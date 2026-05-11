@@ -3,14 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小學中國語文學習網</title>
+    <title>小學中國語文學習網 - 全港最完善平台</title>
     <style>
-        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
-        .header { text-align: center; margin-bottom: 40px; }
-        .header h1 { color: #2c3e50; font-size: 32px; }
-        .header p { color: #555; font-size: 16px; }
-        /* 使用 Grid 排版，讓畫面在電腦是三欄，手機是一欄 */
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; max-width: 1200px; margin: 0 auto; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; color: #333; }
+        
+        /* 全新：頂部學生檔案與經驗值系統 */
+        .user-profile { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .avatar { font-size: 40px; background: white; border-radius: 50%; padding: 5px; height: 50px; width: 50px; display: flex; align-items: center; justify-content: center; }
+        .level-badge { background: #f1c40f; color: #d35400; padding: 3px 10px; border-radius: 12px; font-weight: bold; font-size: 14px; }
+        .exp-bar-container { background: rgba(255,255,255,0.3); width: 150px; height: 10px; border-radius: 5px; margin-top: 5px; overflow: hidden; }
+        .exp-bar { background: #2ecc71; width: 20%; height: 100%; transition: width 0.5s; }
+        
+        .header { text-align: center; margin: 30px 0; padding: 0 20px; }
+        .header h1 { color: #2c3e50; font-size: 32px; margin-bottom: 5px; }
+        .header p { color: #555; font-size: 16px; margin-top: 0; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; max-width: 1200px; margin: 0 auto; padding: 0 20px 40px 20px; }
         .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 6px solid #4a90e2; display: flex; flex-direction: column; }
         .card h2 { margin-top: 0; color: #2c3e50; font-size: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         .card p.desc { font-size: 14px; color: #666; flex-grow: 1; margin-bottom: 20px; }
@@ -19,7 +28,6 @@
         .level-row { display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 10px 15px; border-radius: 8px; transition: 0.2s; border-left: 4px solid transparent; }
         .level-row:hover { background: #e8f4fd; }
         
-        /* 三個層級的顏色設定 */
         .row-basic { border-left-color: #8bc34a; }
         .row-standard { border-left-color: #ff9800; }
         .row-advance { border-left-color: #f44336; }
@@ -36,26 +44,38 @@
 </head>
 <body>
 
+    <div class="user-profile">
+        <div class="user-info">
+            <div class="avatar">👦🏻</div>
+            <div>
+                <div style="font-weight: bold; font-size: 18px;">語文小學士 <span class="level-badge">Lv. 1</span></div>
+                <div class="exp-bar-container"><div class="exp-bar" id="exp-bar-fill"></div></div>
+                <div style="font-size: 12px; margin-top: 3px;">EXP: <span id="exp-text">0</span> / 100</div>
+            </div>
+        </div>
+        <div>🏆 收集徽章: 0</div>
+    </div>
+
     <div class="header">
-        <h1>🎒 小學中國語文學習網 (小一至小六)</h1>
-        <p>請選擇學習單元與難度。完成後點擊灰色圈圈打卡！</p>
+        <h1>🎒 終極小學中國語文學習網</h1>
+        <p>全港最完善學習資源：請選擇單元與難度。完成後點擊灰色圈圈打卡賺取 EXP！</p>
     </div>
 
     <div class="grid">
         <div class="card" style="border-top-color: #3498db;">
             <h2>1️⃣ 字詞基礎</h2>
-            <p class="desc">部首部件、形近/同音字辨析、錯別字修正、詞義、成語、近反義詞。</p>
+            <p class="desc">部首部件、形近/同音字辨析、錯別字修正、詞義、成語。</p>
             <div class="level-container">
                 <div class="level-row row-basic">
-                    <button class="level-btn btn-basic" onclick="alert('跳轉至：補底字詞')">🌱 補底 (小步子/SEN多感官)</button>
+                    <button class="level-btn btn-basic" onclick="window.location.href='word_basic.html'">🌱 補底 (部首小遊戲)</button>
                     <span class="status" id="t_word_1" onclick="toggleStatus(this.id)">⭕</span>
                 </div>
                 <div class="level-row row-standard">
-                    <button class="level-btn btn-standard" onclick="alert('跳轉至：標準字詞')">⭐ 標準 (常規題型訓練)</button>
+                    <button class="level-btn btn-standard" onclick="alert('標準字詞 開發中')">⭐ 標準 (常規題型訓練)</button>
                     <span class="status" id="t_word_2" onclick="toggleStatus(this.id)">⭕</span>
                 </div>
                 <div class="level-row row-advance">
-                    <button class="level-btn btn-advance" onclick="alert('跳轉至：拔尖字詞')">🚀 拔尖 (詞彙擴充挑戰)</button>
+                    <button class="level-btn btn-advance" onclick="alert('拔尖字詞 開發中')">🚀 拔尖 (詞彙擴充挑戰)</button>
                     <span class="status" id="t_word_3" onclick="toggleStatus(this.id)">⭕</span>
                 </div>
             </div>
@@ -63,58 +83,37 @@
 
         <div class="card" style="border-top-color: #9b59b6;">
             <h2>2️⃣ 句子與語法</h2>
-            <p class="desc">擴充/填充句子、詞語造句、重組句子、把/被字句、反問/陳述句轉換。</p>
+            <p class="desc">擴充/填充句子、重組句子、把/被字句、反問/陳述句轉換。</p>
             <div class="level-container">
                 <div class="level-row row-basic">
-                    <button class="level-btn btn-basic" onclick="alert('跳轉至：補底語法')">🌱 補底 (提供填空/首字提示)</button>
-                    <span class="status" id="t_sent_1" onclick="toggleStatus(this.id)">⭕</span>
+                    <button class="level-btn btn-basic">🌱 補底 (提供填空/首字)</button><span class="status" id="t_sent_1" onclick="toggleStatus(this.id)">⭕</span>
                 </div>
                 <div class="level-row row-standard">
-                    <button class="level-btn btn-standard" onclick="alert('跳轉至：標準語法')">⭐ 標準 (獨立造句與重組)</button>
-                    <span class="status" id="t_sent_2" onclick="toggleStatus(this.id)">⭕</span>
+                    <button class="level-btn btn-standard">⭐ 標準 (獨立造句與重組)</button><span class="status" id="t_sent_2" onclick="toggleStatus(this.id)">⭕</span>
                 </div>
                 <div class="level-row row-advance">
-                    <button class="level-btn btn-advance" onclick="alert('跳轉至：拔尖語法')">🚀 拔尖 (複雜句型轉換)</button>
-                    <span class="status" id="t_sent_3" onclick="toggleStatus(this.id)">⭕</span>
+                    <button class="level-btn btn-advance">🚀 拔尖 (複雜句型轉換)</button><span class="status" id="t_sent_3" onclick="toggleStatus(this.id)">⭕</span>
                 </div>
             </div>
         </div>
 
         <div class="card" style="border-top-color: #e67e22;">
             <h2>3️⃣ 修辭與標點</h2>
-            <p class="desc">基本修辭 (比喻、擬人、排比、誇張)、基本與進階標點符號應用。</p>
+            <p class="desc">基本修辭 (比喻、擬人、排比)、基本與進階標點符號應用。</p>
             <div class="level-container">
-                <div class="level-row row-basic">
-                    <button class="level-btn btn-basic" onclick="alert('跳轉至：補底修辭')">🌱 補底 (圖文配對/小步子)</button>
-                    <span class="status" id="t_rhet_1" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-standard">
-                    <button class="level-btn btn-standard" onclick="alert('跳轉至：標準修辭')">⭐ 標準 (修辭辨析與運用)</button>
-                    <span class="status" id="t_rhet_2" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-advance">
-                    <button class="level-btn btn-advance" onclick="alert('跳轉至：拔尖修辭')">🚀 拔尖 (綜合修辭寫作)</button>
-                    <span class="status" id="t_rhet_3" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
+                <div class="level-row row-basic"><button class="level-btn btn-basic">🌱 補底 (圖文配對)</button><span class="status" id="t_rhet_1" onclick="toggleStatus(this.id)">⭕</span></div>
+                <div class="level-row row-standard"><button class="level-btn btn-standard">⭐ 標準 (修辭辨析運用)</button><span class="status" id="t_rhet_2" onclick="toggleStatus(this.id)">⭕</span></div>
+                <div class="level-row row-advance"><button class="level-btn btn-advance">🚀 拔尖 (綜合修辭寫作)</button><span class="status" id="t_rhet_3" onclick="toggleStatus(this.id)">⭕</span></div>
             </div>
         </div>
 
         <div class="card" style="border-top-color: #1abc9c;">
             <h2>4️⃣ 段落與實用文</h2>
-            <p class="desc">排句成段、歸納段落中心訊息、實用文格式 (便條、書信、日記、賀卡)。</p>
+            <p class="desc">排句成段、歸納段落中心訊息、實用文格式 (書信、日記)。</p>
             <div class="level-container">
-                <div class="level-row row-basic">
-                    <button class="level-btn btn-basic" onclick="alert('跳轉至：補底段落')">🌱 補底 (格式框架填寫)</button>
-                    <span class="status" id="t_para_1" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-standard">
-                    <button class="level-btn btn-standard" onclick="alert('跳轉至：標準段落')">⭐ 標準 (排句成段與歸納)</button>
-                    <span class="status" id="t_para_2" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-advance">
-                    <button class="level-btn btn-advance" onclick="alert('跳轉至：拔尖段落')">🚀 拔尖 (獨立撰寫實用文)</button>
-                    <span class="status" id="t_para_3" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
+                <div class="level-row row-basic"><button class="level-btn btn-basic">🌱 補底 (格式框架填寫)</button><span class="status" id="t_para_1" onclick="toggleStatus(this.id)">⭕</span></div>
+                <div class="level-row row-standard"><button class="level-btn btn-standard">⭐ 標準 (排句成段)</button><span class="status" id="t_para_2" onclick="toggleStatus(this.id)">⭕</span></div>
+                <div class="level-row row-advance"><button class="level-btn btn-advance">🚀 拔尖 (獨立撰寫)</button><span class="status" id="t_para_3" onclick="toggleStatus(this.id)">⭕</span></div>
             </div>
         </div>
 
@@ -122,46 +121,50 @@
             <h2>5️⃣ 閱讀理解</h2>
             <p class="desc">提取文本資訊、推斷寓意、三層次閱讀理解訓練。</p>
             <div class="level-container">
-                <div class="level-row row-basic">
-                    <button class="level-btn btn-basic" onclick="alert('跳轉至：補底閱讀')">🌱 補底 (拆段小步子提問)</button>
-                    <span class="status" id="t_read_1" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-standard">
-                    <button class="level-btn btn-standard" onclick="alert('跳轉至：標準閱讀')">⭐ 標準 (常規篇章與短答)</button>
-                    <span class="status" id="t_read_2" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-advance">
-                    <button class="level-btn btn-advance" onclick="alert('跳轉至：拔尖閱讀')">🚀 拔尖 (深層次寓意推斷)</button>
-                    <span class="status" id="t_read_3" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
+                <div class="level-row row-basic"><button class="level-btn btn-basic">🌱 補底 (拆段小步子提問)</button><span class="status" id="t_read_1" onclick="toggleStatus(this.id)">⭕</span></div>
+                <div class="level-row row-standard"><button class="level-btn btn-standard">⭐ 標準 (常規篇章短答)</button><span class="status" id="t_read_2" onclick="toggleStatus(this.id)">⭕</span></div>
+                <div class="level-row row-advance"><button class="level-btn btn-advance">🚀 拔尖 (深層次寓意推斷)</button><span class="status" id="t_read_3" onclick="toggleStatus(this.id)">⭕</span></div>
             </div>
         </div>
 
         <div class="card" style="border-top-color: #e74c3c;">
             <h2>6️⃣ 聆聽與說話</h2>
-            <p class="desc">看圖說話/說故事、聆聽基礎故事並抓取六要素 (時地人起因經過結果)。</p>
+            <p class="desc">看圖說話/說故事、聆聽基礎故事並抓取六要素。</p>
             <div class="level-container">
-                <div class="level-row row-basic">
-                    <button class="level-btn btn-basic" onclick="alert('跳轉至：補底聽說')">🌱 補底 (六要素視覺提示)</button>
-                    <span class="status" id="t_listen_1" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-standard">
-                    <button class="level-btn btn-standard" onclick="alert('跳轉至：標準聽說')">⭐ 標準 (看圖順序說話)</button>
-                    <span class="status" id="t_listen_2" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-advance">
-                    <button class="level-btn btn-advance" onclick="alert('跳轉至：拔尖聽說')">🚀 拔尖 (故事改編與延展)</button>
-                    <span class="status" id="t_listen_3" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
+                <div class="level-row row-basic"><button class="level-btn btn-basic">🌱 補底 (六要素視覺提示)</button><span class="status" id="t_listen_1" onclick="toggleStatus(this.id)">⭕</span></div>
+                <div class="level-row row-standard"><button class="level-btn btn-standard">⭐ 標準 (看圖順序說話)</button><span class="status" id="t_listen_2" onclick="toggleStatus(this.id)">⭕</span></div>
+                <div class="level-row row-advance"><button class="level-btn btn-advance">🚀 拔尖 (故事改編延展)</button><span class="status" id="t_listen_3" onclick="toggleStatus(this.id)">⭕</span></div>
+            </div>
+        </div>
+
+        <div class="card" style="border-top-color: #d35400;">
+            <h2>7️⃣ 中華文化與古詩</h2>
+            <p class="desc">經典古詩背誦與賞析、傳統節日、中國歷史人物故事。</p>
+            <div class="level-container">
+                <div class="level-row row-basic"><button class="level-btn btn-basic">🌱 補底 (語音帶讀與配對)</button><span class="status" id="t_culture_1" onclick="toggleStatus(this.id)">⭕</span></div>
+                <div class="level-row row-standard"><button class="level-btn btn-standard">⭐ 標準 (詩意理解與默書)</button><span class="status" id="t_culture_2" onclick="toggleStatus(this.id)">⭕</span></div>
+                <div class="level-row row-advance"><button class="level-btn btn-advance">🚀 拔尖 (文言文先導啟蒙)</button><span class="status" id="t_culture_3" onclick="toggleStatus(this.id)">⭕</span></div>
+            </div>
+        </div>
+
+        <div class="card" style="border-top-color: #27ae60;">
+            <h2>8️⃣ 綜合寫作專區</h2>
+            <p class="desc">看圖作文、記敘文、描寫文、擴寫縮寫技巧與寫作框架。</p>
+            <div class="level-container">
+                <div class="level-row row-basic"><button class="level-btn btn-basic">🌱 補底 (思維導圖填充)</button><span class="status" id="t_write_1" onclick="toggleStatus(this.id)">⭕</span></div>
+                <div class="level-row row-standard"><button class="level-btn btn-standard">⭐ 標準 (引導式段落擴寫)</button><span class="status" id="t_write_2" onclick="toggleStatus(this.id)">⭕</span></div>
+                <div class="level-row row-advance"><button class="level-btn btn-advance">🚀 拔尖 (無提示命題寫作)</button><span class="status" id="t_write_3" onclick="toggleStatus(this.id)">⭕</span></div>
             </div>
         </div>
     </div>
 
     <script>
-        // 自動化的打卡魔法
+        // 帶有經驗值計算的打卡魔法
         function toggleStatus(taskId) {
             let element = document.getElementById(taskId);
-            if (element.classList.contains('done')) {
+            let isDone = element.classList.contains('done');
+            
+            if (isDone) {
                 element.classList.remove('done');
                 element.innerText = '⭕';
                 localStorage.setItem(taskId, 'false');
@@ -170,9 +173,27 @@
                 element.innerText = '✅';
                 localStorage.setItem(taskId, 'true');
             }
+            updateEXP(); // 每次點擊後重新計算經驗值
         }
 
-        // 網頁載入時，自動掃描所有狀態並還原
+        // 計算經驗值 (每個剔號算 10 分)
+        function updateEXP() {
+            let allStatuses = document.querySelectorAll('.status');
+            let exp = 0;
+            allStatuses.forEach(function(element) {
+                if (localStorage.getItem(element.id) === 'true') {
+                    exp += 10;
+                }
+            });
+            
+            // 更新畫面上的數字和進度條
+            document.getElementById('exp-text').innerText = exp;
+            let percentage = (exp / 100) * 100;
+            if (percentage > 100) percentage = 100; // 最高先設 100% (升級系統後續開發)
+            document.getElementById('exp-bar-fill').style.width = percentage + '%';
+        }
+
+        // 網頁載入時還原狀態
         window.onload = function() {
             let allStatuses = document.querySelectorAll('.status');
             allStatuses.forEach(function(element) {
@@ -181,6 +202,7 @@
                     element.innerText = '✅';
                 }
             });
+            updateEXP(); // 載入時也要算一次分數
         }
     </script>
 
