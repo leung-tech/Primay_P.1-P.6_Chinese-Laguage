@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>補底字詞 - 部首小遊戲</title>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #e8f5e9; margin: 0; padding: 20px; color: #333; text-align: center; }
+        .nav-back { display: inline-block; margin-bottom: 20px; cursor: pointer; color: #2e7d32; font-weight: bold; text-decoration: none; font-size: 18px; background: white; padding: 10px 20px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .nav-back:hover { background: #c8e6c9; }
+        
+        .game-container { background: white; max-width: 600px; margin: 0 auto; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border-top: 8px solid #8bc34a; }
+        
+        .question-box { background: #f1f8e9; padding: 20px; border-radius: 10px; margin-bottom: 30px; font-size: 24px; position: relative; }
+        .highlight { color: #e65100; font-weight: bold; font-size: 32px; margin: 0 10px; }
+        
+        /* 朗讀按鈕樣式 */
+        .speak-btn { background-color: #4CAF50; color: white; border: none; padding: 10px 15px; border-radius: 50%; font-size: 20px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s; margin-left: 15px; vertical-align: middle; }
+        .speak-btn:hover { transform: scale(1.1); background-color: #45a049; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .option-btn { background: #fff; border: 3px solid #8bc34a; font-size: 40px; padding: 20px; border-radius: 15px; cursor: pointer; transition: 0.2s; color: #333; }
+        .option-btn:hover { background: #f1f8e9; transform: translateY(-5px); }
+        
+        #feedback { margin-top: 25px; font-size: 24px; font-weight: bold; min-height: 35px; }
+        .correct { color: #2e7d32; }
+        .wrong { color: #d32f2f; }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="nav-back">⬅ 返回主目錄</a>
+
+    <div class="game-container">
+        <h2>🧩 部首小遊戲 (SEN 補底)</h2>
+        
+        <div class="question-box">
+            <p id="question-text">請問哪一個部首加上「木」，會變成「休息」的「休」？
+                <button class="speak-btn" onclick="speakText('請問哪一個部首加上木，會變成休息的休？')">🔊</button>
+            </p>
+            <div style="font-size: 50px; margin-top: 15px;">❓ + 木 = <span class="highlight">休</span></div>
+        </div>
+
+        <div class="options-grid">
+            <button class="option-btn" onclick="checkAnswer('人')">亻 (人)</button>
+            <button class="option-btn" onclick="checkAnswer('水')">氵 (水)</button>
+        </div>
+
+        <div id="feedback"></div>
+    </div>
+
+    <script>
+        // --- 核心魔法 1：廣東話朗讀功能 ---
+        function speakText(text) {
+            // 檢查瀏覽器是否支援語音
+            if ('speechSynthesis' in window) {
+                let msg = new SpeechSynthesisUtterance();
+                msg.text = text;
+                msg.lang = 'zh-HK'; // 設定為香港廣東話
+                msg.rate = 0.85;    // 稍微調慢語速，方便 SEN 學生聆聽 (1 是正常速度)
+                msg.pitch = 1;      // 正常音調
+                window.speechSynthesis.speak(msg);
+            } else {
+                alert("抱歉，您的設備不支援語音朗讀功能。");
+            }
+        }
+
+        // --- 核心魔法 2：檢查答案邏輯 ---
+        function checkAnswer(answer) {
+            let feedbackElement = document.getElementById('feedback');
+            
+            if (answer === '人') {
+                feedbackElement.innerHTML = "🎉 答對了！「亻」加上「木」就是「休」。";
+                feedbackElement.className = "correct";
+                speakText("答對了！人字部加上木，就是休息的休。"); // 答對也有語音回饋
+            } else {
+                feedbackElement.innerHTML = "❌ 不對喔，請再試一次！";
+                feedbackElement.className = "wrong";
+                speakText("不對喔，請再試一次！"); // 答錯的語音回饋
+            }
+        }
+    </script>
+
+</body>
+</html>
