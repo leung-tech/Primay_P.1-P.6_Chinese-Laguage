@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小學中國語文學習網</title>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f0f8ff; margin: 0; padding: 20px; color: #333; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { color: #2c3e50; font-size: 32px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 6px solid #4a90e2; }
+        .card h2 { margin-top: 0; color: #2c3e50; font-size: 22px; display: flex; justify-content: space-between; }
+        .level-container { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .level-row { display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 10px 15px; border-radius: 8px; transition: 0.2s; }
+        .level-row:hover { background: #e8f4fd; }
+        .level-btn { border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        .btn-basic { background-color: #e2f0cb; color: #558b2f; }
+        .btn-standard { background-color: #ffe0b2; color: #ef6c00; }
+        .btn-advance { background-color: #ffcdd2; color: #c62828; }
+        .level-btn:hover { transform: scale(1.05); filter: brightness(0.9); }
+        .status { font-size: 18px; color: #ccc; cursor: pointer; }
+        .status.done { color: #4CAF50; } /* 綠色剔號 */
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🎒 小一至小六 中國語文學習網</h1>
+        <p>請選擇單元與難度。完成後點擊灰色圈圈打卡！(可重複練習)</p>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h2>字（部首部件）</h2>
+            <div class="level-container">
+                <div class="level-row">
+                    <button class="level-btn btn-basic" onclick="alert('跳轉到：補底部首遊戲 (開發中)')">🌱 補底 (SEN/基礎)</button>
+                    <span class="status" id="task_word_1" onclick="toggleStatus('task_word_1')">⭕</span>
+                </div>
+                <div class="level-row">
+                    <button class="level-btn btn-standard" onclick="alert('跳轉到：標準部首練習 (開發中)')">⭐ 標準 (常規題型)</button>
+                    <span class="status" id="task_word_2" onclick="toggleStatus('task_word_2')">⭕</span>
+                </div>
+                <div class="level-row">
+                    <button class="level-btn btn-advance" onclick="alert('跳轉到：拔尖拆字挑戰 (開發中)')">🚀 拔尖 (進階挑戰)</button>
+                    <span class="status" id="task_word_3" onclick="toggleStatus('task_word_3')">⭕</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="border-top-color: #f39c12;">
+            <h2>詞語與成語</h2>
+            <div class="level-container">
+                <div class="level-row">
+                    <button class="level-btn btn-basic" onclick="alert('跳轉到：圖文配對成語 (開發中)')">🌱 補底 (SEN/基礎)</button>
+                    <span class="status" id="task_idiom_1" onclick="toggleStatus('task_idiom_1')">⭕</span>
+                </div>
+                <div class="level-row">
+                    <button class="level-btn btn-standard" onclick="alert('跳轉到：成語填充 (開發中)')">⭐ 標準 (常規題型)</button>
+                    <span class="status" id="task_idiom_2" onclick="toggleStatus('task_idiom_2')">⭕</span>
+                </div>
+                <div class="level-row">
+                    <button class="level-btn btn-advance" onclick="alert('跳轉到：成語造句與應用 (開發中)')">🚀 拔尖 (進階挑戰)</button>
+                    <span class="status" id="task_idiom_3" onclick="toggleStatus('task_idiom_3')">⭕</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 這個魔法負責記憶學生的「剔號」
+        function toggleStatus(taskId) {
+            let element = document.getElementById(taskId);
+            if (element.classList.contains('done')) {
+                element.classList.remove('done');
+                element.innerText = '⭕';
+                localStorage.setItem(taskId, 'false'); // 存入瀏覽器記憶
+            } else {
+                element.classList.add('done');
+                element.innerText = '✅';
+                localStorage.setItem(taskId, 'true'); // 存入瀏覽器記憶
+            }
+        }
+
+        // 網頁打開時，自動讀取記憶
+        window.onload = function() {
+            let allTasks = ['task_word_1', 'task_word_2', 'task_word_3', 'task_idiom_1', 'task_idiom_2', 'task_idiom_3'];
+            allTasks.forEach(function(taskId) {
+                if (localStorage.getItem(taskId) === 'true') {
+                    let element = document.getElementById(taskId);
+                    element.classList.add('done');
+                    element.innerText = '✅';
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
