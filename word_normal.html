@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>字詞基礎 - 標準常規訓練</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    <style>
+        body {
+            font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif;
+            background-color: #eff6ff;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .bg-grid-pattern {
+            background-image: linear-gradient(to right, #e2e8f0 1px, transparent 1px), linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .mi-zi-ge {
+            background-color: #f8fafc;
+            background-image: 
+                linear-gradient(to right, transparent 49.5%, #ef4444 49.5%, #ef4444 50.5%, transparent 50.5%),
+                linear-gradient(to bottom, transparent 49.5%, #ef4444 49.5%, #ef4444 50.5%, transparent 50.5%),
+                linear-gradient(45deg, transparent 49.5%, #fca5a5 49.5%, #fca5a5 50.5%, transparent 50.5%),
+                linear-gradient(-45deg, transparent 49.5%, #fca5a5 49.5%, #fca5a5 50.5%, transparent 50.5%);
+            border: 4px solid #ef4444; border-radius: 8px;
+        }
+
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .pop { animation: pop 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .option-btn { transition: all 0.2s; box-shadow: 0 4px 0 #94a3b8; }
+        .option-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .option-btn.correct { background-color: #dbeafe; border-color: #3b82f6; color: #1e3a8a; box-shadow: 0 0 0 transparent; transform: translateY(4px); pointer-events: none; }
+        .option-btn.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.6; pointer-events: none; }
+        
+        .tts-btn { transition: transform 0.2s; }
+        .tts-btn:active { transform: scale(0.9); }
+
+        .tab-btn { transition: all 0.3s; }
+        .tab-active { background-color: #2563eb; color: white; border-color: #1d4ed8; }
+        .tab-inactive { background-color: white; color: #475569; border-color: #cbd5e1; }
+        
+        .filter-btn { transition: all 0.2s; }
+        .filter-active { background-color: #3b82f6; color: white; border-color: #2563eb; font-weight: bold; }
+
+        .lvl-btn { transition: transform 0.2s; }
+        .lvl-btn:hover { transform: scale(1.05); }
+
+        .toast-msg {
+            visibility: hidden; min-width: 250px; background-color: #ef4444; color: #fff; text-align: center;
+            border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px;
+            transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
+        @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
+
+    <!-- 頂部導覽列 -->
+    <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
+        <div class="p-3 lg:p-4 bg-blue-600 text-white flex justify-between items-center w-full">
+            <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
+                <a href="index.html" class="hover:bg-blue-700 p-1 rounded transition bg-blue-800">⬅️ 返回</a>
+                <span>📚 字詞基礎 (標準版)</span>
+            </h1>
+            <div class="flex gap-2 lg:gap-4 items-center bg-blue-800 px-3 py-1.5 rounded-full border border-blue-500 shadow-inner">
+                <span class="text-lg lg:text-xl">🏆</span>
+                <span class="font-bold text-sm lg:text-lg">EXP: <span id="exp-display" class="text-yellow-400">0</span></span>
+            </div>
+        </div>
+        
+        <div class="flex w-full bg-slate-100 border-b border-slate-300">
+            <button onclick="switchMode('quest')" id="tab-quest" class="tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-blue-600">
+                📝 綜合字詞特訓 (300題)
+            </button>
+            <button onclick="switchMode('sandbox')" id="tab-sandbox" class="tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200">
+                ✍️ 進階字庫 (中英對照)
+            </button>
+        </div>
+        
+        <div id="progress-container" class="w-full bg-slate-200 h-2">
+            <div id="progress-bar" class="bg-orange-500 h-full w-0 transition-all duration-500"></div>
+        </div>
+    </div>
+
+    <!-- 主畫面區 -->
+    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
+        
+        <!-- ================= 模式 1：闖關地圖 ================= -->
+        <div id="quest-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
+            <div id="quest-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">🎯 常規題型特訓地圖</h2>
+                
+                <!-- 💡 清晰的標記說明圖例 -->
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
+                    <div class="text-blue-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
+                    <div class="flex flex-wrap gap-4 flex-1">
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-lg shadow-sm">🌟</span> 一次答對</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 經嘗試後答對</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-rose-100 border-2 border-rose-400 flex items-center justify-center text-lg shadow-sm">❌</span> 答錯未完成</div>
+                    </div>
+                </div>
+
+                <div id="directory-content" class="flex flex-col gap-8">
+                    <!-- 目錄動態生成 -->
+                </div>
+            </div>
+            <div id="quest-play" class="w-full hidden flex-col items-center">
+                <!-- 題目動態生成 -->
+            </div>
+        </div>
+
+        <!-- ================= 模式 2：常見字寫字板 ================= -->
+        <div id="sandbox-wrapper" class="hidden w-full h-full">
+            <div class="w-full max-w-6xl mx-auto flex flex-col lg:flex-row gap-4 lg:gap-6 h-full min-h-[500px]">
+                <div class="lg:w-1/3 flex flex-col gap-3 min-h-[300px] lg:h-[600px]">
+                    <div class="bg-white rounded-xl shadow-sm border border-blue-200 p-3 flex flex-col gap-2 relative">
+                        <h3 class="font-bold text-blue-800 text-sm">🔍 搜尋小學習字表：</h3>
+                        <div class="flex gap-2">
+                            <input type="text" id="custom-char-input" maxlength="1" placeholder="輸入任何中文字..." class="flex-1 px-3 py-2 border-2 border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-lg text-center font-bold">
+                            <button onclick="searchCustomChar()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-sm transition">生成</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-2 flex overflow-x-auto no-scrollbar gap-2 flex-shrink-0">
+                        <button onclick="filterWords('all')" id="flt-all" class="filter-btn filter-active px-4 py-2 rounded-lg whitespace-nowrap text-sm border">全部</button>
+                        <button onclick="filterWords('nature')" id="flt-nature" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">自然</button>
+                        <button onclick="filterWords('action')" id="flt-action" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">動作</button>
+                        <button onclick="filterWords('body')" id="flt-body" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">身體</button>
+                        <button onclick="filterWords('object')" id="flt-object" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">物品</button>
+                        <button onclick="filterWords('time')" id="flt-time" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">時間</button>
+                        <button onclick="filterWords('emotion')" id="flt-emotion" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">情感</button>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-md border-2 border-slate-200 p-4 flex-1 overflow-y-auto no-scrollbar min-h-[250px]">
+                        <div id="word-grid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 gap-2"></div>
+                    </div>
+                </div>
+
+                <div class="lg:w-2/3 bg-white rounded-2xl shadow-xl border-t-8 border-blue-600 p-4 lg:p-6 flex flex-col items-center justify-center relative min-h-[400px]">
+                    <div id="sandbox-placeholder" class="text-slate-400 font-bold text-xl text-center flex flex-col items-center gap-4">
+                        <span class="text-6xl animate-bounce">👈</span>請從左側選擇，或直接搜尋中文字
+                    </div>
+                    <div id="sandbox-content" class="hidden w-full flex flex-col items-center">
+                        <div class="flex justify-between w-full mb-4 items-end border-b-2 border-slate-100 pb-4">
+                            <div>
+                                <h2 id="sb-char" class="text-5xl lg:text-6xl font-black text-slate-800 mb-3">字</h2>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="bg-orange-100 text-orange-800 px-3 py-1 rounded-lg border border-orange-200 font-bold text-sm lg:text-base">部首：<span id="sb-radical"></span></span>
+                                    <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-lg border border-indigo-200 font-bold text-sm lg:text-base" id="sb-english">English</span>
+                                </div>
+                            </div>
+                            <button onclick="speakText(document.getElementById('sb-char').innerText)" class="tts-btn bg-blue-100 text-blue-700 w-14 h-14 rounded-full text-3xl flex items-center justify-center shadow-sm border-2 border-blue-200">🔊</button>
+                        </div>
+                        <div class="relative w-64 h-64 md:w-80 md:h-80 mi-zi-ge mb-6 shadow-inner touch-none" id="sandbox-canvas"></div>
+                        <div class="flex flex-wrap justify-center gap-3 w-full">
+                            <button onclick="sbWriter.animateCharacter()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-xl shadow transition flex items-center gap-2 text-lg">👀 看筆順</button>
+                            <button onclick="startSandboxQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow transition flex items-center gap-2 text-lg">✍️ 試寫</button>
+                            <button onclick="sbWriter.hideCharacter(); sbWriter.showCharacter()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-6 rounded-xl transition text-lg">🔄 重設</button>
+                        </div>
+                        <div id="sb-feedback" class="mt-4 text-xl font-bold text-blue-600 h-8 opacity-0 transition-opacity"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 反饋 Modal -->
+    <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform" id="feedback-content">
+            <div id="feedback-icon" class="text-7xl mb-4">🎉</div>
+            <h2 id="feedback-title" class="text-3xl font-black text-slate-800 mb-2">答對了！</h2>
+            <div id="feedback-desc" class="text-slate-600 font-bold mb-6 text-lg leading-relaxed"></div>
+            <div class="flex gap-3 w-full">
+                <button onclick="backToDirectoryFromModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition text-lg">⬅️ 目錄</button>
+                <button id="next-btn" class="flex-[1.5] bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-msg">提示訊息</div>
+
+    <script>
+        // ================= 1. 核心設定 =================
+        let stdExp = parseInt(localStorage.getItem('stdExp')) || 0;
+        document.getElementById('exp-display').innerText = stdExp;
+        let typoStep = 1; 
+        let currentQuestionMistakes = 0;
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let msg = new SpeechSynthesisUtterance(text);
+                msg.lang = 'zh-HK';
+                msg.rate = 0.9;
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "toast-msg show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        function switchMode(mode) {
+            const tabQuest = document.getElementById('tab-quest');
+            const tabSandbox = document.getElementById('tab-sandbox');
+            const questMode = document.getElementById('quest-mode');
+            const sandboxWrapper = document.getElementById('sandbox-wrapper');
+            const progress = document.getElementById('progress-container');
+
+            if (mode === 'quest') {
+                tabQuest.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-blue-600";
+                tabSandbox.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                questMode.style.display = 'flex';
+                sandboxWrapper.style.display = 'none';
+                progress.style.display = 'block';
+                updateTotalProgress();
+            } else {
+                tabSandbox.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-blue-600";
+                tabQuest.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                questMode.style.display = 'none';
+                sandboxWrapper.style.display = 'block'; 
+                progress.style.display = 'none';
+                if(!isSandboxInitialized) { initSandbox(); isSandboxInitialized = true; }
+            }
+        }
+
+        // ================= 2. 300題 徹底重建乾淨資料庫 =================
+        const categories = [
+            { id: 'c-pic', title: '🖼️ 象形與指事字配對 (25題)', color: 'amber' },
+            { id: 'c-measure', title: '📏 量詞大考驗 (20題)', color: 'teal' },
+            { id: 'c-similar', title: '🔎 同音/形近字辨析 (40題)', color: 'blue' },
+            { id: 'c-typo', title: '❌ 錯別字醫生 (40題)', color: 'rose' },
+            { id: 'c-synant', title: '🔄 近義與反義詞替換 (40題)', color: 'purple' },
+            { id: 'c-meaning', title: '📖 詞義理解與運用 (45題)', color: 'emerald' },
+            { id: 'c-colloc', title: '📝 詞語造句與搭配 (40題)', color: 'cyan' },
+            { id: 'c-idiom', title: '🐲 基礎成語填空 (50題)', color: 'orange' }
+        ];
+
+        const picData = [
+            ['選出對應的文字', '古人畫了一個圓，中間加一點，代表太陽。這是___字。', ['日', '月', '口'], 0, '日是太陽的象形字。', '🌞', '日'],
+            ['選出對應的文字', '像一彎新月形狀的，是___字。', ['目', '月', '弓'], 1, '月是月亮的象形字。', '🌙', '月'],
+            ['選出對應的文字', '畫出三座高低起伏的山峰，這是___字。', ['水', '火', '山'], 2, '山是山峰的象形字。', '⛰️', '山'],
+            ['選出對應的文字', '像水流動時產生的波紋，這是___字。', ['川', '水', '雨'], 1, '水是流水的象形字。', '🌊', '水'],
+            ['選出對應的文字', '像火焰向上燃燒的樣子，這是___字。', ['炎', '火', '光'], 1, '火是火焰的象形字。', '🔥', '火'],
+            ['選出對應的文字', '像一棵有樹根和樹枝的植物，這是___字。', ['木', '本', '禾'], 0, '木代表樹木的象形字。', '🌲', '木'],
+            ['選出對應的文字', '畫出張開的嘴巴形狀，這是___字。', ['日', '口', '舌'], 1, '口是嘴巴的象形字。', '👄', '口'],
+            ['選出對應的文字', '畫出眼睛的形狀，中間有瞳孔，這是___字。', ['日', '目', '耳'], 1, '目是眼睛的象形字。', '👁️', '目'],
+            ['選出對應的文字', '像一隻有輪廓的耳朵，這是___字。', ['月', '目', '耳'], 2, '耳是耳朵的象形字。', '👂', '耳'],
+            ['選出對應的文字', '畫出一個人側面站立的樣子，這是___字。', ['大', '人', '入'], 1, '人是人類的象形字。', '🚶', '人'],
+            ['選出對應的文字', '畫出有五根手指的形狀，這是___字。', ['爪', '寸', '手'], 2, '手是手掌的象形字。', '✋', '手'],
+            ['選出對應的文字', '畫出一把彎曲的射擊武器，這是___字。', ['弓', '刀', '戈'], 0, '弓是武器的象形字。', '🏹', '弓'],
+            ['選出對應的文字', '畫出一把有刀刃的工具，這是___字。', ['力', '刀', '刃'], 1, '刀是工具的象形字。', '🔪', '刀'],
+            ['選出對應的文字', '像兩扇關起來的門板，這是___字。', ['戶', '門', '開'], 1, '門是門板的象形字。', '🚪', '門'],
+            ['選出對應的文字', '畫出天空落下的水滴，這是___字。', ['水', '雲', '雨'], 2, '雨是雨滴的象形字。', '🌧️', '雨'],
+            ['選出對應的文字', '畫出長長羽毛、會飛的動物，這是___字。', ['烏', '鳥', '飛'], 1, '鳥是鳥類的象形字。', '🐦', '鳥'],
+            ['選出對應的文字', '畫出魚頭、魚鱗和魚尾，這是___字。', ['魚', '龜', '虫'], 0, '魚是魚類的象形字。', '🐟', '魚'],
+            ['選出對應的文字', '畫出有兩隻彎角的動物頭部，這是___字。', ['牛', '羊', '鹿'], 1, '羊是羊隻的象形字。', '🐏', '羊'],
+            ['選出對應的文字', '畫出有兩隻直角的動物頭部，這是___字。', ['羊', '牛', '馬'], 1, '牛是牛隻的象形字。', '🐂', '牛'],
+            ['選出對應的文字', '像一張用來捕捉動物的網子，這是___字。', ['網', '岡', '罒'], 0, '網是捕捉工具的象形字。', '🕸️', '網'],
+            ['選出對應的指事字', '在一長橫線的上方加一點，表示位置。這是___字。', ['上', '下', '中'], 0, '上是指事字，指上方。', '⬆️', '上'],
+            ['選出對應的指事字', '在一長橫線的下方加一點，表示位置。這是___字。', ['上', '下', '底'], 1, '下是指事字，指下方。', '⬇️', '下'],
+            ['選出對應的指事字', '在「木」的下方加一橫，指出樹根的位置。這是___字。', ['本', '末', '朱'], 0, '本代表樹根，是指事字。', '🌳↓', '本'],
+            ['選出對應的指事字', '在「木」的上方加一橫，指出樹梢的位置。這是___字。', ['本', '末', '未'], 1, '末代表樹梢，是指事字。', '🌳↑', '末'],
+            ['選出對應的指事字', '在「刀」口處加一點，指出鋒利的位置。這是___字。', ['刃', '切', '分'], 0, '刃代表刀鋒，是指事字。', '✨🔪', '刃']
+        ].map(item => ['c-pic', 'c-pic', item[0], item[1], item[2], item[3], item[4], item[5], item[6]]);
+
+        const measureData = [
+            ['選出正確的量詞。', '公園裡有一___可愛的小狗。', ['隻', '條', '頭'], 0, '小狗的量詞是「隻」。', '🐶'],
+            ['選出正確的量詞。', '水族箱裡游著一___金魚。', ['隻', '條', '匹'], 1, '魚的量詞通常用「條」或「尾」。', '🐠'],
+            ['選出正確的量詞。', '下雨了，我帶了一___雨傘出門。', ['枝', '把', '張'], 1, '有手柄的物品通常用「把」。', '☔'],
+            ['選出正確的量詞。', '馬路上停了一___紅色的跑車。', ['架', '部', '輛'], 2, '汽車的專屬量詞是「輛」。', '🚗'],
+            ['選出正確的量詞。', '媽媽給我買了一___新衣服。', ['件', '套', '條'], 0, '上衣通常用「件」。', '👕'],
+            ['選出正確的量詞。', '請給我一___白紙寫字。', ['塊', '張', '片'], 1, '紙張的量詞是「張」。', '📄'],
+            ['選出正確的量詞。', '天空中飛過一___飛機。', ['架', '隻', '輛'], 0, '飛機或機器的量詞是「架」。', '✈️'],
+            ['選出正確的量詞。', '我從圖書館借了一___故事書。', ['本', '冊', '份'], 0, '書本的量詞是「本」。', '📚'],
+            ['選出正確的量詞。', '這是一___高大的蘋果樹。', ['棵', '顆', '根'], 0, '樹木的量詞是木字旁的「棵」。', '🌳'],
+            ['選出正確的量詞。', '花園裡開了一___美麗的玫瑰花。', ['朵', '株', '束'], 0, '單獨的花朵量詞是「朵」。', '🌹'],
+            ['選出正確的量詞。', '弟弟吃了一___甜甜的巧克力。', ['粒', '顆', '塊'], 0, '微小圓形的物品用「粒」或「顆」。', '🍫'],
+            ['選出正確的量詞。', '我穿上了一___新鞋子去跑步。', ['對', '雙', '隻'], 1, '成對的鞋子用「雙」或「對」。', '👟'],
+            ['選出正確的量詞。', '遠處有一___高山。', ['個', '座', '塊'], 1, '大型建築或高山用「座」。', '⛰️'],
+            ['選出正確的量詞。', '爸爸買了一___新手提電腦。', ['部', '架', '台'], 0, '電腦的量詞是「部」或「台」。', '💻'],
+            ['選出正確的量詞。', '草原上跑過一___駿馬。', ['匹', '隻', '頭'], 0, '馬的專屬量詞是「匹」。', '🐎'],
+            ['選出正確的量詞。', '天空出現了一___美麗的彩虹。', ['條', '道', '座'], 1, '光線、彩虹等形狀用「道」。', '🌈'],
+            ['選出正確的量詞。', '今天突然吹起了一___大風。', ['個', '場', '陣'], 2, '短暫的自然現象用「陣」。', '🌬️'],
+            ['選出正確的量詞。', '媽媽買了一___布用來做衣服。', ['匹', '條', '塊'], 0, '布料的傳統量詞是「匹」。', '🧵'],
+            ['選出正確的量詞。', '我們乘坐一___渡輪去離島。', ['艘', '隻', '架'], 0, '船隻的量詞是「艘」。', '⛴️'],
+            ['選出正確的量詞。', '牆上掛著一___優美的風景畫。', ['張', '幅', '面'], 1, '圖畫的量詞是「幅」。', '🖼️']
+        ].map(item => ['c-measure', 'c-measure', item[0], item[1], item[2], item[3], item[4], item[5]]);
+
+        const similarData = [
+            ['這朵玫瑰花的花___非常柔軟。', ['辦', '辨', '瓣'], 2, '花瓣的「瓣」，中間是個「瓜」字旁。'],
+            ['遇到困難，我們要想___法解決。', ['辦', '辨', '瓣'], 0, '辦法的「辦」，中間是個「力」。'],
+            ['這對雙胞胎太像了，我無法___認。', ['辦', '辨', '瓣'], 1, '分辨的「辨」，中間是一點一撇。'],
+            ['大家請保持___靜，不可喧嘩。', ['安', '按', '暗'], 0, '安靜的「安」，代表平靜。'],
+            ['老師要求我們___時交功課。', ['按', '安', '暗'], 0, '按時的「按」，代表依照規定。'],
+            ['太陽下山了，天色漸漸變___。', ['暗', '安', '按'], 0, '黑暗的「暗」，與光線有關（日字部）。'],
+            ['我每天早上都會喝一杯牛___。', ['奶', '扔', '仍'], 0, '牛奶的「奶」，女字部。'],
+            ['請不要把垃圾___在地上。', ['扔', '奶', '仍'], 0, '扔垃圾是手部動作，用提手旁（扌）。'],
+            ['他雖然失敗了，但___然沒有放棄。', ['仍', '奶', '扔'], 0, '仍然的「仍」，人字旁。'],
+            ['農夫在田裡辛___地工作。', ['苦', '若', '古'], 0, '辛苦的「苦」，草字頭。'],
+            ['___果明天下雨，我們就不去郊遊。', ['若', '苦', '古'], 0, '如果的「若」。'],
+            ['這是一座歷史悠___的建築物。', ['久', '苦', '古'], 0, '悠久的「久」，代表時間長。'],
+            ['他很喜歡這本___事書。', ['故', '做', '估'], 0, '故事的「故」。'],
+            ['請你幫我___好這件家務。', ['做', '故', '估'], 0, '做事的「做」，人字旁。'],
+            ['請你___計一下這裡有多少人。', ['估', '做', '故'], 0, '估計的「估」。'],
+            ['這是一件___得紀念的禮物。', ['值', '植', '直'], 0, '值得的「值」，人字旁。'],
+            ['春天是___樹的好季節。', ['植', '值', '直'], 0, '植物的「植」，木字旁。'],
+            ['這條馬路筆___地通往海邊。', ['直', '植', '值'], 0, '筆直的「直」。'],
+            ['天氣很熱，我感到十分口___。', ['渴', '喝', '揭'], 0, '口渴缺水，用水字旁（氵）。'],
+            ['弟弟拿起水杯，大口地___水。', ['喝', '渴', '揭'], 0, '喝水用嘴巴，用口字旁。'],
+            ['這是一隻可愛的小___。', ['狗', '夠', '句'], 0, '小狗的狗（犭字旁）。'],
+            ['我的零用錢不___買這本書。', ['夠', '狗', '句'], 0, '足夠的夠。'],
+            ['我們在公園裡___耍。', ['玩', '完', '元'], 0, '玩耍的玩（王字旁）。'],
+            ['功課終於做___了。', ['完', '玩', '元'], 0, '完成的完（宀字旁）。'],
+            ['這件衣服的顏___真漂亮。', ['色', '式', '巴'], 0, '顏色的色。'],
+            ['這件外套的款___很特別。', ['式', '色', '巴'], 0, '款式的式。'],
+            ['這是一把鋒___的刀。', ['利', '力', '立'], 0, '鋒利的利（刀字旁）。'],
+            ['哥哥的力___很大。', ['力', '利', '立'], 0, '力量的力。'],
+            ['請你在這裡___下來。', ['坐', '座', '左'], 0, '坐下是動作。'],
+            ['這是我的___位。', ['座', '坐', '左'], 0, '座位是名詞（广字旁）。'],
+            ['我今天很開___。', ['心', '星', '新'], 0, '開心的心。'],
+            ['天上有許多___星。', ['星', '心', '新'], 0, '星星的星（日字頭）。'],
+            ['這是一件很___苦的事。', ['辛', '幸', '新'], 0, '辛苦的辛。'],
+            ['祝你永遠___福。', ['幸', '辛', '新'], 0, '幸福的幸。'],
+            ['我喜歡吃___蜜。', ['蜂', '峰', '鋒'], 0, '蜜蜂的蜂（虫部）。'],
+            ['那是一座高高的山___。', ['峰', '蜂', '鋒'], 0, '山峰的峰（山部）。'],
+            ['媽媽買了一個水___桃。', ['蜜', '密', '秘'], 0, '水蜜桃的蜜（虫部）。'],
+            ['這是一個大秘___。', ['密', '蜜', '秘'], 0, '秘密的密（宀部）。'],
+            ['我在超級市場___東西。', ['買', '賣', '實'], 0, '購買的買（上面沒十字）。'],
+            ['商店正在___水果。', ['賣', '買', '實'], 0, '賣出的賣（上面有十字）。']
+        ].map(item => ['c-similar', 'c-similar', '選出正確的字填入空格。', `句子：${item[0].replace('___', '___')}`, item[1], item[2], item[3]]);
+
+        const typoData = [
+            ['明天是星其天，我們不用上學。', '其', ['期', '欺', '旗'], 0, '星期'],
+            ['這是一本非常由趣的圖書。', '由', ['有', '游', '友'], 0, '有趣'],
+            ['哥哥十分驕傲，結果退布了。', '布', ['步', '部', '佈'], 0, '退步'],
+            ['妹妹把玻離杯打破了。', '離', ['璃', '籬', '狸'], 0, '玻璃'],
+            ['我們應該保謢環境。', '謢', ['護', '獲', '穫'], 0, '保護'],
+            ['這頓晚飯十分美未。', '未', ['味', '妹', '尾'], 0, '美味'],
+            ['小狗擺動尾巴，歡迎主人回加。', '加', ['家', '佳', '嘉'], 0, '回家'],
+            ['今天風和日厲，適合遠足。', '厲', ['麗', '勵', '例'], 0, '日麗'],
+            ['過馬路要小心看紅綠汀。', '汀', ['燈', '釘', '丁'], 0, '紅綠燈'],
+            ['他做事認真，值得稱桑。', '桑', ['讚', '贊', '鑽'], 0, '稱讚'],
+            ['班房打掃得乾淨齊潔。', '齊', ['整', '正', '政'], 0, '整潔'],
+            ['這件衣服的顏式很鮮艷。', '式', ['色', '飾', '息'], 0, '顏色'],
+            ['遇到因難時，要勇敢面對。', '因', ['困', '恩', '音'], 0, '困難'],
+            ['這道數學題很複習。', '習', ['雜', '集', '及'], 0, '複雜'],
+            ['我們在沙灘上執貝殼。', '執', ['拾', '十', '什'], 0, '拾起'],
+            ['這間餐廳的服務很差列。', '列', ['劣', '烈', '裂'], 0, '惡劣'],
+            ['天空出現了彩虹，十分漂量。', '量', ['亮', '諒', '涼'], 0, '漂亮'],
+            ['養成良好的生話習慣。', '話', ['活', '括', '刮'], 0, '生活'],
+            ['老師耐心教島我們。', '島', ['導', '倒', '到'], 0, '教導'],
+            ['電影情節令人目不暇及。', '及', ['接', '急', '級'], 0, '目不暇接'],
+            ['我們要專心聽課，不要作幣。', '幣', ['弊', '斃', '蔽'], 0, '作弊'],
+            ['他因為生病，所以缺直了。', '直', ['席', '植', '值'], 0, '缺席'],
+            ['請把垃圾掉進垃圾筒。', '筒', ['桶', '痛', '通'], 0, '垃圾桶'],
+            ['這隻狗的皮毛很柔順。', '順', ['軟', '繯', '阮'], 0, '柔軟'],
+            ['這是一場列烈的比賽。', '列', ['激', '擊', '急'], 0, '激烈'],
+            ['他每天都晨跑，身體很健壯。', '壯', ['康', '糠', '慷'], 0, '健康'],
+            ['公園裡有許多遊樂切施。', '切', ['設', '攝', '涉'], 0, '設施'],
+            ['這件衣服的價錢很便誼。', '誼', ['宜', '疑', '儀'], 0, '便宜'],
+            ['我最喜歡吃巧克歷。', '歷', ['力', '立', '利'], 0, '巧克力'],
+            ['他的成積一直很好。', '積', ['績', '擊', '激'], 0, '成績'],
+            ['這是一件很幸苦的事。', '幸', ['辛', '新', '心'], 0, '辛苦'],
+            ['遠處有一座高高的山蜂。', '蜂', ['峰', '鋒', '烽'], 0, '山峰'],
+            ['這是一個大秘蜜。', '蜜', ['密', '謐', '覓'], 0, '秘密'],
+            ['商店正在買出水果。', '買', ['賣', '邁', '麥'], 0, '賣出'],
+            ['這是一個圓刑的蘋果。', '刑', ['形', '型', '行'], 0, '圓形'],
+            ['請你幫我燒水。', '燒', ['澆', '繞', '曉'], 0, '澆水'],
+            ['海邊有一隻小貝穀。', '穀', ['殼', '確', '角'], 0, '貝殼'],
+            ['這是一把峰利的刀。', '峰', ['鋒', '蜂', '豐'], 0, '鋒利'],
+            ['我們去打藍球。', '藍', ['籃', '蘭', '攔'], 0, '籃球'],
+            ['我們去公圓散步。', '圓', ['園', '員', '源'], 0, '公園']
+        ].map(item => ['c-typo', 'c-typo', '找出句子中的錯別字並修正。', item[0], item[1], item[2], item[3], item[4]]);
+
+        const synantData = [
+            ['高興', '近義', ['快樂', '悲傷', '憤怒'], 0], ['美麗', '反義', ['漂亮', '醜陋', '好看'], 1], ['寒冷', '反義', ['冰涼', '炎熱', '清涼'], 1],
+            ['稱讚', '近義', ['讚賞', '責罵', '批評'], 0], ['勤奮', '反義', ['懶惰', '用功', '努力'], 0], ['保護', '近義', ['保衛', '破壞', '傷害'], 0],
+            ['安全', '反義', ['危險', '平穩', '安心'], 0], ['喜愛', '近義', ['喜歡', '討厭', '厭惡'], 0], ['熱鬧', '反義', ['冷清', '喧嘩', '吵鬧'], 0],
+            ['容易', '反義', ['困難', '簡單', '輕鬆'], 0], ['馬上', '近義', ['立刻', '慢慢', '遲遲'], 0], ['開始', '反義', ['結束', '起點', '出發'], 0],
+            ['光明', '反義', ['黑暗', '光亮', '明亮'], 0], ['仔細', '近義', ['細心', '馬虎', '粗心'], 0], ['浪費', '反義', ['節省', '揮霍', '消耗'], 0],
+            ['特別', '近義', ['特殊', '普通', '平凡'], 0], ['進步', '反義', ['退步', '提升', '躍進'], 0], ['希望', '近義', ['盼望', '失望', '絕望'], 0],
+            ['勝利', '反義', ['失敗', '成功', '贏得'], 0], ['愛護', '近義', ['愛惜', '破壞', '損毀'], 0], ['強大', '反義', ['弱小', '巨大', '勇敢'], 0],
+            ['清晰', '近義', ['清楚', '模糊', '暗淡'], 0], ['溫暖', '反義', ['寒冷', '炎熱', '舒適'], 0], ['奇怪', '近義', ['奇特', '平常', '普通'], 0],
+            ['堅強', '反義', ['軟弱', '剛強', '固執'], 0], ['豐富', '反義', ['貧乏', '充足', '多樣'], 0], ['經常', '近義', ['常常', '偶爾', '從不'], 0],
+            ['安靜', '近義', ['寧靜', '喧嘩', '吵鬧'], 0], ['新穎', '反義', ['陳舊', '先進', '奇特'], 0], ['著名', '近義', ['出名', '無名', '普通'], 0],
+            ['讚美', '反義', ['批評', '表揚', '歌頌'], 0], ['迅速', '近義', ['快速', '緩慢', '遲鈍'], 0], ['龐大', '反義', ['微小', '巨大', '宏偉'], 0],
+            ['歡樂', '近義', ['快樂', '悲哀', '痛苦'], 0], ['誠實', '反義', ['虛偽', '老實', '坦白'], 0], ['茂盛', '近義', ['茂密', '枯萎', '凋零'], 0],
+            ['危險', '反義', ['安全', '可怕', '驚險'], 0], ['漆黑', '近義', ['黑暗', '明亮', '雪白'], 0], ['驕傲', '反義', ['謙虛', '自大', '自滿'], 0],
+            ['遙遠', '近義', ['長遠', '附近', '周圍'], 0]
+        ].map(item => ['c-synant', 'c-synant', '請仔細思考詞語的意思。', `選出「${item[0]}」的${item[1]}詞。`, item[2], item[3], '詞義替換練習。']);
+
+        const meaningData = [
+            ['聽到好消息，大家都___。', ['高興', '傷心', '憤怒'], 0], ['問題太___，沒人能回答。', ['困難', '容易', '簡單'], 0],
+            ['警察十分___地捉賊。', ['勇敢', '膽小', '害怕'], 0], ['我們應該___老師教導。', ['聽從', '違背', '忘記'], 0],
+            ['花園開滿了___的花朵。', ['美麗', '枯萎', '醜陋'], 0], ['做錯事感到非常___。', ['慚愧', '驕傲', '自豪'], 0],
+            ['努力後終於取得___。', ['成功', '失敗', '退步'], 0], ['圖書館藏書十分___。', ['豐富', '貧乏', '缺少'], 0],
+            ['題目很___，一分鐘做完。', ['簡單', '深奧', '複雜'], 0], ['下著大雨，___他準時到。', ['但是', '所以', '因為'], 0],
+            ['他有禮貌，大家都___他。', ['喜歡', '討厭', '責罵'], 0], ['衣服款式___，沒人穿了。', ['過時', '流行', '新穎'], 0],
+            ['運動員在田徑場___奔跑。', ['飛快', '緩慢', '悠閒'], 0], ['要___時間，不要浪費。', ['珍惜', '浪費', '揮霍'], 0],
+            ['湯太___了，加點水。', ['鹹', '淡', '甜'], 0], ['佈滿烏雲，___要下雨。', ['看來', '結果', '雖然'], 0],
+            ['怕被罵，於是___起來。', ['躲藏', '炫耀', '展示'], 0], ['高山十分___，難爬。', ['陡峭', '平坦', '矮小'], 0],
+            ['菜散發出___的香味。', ['誘人', '難聞', '刺鼻'], 0], ['大家要___同學。', ['友愛', '欺負', '排擠'], 0],
+            ['這是一件___的事情。', ['機密', '公開', '普遍'], 0], ['塞車，我們___遲到了。', ['結果', '終於', '否則'], 0],
+            ['他不僅聰明，___用功。', ['而且', '但是', '如果'], 0], ['太久沒人住，佈滿___。', ['灰塵', '鮮花', '陽光'], 0],
+            ['大家一起___難題。', ['討論', '放棄', '逃避'], 0], ['病終於___了。', ['痊癒', '加重', '傳染'], 0],
+            ['保持課室___。', ['清潔', '混亂', '吵鬧'], 0], ['小狗___地看著骨頭。', ['渴望', '可憐', '貪婪'], 0],
+            ['這是一場___的比賽。', ['激烈', '沉悶', '輕鬆'], 0], ['他做事___，不出錯。', ['謹慎', '馬虎', '急躁'], 0],
+            ['太陽光十分___。', ['刺眼', '溫和', '柔和'], 0], ['他___地看著這幅畫。', ['專注', '隨便', '散漫'], 0],
+            ['這條河的水很___。', ['清澈', '渾濁', '骯髒'], 0], ['我們對未來充滿___。', ['憧憬', '絕望', '悲觀'], 0],
+            ['他在比賽中表現___。', ['出色', '平常', '糟糕'], 0], ['這座大樓設計___。', ['獨特', '普通', '一般'], 0],
+            ['他___地接受了建議。', ['欣然', '勉強', '拒絕'], 0], ['這裡的風景令人___。', ['陶醉', '討厭', '厭惡'], 0],
+            ['他___地走上頒獎台。', ['自豪', '自卑', '羞愧'], 0], ['我們必須___規則。', ['遵守', '違反', '破壞'], 0],
+            ['這件禮物很___。', ['珍貴', '廉價', '便宜'], 0], ['他對學習很___。', ['熱忱', '冷淡', '敷衍'], 0],
+            ['大家___地鼓掌。', ['熱烈', '冷清', '微弱'], 0], ['這項任務十分___。', ['艱鉅', '輕鬆', '容易'], 0],
+            ['他___地完成了工作。', ['順利', '艱難', '勉強'], 0]
+        ].map(item => ['c-meaning', 'c-meaning', '根據語境，選出最適合的詞語填空。', item[0], item[1], item[2], '詞彙運用']);
+
+        const collocData = [
+            ['我們從小就應該___良好的習慣。', ['養成', '發揮', '提高'], 0],
+            ['這項活動能___學生的創造力。', ['培養', '發揮', '增加'], 0],
+            ['政府正努力___市民的生活。', ['改善', '改變', '改正'], 0],
+            ['大家要___自己的長處。', ['發揮', '發現', '發展'], 0],
+            ['他努力___了自己的缺點。', ['克服', '改善', '越過'], 0],
+            ['我們要___公物，不可破壞。', ['愛護', '愛心', '愛惜'], 0],
+            ['這場雨下得真___，街道都水浸了。', ['大', '好', '快'], 0],
+            ['他以___的成績考入大學。', ['優良', '優美', '優雅'], 0],
+            ['這是一首旋律___的歌曲。', ['優美', '優良', '優秀'], 0],
+            ['這支隊伍的實力非常___。', ['強大', '強烈', '強壯'], 0],
+            ['他對科學有著___的興趣。', ['濃厚', '深厚', '強烈'], 0],
+            ['這本書的內容十分___。', ['豐富', '豐滿', '豐收'], 0],
+            ['我們應該___交通規則。', ['遵守', '遵照', '遵從'], 0],
+            ['遇到火警時，要保持___。', ['鎮定', '安靜', '冷淡'], 0],
+            ['這座城市的夜景十分___。', ['迷人', '誘人', '驚人'], 0],
+            ['這篇文章表達了___的情感。', ['真摯', '真實', '真正'], 0],
+            ['他___了一個重要的決定。', ['作出', '做出', '造成'], 0],
+            ['這家餐廳的服務態度很___。', ['良好', '優良', '善良'], 0],
+            ['我們要___同學間的友誼。', ['增進', '增加', '增長'], 0],
+            ['這發明___了人類的發展。', ['推動', '推行', '推廣'], 0],
+            ['老師幫我___了功課上的錯誤。', ['糾正', '改正', '改變'], 0],
+            ['我們在學校___豐富的知識。', ['吸收', '吸取', '吸引'], 0],
+            ['從失敗中___寶貴的經驗。', ['汲取', '吸取', '吸入'], 0],
+            ['旅行可以___我們的視野。', ['開闊', '打開', '擴大'], 0],
+            ['聽古典音樂能___身心。', ['陶冶', '陶醉', '培養'], 0],
+            ['他終於___了這項艱鉅的任務。', ['完成', '完結', '完畢'], 0],
+            ['經過努力，他___了預定的目標。', ['達到', '到達', '來到'], 0],
+            ['只要不放棄，就能___困難。', ['戰勝', '打敗', '越過'], 0],
+            ['這件產品完全___安全要求。', ['符合', '適合', '配合'], 0],
+            ['做錯事要勇於___責任。', ['承擔', '承諾', '承受'], 0],
+            ['每個公民都可以___投票權利。', ['行使', '實行', '使用'], 0],
+            ['我們必須___合約上的義務。', ['履行', '實行', '執行'], 0],
+            ['我們要___尊師重道的精神。', ['發揚', '發明', '發現'], 0],
+            ['我們應該___優良的傳統。', ['繼承', '繼受', '繼續'], 0],
+            ['他們___了令人驚嘆的歷史。', ['創造', '發明', '製作'], 0],
+            ['這位運動員___了新的奇蹟。', ['創造', '製造', '製作'], 0],
+            ['大家同心協力___難關。', ['度過', '渡過', '走過'], 0],
+            ['我們在海邊___了快樂的時光。', ['度過', '渡過', '走過'], 0],
+            ['他的幽默___了尷尬的危機。', ['化解', '解決', '解答'], 0],
+            ['我們應該好好___同學間的矛盾。', ['化解', '解決', '解答'], 0]
+        ].map(item => ['c-colloc', 'c-colloc', '選出最合適的詞語搭配。', item[0], item[1], item[2], '固定搭配考驗。']);
+
+        const idiomData = [
+            ['鴉雀無聲', '非常安靜，連烏鴉和麻雀的聲音都沒有。', '圖書館裡大家都在看書，課室裡___。', ['鴉雀無聲', '人山人海', '五顏六色']],
+            ['人山人海', '形容人非常多。', '花市裡到處都是人，真是___。', ['人山人海', '井井有條', '一乾二淨']],
+            ['五光十色', '形容顏色鮮豔豐富。', '花園裡開滿了___的花朵。', ['五光十色', '一心一意', '半途而廢']],
+            ['專心致志', '形容非常集中精神。', '上課時，同學們都___地聽講。', ['專心致志', '粗心大意', '手忙腳亂']],
+            ['粗心大意', '指做事不細心。', '他做功課總是___，經常寫錯字。', ['粗心大意', '一絲不苟', '精益求精']],
+            ['目瞪口呆', '形容驚訝或看呆了。', '魔術師的表演令人___。', ['目瞪口呆', '愁眉苦臉', '垂頭喪氣']],
+            ['井井有條', '形容整齊有條理。', '他的書桌總是收拾得___。', ['井井有條', '亂七八糟', '東歪西倒']],
+            ['半途而廢', '指中途放棄。', '我們做事要有恆心，不可___。', ['半途而廢', '持之以恆', '自強不息']],
+            ['五彩繽紛', '形容色彩繁多而美麗。', '天空出現了一道___的彩虹。', ['五彩繽紛', '烏雲密佈', '一毛不拔']],
+            ['愁眉苦臉', '形容擔憂或不開心的樣子。', '聽到這個壞消息，大家都___。', ['愁眉苦臉', '喜笑顏開', '眉飛色舞']],
+            ['垂頭喪氣', '形容因失敗而灰心失望的樣子。', '考試不及格，小明___地回家。', ['垂頭喪氣', '興高采烈', '神采飛揚']],
+            ['同心協力', '指大家團結一致。', '大家互相合作，___完成任務。', ['同心協力', '自私自利', '袖手旁觀']],
+            ['一乾二淨', '形容非常乾淨。', '他把地上的垃圾清理得___。', ['一乾二淨', '亂七八糟', '面目全非']],
+            ['愛不釋手', '形容非常喜愛。', '這隻小狗十分可愛，令人___。', ['愛不釋手', '咬牙切齒', '怒氣沖沖']],
+            ['手忙腳亂', '形容慌亂的樣子。', '他因為趕時間出門，弄得___。', ['手忙腳亂', '從容不迫', '氣定神閒']],
+            ['不屈不撓', '形容意志堅強。', '只要我們___，不怕困難一定成功。', ['不屈不撓', '知難而退', '半途而廢']],
+            ['豐富多彩', '形容內容充實多樣。', '這篇文章寫得很生動，內容___。', ['豐富多彩', '枯燥無味', '千篇一律']],
+            ['固執己見', '指堅持自己的意見。', '他總是___，不願意聽別人的意見。', ['固執己見', '虛心受教', '從善如流']],
+            ['措手不及', '指來不及應付。', '這件事情太突然了，讓我___。', ['措手不及', '胸有成竹', '早有準備']],
+            ['推卸責任', '指把錯誤推給別人。', '做錯事要勇於承認，不要___。', ['推卸責任', '勇於承擔', '改過自新']],
+            ['人云亦云', '指沒有主見，隨聲附和。', '他做事總是___，沒有自己的主見。', ['人云亦云', '堅持己見', '獨排眾議']],
+            ['妙筆生花', '形容寫作或繪畫技巧高超。', '這幅畫畫得栩栩如生，真是___。', ['妙筆生花', '畫蛇添足', '信口開河']],
+            ['有條不紊', '形容做事有條理。', '他雖然年紀小，但做事卻___。', ['有條不紊', '亂七八糟', '雜亂無章']],
+            ['獨具匠心', '形容設計獨特巧妙。', '這座建築物設計得___，令人讚嘆。', ['獨具匠心', '千篇一律', '平淡無奇']],
+            ['廢寢忘食', '形容非常專心努力。', '他每天都___地學習，成績進步很大。', ['廢寢忘食', '游手好閒', '無所事事']],
+            ['煥然一新', '形容呈現出嶄新的面貌。', '經過大掃除，課室變得___。', ['煥然一新', '面目全非', '烏煙瘴氣']],
+            ['光明磊落', '形容人品高尚坦白。', '他為人___，從不說謊。', ['光明磊落', '鬼鬼祟祟', '暗箭傷人']],
+            ['家喻戶曉', '指每家每戶都知道。', '這件事情已經___，大家都知道了。', ['家喻戶曉', '默默無聞', '無人問津']],
+            ['屢敗屢戰', '形容不怕失敗，堅持奮鬥。', '他雖然失敗了多次，但依然___。', ['屢敗屢戰', '一蹶不振', '心灰意冷']],
+            ['回味無窮', '形容事物意味深長。', '這道菜的味道真是___。', ['回味無窮', '平淡無奇', '難以下嚥']],
+            ['三心兩意', '形容意志不堅定。', '他做事總是___，結果什麼都做不好。', ['三心兩意', '一心一意', '全心全意']],
+            ['道聽途說', '指沒有根據的傳聞。', '我們不能___，要根據實際情況判斷。', ['道聽途說', '實事求是', '明辨是非']],
+            ['包羅萬象', '形容內容豐富，無所不有。', '這本書的內容___，讓我學到很多。', ['包羅萬象', '空洞無物', '言之無物']],
+            ['迎難而上', '指不怕困難，勇敢前進。', '他遇到困難時總是___。', ['迎難而上', '知難而退', '畏首畏尾']],
+            ['萬事俱備', '形容一切準備妥當。', '這項計劃已經___，很快能實施。', ['萬事俱備', '準備不足', '手忙腳亂']],
+            ['一籌莫展', '形容毫無辦法。', '他對這件事情___，不知道該怎麼辦。', ['一籌莫展', '胸有成竹', '得心應手']],
+            ['截然不同', '形容完全不一樣。', '這兩個人的性格___，完全不同。', ['截然不同', '一模一樣', '大同小異']],
+            ['引人入勝', '形容特別吸引人。', '他講的故事___，大家都聽入迷了。', ['引人入勝', '平淡無奇', '索然無味']],
+            ['捕風捉影', '比喻沒有確鑿的根據。', '我們不能___，要眼見為實。', ['捕風捉影', '實地考察', '親身經歷']],
+            ['獨一無二', '形容非常稀有。', '這件藝術品真是___，找不出第二件。', ['獨一無二', '隨處可見', '比比皆是']],
+            ['弄巧成拙', '指本想耍弄聰明，結果做了蠢事。', '他雖然很聰明，但有時也會___。', ['弄巧成拙', '錦上添花', '雪中送炭']],
+            ['和衷共濟', '比喻同心協力，克服困難。', '我們大家要___，共同度過難關。', ['和衷共濟', '分道揚鑣', '各奔東西']],
+            ['刻不容緩', '形容情勢十分緊迫。', '這件事情已經到了___的地步。', ['刻不容緩', '從容不迫', '不慌不忙']],
+            ['搬弄是非', '指在別人背後說壞話挑拔。', '他總是___，喜歡在別人背後說壞話。', ['搬弄是非', '光明正大', '坦坦蕩蕩']],
+            ['無懈可擊', '形容十分嚴密，找不到漏洞。', '這個計劃___，考慮到了所有細節。', ['無懈可擊', '漏洞百出', '破綻百出']],
+            ['殫精竭慮', '形容耗盡精力，費盡心思。', '他為了這項研究___，付出了心血。', ['殫精竭慮', '敷衍了事', '得過且過']],
+            ['別具一格', '指另有一種獨特的風格。', '這本書的觀點___，讓人耳目一新。', ['別具一格', '老生常談', '拾人牙慧']],
+            ['盲人摸象', '比喻憑片面了解下結論。', '我們不能___，要看到事物的全貌。', ['盲人摸象', '高瞻遠矚', '洞察秋毫']],
+            ['顧此失彼', '指顧了這個，丟了那個。', '他做事總是___，結果什麼都沒做好。', ['顧此失彼', '面面俱到', '十全十美']],
+            ['群策群力', '指發揮集體的智慧和力量。', '這項工程需要大家___才能完成。', ['群策群力', '孤軍奮戰', '單打獨鬥']]
+        ].map(item => ['c-idiom', 'c-idiom', '選出適合的成語填空。', item[2], item[3], 0, `${item[0]}：${item[1]}`, `💡 提示：這個成語的意思是「${item[1]}」`]);
+
+        const rawQuestData = [...picData, ...measureData, ...similarData, ...typoData, ...synantData, ...meaningData, ...collocData, ...idiomData];
+
+        let userProgress = JSON.parse(localStorage.getItem('stdQuestProgress')) || new Array(300).fill(0);
+        let currentQuestionIdx = -1;
+
+        function renderDirectory() {
+            const dirContainer = document.getElementById('directory-content');
+            let html = '';
+            categories.forEach(cat => {
+                html += `<div class="mb-6"><h3 class="text-xl font-bold text-${cat.color}-700 mb-3 border-b-2 border-${cat.color}-100 pb-2">${cat.title}</h3><div class="flex flex-wrap gap-3">`;
+                rawQuestData.forEach((q, idx) => {
+                    if(q[1] === cat.id) {
+                        let status = userProgress[idx];
+                        let btnClass = 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50';
+                        let icon = (idx + 1);
+
+                        if (status === 1) {
+                            btnClass = 'bg-yellow-100 border-yellow-400 text-yellow-700';
+                            icon = '🌟';
+                        } else if (status === 2) {
+                            btnClass = 'bg-emerald-100 border-emerald-400 text-emerald-700';
+                            icon = '✅';
+                        } else if (status === -1) {
+                            btnClass = 'bg-rose-100 border-rose-400 text-rose-700';
+                            icon = '❌';
+                        }
+
+                        html += `<button onclick="startQuestion(${idx})" class="lvl-btn ${btnClass} w-12 h-12 lg:w-14 lg:h-14 rounded-xl font-black text-base lg:text-lg border-b-4 flex items-center justify-center shadow-sm">${icon}</button>`;
+                    }
+                });
+                html += `</div></div>`;
+            });
+            dirContainer.innerHTML = html;
+            updateTotalProgress();
+        }
+
+        function updateTotalProgress() {
+            let solved = userProgress.filter(p => p === 1 || p === 2).length;
+            let percent = (solved / 300) * 100;
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+
+        function startQuestion(idx) {
+            typoStep = 1; 
+            currentQuestionMistakes = 0; 
+            currentQuestionIdx = idx;
+            document.getElementById('quest-directory').style.display = 'none';
+            const questPlay = document.getElementById('quest-play');
+            questPlay.style.display = 'flex';
+            document.getElementById('main-scroll-area').scrollTop = 0;
+            
+            const qData = rawQuestData[idx];
+            const qType = qData[0];
+            const qCatTitle = categories.find(c => c.id === qData[1]).title;
+            const qTask = qData[2];
+            let qSentence, options, ansIdx, typoChar, extraData;
+
+            if (qType === 'c-typo') {
+                qSentence = qData[3];
+                typoChar = qData[4];
+                options = qData[5];
+                ansIdx = qData[6];
+            } else {
+                qSentence = qData[3];
+                options = qData[4];
+                ansIdx = qData[5];
+                extraData = qData[7]; 
+            }
+
+            let ttsText = qSentence.replace('___', '什麼');
+            if (qType === 'c-synant') ttsText = qTask + " " + qSentence; 
+            if (qType === 'c-typo') ttsText = qTask + " " + qSentence;
+
+            let html = `
+                <div class="w-full flex justify-between items-center mb-4">
+                    <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
+                    <span class="bg-blue-100 text-blue-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${idx + 1} 題 / 共 300 題</span>
+                </div>
+                
+                <div class="slide-up w-full bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center relative transition-all duration-500">
+                    <span class="absolute -top-4 bg-blue-600 text-white px-5 py-1.5 rounded-full font-bold shadow-md text-sm md:text-base">
+                        ${qCatTitle}
+                    </span>
+                    
+                    <div class="w-full flex items-center gap-3 mt-4 mb-6">
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm font-bold whitespace-nowrap">任務</span>
+                        <h2 class="text-lg md:text-xl font-bold text-slate-600">${qTask}</h2>
+                    </div>
+            `;
+
+            if (qType === 'c-pic' && extraData) {
+                html += `<div class="text-8xl md:text-9xl mb-6 bg-amber-50 p-8 rounded-3xl border-4 border-amber-200 w-full text-center shadow-inner select-none cursor-default">${extraData}</div>`;
+            } else if (qType === 'c-measure' && extraData) {
+                html += `<div class="text-7xl md:text-8xl mb-6 text-center animate-bounce drop-shadow-md cursor-default select-none">${extraData}</div>`;
+            } else if (qType === 'c-idiom' && extraData) {
+                html += `
+                    <div class="w-full flex justify-center mb-6">
+                        <button onclick="document.getElementById('idiom-hint').classList.toggle('hidden')" class="bg-orange-100 text-orange-700 font-bold px-6 py-2 rounded-xl border-2 border-orange-300 hover:bg-orange-200 transition shadow-sm flex items-center gap-2">
+                            💡 需要提示嗎？點擊看成語解釋
+                        </button>
+                    </div>
+                    <div id="idiom-hint" class="hidden mb-6 bg-yellow-50 text-yellow-800 p-5 rounded-2xl border-2 border-yellow-200 shadow-inner font-bold text-lg w-full leading-relaxed text-center">
+                        ${extraData}
+                    </div>
+                `;
+            }
+
+            if (qType === 'c-typo') {
+                let sentenceHtml = '';
+                for(let char of qSentence) {
+                    if(/[，。、？！]/.test(char)) {
+                        sentenceHtml += char;
+                    } else {
+                        sentenceHtml += `<span onclick="checkTypoChar(this, '${char}', '${typoChar}')" class="cursor-pointer hover:bg-rose-200 px-1 rounded transition">${char}</span>`;
+                    }
+                }
+                
+                html += `
+                    <div class="w-full flex items-start gap-4 mb-8 bg-blue-50 p-6 rounded-2xl border border-blue-100 shadow-inner">
+                        <button onclick="speakText('${ttsText}')" class="tts-btn flex-shrink-0 bg-white text-blue-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-blue-200">🔊</button>
+                        <div class="text-2xl md:text-3xl font-bold text-slate-800 leading-loose">${sentenceHtml}</div>
+                    </div>
+                    <div class="flex flex-col gap-3 w-full max-w-lg mt-auto" id="options-container">
+                        <div class="text-center text-rose-500 font-bold text-xl animate-pulse bg-rose-50 py-4 rounded-xl border border-rose-200">👆 步驟一：請在上方句子中找出並點擊「錯別字」</div>
+                    </div>
+                `;
+            } else {
+                let sentenceHtml = qSentence.replace('___', '<span class="text-orange-500 border-b-4 border-orange-500 px-6 font-black bg-orange-50">?</span>');
+                html += `
+                    <div class="w-full flex items-start gap-4 mb-8 bg-blue-50 p-6 rounded-2xl border border-blue-100 shadow-inner">
+                        <button onclick="speakText('${ttsText}')" class="tts-btn flex-shrink-0 bg-white text-blue-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-blue-200">🔊</button>
+                        <div class="text-2xl md:text-3xl font-bold text-slate-800 leading-loose">${sentenceHtml}</div>
+                    </div>
+
+                    <div class="flex flex-col gap-3 w-full max-w-lg mt-auto" id="options-container">
+                `;
+                options.forEach((optText, oIdx) => {
+                    const isCorr = (oIdx === ansIdx);
+                    html += `<button onclick="checkAnswer(this, ${isCorr})" class="option-btn bg-white border-2 border-slate-200 text-slate-700 text-xl font-bold py-4 rounded-xl hover:bg-slate-50 transition w-full text-center">${optText}</button>`;
+                });
+                html += `</div>`;
+            }
+
+            html += `
+                <div id="post-answer-view" class="hidden w-full flex-col items-center mt-6 pt-6 border-t border-slate-200">
+                    <h3 class="text-xl font-bold text-blue-600 mb-4">✨ 一起來學寫正確的字吧！</h3>
+                    <div id="post-canvas" class="w-48 h-48 mi-zi-ge mb-4 touch-none"></div>
+                    <div class="flex gap-4 w-full max-w-[400px]">
+                        <button onclick="backToDirectory()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition text-lg">⬅️ 目錄</button>
+                        <button onclick="goToNextQuestion()" class="flex-[1.5] bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
+                    </div>
+                </div>
+            </div>`;
+
+            questPlay.innerHTML = html;
+        }
+
+        function checkTypoChar(element, char, typoChar) {
+            if (typoStep !== 1) return;
+            
+            if (char === typoChar) {
+                speakText("找對了！請選擇正確的字。");
+                typoStep = 2; 
+                
+                element.className = "text-rose-500 font-black border-b-4 border-rose-500 px-1 scale-110 inline-block bg-rose-100 rounded transition";
+                
+                const qData = rawQuestData[currentQuestionIdx];
+                const options = qData[5];
+                const ansIdx = qData[6];
+                
+                let optsHtml = `<div class="text-center text-emerald-600 font-bold text-lg mb-2">步驟二：「${typoChar}」是錯字！應該改成哪一個？</div>`;
+                options.forEach((optText, oIdx) => {
+                    const isCorr = (oIdx === ansIdx);
+                    optsHtml += `<button onclick="checkAnswer(this, ${isCorr})" class="option-btn bg-white border-2 border-slate-200 text-slate-700 text-xl font-bold py-4 rounded-xl hover:bg-slate-50 transition w-full text-center">${optText}</button>`;
+                });
+                document.getElementById('options-container').innerHTML = optsHtml;
+            } else {
+                speakText("這不是錯字喔，再找找看！");
+                element.classList.add('bg-rose-300', 'shake');
+                currentQuestionMistakes++; 
+                userProgress[currentQuestionIdx] = -1;
+                localStorage.setItem('stdQuestProgress', JSON.stringify(userProgress));
+                setTimeout(() => element.classList.remove('bg-rose-300', 'shake'), 500);
+            }
+        }
+
+        function backToDirectory() {
+            document.getElementById('quest-play').style.display = 'none';
+            document.getElementById('quest-directory').style.display = 'block';
+            renderDirectory();
+        }
+
+        function goToNextQuestion() {
+            let nextIdx = currentQuestionIdx + 1;
+            if (nextIdx < rawQuestData.length) {
+                startQuestion(nextIdx);
+            } else {
+                showToast("恭喜！這已經是最後一題囉！");
+                backToDirectory();
+            }
+        }
+
+        function backToDirectoryFromModal() {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                backToDirectory();
+            }, 300);
+        }
+
+        function checkAnswer(btnElement, isCorrect) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+            if (isCorrect) {
+                btnElement.classList.add('correct');
+                handleCorrectAnswer(false);
+            } else {
+                btnElement.classList.add('wrong', 'shake');
+                speakText("不對喔，請再試一次！");
+                currentQuestionMistakes++; 
+                userProgress[currentQuestionIdx] = -1;
+                localStorage.setItem('stdQuestProgress', JSON.stringify(userProgress));
+                
+                setTimeout(() => {
+                    btnElement.classList.remove('wrong', 'shake');
+                    allBtns.forEach(b => { if (!b.classList.contains('correct')) b.style.pointerEvents = 'auto'; });
+                }, 1500);
+            }
+        }
+
+        function handleCorrectAnswer(isWriteTask) {
+            const qData = rawQuestData[currentQuestionIdx];
+            const qType = qData[0];
+            const expText = qType === 'c-typo' ? qData[7] : qData[6];
+            
+            let targetChar = null;
+            if (qType === 'c-typo') targetChar = qData[5][qData[6]].charAt(0);
+            else if (qData[8]) targetChar = qData[8]; 
+
+            if (!isWriteTask) {
+                speakText("答對了！" + expText);
+            }
+            
+            let finalStatus = currentQuestionMistakes === 0 ? 1 : 2;
+            let previousStatus = userProgress[currentQuestionIdx];
+            let expGained = 0;
+
+            if (previousStatus !== 1 && previousStatus !== 2) {
+                expGained = finalStatus === 1 ? 20 : 10;
+            } else if (previousStatus === 2 && finalStatus === 1) {
+                expGained = 10; 
+            }
+
+            if (expGained > 0) {
+                stdExp += expGained;
+                localStorage.setItem('stdExp', stdExp);
+                document.getElementById('exp-display').innerText = stdExp;
+                document.getElementById('exp-display').classList.add('pop');
+                setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+            }
+
+            if (finalStatus === 1 || previousStatus !== 1) {
+                userProgress[currentQuestionIdx] = finalStatus;
+                localStorage.setItem('stdQuestProgress', JSON.stringify(userProgress));
+            }
+
+            let modalIcon = finalStatus === 1 ? '🌟' : '✅';
+            let modalTitle = finalStatus === 1 ? '完美答對！' : '成功過關！';
+            
+            let expMsg = "";
+            if (expGained > 0) {
+                if (finalStatus === 1) {
+                    expMsg = `<span class="text-blue-600 block text-xl mb-3">一次答對！獲得 20 點經驗值 ✨</span>`;
+                } else {
+                    expMsg = `<span class="text-emerald-600 block text-xl mb-3">經嘗試後答對！獲得 10 點經驗值 ✨</span>`;
+                }
+            } else {
+                expMsg = `<span class="text-slate-500 block text-lg mb-3">這題已經成功過關囉！</span>`;
+            }
+            
+            let combinedDesc = expMsg + expText;
+
+            if (!isWriteTask && targetChar && (qType === 'c-pic' || qType === 'c-similar' || qType === 'c-typo')) {
+                setTimeout(() => {
+                    const optionsContainer = document.getElementById('options-container');
+                    if (optionsContainer) optionsContainer.classList.add('hidden');
+                    
+                    const postView = document.getElementById('post-answer-view');
+                    if (postView) {
+                        postView.classList.remove('hidden');
+                        postView.classList.add('flex', 'slide-up');
+                        
+                        document.getElementById('post-canvas').innerHTML = ''; 
+                        try {
+                            const postWriter = HanziWriter.create('post-canvas', targetChar, {
+                                width: 192, height: 192, padding: 10, strokeAnimationSpeed: 1, delayBetweenStrokes: 100,
+                                strokeColor: '#1e293b', radicalColor: '#3b82f6'
+                            });
+                            setTimeout(() => postWriter.animateCharacter(), 500);
+                        } catch(e) {
+                            showModal(modalIcon, modalTitle, combinedDesc);
+                        }
+                    } else {
+                        showModal(modalIcon, modalTitle, combinedDesc);
+                    }
+                }, 1000);
+            } else {
+                setTimeout(() => { showModal(modalIcon, modalTitle, combinedDesc); }, 1000);
+            }
+        }
+
+        function showModal(icon, title, desc) {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            document.getElementById('feedback-icon').innerText = icon;
+            document.getElementById('feedback-title').innerText = title;
+            document.getElementById('feedback-desc').innerHTML = desc;
+            
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.onclick = () => {
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-90');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    goToNextQuestion();
+                }, 300);
+            };
+
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+        }
+
+        // ================= 3. 無盡字庫寫字板 (進階字彙 + 英文解釋) =================
+        const rawWordData = "nature|霧:雨:Fog,露:雨:Dew,霞:雨:Sunset clouds,雷:雨:Thunder,電:雨:Electricity,峰:山:Peak,嶺:山:Ridge,崖:山:Cliff,泉:水:Spring,瀑:水:Waterfall,溪:水:Stream,潮:水:Tide,濤:水:Waves,旱:日:Drought,晨:日:Morning,暮:日:Dusk|person|腦:頁:Brain,肺:肉:Lung,胃:肉:Stomach,腸:肉:Intestine,膚:皮:Skin,骨:骨:Bone,脈:肉:Vein,額:頁:Forehead,頸:頁:Neck,肩:肉:Shoulder,臂:肉:Arm,腿:肉:Leg,智:日:Wisdom,慧:心:Intelligence|action|觀:見:Observe,聽:耳:Listen,思:心:Think,探:手:Explore,創:刀:Create,駕:馬:Drive,航:舟:Sail,藏:艸:Hide,找:手:Search,救:攴:Save,毀:殳:Destroy,建:廴:Build,測:水:Measure|object|鏡:金:Mirror,鐘:金:Clock,錶:金:Watch,鍵:金:Key,盤:皿:Plate,碗:石:Bowl,筷:竹:Chopsticks,劍:刀:Sword,盾:目:Shield,箭:竹:Arrow,箱:竹:Box,櫃:木:Cabinet,琴:玉:Piano,棋:木:Chess|emotion|憤:心:Angry,恨:心:Hate,愁:心:Worry,悲:心:Sad,恐:心:Fear,懼:心:Dread,慕:心:Admire,戀:心:Love,慰:心:Comfort,愧:心:Ashamed,驚:馬:Surprised,喜:口:Joy,怒:心:Anger,哀:口:Sorrow|time|年:干:Year,月:月:Month,日:日:Day,時:日:Hour,分:刀:Minute,秒:禾:Second,早:日:Early,晚:日:Late,晝:日:Daytime,夜:夕:Night,春:日:Spring,夏:夊:Summer,秋:禾:Autumn,冬:冫:Winter";
+
+        let parsedWords = [];
+        rawWordData.split('|').forEach((chunk, index, arr) => {
+            if(index % 2 === 0) {
+                let cat = chunk;
+                let pairs = arr[index+1].split(',');
+                pairs.forEach(p => { 
+                    let [char, rad, eng] = p.split(':'); 
+                    if (char && rad) parsedWords.push({ cat, char, rad, eng }); 
+                });
+            }
+        });
+
+        let sbWriter;
+        let isSandboxInitialized = false;
+
+        function initSandbox() { filterWords('all'); }
+
+        function filterWords(category) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('filter-active', 'bg-blue-600', 'text-white');
+                btn.classList.add('bg-slate-50', 'text-slate-600');
+            });
+            let activeBtn = document.getElementById('flt-' + category);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-slate-50', 'text-slate-600');
+                activeBtn.classList.add('filter-active');
+            }
+
+            const grid = document.getElementById('word-grid');
+            let html = '';
+            parsedWords.forEach((item) => {
+                if (category === 'all' || item.cat === category) {
+                    const itemStr = encodeURIComponent(JSON.stringify(item));
+                    html += `<button onclick="selectSandboxChar('${itemStr}')" class="bg-slate-50 border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-2xl lg:text-3xl font-bold py-3 lg:py-4 rounded-xl transition shadow-sm text-slate-700">${item.char}</button>`;
+                }
+            });
+            grid.innerHTML = html;
+        }
+
+        function searchCustomChar() {
+            const input = document.getElementById('custom-char-input').value.trim();
+            const chars = input.match(/[\u4e00-\u9fa5]/g);
+            if (!chars || chars.length === 0) { showToast("請輸入一個有效的中文字！"); return; }
+            selectSandboxChar(encodeURIComponent(JSON.stringify({ char: chars[0], rad: '檢索字', eng: 'Custom' })));
+            document.getElementById('custom-char-input').value = ''; 
+        }
+
+        function selectSandboxChar(itemStr) {
+            document.getElementById('sandbox-placeholder').classList.add('hidden');
+            document.getElementById('sandbox-content').classList.remove('hidden');
+            const data = JSON.parse(decodeURIComponent(itemStr));
+            document.getElementById('sb-char').innerText = data.char;
+            document.getElementById('sb-radical').innerText = data.rad;
+            document.getElementById('sb-english').innerText = data.eng || 'Translation';
+            document.getElementById('sb-feedback').style.opacity = '0';
+            speakText(data.char);
+
+            const canvasDiv = document.getElementById('sandbox-canvas');
+            canvasDiv.innerHTML = ''; 
+            const size = window.innerWidth < 768 ? 256 : 320; 
+            
+            try {
+                sbWriter = HanziWriter.create('sandbox-canvas', data.char, {
+                    width: size, height: size, padding: 15, strokeAnimationSpeed: 1, delayBetweenStrokes: 100,
+                    strokeColor: '#1e293b', radicalColor: '#2563eb', showHintAfterMisses: 2, leniency: 2.0,
+                    onLoadCharDataError: function(reason) {
+                        canvasDiv.innerHTML = `
+                            <div class="flex flex-col items-center justify-center h-full px-4 text-center">
+                                <span class="text-5xl mb-3">📭</span>
+                                <p class="text-rose-500 font-bold text-lg">系統字庫暫時未收錄「${data.char}」字的筆順資料喔！</p>
+                                <p class="text-slate-500 font-medium text-sm mt-2">請嘗試搜尋其他中文字。</p>
+                            </div>
+                        `;
+                        sbWriter = null;
+                    }
+                });
+            } catch(e) {
+                // Initial creation catch
+            }
+        }
+
+        function startSandboxQuiz() {
+            if (!sbWriter) { showToast("這個字沒有筆順資料，無法練習試寫喔！"); return; }
+            document.getElementById('sb-feedback').style.opacity = '0';
+            sbWriter.quiz({
+                onMistake: function() {
+                    const fb = document.getElementById('sb-feedback');
+                    fb.innerText = "❌ 筆順不正確！";
+                    fb.className = "mt-4 text-lg font-bold text-rose-500 h-8 transition-opacity opacity-100 shake";
+                    speakText("筆順不正確");
+                    setTimeout(() => fb.classList.remove('shake'), 400);
+                },
+                onComplete: function() {
+                    const fb = document.getElementById('sb-feedback');
+                    fb.innerText = "✨ 書寫正確！(獲得 5 EXP)";
+                    fb.className = "mt-4 text-xl font-bold text-blue-600 h-8 transition-opacity opacity-100 pop";
+                    speakText("書寫正確！");
+                    stdExp += 5;
+                    localStorage.setItem('stdExp', stdExp);
+                    document.getElementById('exp-display').innerText = stdExp;
+                    document.getElementById('exp-display').classList.add('pop');
+                    setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+                }
+            });
+        }
+
+        window.onload = function() {
+            document.getElementById('exp-display').innerText = stdExp;
+            switchMode('quest'); 
+            renderDirectory();
+            document.getElementById('custom-char-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') searchCustomChar();
+            });
+        }
+    </script>
+</body>
+</html>
