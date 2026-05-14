@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>句子與語法 - 基礎趣味訓練</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif;
+            background-color: #f0fdfa; /* 溫暖的淺草綠色 */
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .bg-grid-pattern {
+            background-image: linear-gradient(to right, #ccfbf1 1px, transparent 1px), linear-gradient(to bottom, #ccfbf1 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .pop { animation: pop 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .option-btn { transition: all 0.2s; box-shadow: 0 4px 0 #94a3b8; }
+        .option-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .option-btn.correct { background-color: #d1fae5; border-color: #0d9488; color: #115e59; box-shadow: 0 0 0 transparent; transform: translateY(4px); pointer-events: none; }
+        .option-btn.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.6; pointer-events: none; }
+
+        /* 重組句子專用按鈕 */
+        .chunk-btn { transition: all 0.2s; box-shadow: 0 4px 0 #0f766e; }
+        .chunk-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .chunk-slot { transition: all 0.2s; border: 2px dashed #99f6e4; background-color: #f0fdfa; }
+        
+        .tts-btn { transition: transform 0.2s; }
+        .tts-btn:active { transform: scale(0.9); }
+
+        .lvl-btn { transition: transform 0.2s; }
+        .lvl-btn:hover { transform: scale(1.05); }
+
+        .toast-msg {
+            visibility: hidden; min-width: 250px; background-color: #ef4444; color: #fff; text-align: center;
+            border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px;
+            transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
+        @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
+
+    <!-- 頂部導覽列 (Teal 配色) -->
+    <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
+        <div class="p-3 lg:p-4 bg-teal-600 text-white flex justify-between items-center w-full">
+            <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
+                <a href="index.html" class="hover:bg-teal-700 p-1 rounded transition bg-teal-800">⬅️ 返回</a>
+                <span>📝 句子與語法 (基礎版)</span>
+            </h1>
+            <div class="flex gap-2 lg:gap-4 items-center bg-teal-800 px-3 py-1.5 rounded-full border border-teal-500 shadow-inner">
+                <span class="text-lg lg:text-xl">🏆</span>
+                <span class="font-bold text-sm lg:text-lg">EXP: <span id="exp-display" class="text-yellow-400">0</span></span>
+            </div>
+        </div>
+        
+        <div id="progress-container" class="w-full bg-slate-200 h-2">
+            <div id="progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
+        </div>
+    </div>
+
+    <!-- 主畫面區 -->
+    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
+        
+        <div id="quest-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
+            <!-- 目錄 -->
+            <div id="quest-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">🎯 基礎句型闖關地圖</h2>
+                
+                <div class="bg-teal-50 border border-teal-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
+                    <div class="text-teal-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
+                    <div class="flex flex-wrap gap-4 flex-1">
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-lg shadow-sm">🌟</span> 一次答對 (+15)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 嘗試後答對 (+5)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-rose-100 border-2 border-rose-400 flex items-center justify-center text-lg shadow-sm">❌</span> 未完成</div>
+                    </div>
+                </div>
+
+                <div id="directory-content" class="flex flex-col gap-8">
+                    <!-- 目錄動態生成 -->
+                </div>
+            </div>
+            
+            <!-- 答題區 -->
+            <div id="quest-play" class="w-full hidden flex-col items-center">
+                <!-- 題目動態生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 反饋 Modal -->
+    <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform" id="feedback-content">
+            <div id="feedback-icon" class="text-7xl mb-4">🎉</div>
+            <h2 id="feedback-title" class="text-3xl font-black text-slate-800 mb-2">答對了！</h2>
+            <div id="feedback-desc" class="text-slate-600 font-bold mb-6 text-lg leading-relaxed text-center"></div>
+            <div class="flex gap-3 w-full mt-4">
+                <button onclick="backToDirectoryFromModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition text-lg">⬅️ 目錄</button>
+                <button id="next-btn" class="flex-[1.5] bg-teal-600 hover:bg-teal-700 text-white font-black py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-teal-800 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-msg">提示訊息</div>
+
+    <script>
+        // ================= 1. 核心設定 =================
+        let sentExp = parseInt(localStorage.getItem('sentBasicExp')) || 0;
+        document.getElementById('exp-display').innerText = sentExp;
+        let currentQuestionMistakes = 0; 
+        
+        // 用於重組句子的狀態變數
+        let reorderSource = []; // 尚未被選的詞塊
+        let reorderTarget = []; // 已經選擇的詞塊
+        let reorderCorrect = []; // 正確的順序
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let msg = new SpeechSynthesisUtterance(text);
+                msg.lang = 'zh-HK';
+                msg.rate = 0.85; // 基礎版稍微放慢
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "toast-msg show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // ================= 2. 基礎語法題庫 =================
+        const categories = [
+            { id: 's-reorder-2', title: '🧩 簡單重組 (二素句)', color: 'emerald' },
+            { id: 's-reorder-2adv', title: '🧩 進階重組 (加形容詞)', color: 'teal' },
+            { id: 's-reorder-3', title: '🧩 複雜重組 (三素句)', color: 'cyan' },
+            { id: 's-reorder-4', title: '🧩 終極重組 (四素句)', color: 'indigo' },
+            { id: 's-fill', title: '📝 圖片配詞填充 (看圖選詞)', color: 'blue' },
+            { id: 's-babei', title: '🔄 把/被字句基礎 (選字填空)', color: 'amber' }
+        ];
+
+        // 資料產生器函數
+        function generateData(pool, category, task, count) {
+            let result = [];
+            for (let i = 0; i < count; i++) {
+                let item = pool[i % pool.length];
+                result.push({
+                    category: category,
+                    task: task,
+                    qData: item // 將完整 array 傳入
+                });
+            }
+            return result;
+        }
+
+        // --- 題型 A1：二素句重組池 (人物+動作) ---
+        const reorder2Pool = [
+            [['我', '在唱歌。'], '🎤'], [['弟弟', '在睡覺。'], '😴'], [['小鳥', '在飛。'], '🐦'], [['魚兒', '在游泳。'], '🐟'], [['老師', '在教書。'], '👨‍🏫'],
+            [['妹妹', '在畫畫。'], '🎨'], [['爸爸', '在喝茶。'], '🍵'], [['太陽', '出來了。'], '☀️'], [['下雨', '了。'], '☔'], [['花兒', '開了。'], '🌸'],
+            [['哥哥', '在跑步。'], '🏃'], [['貓咪', '伸懶腰。'], '🐈'], [['小狗', '在叫。'], '🐶'], [['風', '吹著。'], '🌬️'], [['寶寶', '在哭。'], '👶'],
+            [['青蛙', '在跳。'], '🐸'], [['樹葉', '落下來。'], '🍂'], [['雪', '下著。'], '❄️'], [['汽車', '在行駛。'], '🚗'], [['飛機', '起飛了。'], '✈️']
+        ];
+
+        // --- 題型 A2：二素句進階池 (加入形容詞) ---
+        const reorder2AdvPool = [
+            [['可愛的', '小貓', '在睡覺。'], '🐈'], [['紅紅的', '蘋果', '掉下來。'], '🍎'], [['美麗的', '蝴蝶', '在飛舞。'], '🦋'], [['明亮的', '星星', '在閃爍。'], '✨'], [['大大的', '氣球', '飛走了。'], '🎈'],
+            [['勤勞的', '農夫', '在工作。'], '👨‍🌾'], [['快樂的', '孩子', '在唱歌。'], '👦'], [['綠色的', '樹葉', '掉下來。'], '🍃'], [['凶猛的', '老虎', '在吼叫。'], '🐯'], [['白白的', '雲朵', '在飄動。'], '☁️'],
+            [['美味的', '蛋糕', '烤好了。'], '🍰'], [['調皮的', '弟弟', '在搗蛋。'], '😜'], [['高高的', '大樹', '倒下了。'], '🌳'], [['溫暖的', '太陽', '照耀著。'], '☀️'], [['清澈的', '河水', '流動著。'], '💧'],
+            [['漂亮的', '裙子', '弄髒了。'], '👗'], [['厚厚的', '書本', '掉到地上。'], '📚'], [['五彩的', '煙花', '升空了。'], '🎆'], [['冰涼的', '雪糕', '融化了。'], '🍦'], [['新鮮的', '果汁', '倒翻了。'], '🍹']
+        ];
+
+        // --- 題型 A3：三素句重組池 (人物 + 時間/地點/方式 + 動作/物件) ---
+        const reorder3Pool = [
+            [['我', '在公園', '玩耍。'], '⛲'], [['媽媽', '去市場', '買菜。'], '🛒'], [['哥哥', '在房間', '看書。'], '📖'], [['弟弟', '開心地', '吃雪糕。'], '🍦'], [['大家', '在操場', '做運動。'], '🏃'],
+            [['小狗', '在草地', '奔跑。'], '🐕'], [['爸爸', '早上', '喝咖啡。'], '☕'], [['我們', '一起去', '上學。'], '🏫'], [['妹妹', '專心地', '寫字。'], '✍️'], [['老師', '在黑板上', '寫字。'], '👨‍🏫'],
+            [['鳥兒', '在天空中', '飛翔。'], '🐦'], [['小貓', '在沙發上', '睡覺。'], '🛋️'], [['他們', '在海邊', '堆沙堡。'], '🏖️'], [['我', '每天', '做功課。'], '📝'], [['姐姐', '用心地', '彈鋼琴。'], '🎹'],
+            [['爺爺', '在公園裡', '散步。'], '🚶'], [['我們', '在餐廳', '吃晚餐。'], '🍽️'], [['農夫', '在農田', '種菜。'], '🥬'], [['消防員', '勇敢地', '救火。'], '🚒'], [['警察', '在街上', '巡邏。'], '👮']
+        ];
+
+        // --- 題型 A4：四素句重組池 (時間 + 人物 + 地點 + 動作) ---
+        const reorder4Pool = [
+            [['星期天，', '我們', '去公園', '野餐。'], '🧺'], [['昨天晚上，', '哥哥', '在房間裡', '看書。'], '📖'], [['放學後，', '同學們', '在操場上', '打籃球。'], '🏀'], [['今天早上，', '媽媽', '在廚房', '做早餐。'], '🍳'], [['暑假時，', '一家人', '去海邊', '游泳。'], '🏖️'],
+            [['週末時，', '爸爸', '在客廳', '看電視。'], '📺'], [['下課後，', '我', '在圖書館', '溫習。'], '📚'], [['昨天下午，', '姐姐', '在琴房', '彈鋼琴。'], '🎹'], [['新年時，', '大家', '在客廳裡', '拜年。'], '🧧'], [['秋天時，', '農夫', '在果園裡', '採蘋果。'], '🍎'],
+            [['晚飯後，', '爺爺', '在公園', '散步。'], '🚶'], [['小息時，', '大家', '在操場', '玩耍。'], '🏃'], [['明天早上，', '我們', '去動物園', '看大象。'], '🐘'], [['放假時，', '我', '在家裡', '玩玩具。'], '🧸'], [['清晨時，', '小鳥', '在樹上', '唱歌。'], '🐦'],
+            [['深夜裡，', '貓頭鷹', '在天空中', '飛翔。'], '🦉'], [['春天時，', '蝴蝶', '在花園裡', '飛舞。'], '🦋'], [['冬天時，', '我們', '在雪地裡', '堆雪人。'], '⛄'], [['下雨天，', '弟弟', '在家裡', '畫畫。'], '🎨'], [['黃昏時，', '漁夫', '在海邊', '捕魚。'], '🎣']
+        ];
+
+        // --- 題型 B：圖片配詞填充池 ---
+        // 格式: [題目句子(含___), Emoji, [選項1, 選項2], 正答索引]
+        const fillPool = [
+            ['小貓在草地上___。', '🐈', ['睡覺', '寫字'], 0],
+            ['天氣很熱，我想吃___。', '🥵', ['雪糕', '火鍋'], 0],
+            ['弟弟用___畫了一幅畫。', '🎨', ['顏色筆', '筷子'], 0],
+            ['晚上，天空中出現了___。', '🌃', ['月亮', '太陽'], 0],
+            ['我用___聽音樂。', '🎶', ['耳朵', '眼睛'], 0],
+            ['猴子最喜歡吃___。', '🐒', ['香蕉', '骨頭'], 0],
+            ['下雨了，我打開了___。', '🌧️', ['雨傘', '雪櫃'], 0],
+            ['這件衣服太___了，我不喜歡。', '👕', ['骯髒', '乾淨'], 0],
+            ['圖書館裡有很多___。', '📚', ['圖書', '玩具'], 0],
+            ['農夫在田裡辛勤地___。', '👨‍🌾', ['工作', '遊戲'], 0],
+            ['小白兔跑得十分___。', '🐇', ['快', '慢'], 0],
+            ['我們用___看東西。', '👀', ['眼睛', '鼻子'], 0],
+            ['這杯檸檬汁非常___。', '🍋', ['酸', '甜'], 0],
+            ['春天到了，樹木長出___的葉子。', '🌱', ['綠色', '黑色'], 0],
+            ['他生病了，所以要去___看醫生。', '🤒', ['醫院', '公園'], 0],
+            ['小鳥在天空中自由地___。', '🐦', ['飛翔', '游泳'], 0],
+            ['我在文具店買了一把___。', '📏', ['直尺', '蘋果'], 0],
+            ['過馬路要小心看紅綠___。', '🚦', ['燈', '車'], 0],
+            ['哥哥把地上的垃圾___起來。', '🗑️', ['撿', '扔'], 0],
+            ['媽媽煮的飯菜真___！', '🍲', ['美味', '難聽'], 0]
+        ];
+
+        // --- 題型 C：把/被字句基礎池 ---
+        // 格式: [題目句子(含___), Emoji, [選項1(被), 選項2(把)], 正答索引]
+        const babeiPool = [
+            ['弟弟___水杯打破了。', '💥', ['被', '把'], 1],
+            ['水杯___弟弟打破了。', '💥', ['被', '把'], 0],
+            ['小貓___魚吃光了。', '🐟', ['被', '把'], 1],
+            ['魚___小貓吃光了。', '🐟', ['被', '把'], 0],
+            ['大風___樹葉吹落了。', '🍂', ['被', '把'], 1],
+            ['樹葉___大風吹落了。', '🍂', ['被', '把'], 0],
+            ['老師___功課派發了。', '📝', ['被', '把'], 1],
+            ['功課___老師派發了。', '📝', ['被', '把'], 0],
+            ['警察___小偷抓住了。', '👮', ['被', '把'], 1],
+            ['小偷___警察抓住了。', '👮', ['被', '把'], 0],
+            ['我___房間打掃乾淨了。', '🧹', ['被', '把'], 1],
+            ['房間___我打掃乾淨了。', '🧹', ['被', '把'], 0],
+            ['烏雲___太陽遮住了。', '☁️', ['被', '把'], 1],
+            ['太陽___烏雲遮住了。', '☁️', ['被', '把'], 0],
+            ['媽媽___衣服洗好了。', '👕', ['被', '把'], 1],
+            ['衣服___媽媽洗好了。', '👕', ['被', '把'], 0],
+            ['大野狼___小羊吃掉了。', '🐺', ['被', '把'], 1],
+            ['小羊___大野狼吃掉了。', '🐺', ['被', '把'], 0],
+            ['我___這本書看完了。', '📖', ['被', '把'], 1],
+            ['這本書___我看完了。', '📖', ['被', '把'], 0]
+        ];
+
+        const rawQuestDataObj = [
+            ...generateData(reorder2Pool, 's-reorder-2', '二素句：將人物和動作排好。', 20),
+            ...generateData(reorder2AdvPool, 's-reorder-2adv', '二素句進階：加入形容詞排好句子。', 20),
+            ...generateData(reorder3Pool, 's-reorder-3', '三素句：把人物、地點/時間和動作排好。', 20),
+            ...generateData(reorder4Pool, 's-reorder-4', '四素句：依序把時間、人物、地點和事情排好。', 20),
+            ...generateData(fillPool, 's-fill', '看圖選出最適合的詞語填空。', 40),
+            ...generateData(babeiPool, 's-babei', '仔細看清楚動作是誰做的，選「把」或「被」。', 40)
+        ]; // 總共 160 題
+
+        // 進度追蹤
+        let userProgress = JSON.parse(localStorage.getItem('sentBasicProgress')) || new Array(rawQuestDataObj.length).fill(0);
+
+        function renderDirectory() {
+            const dirContainer = document.getElementById('directory-content');
+            let html = '';
+            categories.forEach(cat => {
+                html += `<div class="mb-6"><h3 class="text-xl font-bold text-${cat.color}-700 mb-3 border-b-2 border-${cat.color}-100 pb-2">${cat.title}</h3><div class="flex flex-wrap gap-3">`;
+                rawQuestDataObj.forEach((q, idx) => {
+                    if(q.category === cat.id) {
+                        let status = userProgress[idx];
+                        let btnClass = 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50';
+                        let icon = (idx + 1);
+
+                        if (status === 1) {
+                            btnClass = 'bg-yellow-100 border-yellow-400 text-yellow-700 shadow-inner';
+                            icon = '🌟';
+                        } else if (status === 2) {
+                            btnClass = 'bg-emerald-100 border-emerald-400 text-emerald-700 shadow-inner';
+                            icon = '✅';
+                        } else if (status === -1) {
+                            btnClass = 'bg-rose-100 border-rose-400 text-rose-700 shadow-inner';
+                            icon = '❌';
+                        }
+
+                        html += `<button onclick="startQuestion(${idx})" class="lvl-btn ${btnClass} w-12 h-12 lg:w-14 lg:h-14 rounded-xl font-black text-base lg:text-lg border-b-4 flex items-center justify-center shadow-sm transition-transform">${icon}</button>`;
+                    }
+                });
+                html += `</div></div>`;
+            });
+            dirContainer.innerHTML = html;
+            updateTotalProgress();
+        }
+
+        function updateTotalProgress() {
+            let solved = userProgress.filter(p => p === 1 || p === 2).length;
+            let percent = (solved / rawQuestDataObj.length) * 100;
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+
+        let currentQuestionIdx = -1;
+
+        function startQuestion(idx) {
+            currentQuestionMistakes = 0; 
+            currentQuestionIdx = idx;
+            document.getElementById('quest-directory').style.display = 'none';
+            const questPlay = document.getElementById('quest-play');
+            questPlay.style.display = 'flex';
+            document.getElementById('main-scroll-area').scrollTop = 0;
+            
+            const qData = rawQuestDataObj[idx];
+            const qType = qData.category;
+            const qCatTitle = categories.find(c => c.id === qType).title;
+            const qTask = qData.task;
+
+            let html = `
+                <div class="w-full flex justify-between items-center mb-4">
+                    <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
+                    <span class="bg-teal-100 text-teal-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${idx + 1} 題</span>
+                </div>
+                
+                <div class="slide-up w-full bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center relative transition-all duration-500">
+                    <span class="absolute -top-4 bg-teal-600 text-white px-5 py-1.5 rounded-full font-bold shadow-md text-sm md:text-base">
+                        ${qCatTitle}
+                    </span>
+                    
+                    <div class="w-full flex items-center gap-3 mt-4 mb-4">
+                        <span class="bg-teal-100 text-teal-800 px-3 py-1 rounded text-sm font-bold whitespace-nowrap">任務</span>
+                        <h2 class="text-lg md:text-xl font-bold text-slate-700">${qTask}</h2>
+                    </div>
+            `;
+
+            if (qType.startsWith('s-reorder')) {
+                // 重組句子邏輯 (使用預先切好的陣列)
+                const chunkArray = qData.qData[0];
+                const fullSentence = chunkArray.join('');
+                const emoji = qData.qData[1];
+                
+                reorderCorrect = [...chunkArray];
+                // 打亂選項
+                reorderSource = [...reorderCorrect].sort(() => Math.random() - 0.5);
+                reorderTarget = [];
+
+                html += `
+                    <div class="text-7xl md:text-8xl mb-4 text-center animate-bounce drop-shadow-md cursor-default select-none">${emoji}</div>
+                    <button onclick="speakText('${fullSentence}')" class="mb-6 bg-teal-100 text-teal-700 font-bold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-teal-200 transition"><span class="text-2xl">🔊</span> 聽聽完整句子</button>
+                    
+                    <!-- 目標放置區 -->
+                    <div class="w-full bg-slate-50 p-4 md:p-6 rounded-2xl border-2 border-slate-200 min-h-[120px] flex flex-wrap content-start gap-2 mb-6" id="reorder-target-area">
+                        <!-- 動態填充 -->
+                    </div>
+
+                    <div class="w-full border-t-2 border-dashed border-slate-200 my-2"></div>
+
+                    <!-- 來源點擊區 -->
+                    <div class="text-center text-slate-500 font-bold mb-2 text-sm">👇 點擊下方詞語加入句子</div>
+                    <div class="w-full flex flex-wrap justify-center gap-3" id="reorder-source-area">
+                        <!-- 動態填充 -->
+                    </div>
+                `;
+                html += `</div>`;
+                questPlay.innerHTML = html;
+                renderReorderUI();
+
+            } else {
+                // s-fill 或 s-babei (常規選擇題)
+                const sentence = qData.qData[0];
+                const emoji = qData.qData[1];
+                const options = qData.qData[2];
+                const ansIdx = qData.qData[3];
+
+                let ttsText = sentence.replace('___', '什麼');
+                let sentenceHtml = sentence.replace('___', '<span class="text-teal-600 border-b-4 border-teal-500 px-6 font-black bg-teal-50">?</span>');
+
+                html += `
+                    <div class="text-8xl md:text-9xl mb-6 bg-slate-50 p-6 rounded-3xl border-4 border-slate-100 w-full text-center shadow-inner select-none cursor-default">${emoji}</div>
+                    
+                    <div class="w-full flex items-start gap-4 mb-8 bg-teal-50 p-6 rounded-2xl border border-teal-100 shadow-inner">
+                        <button onclick="speakText('${ttsText}')" class="tts-btn flex-shrink-0 bg-white text-teal-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-teal-200">🔊</button>
+                        <div class="text-2xl md:text-3xl font-bold text-slate-800 leading-loose">${sentenceHtml}</div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full mt-auto" id="options-container">
+                `;
+                
+                // 為了防止死背，這裡將選項隨機打亂，但必須記住正確答案
+                let optsWithIdx = options.map((opt, i) => ({ text: opt, isCorrect: i === ansIdx }));
+                optsWithIdx.sort(() => Math.random() - 0.5);
+
+                optsWithIdx.forEach((opt) => {
+                    html += `<button onclick="checkSelectionAnswer(this, ${opt.isCorrect})" class="option-btn bg-white border-4 border-slate-200 text-slate-700 text-2xl font-bold py-6 rounded-2xl hover:bg-slate-50 transition w-full text-center">${opt.text}</button>`;
+                });
+                
+                html += `</div></div>`;
+                questPlay.innerHTML = html;
+            }
+        }
+
+        // --- 重組句子 UI 渲染與邏輯 ---
+        function renderReorderUI() {
+            const tArea = document.getElementById('reorder-target-area');
+            const sArea = document.getElementById('reorder-source-area');
+            if(!tArea || !sArea) return;
+
+            let tHtml = '';
+            if (reorderTarget.length === 0) {
+                tHtml = '<span class="text-slate-400 font-bold m-auto">你的句子會顯示在這裡...</span>';
+            } else {
+                reorderTarget.forEach((chunk, idx) => {
+                    tHtml += `<button onclick="removeFromTarget(${idx})" class="chunk-btn bg-teal-500 text-white font-black text-xl md:text-2xl py-3 px-5 rounded-xl shadow-md pop">${chunk}</button>`;
+                });
+            }
+            tArea.innerHTML = tHtml;
+
+            let sHtml = '';
+            reorderSource.forEach((chunk, idx) => {
+                if (chunk === null) {
+                    sHtml += `<div class="chunk-slot w-24 h-14 md:w-32 md:h-16 rounded-xl"></div>`; // 佔位符
+                } else {
+                    sHtml += `<button onclick="moveToTarget(${idx})" class="chunk-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-teal-400 hover:bg-teal-50 font-black text-xl md:text-2xl py-3 px-5 rounded-xl shadow">${chunk}</button>`;
+                }
+            });
+            sArea.innerHTML = sHtml;
+
+            // 檢查是否完成
+            if (reorderTarget.length > 0 && reorderTarget.length === reorderCorrect.length) {
+                checkReorderAnswer();
+            }
+        }
+
+        function moveToTarget(sourceIdx) {
+            let chunk = reorderSource[sourceIdx];
+            reorderSource[sourceIdx] = null; // 設為空，保留位置
+            reorderTarget.push(chunk);
+            speakText(chunk);
+            renderReorderUI();
+        }
+
+        function removeFromTarget(targetIdx) {
+            let chunk = reorderTarget[targetIdx];
+            reorderTarget.splice(targetIdx, 1);
+            // 找回本來的第一個 null 位置放回去
+            let emptyIdx = reorderSource.indexOf(null);
+            if(emptyIdx !== -1) reorderSource[emptyIdx] = chunk;
+            renderReorderUI();
+        }
+
+        function checkReorderAnswer() {
+            let isCorrect = true;
+            for(let i=0; i<reorderCorrect.length; i++) {
+                if(reorderTarget[i] !== reorderCorrect[i]) isCorrect = false;
+            }
+
+            if (isCorrect) {
+                speakText("重組正確！" + reorderCorrect.join(''));
+                handleCorrectAnswer(reorderCorrect.join(''));
+            } else {
+                speakText("順序好像有點不對喔，再試試看！");
+                currentQuestionMistakes++;
+                userProgress[currentQuestionIdx] = -1;
+                localStorage.setItem('sentBasicProgress', JSON.stringify(userProgress));
+                
+                const tArea = document.getElementById('reorder-target-area');
+                tArea.classList.add('bg-rose-100', 'border-rose-400', 'shake');
+                setTimeout(() => tArea.classList.remove('bg-rose-100', 'border-rose-400', 'shake'), 800);
+                
+                // 錯誤時自動把最後一個字彈回去，給予幫助
+                setTimeout(() => {
+                    if(reorderTarget.length > 0) removeFromTarget(reorderTarget.length - 1);
+                }, 1000);
+            }
+        }
+
+        // --- 選擇題檢查邏輯 ---
+        function checkSelectionAnswer(btnElement, isCorrect) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+            if (isCorrect) {
+                btnElement.classList.add('correct');
+                const fullSentence = rawQuestDataObj[currentQuestionIdx].qData[0].replace('___', btnElement.innerText);
+                speakText("答對了！" + fullSentence);
+                handleCorrectAnswer(fullSentence);
+            } else {
+                btnElement.classList.add('wrong', 'shake');
+                speakText("不對喔，請再想想看！");
+                currentQuestionMistakes++; 
+                userProgress[currentQuestionIdx] = -1;
+                localStorage.setItem('sentBasicProgress', JSON.stringify(userProgress));
+                
+                setTimeout(() => {
+                    btnElement.classList.remove('wrong', 'shake');
+                    allBtns.forEach(b => { if (!b.classList.contains('correct')) b.style.pointerEvents = 'auto'; });
+                }, 1500);
+            }
+        }
+
+        // --- 共通答對處理 ---
+        function handleCorrectAnswer(completeSentence) {
+            let finalStatus = currentQuestionMistakes === 0 ? 1 : 2;
+            let previousStatus = userProgress[currentQuestionIdx];
+            let expGained = 0;
+
+            if (previousStatus !== 1 && previousStatus !== 2) {
+                expGained = finalStatus === 1 ? 15 : 5;
+            } else if (previousStatus === 2 && finalStatus === 1) {
+                expGained = 10; 
+            }
+
+            if (expGained > 0) {
+                sentExp += expGained;
+                localStorage.setItem('sentBasicExp', sentExp);
+                document.getElementById('exp-display').innerText = sentExp;
+                document.getElementById('exp-display').classList.add('pop');
+                setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+            }
+
+            if (finalStatus === 1 || previousStatus !== 1) {
+                userProgress[currentQuestionIdx] = finalStatus;
+                localStorage.setItem('sentBasicProgress', JSON.stringify(userProgress));
+            }
+
+            let modalIcon = finalStatus === 1 ? '🌟' : '✅';
+            let modalTitle = finalStatus === 1 ? '太棒了！一次答對！' : '成功過關！';
+            let expMsg = expGained > 0 
+                ? `<span class="text-teal-600 block text-xl mb-4">獲得 ${expGained} 點經驗值 ✨</span>` 
+                : `<span class="text-slate-500 block text-lg mb-4">這題已經成功過關囉！</span>`;
+            
+            let combinedDesc = expMsg + `<div class="bg-slate-100 border-l-4 border-teal-500 p-4 text-left text-slate-800 rounded-r-lg font-bold text-xl">${completeSentence}</div>`;
+
+            setTimeout(() => { showModal(modalIcon, modalTitle, combinedDesc); }, 1000);
+        }
+
+        function showModal(icon, title, desc) {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            document.getElementById('feedback-icon').innerText = icon;
+            document.getElementById('feedback-title').innerText = title;
+            document.getElementById('feedback-desc').innerHTML = desc;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+        }
+
+        function backToDirectory() {
+            document.getElementById('quest-play').style.display = 'none';
+            document.getElementById('quest-directory').style.display = 'block';
+            renderDirectory();
+        }
+
+        function backToDirectoryFromModal() {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                backToDirectory();
+            }, 300);
+        }
+
+        function goToNextQuestion() {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                let nextIdx = currentQuestionIdx + 1;
+                if (nextIdx < rawQuestDataObj.length) startQuestion(nextIdx);
+                else { showToast("恭喜完成所有挑戰！"); backToDirectory(); }
+            }, 300);
+        }
+
+        window.onload = function() {
+            document.getElementById('exp-display').innerText = sentExp;
+            renderDirectory();
+            
+            // 將 modal 的 next-btn 綁定事件
+            document.getElementById('next-btn').onclick = goToNextQuestion;
+        }
+    </script>
+</body>
+</html>
