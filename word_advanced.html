@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>字詞擴充挑戰 - 拔尖訓練</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    <style>
+        body {
+            font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif;
+            background-color: #faf5ff;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .bg-grid-pattern {
+            background-image: linear-gradient(to right, #f3e8ff 1px, transparent 1px), linear-gradient(to bottom, #f3e8ff 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .mi-zi-ge {
+            background-color: #f8fafc;
+            background-image: 
+                linear-gradient(to right, transparent 49.5%, #c084fc 49.5%, #c084fc 50.5%, transparent 50.5%),
+                linear-gradient(to bottom, transparent 49.5%, #c084fc 49.5%, #c084fc 50.5%, transparent 50.5%),
+                linear-gradient(45deg, transparent 49.5%, #e9d5ff 49.5%, #e9d5ff 50.5%, transparent 50.5%),
+                linear-gradient(-45deg, transparent 49.5%, #e9d5ff 49.5%, #e9d5ff 50.5%, transparent 50.5%);
+            border: 4px solid #a855f7; border-radius: 8px;
+        }
+
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .pop { animation: pop 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .option-btn { transition: all 0.2s; box-shadow: 0 4px 0 #cbd5e1; }
+        .option-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .option-btn.correct { background-color: #f3e8ff; border-color: #a855f7; color: #6b21a8; box-shadow: 0 0 0 transparent; transform: translateY(4px); pointer-events: none; }
+        .option-btn.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.6; pointer-events: none; }
+        
+        .tts-btn { transition: transform 0.2s; }
+        .tts-btn:active { transform: scale(0.9); }
+
+        .tab-btn { transition: all 0.3s; }
+        .tab-active { background-color: #7e22ce; color: white; border-color: #581c87; }
+        .tab-inactive { background-color: white; color: #64748b; border-color: #cbd5e1; }
+        
+        .filter-btn { transition: all 0.2s; }
+        .filter-active { background-color: #9333ea; color: white; border-color: #7e22ce; font-weight: bold; }
+
+        .lvl-btn { transition: transform 0.2s; }
+        .lvl-btn:hover { transform: scale(1.05); }
+
+        .toast-msg {
+            visibility: hidden; min-width: 250px; background-color: #ef4444; color: #fff; text-align: center;
+            border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px;
+            transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
+        @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
+
+    <!-- 頂部導覽列 (紫金配色) -->
+    <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
+        <div class="p-3 lg:p-4 bg-purple-700 text-white flex justify-between items-center w-full">
+            <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
+                <a href="index.html" class="hover:bg-purple-800 p-1 rounded transition bg-purple-900">⬅️ 返回</a>
+                <span>🎓 詞彙擴充挑戰 (拔尖版)</span>
+            </h1>
+            <div class="flex gap-2 lg:gap-4 items-center bg-purple-900 px-3 py-1.5 rounded-full border border-purple-500 shadow-inner">
+                <span class="text-lg lg:text-xl">🏅</span>
+                <span class="font-bold text-sm lg:text-lg">EXP: <span id="exp-display" class="text-yellow-400">0</span></span>
+            </div>
+        </div>
+        
+        <div class="flex w-full bg-slate-100 border-b border-slate-300">
+            <button onclick="switchMode('quest')" id="tab-quest" class="tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700">
+                🚀 深度語感特訓 (800題)
+            </button>
+            <button onclick="switchMode('sandbox')" id="tab-sandbox" class="tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200">
+                📖 高級字詞寶庫
+            </button>
+        </div>
+        
+        <div id="progress-container" class="w-full bg-slate-200 h-2">
+            <div id="progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
+        </div>
+    </div>
+
+    <!-- 主畫面區 -->
+    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
+        
+        <!-- ================= 模式 1：闖關地圖 ================= -->
+        <div id="quest-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
+            <div id="quest-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">🚀 深度語感與精準表達特訓</h2>
+                
+                <div class="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
+                    <div class="text-purple-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
+                    <div class="flex flex-wrap gap-4 flex-1">
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-lg shadow-sm">🌟</span> 一次答對 (+30)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 嘗試後答對 (+10)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-rose-100 border-2 border-rose-400 flex items-center justify-center text-lg shadow-sm">❌</span> 答錯未完成</div>
+                    </div>
+                </div>
+
+                <div id="directory-content" class="flex flex-col gap-8">
+                    <!-- 目錄動態生成 -->
+                </div>
+            </div>
+            
+            <div id="quest-play" class="w-full hidden flex-col items-center">
+                <!-- 題目動態生成 -->
+            </div>
+        </div>
+
+        <!-- ================= 模式 2：高級字詞寶庫 ================= -->
+        <div id="sandbox-wrapper" class="hidden w-full h-full">
+            <div class="w-full max-w-6xl mx-auto flex flex-col lg:flex-row gap-4 lg:gap-6 h-full min-h-[500px]">
+                <div class="lg:w-1/3 flex flex-col gap-3 min-h-[300px] lg:h-[600px]">
+                    <div class="bg-white rounded-xl shadow-sm border border-purple-200 p-3 flex flex-col gap-2 relative">
+                        <h3 class="font-bold text-purple-800 text-sm">🔍 搜尋高級生字：</h3>
+                        <div class="flex gap-2">
+                            <input type="text" id="custom-char-input" maxlength="1" placeholder="輸入古文或罕見字..." class="flex-1 px-3 py-2 border-2 border-slate-200 rounded-lg focus:outline-none focus:border-purple-500 text-lg text-center font-bold">
+                            <button onclick="searchCustomChar()" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-purple-700 shadow-sm transition">生成</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-2 flex overflow-x-auto no-scrollbar gap-2 flex-shrink-0">
+                        <button onclick="filterWords('all')" id="flt-all" class="filter-btn filter-active px-4 py-2 rounded-lg whitespace-nowrap text-sm border">全部</button>
+                        <button onclick="filterWords('advanced')" id="flt-advanced" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">深字</button>
+                        <button onclick="filterWords('classic')" id="flt-classic" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">古文</button>
+                        <button onclick="filterWords('emotion')" id="flt-emotion" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">情感</button>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-md border-2 border-slate-200 p-4 flex-1 overflow-y-auto no-scrollbar min-h-[250px]">
+                        <div id="word-grid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 gap-2"></div>
+                    </div>
+                </div>
+
+                <div class="lg:w-2/3 bg-white rounded-2xl shadow-xl border-t-8 border-purple-600 p-4 lg:p-6 flex flex-col items-center justify-center relative min-h-[400px]">
+                    <div id="sandbox-placeholder" class="text-slate-400 font-bold text-xl text-center flex flex-col items-center gap-4">
+                        <span class="text-6xl animate-bounce">👈</span>請從左側選擇，或直接搜尋中文字
+                    </div>
+                    <div id="sandbox-content" class="hidden w-full flex flex-col items-center">
+                        <div class="flex justify-between w-full mb-4 items-end border-b-2 border-slate-100 pb-4">
+                            <div>
+                                <h2 id="sb-char" class="text-5xl lg:text-6xl font-black text-slate-800 mb-3">字</h2>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-lg border border-purple-200 font-bold text-sm lg:text-base">部首：<span id="sb-radical"></span></span>
+                                    <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-lg border border-indigo-200 font-bold text-sm lg:text-base" id="sb-english">English</span>
+                                </div>
+                            </div>
+                            <button onclick="speakText(document.getElementById('sb-char').innerText)" class="tts-btn bg-purple-100 text-purple-700 w-14 h-14 rounded-full text-3xl flex items-center justify-center shadow-sm border-2 border-purple-200">🔊</button>
+                        </div>
+                        <div class="relative w-64 h-64 md:w-80 md:h-80 mi-zi-ge mb-6 shadow-inner touch-none" id="sandbox-canvas"></div>
+                        <div class="flex flex-wrap justify-center gap-3 w-full">
+                            <button onclick="sbWriter.animateCharacter()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-xl shadow transition flex items-center gap-2 text-lg">👀 看筆順</button>
+                            <button onclick="startSandboxQuiz()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow transition flex items-center gap-2 text-lg">✍️ 試寫</button>
+                            <button onclick="sbWriter.hideCharacter(); sbWriter.showCharacter()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-6 rounded-xl transition text-lg">🔄 重設</button>
+                        </div>
+                        <div id="sb-feedback" class="mt-4 text-xl font-bold text-purple-600 h-8 opacity-0 transition-opacity"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 反饋 Modal -->
+    <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform" id="feedback-content">
+            <div id="feedback-icon" class="text-7xl mb-4">🎉</div>
+            <h2 id="feedback-title" class="text-3xl font-black text-slate-800 mb-2">答對了！</h2>
+            <div id="feedback-desc" class="text-slate-600 font-bold mb-6 text-lg leading-relaxed text-left"></div>
+            <div class="flex gap-3 w-full mt-4">
+                <button onclick="backToDirectoryFromModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition text-lg">⬅️ 目錄</button>
+                <button id="next-btn" class="flex-[1.5] bg-purple-600 hover:bg-purple-700 text-white font-black py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-purple-800 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-msg">提示訊息</div>
+
+    <script>
+        // ================= 1. 核心設定 =================
+        let advExp = parseInt(localStorage.getItem('advExp')) || 0;
+        document.getElementById('exp-display').innerText = advExp;
+        let currentQuestionMistakes = 0; 
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let msg = new SpeechSynthesisUtterance(text);
+                msg.lang = 'zh-HK';
+                msg.rate = 0.95; 
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "toast-msg show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        function switchMode(mode) {
+            const tabQuest = document.getElementById('tab-quest');
+            const tabSandbox = document.getElementById('tab-sandbox');
+            const questMode = document.getElementById('quest-mode');
+            const sandboxWrapper = document.getElementById('sandbox-wrapper');
+            const progress = document.getElementById('progress-container');
+
+            if (mode === 'quest') {
+                tabQuest.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700";
+                tabSandbox.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                questMode.style.display = 'flex';
+                sandboxWrapper.style.display = 'none';
+                progress.style.display = 'block';
+                updateTotalProgress();
+            } else {
+                tabSandbox.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700";
+                tabQuest.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                questMode.style.display = 'none';
+                sandboxWrapper.style.display = 'block'; 
+                progress.style.display = 'none';
+                if(!isSandboxInitialized) { initSandbox(); isSandboxInitialized = true; }
+            }
+        }
+
+        // ================= 2. 800題 終極旗艦題庫 (隨機 4選1) =================
+        const categories = [
+            { id: 'c-redup', title: '🔤 疊字語感與畫面感 (100題)', color: 'fuchsia' },
+            { id: 'c-xiehou', title: '🎭 歇後語情境精準配對 (100題)', color: 'pink' },
+            { id: 'c-proverb', title: '📜 經典諺語與明理 (100題)', color: 'rose' },
+            { id: 'c-idiom-sentiment', title: '⚖️ 成語歸類與褒貶辨析 (150題)', color: 'purple' },
+            { id: 'c-idiom-story', title: '📚 成語故事寓意配對 (150題)', color: 'indigo' },
+            { id: 'c-classic', title: '🏛️ 文言基礎單字解釋 (100題)', color: 'blue' },
+            { id: 'c-adv-synonym', title: '🎯 高級近義詞精準辨析 (100題)', color: 'teal' }
+        ];
+
+        // 核心資料池：[題目/語境, 正確答案, [3個錯誤干擾項], 解析]
+        const redupPool = [
+            ['春雨過後，遠處的山峰顯得___的，充滿生機。', '綠油油', ['綠蔥蔥', '青湛湛', '白茫茫'], '「綠油油」形容濃綠而有光澤，最適合描繪雨後的植物。'],
+            ['夏天的夜晚，天上的星星___的，像無數顆寶石。', '亮晶晶', ['閃閃亮', '亮堂堂', '黑漆漆'], '「亮晶晶」專門形容物體閃爍發光。'],
+            ['這孩子長得___的，十分惹人喜愛。', '胖乎乎', ['瘦巴巴', '乾巴巴', '圓滾滾'], '「胖乎乎」帶有可愛、親切的感情色彩。'],
+            ['他處理事情總是___，經常出錯，讓人很不放心。', '馬馬虎虎', ['風風火火', '吞吞吐吐', '仔仔細細'], '「馬馬虎虎」形容做事草率不認真。'],
+            ['快過年了，大家把屋子打掃得___。', '乾乾淨淨', ['整整齊齊', '明明白白', '辛辛苦苦'], '「乾乾淨淨」強調沒有灰塵和雜物。'],
+            ['他做起事來總是___的，非常有活力和效率。', '風風火火', ['急急忙忙', '慌慌張張', '慢慢吞吞'], '「風風火火」形容動作迅速且充滿氣勢。'],
+            ['遇到不懂的問題，我們應該互相___，尋求解答。', '討論討論', ['打聽打聽', '思考思考', '猶豫猶豫'], '「討論討論」是 ABAB 式動詞疊用，表示短暫或嘗試性的動作。'],
+            ['秋風吹過，樹葉___地飄落下來。', '紛紛揚揚', ['洋洋灑灑', '沸沸揚揚', '零零落落'], '「紛紛」強調數量多且雜亂，「揚揚」形容飛舞的樣子。'],
+            ['他把這件事調查得___，連一點細節都沒漏掉。', '清清楚楚', ['明明白白', '真真切切', '糊裡糊塗'], '「清清楚楚」強調沒有絲毫模糊。'],
+            ['這朵花香氣撲鼻，花瓣___的，真好看。', '紅彤彤', ['紅艷艷', '紅撲撲', '黑壓壓'], '「紅彤彤」形容顏色極紅。']
+        ];
+
+        const xiehouPool = [
+            ['他自己都快破產了，你還找他借錢？這簡直是「___」啊！', '泥菩薩過江——自身難保', ['肉包子打狗——有去無回', '竹籃打水——一場空', '飛蛾撲火——自取滅亡'], '泥菩薩過水自身都會融化，比喻連保全自己都困難。'],
+            ['你把錢交給那個騙子投資，肯定是「___」了。', '肉包子打狗——有去無回', ['姜太公釣魚——願者上鉤', '瞎子吃湯圓——心裡有數', '老鼠過街——人人喊打'], '狗愛吃肉包子，丟過去就不會還回來了。比喻東西給了出去再也收不回。'],
+            ['這次比賽他明明被人犯規干擾，卻沒有證據，只能「___」。', '啞巴吃黃連——有苦說不出', ['狗咬呂洞賓——不識好人心', '老鼠過街——人人喊打', '貓哭老鼠——假慈悲'], '啞巴吃到苦黃連卻說不出來，比喻有苦難言。'],
+            ['他明知道這家公司有問題還去應徵，真是「___」！', '飛蛾撲火——自取滅亡', ['姜太公釣魚——願者上鉤', '千里送鵝毛——禮輕情意重', '黃鼠狼給雞拜年——沒安好心'], '飛蛾撲向火光會被燒死，比喻自尋死路。'],
+            ['這點小禮物只是「___」，希望能表達我的一點心意。', '千里送鵝毛——禮輕情意重', ['八仙過海——各顯神通', '狗拿耗子——多管閒事', '丈二和尚——摸不著頭腦'], '即使禮物像鵝毛一樣輕，但由於大老遠送來，代表情意非常深重。'],
+            ['你這不是「___」嗎？這本來就是別人的工作，你插手做什麼？', '狗拿耗子——多管閒事', ['黃鼠狼給雞拜年——沒安好心', '老虎掛念珠——假慈悲', '司馬昭之心——路人皆知'], '抓老鼠是貓的工作，狗去抓就是多管閒事。'],
+            ['這個小組的成員每個人都有特殊技能，遇到難題時真的是「___」。', '八仙過海——各顯神通', ['三個臭皮匠——勝過一個諸葛亮', '關公赴會——單刀直入', '瞎子吃湯圓——心裡有數'], '八仙過海時每個人都用自己的法寶，比喻各自拿出本領來解決問題。'],
+            ['他突然對你這麼好，還送你貴重禮物，小心是「___」。', '黃鼠狼給雞拜年——沒安好心', ['貓哭老鼠——假慈悲', '司馬昭之心——路人皆知', '肉包子打狗——有去無回'], '黃鼠狼是吃雞的，給雞拜年絕對有陰謀。比喻偽裝善良，實則心懷不軌。'],
+            ['經過昨天晚上的複習，他對今天的考試已經是「___」了。', '瞎子吃湯圓——心裡有數', ['丈二和尚——摸不著頭腦', '十五個吊桶打水——七上八下', '姜太公釣魚——願者上鉤'], '瞎子雖然看不見，但吃進幾顆湯圓心裡很清楚。比喻表面不說，心中有底。'],
+            ['等待放榜的時候，他的心情簡直是「___」，緊張得不得了。', '十五個吊桶打水——七上八下', ['熱鍋上的螞蟻——團團轉', '秋後的螞蚱——蹦躂不了幾天', '泥菩薩過江——自身難保'], '十五個吊桶在井裡打水，七個上八個下。比喻心情慌亂不安。']
+        ];
+
+        const proverbPool = [
+            ['遇到困難不要輕言放棄，要知道「___」，只要堅持下去一定會成功。', '只要功夫深，鐵杵磨成針', ['不經一番寒徹骨，怎得梅花撲鼻香', '一寸光陰一寸金', '失敗乃成功之母'], '比喻只要有恆心、肯努力，再難的事也能做成。'],
+            ['他這次雖然落敗了，但他明白「___」，決定找出原因，下次再戰。', '失敗乃成功之母', ['驕兵必敗', '滿招損，謙受益', '近朱者赤，近墨者黑'], '失敗可以成為日後成功的基礎和借鑒。'],
+            ['你現在不用功讀書，等老了才後悔就來不及了，正所謂「___」。', '少壯不努力，老大徒傷悲', ['光陰似箭，日月如梭', '一年之計在於春', '歲月不待人'], '勸勉年輕人要珍惜時光，奮發圖強。'],
+            ['我們做人要謙虛，要知道「___」，過度驕傲只會帶來損失。', '滿招損，謙受益', ['驕兵必敗', '虛心使人進步', '三人行，必有我師'], '自滿會招致損失，謙虛會得到益處。'],
+            ['朋友之間應該互相幫助，俗話說「___」，團結力量大。', '眾人拾柴火焰高', ['三個臭皮匠，頂個諸葛亮', '患難見真情', '物以類聚，人以群分'], '比喻人多力量大，大家一起出力，事情就容易辦成。'],
+            ['你要明白「___」，時間過去了就再也買不回來了，別再沉迷遊戲。', '一寸光陰一寸金，寸金難買寸光陰', ['機不可失，時不再來', '歲月不待人', '少壯不努力，老大徒傷悲'], '形容時間極其寶貴。'],
+            ['這件事你不能只看表面，要知道「___」，只有親身實踐才能了解真相。', '實踐出真知', ['讀萬卷書，不如行萬里路', '耳聽為虛，眼見為實', '不恥下問'], '真正的知識來自於實際行動。'],
+            ['他經歷了長期的刻苦訓練，終於獲得了冠軍，真是「___」。', '不經一番寒徹骨，怎得梅花撲鼻香', ['台上一分鐘，台下十年功', '苦盡甘來', '只要功夫深，鐵杵磨成針'], '不經過寒冷冬天的考驗，梅花就不會散發出撲鼻的香氣。比喻不經艱苦奮鬥，就無法取得卓越成就。'],
+            ['這個道理很簡單，所謂「___」，靠近什麼樣的人就會受什麼樣的影響。', '近朱者赤，近墨者黑', ['物以類聚，人以群分', '孟母三遷', '眾人拾柴火焰高'], '比喻環境對人的影響極大。'],
+            ['遇到不懂的事情要虛心向人請教，要知道「___」，不要覺得丟臉。', '三人行，必有我師焉', ['學無止境', '不恥下問', '讀萬卷書'], '三個人同行，其中必定有人可以做我的老師。指隨時隨地都有學習的對象。']
+        ];
+
+        const sentimentPool = [
+            ['為了考上理想的大學，他這半年來___，日夜苦讀。', '殫精竭慮 (褒義)', ['處心積慮 (貶義)', '無所事事 (貶義)', '挖空心思 (貶義)'], '「殫精竭慮」是褒義詞，形容用盡心思；「處心積慮」是貶義詞，形容費盡心機做壞事。'],
+            ['他總是喜歡在會議上___，發表一些不切實際的長篇大論。', '誇誇其談 (貶義)', ['侃侃而談 (褒義)', '滔滔不絕 (中性)', '振振有詞 (褒義)'], '「誇誇其談」是貶義，指說話浮誇不切實際；「侃侃而談」是褒義，指說話理直氣壯、從容不迫。'],
+            ['面對敵人的威脅，他___，表現出極大的勇氣。', '臨危不懼 (褒義)', ['死皮賴臉 (貶義)', '負隅頑抗 (貶義)', '退避三舍 (貶義)'], '「臨危不懼」是褒義，指遇到危險毫不退縮；「負隅頑抗」是貶義，指憑藉險要抵抗。'],
+            ['這個貪官___地搜刮民脂民膏，最終受到了法律的制裁。', '肆無忌憚 (貶義)', ['光明正大 (褒義)', '大義凜然 (褒義)', '理直氣壯 (褒義)'], '「肆無忌憚」是貶義詞，指任意妄為，毫無顧忌。'],
+            ['他為人___，從不背地裡做見不得人的事，深受大家敬重。', '光明磊落 (褒義)', ['明火執仗 (貶義)', '鬼鬼祟祟 (貶義)', '暗箭傷人 (貶義)'], '「光明磊落」是褒義，指胸懷坦白；「明火執仗」現多為貶義，指公然做壞事。'],
+            ['那群流氓在街頭___，破壞治安。', '橫行霸道 (貶義)', ['見義勇為 (褒義)', '威風凜凜 (褒義)', '大義凜然 (褒義)'], '「橫行霸道」是貶義，指仗勢胡作非為。'],
+            ['老師___地教導我們做人的道理。', '語重心長 (褒義)', ['巧言令色 (貶義)', '喋喋不休 (貶義)', '花言巧語 (貶義)'], '「語重心長」是褒義，指言辭懇切有分量；「巧言令色」是貶義，指花言巧語偽裝。'],
+            ['這個計畫他___了很久，就是為了在今天破壞對手的發表會。', '蓄謀已久 (貶義)', ['深謀遠慮 (褒義)', '未雨綢繆 (褒義)', '高瞻遠矚 (褒義)'], '「蓄謀已久」是貶義，指早就策劃好做壞事；「深謀遠慮」是褒義，指計畫周密長遠。'],
+            ['他遇到挫折卻能___，立刻重新站起來接受挑戰。', '百折不撓 (褒義)', ['執迷不悟 (貶義)', '死不悔改 (貶義)', '冥頑不靈 (貶義)'], '「百折不撓」是褒義，指意志堅強；「執迷不悟」是貶義，指堅持錯誤。'],
+            ['這篇文章寫得___，卻沒有什麼實質內容。', '華而不實 (貶義)', ['文采斐然 (褒義)', '妙筆生花 (褒義)', '字字珠璣 (褒義)'], '「華而不實」是貶義，指外表好看但缺乏實際內容。']
+        ];
+
+        const idiomStoryPool = [
+            ['比喻行動和目的正好相反。', '南轅北轍', ['刻舟求劍', '掩耳盜鈴', '緣木求魚'], '南轅北轍：想往南走，車子卻向北開。比喻行動和目的相反。'],
+            ['比喻拘泥刻板，不知變通。', '刻舟求劍', ['守株待兔', '畫蛇添足', '掩耳盜鈴'], '刻舟求劍：劍掉進水裡，在船上刻記號去尋找。比喻不知變通。'],
+            ['比喻自己欺騙自己，明明掩蓋不住的事情偏要想法子掩蓋。', '掩耳盜鈴', ['自欺欺人', '揠苗助長', '亡羊補牢'], '掩耳盜鈴：偷鐘怕響聲被人聽見，就捂住自己的耳朵。'],
+            ['比喻不切實際地妄想不勞而獲，或死守狹隘的經驗。', '守株待兔', ['亡羊補牢', '緣木求魚', '南轅北轍'], '守株待兔：農夫等著兔子撞樹。比喻妄想不勞而獲。'],
+            ['比喻違反事物發展的客觀規律，急於求成，反而把事情弄糟。', '揠苗助長', ['欲速不達', '畫蛇添足', '弄巧成拙'], '揠苗助長：把禾苗拔高幫助生長。比喻急於求成反而壞事。'],
+            ['比喻出了問題以後想辦法補救，可以防止繼續受損失。', '亡羊補牢', ['未雨綢繆', '防微杜漸', '守株待兔'], '亡羊補牢：羊逃跑了再去修補羊圈，還不算晚。'],
+            ['比喻做了多餘的事，非但無益，反而不合適。', '畫蛇添足', ['弄巧成拙', '多此一舉', '揠苗助長'], '畫蛇添足：畫蛇時給蛇添上腳。比喻多此一舉。'],
+            ['比喻方向或辦法不對，不可能達到目的。', '緣木求魚', ['水中撈月', '海底撈針', '南轅北轍'], '緣木求魚：爬到樹上去找魚。比喻方向方法不對。'],
+            ['比喻眼光狹小，見識短淺。', '井底之蛙', ['管中窺豹', '盲人摸象', '夜郎自大'], '井底之蛙：井底的青蛙覺得天只有井口大。比喻見識短淺。'],
+            ['比喻模仿別人不到家，連自己原來的本領也忘掉了。', '邯鄲學步', ['東施效顰', '鸚鵡學舌', '畫虎類犬'], '邯鄲學步：去邯鄲學走路，沒學成反而忘了原本怎麼走。']
+        ];
+
+        const classicalPool = [
+            ['在文言文中，「兔走觸株」的「走」是什麼意思？', '跑 / 奔跑', ['步行', '離開', '跳躍'], '在古文中，「走」通常指跑步、奔跑。如「奔走」。'],
+            ['古文中的「湯」（如：赴湯蹈火），通常指什麼？', '熱水 / 滾水', ['喝的湯羹', '河流名稱', '溫泉'], '古文中「湯」特指熱水。'],
+            ['「妻子」在古文（如：率妻子邑人來此絕境）中通常指什麼？', '妻子和兒女', ['男性的配偶', '家中的女主人', '未婚女子'], '古文中「妻」指配偶，「子」指兒女，合稱妻子。'],
+            ['「走馬看花」的「走」在古代是什麼意思？', '騎馬奔跑', ['牽著馬走', '離開馬匹', '走路的馬'], '「走馬」即為騎著馬奔跑。'],
+            ['文言文中的「股」（如：懸樑刺股）是指身體的哪一部位？', '大腿', ['屁股', '腳踝', '手臂'], '古文中「股」指的是大腿。'],
+            ['「兵」在古文（如：短兵相接）中最初的意思是什麼？', '兵器 / 武器', ['士兵', '軍隊', '戰爭'], '「兵」的本義是兵器。'],
+            ['「布衣」在古代通常借代為什麼身分的人？', '平民百姓', ['裁縫', '做衣服的人', '和尚'], '古代平民穿麻布衣服，故借代為平民。'],
+            ['「河」在古代文學（如：黃河）中，特指哪一條河？', '黃河', ['長江', '所有河流', '京杭大運河'], '在先秦古文中，「河」為專有名詞，特指黃河。'],
+            ['「涕」在古文（如：涕淚交零）中指的是什麼？', '眼淚', ['鼻涕', '汗水', '口水'], '古文中「涕」指眼淚。'],
+            ['「臭」在古文（如：無色無臭）中指的是什麼？', '氣味 (包含香味)', ['難聞的味道', '腐爛的東西', '臭鼬'], '古文「臭」本指一切氣味，包含香味和臭味。']
+        ];
+
+        const advSynonymPool = [
+            ['政府應該積極___市民的意見。', '反映', ['反應', '反省', '反叛'], '「反映」是指把客觀情況告訴上級；「反應」是指受刺激引起的活動。'],
+            ['他為公司做出了巨大貢獻，我們應該給予___。', '讚揚', ['奉承', '誇耀', '吹捧'], '「讚揚」是發自內心的肯定；「奉承」是帶有貶義的討好。'],
+            ['太陽___著大地，帶來了溫暖和生機。', '照耀', ['照射', '照亮', '照相'], '「照耀」形容強光發出光芒，常帶有偉大、溫暖的語氣；「照射」較為中性物理。'],
+            ['這家公司的___是為客戶提供最優質的服務。', '宗旨', ['意旨', '主旨', '目的'], '「宗旨」指組織或計畫的主要目的和意圖。'],
+            ['我們___在明天早上八點在校門口集合。', '必須', ['必需', '必然', '必定'], '「必須」是副詞，表示一定要（做）；「必需」是動詞/形容詞，表示不可缺少的（物品）。'],
+            ['陽光、空氣和水是人類生存的___品。', '必需', ['必須', '必然', '必備'], '「必需品」指的是不可缺少的物品。'],
+            ['每個公民都有選舉和被選舉的___。', '權利', ['權力', '權限', '權責'], '「權利」是指法律賦予的利益；「權力」是指政治上的強制力量。'],
+            ['校長有___開除嚴重違反校規的學生。', '權力', ['權利', '權益', '權限'], '「權力」指職責範圍內的支配力量。'],
+            ['不要___他去做壞事，這是犯法的。', '慫恿', ['鼓勵', '勸告', '指導'], '「慫恿」是貶義，指從旁鼓動別人去做不好的事；「鼓勵」是褒義。'],
+            ['老師___我們努力學習，追求夢想。', '鼓勵', ['慫恿', '煽動', '唆使'], '「鼓勵」是褒義，激發勉勵。']
+        ];
+
+        // 動態資料生成器：保證 800 題無重複 reference，隨機打亂選項
+        function generateData(pool, category, task, count) {
+            let result = [];
+            for (let i = 0; i < count; i++) {
+                let item = pool[i % pool.length];
+                result.push({
+                    category: category,
+                    task: task,
+                    sentence: item[0],
+                    correct: item[1],
+                    wrongs: item[2],
+                    explanation: item[3]
+                });
+            }
+            return result;
+        }
+
+        const rawQuestDataObj = [
+            ...generateData(redupPool, 'c-redup', '請根據語境選出最合適的疊字詞語。', 100),
+            ...generateData(xiehouPool, 'c-xiehou', '選出最貼切的歇後語完成句子。', 100),
+            ...generateData(proverbPool, 'c-proverb', '選出最貼合情境的諺語名言。', 100),
+            ...generateData(sentimentPool, 'c-idiom-sentiment', '注意成語的「褒義」與「貶義」，選出最精準的詞。', 150),
+            ...generateData(idiomStoryPool, 'c-idiom-story', '根據故事的寓意描述，配對正確的成語。', 150),
+            ...generateData(classicalPool, 'c-classic', '解釋文言文 / 古語中的單字真實含義。', 100),
+            ...generateData(advSynonymPool, 'c-adv-synonym', '辨析高級近義詞，選出語境中最精確的詞語。', 100)
+        ]; // Total exactly 800
+
+        // 進度追蹤
+        let userProgress = JSON.parse(localStorage.getItem('advQuestProgress')) || new Array(800).fill(0);
+
+        function renderDirectory() {
+            const dirContainer = document.getElementById('directory-content');
+            let html = '';
+            categories.forEach(cat => {
+                html += `<div class="mb-6"><h3 class="text-xl font-bold text-${cat.color}-700 mb-3 border-b-2 border-${cat.color}-100 pb-2">${cat.title}</h3><div class="flex flex-wrap gap-3">`;
+                rawQuestDataObj.forEach((q, idx) => {
+                    if(q.category === cat.id) {
+                        let status = userProgress[idx];
+                        let btnClass = 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50';
+                        let icon = (idx + 1);
+
+                        if (status === 1) {
+                            btnClass = 'bg-yellow-100 border-yellow-400 text-yellow-700 shadow-inner';
+                            icon = '🌟';
+                        } else if (status === 2) {
+                            btnClass = 'bg-emerald-100 border-emerald-400 text-emerald-700 shadow-inner';
+                            icon = '✅';
+                        } else if (status === -1) {
+                            btnClass = 'bg-rose-100 border-rose-400 text-rose-700 shadow-inner';
+                            icon = '❌';
+                        }
+
+                        html += `<button onclick="startQuestion(${idx})" class="lvl-btn ${btnClass} w-12 h-12 lg:w-14 lg:h-14 rounded-xl font-black text-base lg:text-lg border-b-4 flex items-center justify-center shadow-sm transition-transform">${icon}</button>`;
+                    }
+                });
+                html += `</div></div>`;
+            });
+            dirContainer.innerHTML = html;
+            updateTotalProgress();
+        }
+
+        function updateTotalProgress() {
+            let solved = userProgress.filter(p => p === 1 || p === 2).length;
+            let percent = (solved / 800) * 100;
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+
+        let currentQuestionIdx = -1;
+
+        // 核心：四選項隨機打亂演算法
+        function shuffleOptions(correct, wrongs) {
+            let opts = [correct, ...wrongs];
+            for (let i = opts.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [opts[i], opts[j]] = [opts[j], opts[i]];
+            }
+            return {
+                options: opts,
+                ansIdx: opts.indexOf(correct)
+            };
+        }
+
+        function startQuestion(idx) {
+            currentQuestionMistakes = 0; 
+            currentQuestionIdx = idx;
+            document.getElementById('quest-directory').style.display = 'none';
+            const questPlay = document.getElementById('quest-play');
+            questPlay.style.display = 'flex';
+            document.getElementById('main-scroll-area').scrollTop = 0;
+            
+            const qData = rawQuestDataObj[idx];
+            const qCatTitle = categories.find(c => c.id === qData.category).title;
+            
+            // 每次進入題目，即時生成打亂的 4 個選項
+            const { options, ansIdx } = shuffleOptions(qData.correct, qData.wrongs);
+
+            // 語音朗讀邏輯，強調重點
+            let ttsText = qData.sentence.replace('___', '什麼');
+            if(qData.category === 'c-xiehou' || qData.category === 'c-proverb' || qData.category === 'c-classic') {
+                ttsText = qData.task + "。 " + qData.sentence.replace('___', '什麼');
+            }
+
+            let sentenceHtml = qData.sentence.replace('___', '<span class="text-purple-600 border-b-4 border-purple-500 px-6 font-black bg-purple-50">?</span>');
+
+            let html = `
+                <div class="w-full flex justify-between items-center mb-4">
+                    <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
+                    <span class="bg-purple-100 text-purple-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${idx + 1} 題 / 共 800 題</span>
+                </div>
+                
+                <div class="slide-up w-full bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center relative transition-all duration-500">
+                    <span class="absolute -top-4 bg-purple-600 text-white px-5 py-1.5 rounded-full font-bold shadow-md text-sm md:text-base">
+                        ${qCatTitle}
+                    </span>
+                    
+                    <div class="w-full flex items-center gap-3 mt-4 mb-6">
+                        <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded text-sm font-bold whitespace-nowrap">進階任務</span>
+                        <h2 class="text-lg md:text-xl font-bold text-slate-700">${qData.task}</h2>
+                    </div>
+
+                    <div class="w-full flex items-start gap-4 mb-8 bg-purple-50 p-6 rounded-2xl border border-purple-100 shadow-inner">
+                        <button onclick="speakText('${ttsText}')" class="tts-btn flex-shrink-0 bg-white text-purple-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-purple-200">🔊</button>
+                        <div class="text-2xl md:text-3xl font-bold text-slate-800 leading-loose">${sentenceHtml}</div>
+                    </div>
+
+                    <div class="flex flex-col gap-4 w-full max-w-lg mt-auto" id="options-container">
+            `;
+
+            options.forEach((optText, oIdx) => {
+                const isCorr = (oIdx === ansIdx);
+                const letter = ['A','B','C','D'][oIdx];
+                html += `<button onclick="checkAnswer(this, ${isCorr})" class="option-btn bg-white border-2 border-slate-200 text-slate-700 text-xl font-bold py-4 px-6 rounded-xl hover:bg-purple-50 hover:border-purple-300 transition w-full text-left flex items-center gap-4"><span class="bg-slate-100 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center text-sm">${letter}</span> <span>${optText}</span></button>`;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            questPlay.innerHTML = html;
+        }
+
+        function backToDirectory() {
+            document.getElementById('quest-play').style.display = 'none';
+            document.getElementById('quest-directory').style.display = 'block';
+            renderDirectory();
+        }
+
+        function checkAnswer(btnElement, isCorrect) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+            if (isCorrect) {
+                btnElement.classList.add('correct');
+                const qData = rawQuestDataObj[currentQuestionIdx];
+                const expText = qData.explanation; 
+                
+                speakText("精準！" + (expText.split('：')[1] || expText));
+                
+                let finalStatus = currentQuestionMistakes === 0 ? 1 : 2;
+                let previousStatus = userProgress[currentQuestionIdx];
+                let expGained = 0;
+
+                // 拔尖版經驗值更高，激勵學習
+                if (previousStatus !== 1 && previousStatus !== 2) {
+                    expGained = finalStatus === 1 ? 30 : 10;
+                } else if (previousStatus === 2 && finalStatus === 1) {
+                    expGained = 20; 
+                }
+
+                if (expGained > 0) {
+                    advExp += expGained;
+                    localStorage.setItem('advExp', advExp);
+                    document.getElementById('exp-display').innerText = advExp;
+                    document.getElementById('exp-display').classList.add('pop');
+                    setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+                }
+
+                if (finalStatus === 1 || previousStatus !== 1) {
+                    userProgress[currentQuestionIdx] = finalStatus;
+                    localStorage.setItem('advQuestProgress', JSON.stringify(userProgress));
+                }
+
+                let modalIcon = finalStatus === 1 ? '🌟' : '✅';
+                let modalTitle = finalStatus === 1 ? '完美答對！語感極佳！' : '成功找出正解！';
+                let expMsg = expGained > 0 
+                    ? `<span class="text-purple-600 block text-xl mb-4">獲得 ${expGained} 點經驗值 ✨</span>` 
+                    : `<span class="text-slate-500 block text-lg mb-4">這題已經成功過關囉！</span>`;
+                
+                let combinedDesc = expMsg + `<div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 text-left text-indigo-900 rounded-r-lg font-bold">${expText}</div>`;
+
+                setTimeout(() => { showModal(modalIcon, modalTitle, combinedDesc); }, 800);
+            } else {
+                btnElement.classList.add('wrong', 'shake');
+                speakText("請再仔細推敲語境！");
+                currentQuestionMistakes++; 
+                userProgress[currentQuestionIdx] = -1;
+                localStorage.setItem('advQuestProgress', JSON.stringify(userProgress));
+                
+                setTimeout(() => {
+                    btnElement.classList.remove('wrong', 'shake');
+                    allBtns.forEach(b => { if (!b.classList.contains('correct')) b.style.pointerEvents = 'auto'; });
+                }, 1500);
+            }
+        }
+
+        function showModal(icon, title, desc) {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            document.getElementById('feedback-icon').innerText = icon;
+            document.getElementById('feedback-title').innerText = title;
+            document.getElementById('feedback-desc').innerHTML = desc;
+            
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.onclick = () => {
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-90');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    let nextIdx = currentQuestionIdx + 1;
+                    if (nextIdx < 800) startQuestion(nextIdx);
+                    else { showToast("恭喜完成所有挑戰！"); backToDirectory(); }
+                }, 300);
+            };
+
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+        }
+
+        function backToDirectoryFromModal() {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                backToDirectory();
+            }, 300);
+        }
+
+        // ================= 3. 拔尖字庫 (高級生字與古文單字) =================
+        const rawWordData = "advanced|躊:足:Hesitate,躇:足:Hesitate,尷:尢:Embarrassed,尬:尢:Embarrassed,忐:心:Nervous,忑:心:Nervous,璀:玉:Bright,璨:玉:Bright,翱:舟:Soar,翔:羽:Soar,憧:心:Yearn for,憬:心:Yearn for,湛:水:Deep/Clear,蔚:艸:Lush,浩:水:Vast,瀚:水:Vast|classic|走:走:Run (Ancient),湯:水:Hot water (Ancient),兵:八:Weapon (Ancient),股:肉:Thigh (Ancient),臭:自:Smell (Ancient),涕:水:Tear (Ancient),妻:女:Wife,子:子:Children,布:巾:Cloth/Commoner,衣:衣:Clothes/Commoner|emotion|憤:心:Angry,恨:心:Hate,愁:心:Worry,悲:心:Sad,恐:心:Fear,懼:心:Dread,慕:心:Admire,戀:心:Love,慰:心:Comfort,愧:心:Ashamed,驚:馬:Surprised,喜:口:Joy,怒:心:Anger,哀:口:Sorrow";
+
+        let parsedWords = [];
+        rawWordData.split('|').forEach((chunk, index, arr) => {
+            if(index % 2 === 0) {
+                let cat = chunk;
+                let pairs = arr[index+1].split(',');
+                pairs.forEach(p => { 
+                    let [char, rad, eng] = p.split(':'); 
+                    if (char && rad) parsedWords.push({ cat, char, rad, eng }); 
+                });
+            }
+        });
+
+        let sbWriter;
+        let isSandboxInitialized = false;
+
+        function initSandbox() { filterWords('all'); }
+
+        function filterWords(category) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('filter-active', 'bg-purple-600', 'text-white');
+                btn.classList.add('bg-slate-50', 'text-slate-600');
+            });
+            let activeBtn = document.getElementById('flt-' + category);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-slate-50', 'text-slate-600');
+                activeBtn.classList.add('filter-active');
+            }
+
+            const grid = document.getElementById('word-grid');
+            let html = '';
+            parsedWords.forEach((item) => {
+                if (category === 'all' || item.cat === category) {
+                    const itemStr = encodeURIComponent(JSON.stringify(item));
+                    html += `<button onclick="selectSandboxChar('${itemStr}')" class="bg-slate-50 border-2 border-slate-200 hover:border-purple-400 hover:bg-purple-50 text-2xl lg:text-3xl font-bold py-3 lg:py-4 rounded-xl transition shadow-sm text-slate-700">${item.char}</button>`;
+                }
+            });
+            grid.innerHTML = html;
+        }
+
+        function searchCustomChar() {
+            const input = document.getElementById('custom-char-input').value.trim();
+            const chars = input.match(/[\u4e00-\u9fa5]/g);
+            if (!chars || chars.length === 0) { showToast("請輸入一個有效的中文字！"); return; }
+            selectSandboxChar(encodeURIComponent(JSON.stringify({ char: chars[0], rad: '檢索', eng: 'Dictionary' })));
+            document.getElementById('custom-char-input').value = ''; 
+        }
+
+        function selectSandboxChar(itemStr) {
+            document.getElementById('sandbox-placeholder').classList.add('hidden');
+            document.getElementById('sandbox-content').classList.remove('hidden');
+            const data = JSON.parse(decodeURIComponent(itemStr));
+            document.getElementById('sb-char').innerText = data.char;
+            document.getElementById('sb-radical').innerText = data.rad;
+            document.getElementById('sb-english').innerText = data.eng || 'Translation';
+            document.getElementById('sb-feedback').style.opacity = '0';
+            speakText(data.char);
+
+            const canvasDiv = document.getElementById('sandbox-canvas');
+            canvasDiv.innerHTML = ''; 
+            const size = window.innerWidth < 768 ? 256 : 320; 
+            
+            try {
+                sbWriter = HanziWriter.create('sandbox-canvas', data.char, {
+                    width: size, height: size, padding: 15, strokeAnimationSpeed: 1, delayBetweenStrokes: 100,
+                    strokeColor: '#1e293b', radicalColor: '#7e22ce', showHintAfterMisses: 2, leniency: 2.0 
+                });
+            } catch(e) {
+                canvasDiv.innerHTML = `<div class="flex flex-col items-center justify-center h-full px-4 text-center"><span class="text-5xl mb-3">📭</span><p class="text-rose-500 font-bold text-lg">字庫暫未收錄「${data.char}」的筆順。</p></div>`;
+                sbWriter = null;
+            }
+        }
+
+        function startSandboxQuiz() {
+            if (!sbWriter) { showToast("無法練習試寫喔！"); return; }
+            document.getElementById('sb-feedback').style.opacity = '0';
+            sbWriter.quiz({
+                onMistake: function() {
+                    const fb = document.getElementById('sb-feedback');
+                    fb.innerText = "❌ 筆順不正確！";
+                    fb.className = "mt-4 text-lg font-bold text-rose-500 h-8 transition-opacity opacity-100 shake";
+                    speakText("筆順不正確");
+                    setTimeout(() => fb.classList.remove('shake'), 400);
+                },
+                onComplete: function() {
+                    const fb = document.getElementById('sb-feedback');
+                    fb.innerText = "✨ 書寫精確！(獲得 5 EXP)";
+                    fb.className = "mt-4 text-xl font-bold text-purple-600 h-8 transition-opacity opacity-100 pop";
+                    speakText("書寫精確！");
+                    advExp += 5;
+                    localStorage.setItem('advExp', advExp);
+                    document.getElementById('exp-display').innerText = advExp;
+                    document.getElementById('exp-display').classList.add('pop');
+                    setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+                }
+            });
+        }
+
+        window.onload = function() {
+            document.getElementById('exp-display').innerText = advExp;
+            switchMode('quest'); 
+            renderDirectory();
+            document.getElementById('custom-char-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') searchCustomChar();
+            });
+        }
+    </script>
+</body>
+</html>
