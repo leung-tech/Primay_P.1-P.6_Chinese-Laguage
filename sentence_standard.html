@@ -104,6 +104,22 @@
         </div>
     </div>
 
+    <!-- 學習小教學 Modal -->
+    <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="tutorial-content">
+            <div class="flex justify-between items-center mb-4 border-b-2 border-orange-100 pb-3">
+                <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-orange-600 flex items-center gap-2">📘 學習錦囊</h2>
+                <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
+            </div>
+            <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4">
+                <!-- 教學內容動態載入 -->
+            </div>
+            <div class="mt-6 pt-4 border-t-2 border-slate-100">
+                <button onclick="closeTutorial()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-orange-700 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 反饋 Modal -->
     <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity">
         <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform" id="feedback-content">
@@ -124,6 +140,7 @@
         let sentExp = parseInt(localStorage.getItem('sentStandardExp')) || 0;
         document.getElementById('exp-display').innerText = sentExp;
         let currentQuestionMistakes = 0; 
+        let pendingQuestionIdx = -1; // 記錄被教學攔截的題目
         
         // 用於重組句子的狀態變數
         let reorderSource = []; 
@@ -140,6 +157,94 @@
             }
         }
 
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "toast-msg show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // ================= 1.5 學習錦囊內容 (教學資源庫) =================
+        const tutorialContents = {
+            's-insert': `
+                <div class="text-center mb-4"><span class="text-6xl">🧩 ➕ 📝</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">如何精準「擴充句子」？</p>
+                <p class="mb-4 text-slate-600">擴充句子就像幫詞語找好朋友，你要判斷新詞語應該放在哪裡！</p>
+                <div class="bg-orange-50 p-4 rounded-xl border-2 border-orange-200 mb-3 space-y-4">
+                    <div>
+                        <p class="font-black text-orange-800 text-lg border-b border-orange-200 pb-1 mb-2">1. 修飾物品的「的」👉 放在名詞前面</p>
+                        <p class="text-base text-slate-600">例：把「美麗的」放入「這是一朵花」</p>
+                        <p class="text-lg font-bold">✅ 這是一朵 <span class="text-white bg-orange-500 px-2 rounded">美麗的</span> 花。</p>
+                    </div>
+                    <div>
+                        <p class="font-black text-rose-800 text-lg border-b border-rose-200 pb-1 mb-2">2. 修飾動作的「地」👉 放在動詞前面</p>
+                        <p class="text-base text-slate-600">例：把「開心地」放入「妹妹在畫畫」</p>
+                        <p class="text-lg font-bold">✅ 妹妹 <span class="text-white bg-rose-500 px-2 rounded">開心地</span> 在畫畫。</p>
+                    </div>
+                </div>
+            `,
+            's-conj': `
+                <div class="text-center mb-4"><span class="text-6xl">🔗 💡</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">關聯詞魔法配對！</p>
+                <p class="mb-4 text-slate-600">關聯詞能把兩個句子連起來，不同的關聯詞有不同的魔法效果喔：</p>
+                <div class="bg-amber-50 p-4 rounded-xl border-2 border-amber-200 mb-3 space-y-3">
+                    <p class="text-lg"><span class="bg-white font-black text-amber-700 border border-amber-300 px-2 py-1 rounded">因為...所以...</span> 👉 解釋原因和結果</p>
+                    <p class="text-lg"><span class="bg-white font-black text-rose-700 border border-rose-300 px-2 py-1 rounded">雖然...但是...</span> 👉 事情有轉折 (意想不到)</p>
+                    <p class="text-lg"><span class="bg-white font-black text-blue-700 border border-blue-300 px-2 py-1 rounded">不但...而且...</span> 👉 好的加好，壞的加壞 (遞進)</p>
+                    <p class="text-lg"><span class="bg-white font-black text-emerald-700 border border-emerald-300 px-2 py-1 rounded">如果...就...</span> 👉 假設一種情況</p>
+                </div>
+            `,
+            's-reorder-adv': `
+                <div class="text-center mb-4"><span class="text-6xl">🕵️‍♂️ 🚂</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">破解長句子密碼！</p>
+                <p class="mb-4 text-slate-600">遇到很長的句子不要怕，我們有「三步解碼法」：</p>
+                <div class="bg-teal-50 p-4 rounded-xl border-2 border-teal-200 mb-3 space-y-3 text-lg font-bold text-teal-900">
+                    <p>1️⃣ 先找 <span class="bg-white px-2 rounded text-rose-600 border border-rose-200">關聯詞</span> (因為、所以、雖然)，排在句首。</p>
+                    <p>2️⃣ 再找 <span class="bg-white px-2 rounded text-blue-600 border border-blue-200">人物 / 時間</span> (他、今天、我們)。</p>
+                    <p>3️⃣ 最後配對 <span class="bg-white px-2 rounded text-orange-600 border border-orange-200">動作 / 事情</span> 把它們連起來！</p>
+                </div>
+            `,
+            's-rhetorical': `
+                <div class="text-center mb-4"><span class="text-6xl">🔄 ❓</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">陳述句 VS 反問句</p>
+                <p class="mb-4 text-slate-600">「反問句」表面上是問問題 (❓)，其實是用來表達非常肯定的意思！轉換時有一個大秘訣：</p>
+                <div class="bg-blue-50 p-4 rounded-xl border-2 border-blue-200 mb-3 text-center">
+                    <p class="font-black text-xl text-blue-800 mb-2">✨ 變變變口訣 ✨</p>
+                    <p class="text-lg font-bold mb-1"><span class="text-rose-600">有「不」</span> 變成 <span class="text-emerald-600">沒「不」</span></p>
+                    <p class="text-lg font-bold"><span class="text-emerald-600">沒「不」</span> 變成 <span class="text-rose-600">有「不」</span></p>
+                    <hr class="my-3 border-blue-200">
+                    <p class="text-left text-slate-700 text-base">例：你不<span class="text-rose-500 font-bold">應該</span>生氣。<br>👉 你怎麼<span class="text-rose-500 font-bold">能</span>生氣呢？</p>
+                </div>
+            `
+        };
+
+        function showTutorial(categoryId) {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            
+            document.getElementById('tutorial-body').innerHTML = tutorialContents[categoryId];
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+            
+            localStorage.setItem('tut_seen_' + categoryId, 'true');
+        }
+
+        function closeTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (pendingQuestionIdx !== -1) {
+                    let targetIdx = pendingQuestionIdx;
+                    pendingQuestionIdx = -1;
+                    startQuestion(targetIdx, true); // force=true 略過攔截
+                }
+            }, 300);
+        }
+
         // ================= 2. 標準語法題庫 (無重複，純淨 80 題) =================
         const categories = [
             { id: 's-insert', title: '🌟 擴充句子 (精準插入位置)', color: 'orange' },
@@ -148,7 +253,6 @@
             { id: 's-rhetorical', title: '🔄 句型轉換 (陳述與反問)', color: 'blue' }
         ];
 
-        // 資料整理工具 (不再循環複製，保證 100% 獨立不重複)
         function formatData(pool, category, task) {
             return pool.map(item => ({
                 category: category,
@@ -157,7 +261,7 @@
             }));
         }
 
-        // --- 題型 A：擴充句子插入位置 (20題絕對不重複) ---
+        // --- 題型 A：擴充句子插入位置 (20題) ---
         const insertPool = [
             [['妹妹', '在畫畫。'], '開心地', 1],
             [['太陽', '升起來了。'], '慢慢地', 1],
@@ -181,7 +285,7 @@
             [['汽車', '在公路上行駛。'], '飛快地', 1]
         ];
 
-        // --- 題型 B：關聯詞填充 (20題絕對不重複) ---
+        // --- 題型 B：關聯詞填充 (20題) ---
         const conjPool = [
             ['___明天下大雨，我們___不去了。', ['如果...就...', '因為...所以...', '雖然...但是...'], 0],
             ['___他生病了，___他沒有來上學。', ['因為...所以...', '不但...而且...', '如果...就...'], 0],
@@ -205,7 +309,7 @@
             ['___你想取得好成績，___必須付出努力。', ['如果...就...', '即使...也...', '雖然...但是...'], 0]
         ];
 
-        // --- 題型 C：進階重組長句 (20題絕對不重複) ---
+        // --- 題型 C：進階重組長句 (20題) ---
         const reorderAdvPool = [
             [['因為', '今天', '下大雨，', '所以', '比賽', '取消了。'], '🌧️'],
             [['雖然', '這道題', '很難，', '但是', '他', '算出來了。'], '✍️'],
@@ -229,7 +333,7 @@
             [['與其', '浪費時間，', '不如', '多讀', '幾本', '好書。'], '📖']
         ];
 
-        // --- 題型 D：句型轉換 (20題絕對不重複) ---
+        // --- 題型 D：句型轉換 (20題) ---
         const rhetoricalPool = [
             ['這點小事，你不應該生氣。（改為反問句）', ['這點小事，你怎麼能生氣呢？', '這點小事，你一定會生氣。', '這點小事，請你不要生氣。'], 0],
             ['這件事怎麼能怪他呢？（改為陳述句）', ['這件事不應該怪他。', '這件事一定要怪他。', '這件事難道不怪他嗎？'], 0],
@@ -267,7 +371,14 @@
             const dirContainer = document.getElementById('directory-content');
             let html = '';
             categories.forEach(cat => {
-                html += `<div class="mb-6"><h3 class="text-xl font-bold text-${cat.color}-700 mb-3 border-b-2 border-${cat.color}-100 pb-2">${cat.title}</h3><div class="flex flex-wrap gap-3">`;
+                html += `
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between border-b-2 border-${cat.color}-100 pb-2 mb-3">
+                            <h3 class="text-xl font-bold text-${cat.color}-700">${cat.title}</h3>
+                            <button onclick="showTutorial('${cat.id}')" class="bg-orange-100 text-orange-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-orange-300 hover:bg-orange-200 transition flex items-center gap-1 active:scale-95">📘 學習錦囊</button>
+                        </div>
+                        <div class="flex flex-wrap gap-3">
+                `;
                 rawQuestDataObj.forEach((q, idx) => {
                     if(q.category === cat.id) {
                         let status = userProgress[idx];
@@ -302,13 +413,22 @@
 
         let currentQuestionIdx = -1;
 
-        // 打亂選項的輔助函數
         function shuffleOptions(optionsArray, correctIndex) {
             let opts = optionsArray.map((opt, i) => ({ text: opt, isCorrect: i === correctIndex }));
             return opts.sort(() => Math.random() - 0.5);
         }
 
-        function startQuestion(idx) {
+        function startQuestion(idx, forceStart = false) {
+            const qData = rawQuestDataObj[idx];
+            const qType = qData.category;
+            
+            // 🌟 自動攔截機制：如果沒看過教學，強制彈出
+            if (!forceStart && !localStorage.getItem('tut_seen_' + qType)) {
+                pendingQuestionIdx = idx;
+                showTutorial(qType);
+                return;
+            }
+
             currentQuestionMistakes = 0; 
             currentQuestionIdx = idx;
             document.getElementById('quest-directory').style.display = 'none';
@@ -316,8 +436,6 @@
             questPlay.style.display = 'flex';
             document.getElementById('main-scroll-area').scrollTop = 0;
             
-            const qData = rawQuestDataObj[idx];
-            const qType = qData.category;
             const qCatTitle = categories.find(c => c.id === qType).title;
             const qTask = qData.task;
 
@@ -339,7 +457,7 @@
             `;
 
             if (qType === 's-insert') {
-                // 擴充句子：位置點擊
+                // 擴充句子
                 const chunks = qData.qData[0];
                 const phrase = qData.qData[1];
                 const ansPos = qData.qData[2];
@@ -358,7 +476,6 @@
                     <div class="w-full bg-slate-50 p-6 md:p-8 rounded-2xl border-2 border-slate-200 flex flex-wrap items-center justify-center gap-2 mb-6 text-2xl md:text-3xl font-bold text-slate-700 leading-loose">
                 `;
 
-                // 產生插入點與文字
                 for (let i = 0; i <= chunks.length; i++) {
                     const isCorr = (i === ansPos);
                     html += `<button onclick="checkInsertAnswer(this, ${isCorr}, '${phrase}', ${i})" class="insert-slot px-4 py-2 rounded-xl text-orange-400 font-black" title="點擊放入這裡">＋</button>`;
@@ -385,7 +502,6 @@
                     
                     <!-- 目標放置區 -->
                     <div class="w-full bg-slate-50 p-4 md:p-6 rounded-2xl border-2 border-slate-200 min-h-[120px] flex flex-wrap content-start gap-2 mb-6" id="reorder-target-area">
-                        <!-- 動態填充 -->
                     </div>
 
                     <div class="w-full border-t-2 border-dashed border-slate-200 my-2"></div>
@@ -393,7 +509,6 @@
                     <!-- 來源點擊區 -->
                     <div class="text-center text-slate-500 font-bold mb-2 text-sm">👇 點擊下方詞語加入句子</div>
                     <div class="w-full flex flex-wrap justify-center gap-3" id="reorder-source-area">
-                        <!-- 動態填充 -->
                     </div>
                 `;
                 html += `</div>`;
@@ -401,7 +516,7 @@
                 renderReorderUI();
 
             } else {
-                // s-conj (關聯詞) 或 s-rhetorical (句型轉換)
+                // 關聯詞 或 句型轉換
                 const sentence = qData.qData[0];
                 const options = qData.qData[1];
                 const ansIdx = qData.qData[2];
