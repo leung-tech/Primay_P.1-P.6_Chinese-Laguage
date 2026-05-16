@@ -101,7 +101,6 @@
             <div id="quest-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
                 <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">🎯 常規題型特訓地圖</h2>
                 
-                <!-- 💡 清晰的標記說明圖例 -->
                 <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
                     <div class="text-blue-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
                     <div class="flex flex-wrap gap-4 flex-1">
@@ -175,6 +174,22 @@
         </div>
     </div>
 
+    <!-- 學習小教學 Modal -->
+    <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="tutorial-content">
+            <div class="flex justify-between items-center mb-4 border-b-2 border-blue-100 pb-3">
+                <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-blue-600 flex items-center gap-2">📘 學習錦囊</h2>
+                <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
+            </div>
+            <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4">
+                <!-- 教學內容動態載入 -->
+            </div>
+            <div class="mt-6 pt-4 border-t-2 border-slate-100">
+                <button onclick="closeTutorial()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 反饋 Modal -->
     <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity">
         <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform" id="feedback-content">
@@ -196,6 +211,8 @@
         document.getElementById('exp-display').innerText = stdExp;
         let typoStep = 1; 
         let currentQuestionMistakes = 0;
+        let currentQuestionIdx = -1;
+        let pendingQuestionIdx = -1; // 用於教學攔截
 
         function speakText(text) {
             if ('speechSynthesis' in window) {
@@ -212,6 +229,133 @@
             toast.innerText = message;
             toast.className = "toast-msg show";
             setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // ================= 1.5 學習錦囊內容 (教學資源庫) =================
+        const tutorialContents = {
+            'c-pic': `
+                <div class="text-center mb-4"><span class="text-6xl">🎨 ➡️ 字</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">古人怎麼發明文字的？</p>
+                <p class="mb-4 text-slate-600">中文字的祖先是「畫畫」！</p>
+                <div class="bg-amber-50 p-4 rounded-xl border-2 border-amber-200 mb-3 space-y-4 text-center">
+                    <div>
+                        <p class="font-black text-amber-800 text-xl mb-1">【象形字】</p>
+                        <p class="text-base text-slate-700">照著東西的形狀畫出來。<br>例：畫一座山峰 ⛰️ 變成「<span class="text-amber-600 font-bold">山</span>」</p>
+                    </div>
+                    <hr class="border-amber-200">
+                    <div>
+                        <p class="font-black text-teal-800 text-xl mb-1">【指事字】</p>
+                        <p class="text-base text-slate-700">用點或線「做記號」來表示位置。<br>例：在橫線下面點一點 ⬇️ 變成「<span class="text-teal-600 font-bold">下</span>」</p>
+                    </div>
+                </div>
+            `,
+            'c-measure': `
+                <div class="text-center mb-4"><span class="text-6xl">📏 🐶 🐟</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">什麼是「量詞」？</p>
+                <p class="mb-4 text-slate-600">量詞就是用來計算東西數量的單位。不同的東西有不同的好朋友：</p>
+                <div class="bg-teal-50 p-4 rounded-xl border-2 border-teal-200 mb-3 space-y-3">
+                    <p class="text-lg">🐶 動物通常用 <span class="bg-white font-black text-teal-700 border border-teal-300 px-2 py-1 rounded">隻</span> 或 <span class="bg-white font-black text-teal-700 border border-teal-300 px-2 py-1 rounded">頭</span></p>
+                    <p class="text-lg">🐟 長條形的東西用 <span class="bg-white font-black text-teal-700 border border-teal-300 px-2 py-1 rounded">條</span></p>
+                    <p class="text-lg">🚗 車子、機器用 <span class="bg-white font-black text-teal-700 border border-teal-300 px-2 py-1 rounded">輛</span> 或 <span class="bg-white font-black text-teal-700 border border-teal-300 px-2 py-1 rounded">部</span></p>
+                    <p class="text-lg">☔ 有手柄的東西用 <span class="bg-white font-black text-teal-700 border border-teal-300 px-2 py-1 rounded">把</span></p>
+                </div>
+            `,
+            'c-similar': `
+                <div class="text-center mb-4"><span class="text-6xl">👯‍♂️ 🔎</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">分辨「形近字」的秘訣</p>
+                <p class="mb-4 text-slate-600">長得很像的字，要看它們的<span class="text-blue-600 font-bold">部首</span>或<span class="text-blue-600 font-bold">小細節</span>！</p>
+                <div class="bg-blue-50 p-4 rounded-xl border-2 border-blue-200 mb-3 space-y-4 text-center">
+                    <div>
+                        <p class="text-2xl font-black mb-1">喝 <span class="text-slate-400 font-normal">VS</span> 渴</p>
+                        <p class="text-base text-slate-700">用 <span class="font-bold text-rose-500 bg-white px-1 rounded">口</span> 喝水<br>身體缺 <span class="font-bold text-rose-500 bg-white px-1 rounded">水 (氵)</span> 會口渴</p>
+                    </div>
+                    <hr class="border-blue-200">
+                    <div>
+                        <p class="text-2xl font-black mb-1">坐 <span class="text-slate-400 font-normal">VS</span> 座</p>
+                        <p class="text-base text-slate-700">「坐」下是一個<span class="font-bold text-blue-600">動作</span><br>「座」位是一個<span class="font-bold text-blue-600">地方(广)</span></p>
+                    </div>
+                </div>
+            `,
+            'c-typo': `
+                <div class="text-center mb-4"><span class="text-6xl">🩺 ❌</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">如何成為「錯別字醫生」？</p>
+                <p class="mb-4 text-slate-600">當句子裡混進了同音字或形近字，就會變成錯字。請跟著以下步驟：</p>
+                <div class="bg-rose-50 p-4 rounded-xl border-2 border-rose-200 mb-3 space-y-3 font-bold text-rose-800 text-lg">
+                    <p>1️⃣ 先大聲讀一次句子，覺得哪個字怪怪的？</p>
+                    <p>2️⃣ <span class="bg-white px-2 py-1 rounded border border-rose-300 text-rose-600">點擊</span>那個怪怪的字。</p>
+                    <p>3️⃣ 從選項中選出<span class="bg-white px-2 py-1 rounded border border-rose-300 text-rose-600">正確的字</span>把它治好！</p>
+                </div>
+            `,
+            'c-synant': `
+                <div class="text-center mb-4"><span class="text-6xl">🔄 🎭</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">近義詞 與 反義詞</p>
+                <div class="bg-purple-50 p-4 rounded-xl border-2 border-purple-200 mb-3 space-y-4">
+                    <div>
+                        <p class="font-black text-purple-800 text-xl border-b border-purple-200 pb-1 mb-2">🤝 近義詞 (好朋友)</p>
+                        <p class="text-base text-slate-700">意思相近的詞語，可以互相替換。<br>例：美麗 ➡️ <span class="font-bold text-purple-600 bg-white px-1 rounded">漂亮</span></p>
+                    </div>
+                    <div>
+                        <p class="font-black text-orange-800 text-xl border-b border-orange-200 pb-1 mb-2">⚔️ 反義詞 (敵人)</p>
+                        <p class="text-base text-slate-700">意思完全相反的詞語。<br>例：美麗 ➡️ <span class="font-bold text-orange-600 bg-white px-1 rounded">醜陋</span></p>
+                    </div>
+                </div>
+            `,
+            'c-meaning': `
+                <div class="text-center mb-4"><span class="text-6xl">📖 🕵️‍♂️</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">詞義理解與運用</p>
+                <p class="mb-4 text-slate-600">這關考驗你對詞語的熟悉度。遇到不會的詞，要像偵探一樣尋找<span class="text-emerald-600 font-bold">上下文線索</span>！</p>
+                <div class="bg-emerald-50 p-4 rounded-xl border-2 border-emerald-200 mb-3 text-base text-slate-700">
+                    <p class="font-bold mb-2">例：他做事很___，從不出錯。</p>
+                    <p>💡 線索是「不出錯」，所以答案一定是小心、仔細的意思，我們應該選 <span class="font-bold text-emerald-700 bg-white px-2 rounded">謹慎</span>！</p>
+                </div>
+            `,
+            'c-colloc': `
+                <div class="text-center mb-4"><span class="text-6xl">🤝 🧩</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">詞語的固定搭配</p>
+                <p class="mb-4 text-slate-600">中文裡有很多詞語是「固定好朋友」，一定要放在一起才通順！</p>
+                <div class="bg-cyan-50 p-4 rounded-xl border-2 border-cyan-200 mb-3 space-y-2 font-bold text-cyan-800 text-lg text-center">
+                    <p><span class="bg-white px-2 rounded text-cyan-600">養成</span> ➕ 習慣</p>
+                    <p><span class="bg-white px-2 rounded text-cyan-600">發揮</span> ➕ 作用 / 長處</p>
+                    <p><span class="bg-white px-2 rounded text-cyan-600">克服</span> ➕ 困難</p>
+                    <p><span class="bg-white px-2 rounded text-cyan-600">愛護</span> ➕ 公物</p>
+                </div>
+            `,
+            'c-idiom': `
+                <div class="text-center mb-4"><span class="text-6xl">🐲 📜</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">四字成語大挑戰</p>
+                <p class="mb-4 text-slate-600">成語通常有四個字，背後都有一個小故事或特別的意思！</p>
+                <div class="bg-orange-50 p-4 rounded-xl border-2 border-orange-200 mb-3 text-center">
+                    <p class="text-xl font-black text-orange-800 mb-2">💡 卡關了嗎？</p>
+                    <p class="text-base text-slate-700">做題時，如果不知道選哪個，可以點擊畫面上的<span class="font-bold text-orange-600">「💡 提示」</span>按鈕，看看成語的解釋喔！</p>
+                </div>
+            `
+        };
+
+        function showTutorial(categoryId) {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            
+            document.getElementById('tutorial-body').innerHTML = tutorialContents[categoryId];
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+            
+            localStorage.setItem('tut_seen_' + categoryId, 'true');
+        }
+
+        function closeTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (pendingQuestionIdx !== -1) {
+                    let targetIdx = pendingQuestionIdx;
+                    pendingQuestionIdx = -1;
+                    startQuestion(targetIdx, true); 
+                }
+            }, 300);
         }
 
         function switchMode(mode) {
@@ -340,8 +484,8 @@
             ['那是一座高高的山___。', ['峰', '蜂', '鋒'], 0, '山峰的峰（山部）。'],
             ['媽媽買了一個水___桃。', ['蜜', '密', '秘'], 0, '水蜜桃的蜜（虫部）。'],
             ['這是一個大秘___。', ['密', '蜜', '秘'], 0, '秘密的密（宀部）。'],
-            ['我在超級市場___東西。', ['買', '賣', '實'], 0, '購買的買（上面沒十字）。'],
-            ['商店正在___水果。', ['賣', '買', '實'], 0, '賣出的賣（上面有十字）。']
+            ['商店正在___水果。', ['賣', '買', '實'], 0, '賣出的賣（上面有十字）。'],
+            ['這是一個圖___。', ['形', '刑', '行'], 0, '圖形的形，右邊是三撇。']
         ].map(item => ['c-similar', 'c-similar', '選出正確的字填入空格。', `句子：${item[0].replace('___', '___')}`, item[1], item[2], item[3]]);
 
         const typoData = [
@@ -380,6 +524,7 @@
             ['這是一個大秘蜜。', '蜜', ['密', '謐', '覓'], 0, '秘密'],
             ['商店正在買出水果。', '買', ['賣', '邁', '麥'], 0, '賣出'],
             ['這是一個圓刑的蘋果。', '刑', ['形', '型', '行'], 0, '圓形'],
+            ['畫畫需要用到圖刑。', '刑', ['形', '型', '行'], 0, '圖形的形。'],
             ['請你幫我燒水。', '燒', ['澆', '繞', '曉'], 0, '澆水'],
             ['海邊有一隻小貝穀。', '穀', ['殼', '確', '角'], 0, '貝殼'],
             ['這是一把峰利的刀。', '峰', ['鋒', '蜂', '豐'], 0, '鋒利'],
@@ -529,13 +674,19 @@
         const rawQuestData = [...picData, ...measureData, ...similarData, ...typoData, ...synantData, ...meaningData, ...collocData, ...idiomData];
 
         let userProgress = JSON.parse(localStorage.getItem('stdQuestProgress')) || new Array(300).fill(0);
-        let currentQuestionIdx = -1;
 
         function renderDirectory() {
             const dirContainer = document.getElementById('directory-content');
             let html = '';
             categories.forEach(cat => {
-                html += `<div class="mb-6"><h3 class="text-xl font-bold text-${cat.color}-700 mb-3 border-b-2 border-${cat.color}-100 pb-2">${cat.title}</h3><div class="flex flex-wrap gap-3">`;
+                html += `
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between border-b-2 border-${cat.color}-100 pb-2 mb-3">
+                            <h3 class="text-xl font-bold text-${cat.color}-700">${cat.title}</h3>
+                            <button onclick="showTutorial('${cat.id}')" class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-blue-300 hover:bg-blue-200 transition flex items-center gap-1 active:scale-95">📘 學習錦囊</button>
+                        </div>
+                        <div class="flex flex-wrap gap-3">
+                `;
                 rawQuestData.forEach((q, idx) => {
                     if(q[1] === cat.id) {
                         let status = userProgress[idx];
@@ -568,7 +719,17 @@
             document.getElementById('progress-bar').style.width = percent + '%';
         }
 
-        function startQuestion(idx) {
+        function startQuestion(idx, forceStart = false) {
+            const qData = rawQuestData[idx];
+            const catId = qData[1];
+            
+            // 🌟 自動教學攔截
+            if (!forceStart && !localStorage.getItem('tut_seen_' + catId)) {
+                pendingQuestionIdx = idx;
+                showTutorial(catId);
+                return;
+            }
+
             typoStep = 1; 
             currentQuestionMistakes = 0; 
             currentQuestionIdx = idx;
@@ -577,9 +738,8 @@
             questPlay.style.display = 'flex';
             document.getElementById('main-scroll-area').scrollTop = 0;
             
-            const qData = rawQuestData[idx];
             const qType = qData[0];
-            const qCatTitle = categories.find(c => c.id === qData[1]).title;
+            const qCatTitle = categories.find(c => c.id === catId).title;
             const qTask = qData[2];
             let qSentence, options, ansIdx, typoChar, extraData;
 
@@ -862,7 +1022,7 @@
             setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
         }
 
-        // ================= 3. 無盡字庫寫字板 (進階字彙 + 英文解釋) =================
+        // ================= 3. 無盡字庫寫字板 =================
         const rawWordData = "nature|霧:雨:Fog,露:雨:Dew,霞:雨:Sunset clouds,雷:雨:Thunder,電:雨:Electricity,峰:山:Peak,嶺:山:Ridge,崖:山:Cliff,泉:水:Spring,瀑:水:Waterfall,溪:水:Stream,潮:水:Tide,濤:水:Waves,旱:日:Drought,晨:日:Morning,暮:日:Dusk|person|腦:頁:Brain,肺:肉:Lung,胃:肉:Stomach,腸:肉:Intestine,膚:皮:Skin,骨:骨:Bone,脈:肉:Vein,額:頁:Forehead,頸:頁:Neck,肩:肉:Shoulder,臂:肉:Arm,腿:肉:Leg,智:日:Wisdom,慧:心:Intelligence|action|觀:見:Observe,聽:耳:Listen,思:心:Think,探:手:Explore,創:刀:Create,駕:馬:Drive,航:舟:Sail,藏:艸:Hide,找:手:Search,救:攴:Save,毀:殳:Destroy,建:廴:Build,測:水:Measure|object|鏡:金:Mirror,鐘:金:Clock,錶:金:Watch,鍵:金:Key,盤:皿:Plate,碗:石:Bowl,筷:竹:Chopsticks,劍:刀:Sword,盾:目:Shield,箭:竹:Arrow,箱:竹:Box,櫃:木:Cabinet,琴:玉:Piano,棋:木:Chess|emotion|憤:心:Angry,恨:心:Hate,愁:心:Worry,悲:心:Sad,恐:心:Fear,懼:心:Dread,慕:心:Admire,戀:心:Love,慰:心:Comfort,愧:心:Ashamed,驚:馬:Surprised,喜:口:Joy,怒:心:Anger,哀:口:Sorrow|time|年:干:Year,月:月:Month,日:日:Day,時:日:Hour,分:刀:Minute,秒:禾:Second,早:日:Early,晚:日:Late,晝:日:Daytime,夜:夕:Night,春:日:Spring,夏:夊:Summer,秋:禾:Autumn,冬:冫:Winter";
 
         let parsedWords = [];
@@ -942,7 +1102,7 @@
                     }
                 });
             } catch(e) {
-                // Initial creation catch
+                // Error catching
             }
         }
 
