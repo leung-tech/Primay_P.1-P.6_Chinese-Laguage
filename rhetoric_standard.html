@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>修辭與標點 - 標準常規訓練</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif;
+            background-color: #ecfeff; /* 清新的海洋青/淺藍綠背景 */
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .bg-grid-pattern {
+            background-image: linear-gradient(to right, #cffafe 1px, transparent 1px), linear-gradient(to bottom, #cffafe 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .pop { animation: pop 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .option-btn { transition: all 0.2s; box-shadow: 0 4px 0 #67e8f9; }
+        .option-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .option-btn.correct { background-color: #cffafe; border-color: #06b6d4; color: #164e63; box-shadow: 0 0 0 transparent; transform: translateY(4px); pointer-events: none; }
+        .option-btn.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.6; pointer-events: none; }
+
+        .tts-btn { transition: transform 0.2s; }
+        .tts-btn:active { transform: scale(0.9); }
+        .lvl-btn { transition: transform 0.2s; }
+        .lvl-btn:hover { transform: scale(1.05); }
+
+        .toast-msg {
+            visibility: hidden; min-width: 250px; background-color: #ef4444; color: #fff; text-align: center;
+            border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px;
+            transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
+        @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
+
+    <!-- 頂部導覽列 (Cyan 配色) -->
+    <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
+        <div class="p-3 lg:p-4 bg-cyan-600 text-white flex justify-between items-center w-full">
+            <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
+                <a href="index.html" class="hover:bg-cyan-700 p-1 rounded transition bg-cyan-800">⬅️ 返回</a>
+                <span>📝 修辭與標點 (標準版)</span>
+            </h1>
+            <div class="flex gap-2 lg:gap-4 items-center bg-cyan-800 px-3 py-1.5 rounded-full border border-cyan-500 shadow-inner">
+                <span class="text-lg lg:text-xl">🏆</span>
+                <span class="font-bold text-sm lg:text-lg">EXP: <span id="exp-display" class="text-yellow-300">0</span></span>
+            </div>
+        </div>
+        <div id="progress-container" class="w-full bg-slate-200 h-2">
+            <div id="progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
+        </div>
+    </div>
+
+    <!-- 主畫面區 -->
+    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
+        
+        <div id="quest-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
+            <div id="quest-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">🎯 標點與修辭常規特訓</h2>
+                <div class="bg-cyan-50 border border-cyan-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
+                    <div class="text-cyan-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
+                    <div class="flex flex-wrap gap-4 flex-1">
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-lg shadow-sm">🌟</span> 一次答對 (+20)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 經提示答對 (+10)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-rose-100 border-2 border-rose-400 flex items-center justify-center text-lg shadow-sm">❌</span> 未完成</div>
+                    </div>
+                </div>
+                <div id="directory-content" class="flex flex-col gap-8"></div>
+            </div>
+            
+            <div id="quest-play" class="w-full hidden flex-col items-center"></div>
+        </div>
+    </div>
+
+    <!-- 學習小教學 Modal -->
+    <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="tutorial-content">
+            <div class="flex justify-between items-center mb-4 border-b-2 border-cyan-100 pb-3">
+                <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-cyan-600 flex items-center gap-2">📘 學習錦囊</h2>
+                <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
+            </div>
+            <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4"></div>
+            <div class="mt-6 pt-4 border-t-2 border-slate-100">
+                <button onclick="closeTutorial()" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-cyan-800 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 答對全解析 Modal -->
+    <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-xl text-center transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="feedback-content">
+            <div id="feedback-icon" class="text-6xl mb-2">🎉</div>
+            <h2 id="feedback-title" class="text-2xl md:text-3xl font-black text-slate-800 mb-2">答對了！</h2>
+            <div id="feedback-desc" class="text-slate-600 font-bold mb-4 text-base md:text-lg leading-relaxed text-left overflow-y-auto pr-2 flex-1 w-full"></div>
+            <div class="flex gap-3 w-full mt-2 pt-4 border-t border-slate-100">
+                <button onclick="backToDirectoryFromModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition text-lg">⬅️ 目錄</button>
+                <button id="next-btn" class="flex-[1.5] bg-cyan-600 hover:bg-cyan-700 text-white font-black py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-cyan-800 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-msg">提示訊息</div>
+
+    <script>
+        // ================= 1. 核心狀態與輔助函數 =================
+        let stdExp = parseInt(localStorage.getItem('rhetStdExp')) || 0;
+        let currentQuestionMistakes = 0; 
+        let pendingQuestionIdx = -1;
+        let currentQuestionIdx = -1;
+        window.currentHints = []; // 用於記錄累積提示
+
+        document.getElementById('exp-display').innerText = stdExp;
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let cleanText = text.replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】]/g, '').replace(/&nbsp;/g, ' ');
+                let msg = new SpeechSynthesisUtterance(cleanText);
+                msg.lang = 'zh-HK';
+                msg.rate = 0.9; 
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "toast-msg show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // 標點與修辭的通用解釋字典 (極大壓縮資料量)
+        const genericExplanations = {
+            '《》': '書名號：用來標示書本、文章、電影、報紙等的名稱。',
+            '「」': '引號：用來標示人物說的話，或特別強調的詞語。',
+            '……': '省略號：表示話未說完、語意未盡，或列舉的省略。',
+            '——': '破折號：表示聲音的延長，或意思的轉折、解釋說明。',
+            '；': '分號：用來分開兩個結構相同、意思並列的長句子。',
+            '：': '冒號：用在提示語後面，引起下文。',
+            '明喻': '明喻：有本體、喻體，並使用「像」、「好像」、「猶如」等喻詞。',
+            '暗喻': '暗喻：有本體、喻體，但不使用「像」，而是用「是」、「變成」等連接。',
+            '借喻': '借喻：不出現本體和喻詞，直接把喻體（比喻的東西）當作本體來說。',
+            '擬人': '擬人：把死物或動植物當作「人」來寫，賦予人的動作或情感。',
+            '擬物': '擬物：把人當作「物」來寫，或把甲物當作乙物來寫。',
+            '誇張': '誇張：故意言過其實，放大或縮小事物的特徵，令人印象深刻。',
+            '排比': '排比：把三個或以上結構相同、意思相關的短語或句子排列在一起。',
+            '反問': '反問：只問不答，答案已經包含在問題中（常用「難道」），用來加強語氣。',
+            '設問': '設問：為了引起注意，自己提出問題，然後自己回答（自問自答）。',
+            '對偶': '對偶：兩句話字數相等、結構相同、意思相對或相關（如春聯）。'
+        };
+
+        function getGenericExp(term) {
+            return genericExplanations[term] || '這是一個修辭或標點符號。';
+        }
+
+        // ================= 2. 學習錦囊 (教學庫) =================
+        const tutorialContents = {
+            'r-punc-adv': `
+                <div class="text-center mb-4"><span class="text-6xl">📖 ⋯ 💨</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">進階標點符號魔法！</p>
+                <div class="bg-blue-50 p-4 rounded-xl border-2 border-blue-200 mb-3 space-y-3">
+                    <p class="text-lg"><span class="bg-white font-black text-blue-700 border border-blue-300 px-2 py-1 rounded">《 》書名號</span> 👉 用來標示書本、電影、報紙的名字。例：《西遊記》</p>
+                    <p class="text-lg"><span class="bg-white font-black text-teal-700 border border-teal-300 px-2 py-1 rounded">…… 省略號</span> 👉 表示話還沒說完，或者列舉還沒完。例：有蘋果、橙……</p>
+                    <p class="text-lg"><span class="bg-white font-black text-rose-700 border border-rose-300 px-2 py-1 rounded">—— 破折號</span> 👉 表示聲音拉長，或者補充解釋。例：嗚——火車開了。</p>
+                    <p class="text-lg"><span class="bg-white font-black text-purple-700 border border-purple-300 px-2 py-1 rounded">； 分號</span> 👉 分開兩個並列的長句。例：春天百花開；秋天落葉飛。</p>
+                </div>
+            `,
+            'r-rhet-meta': `
+                <div class="text-center mb-4"><span class="text-6xl">🍎 👦🏻</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">比喻三兄弟：明喻、暗喻、借喻</p>
+                <div class="bg-amber-50 p-4 rounded-xl border-2 border-amber-200 mb-3 space-y-4">
+                    <div>
+                        <p class="font-black text-amber-800 text-lg">👦🏻 明喻 (明顯的比喻)</p>
+                        <p class="text-slate-700">特徵：有「<span class="text-amber-600 font-bold">像、好像、宛如</span>」。<br>例：弟弟的臉蛋<span class="text-amber-600 font-bold">像</span>紅蘋果。</p>
+                    </div>
+                    <hr class="border-amber-200">
+                    <div>
+                        <p class="font-black text-orange-800 text-lg">🕵️‍♂️ 暗喻 (暗中的比喻)</p>
+                        <p class="text-slate-700">特徵：沒有「像」，用「<span class="text-orange-600 font-bold">是、變成</span>」。<br>例：弟弟的臉蛋<span class="text-orange-600 font-bold">是</span>紅蘋果。</p>
+                    </div>
+                    <hr class="border-amber-200">
+                    <div>
+                        <p class="font-black text-rose-800 text-lg">🥷 借喻 (最高級的比喻)</p>
+                        <p class="text-slate-700">特徵：<span class="text-rose-600 font-bold">不寫出本體，直接用喻體代替</span>。<br>例：那個<span class="text-rose-600 font-bold">紅蘋果</span>(指弟弟的臉)真可愛。</p>
+                    </div>
+                </div>
+            `,
+            'r-rhet-person': `
+                <div class="text-center mb-4"><span class="text-6xl">🌸 🐘</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">擬人 VS 誇張</p>
+                <div class="bg-emerald-50 p-4 rounded-xl border-2 border-emerald-200 mb-3 space-y-4">
+                    <div>
+                        <p class="font-black text-emerald-800 text-lg">💃 擬人 (死物變活人)</p>
+                        <p class="text-slate-700">把東西當作人，給它<span class="font-bold text-emerald-600">人的動作或感情</span>。<br>例：桃花開心地<span class="text-emerald-600 font-bold bg-white px-1 rounded">笑了</span>。</p>
+                    </div>
+                    <hr class="border-emerald-200">
+                    <div>
+                        <p class="font-black text-indigo-800 text-lg">🐘 誇張 (吹牛皮)</p>
+                        <p class="text-slate-700">故意把事情<span class="font-bold text-indigo-600">放大或縮小</span>到不合常理。<br>例：這個課室小得<span class="text-indigo-600 font-bold bg-white px-1 rounded">只有巴掌大</span>。</p>
+                    </div>
+                </div>
+            `,
+            'r-rhet-struct': `
+                <div class="text-center mb-4"><span class="text-6xl">❓ ❗</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">排比、設問 與 反問</p>
+                <div class="bg-cyan-50 p-4 rounded-xl border-2 border-cyan-200 mb-3 space-y-3">
+                    <p class="text-lg"><span class="bg-white font-black text-cyan-700 border border-cyan-300 px-2 py-1 rounded">排比</span> 👉 連續 <span class="font-bold text-cyan-600">三個或以上</span> 結構相同的句子。<br>例：書本是海洋，是鑰匙，是導師。</p>
+                    <p class="text-lg"><span class="bg-white font-black text-teal-700 border border-teal-300 px-2 py-1 rounded">設問</span> 👉 自己問，<span class="font-bold text-teal-600">自己答</span>。<br>例：什麼是快樂？快樂是助人。</p>
+                    <p class="text-lg"><span class="bg-white font-black text-rose-700 border border-rose-300 px-2 py-1 rounded">反問</span> 👉 只問不答，答案就在問題裡 (常用<span class="font-bold text-rose-600">難道</span>)。<br>例：難道我們不該環保嗎？</p>
+                </div>
+            `
+        };
+
+        function showTutorial(categoryId) {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            document.getElementById('tutorial-body').innerHTML = tutorialContents[categoryId];
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+            localStorage.setItem('tut_seen_' + categoryId, 'true');
+        }
+
+        function closeTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (pendingQuestionIdx !== -1) {
+                    let targetIdx = pendingQuestionIdx;
+                    pendingQuestionIdx = -1;
+                    startQuestion(targetIdx, true); 
+                }
+            }, 300);
+        }
+
+        // ================= 3. 標準題庫 (160題 全解析版) =================
+        const categories = [
+            { id: 'r-punc-adv', title: '🔴 進階標點符號辨析 (40題)', color: 'rose' },
+            { id: 'r-rhet-meta', title: '🟠 比喻三兄弟辨析 (40題)', color: 'orange' },
+            { id: 'r-rhet-person', title: '🟢 擬人與誇張辨析 (40題)', color: 'emerald' },
+            { id: 'r-rhet-struct', title: '🔵 排比與問句辨析 (40題)', color: 'blue' }
+        ];
+
+        // 資料產生器：將精簡陣列轉為完整物件，並自動綁定通用解釋
+        function formatData(pool, category, task) {
+            return pool.map(item => {
+                let correctOpt = item[1];
+                let w1 = item[2];
+                let w2 = item[3];
+                let w3 = item[4];
+                let specificExp = item[5];
+                
+                let exp = `✅ ${correctOpt}：${specificExp}<br>❌ ${w1}：${getGenericExp(w1)}<br>❌ ${w2}：${getGenericExp(w2)}<br>❌ ${w3}：${getGenericExp(w3)}`;
+                
+                return { category: category, task: task, sentence: item[0], correct: correctOpt, wrongs: [w1, w2, w3], explanation: exp };
+            });
+        }
+
+        // --- 1. 進階標點 (40題) ---
+        // 格式: [句子, 正確, 錯1, 錯2, 錯3, 具體解釋]
+        const puncAdvPool = [
+            ['這本___西遊記___是我最喜歡的書。', '《》', '「」', '（）', '……', '西遊記是一本書的名稱，必須用書名號。'],
+            ['他大聲喊道___「快點過來！」', '：', '，', '；', '。', '在引號前面提示別人說的話，要用冒號。'],
+            ['操場上有滑梯、鞦韆、攀爬架___', '……', '。', '！', '——', '表示還有很多設施沒有列舉完，用省略號。'],
+            ['「這___這怎麼可能？」他結結巴巴地說。', '……', '——', '，', '。', '表示說話結巴、斷斷續續，用省略號。'],
+            ['這是一列長長的火車，嗚___', '——', '……', '！', '。', '表示火車聲音的延長，用破折號。'],
+            ['春天百花齊放___秋天落葉紛飛。', '；', '，', '。', '：', '兩個結構相同、意思並列的長句，中間用分號。'],
+            ['我最喜歡看的電影是___哈利波特___。', '《》', '「」', '（）', '……', '電影名稱必須使用書名號。'],
+            ['老師嚴肅地說___「明天要考試。」', '：', '，', '；', '。', '提示接下來要說的話，用冒號。'],
+            ['文具店有賣筆、尺、橡皮擦___', '……', '。', '！', '——', '列舉未完，表示還有其他文具，用省略號。'],
+            ['這件事的真相是___他根本沒去過！', '——', '……', '，', '。', '表示意思的轉折或突然的解釋說明，用破折號。'],
+            ['爸爸喜歡喝茶___媽媽喜歡喝咖啡。', '；', '，', '。', '：', '兩句並列且結構相對的句子，用分號隔開。'],
+            ['這份___大公報___是昨天的。', '《》', '「」', '（）', '……', '報紙的名稱要用書名號。'],
+            ['她哭著說：「我___我不知道。」', '……', '——', '，', '。', '哭泣時說話斷斷續續，用省略號。'],
+            ['這是一場「大戰」___其實只是兩個小孩吵架。', '——', '……', '，', '。', '對前面的「大戰」進行解釋說明，用破折號。'],
+            ['大家請注意___明天放假一天。', '：', '，', '；', '。', '提示下面要宣佈的事情，用冒號。'],
+            ['我會彈鋼琴___哥哥會拉小提琴。', '；', '，', '。', '：', '並列的分句，用分號。'],
+            ['這首詩名叫___靜夜思___。', '《》', '「」', '（）', '……', '詩歌的名稱要用書名號。'],
+            ['「砰___」一聲巨響，嚇了大家一跳。', '——', '……', '，', '。', '表示巨大聲音的延續，用破折號。'],
+            ['動物園裡有獅子、老虎、大象___', '……', '。', '！', '——', '表示列舉未完，用省略號。'],
+            ['他大聲宣佈___「比賽現在開始！」', '：', '，', '；', '。', '提示說話內容，用冒號。'],
+            ['早上空氣清新___晚上微風陣陣。', '；', '，', '。', '：', '並列分句，用分號。'],
+            ['這本雜誌叫___兒童樂園___。', '《》', '「」', '（）', '……', '雜誌名稱用書名號。'],
+            ['「你___你不要過來！」他害怕地說。', '……', '——', '，', '。', '說話因害怕而結巴，用省略號。'],
+            ['這是一個美麗的誤會___我們認錯人了。', '——', '……', '，', '。', '對前面的誤會進行解釋說明，用破折號。'],
+            ['校長致辭時說___「祝大家學業進步。」', '：', '，', '；', '。', '提示說話內容，用冒號。'],
+            ['姐姐喜歡畫畫___妹妹喜歡唱歌。', '；', '，', '。', '：', '並列分句，用分號。'],
+            ['那篇文章名為___我的母親___。', '《》', '「」', '（）', '……', '文章名稱用書名號。'],
+            ['超市裡有蘋果、橙、香蕉___等水果。', '……', '。', '！', '——', '列舉未完，用省略號。'],
+            ['「嘩___」大雨傾盆而下。', '——', '……', '，', '。', '表示水聲的延續，用破折號。'],
+            ['導遊說___「前面就是著名的景點。」', '：', '，', '；', '。', '提示說話內容，用冒號。'],
+            ['哥哥性格外向___弟弟性格內向。', '；', '，', '。', '：', '並列且有對比的分句，用分號。'],
+            ['這首___國歌___我們都會唱。', '《》', '「」', '（）', '……', '歌曲名稱用書名號。'],
+            ['「我___我忘了帶功課。」他小聲說。', '……', '——', '，', '。', '說話吞吞吐吐，用省略號。'],
+            ['這是一份特別的禮物___一本書。', '——', '……', '，', '。', '對禮物進行解釋，用破折號。'],
+            ['隊長大喊一聲___「衝啊！」', '：', '，', '；', '。', '提示大喊的內容，用冒號。'],
+            ['夏天天氣炎熱___冬天白雪皚皚。', '；', '，', '。', '：', '並列分句，用分號。'],
+            ['這部名為___獅子王___的電影很好看。', '《》', '「」', '（）', '……', '電影名稱用書名號。'],
+            ['花園裡有紅的、黃的、紫的___', '……', '。', '！', '——', '表示顏色列舉未完，用省略號。'],
+            ['「叮___」下課鐘聲響了。', '——', '……', '，', '。', '表示鐘聲的延續，用破折號。'],
+            ['警察警告說___「不許動！」', '：', '，', '；', '。', '提示警告內容，用冒號。']
+        ];
+
+        // --- 2. 比喻三兄弟 (40題) ---
+        const metaAdvPool = [
+            ['妹妹的臉蛋像一個紅蘋果。', '明喻', '暗喻', '借喻', '擬人', '有本體(臉蛋)、喻詞(像)和喻體(紅蘋果)。'],
+            ['老師是辛勤的園丁。', '暗喻', '明喻', '借喻', '擬物', '有本體(老師)和喻體(園丁)，用「是」連接。'],
+            ['天上的白玉盤亮晶晶的。', '借喻', '明喻', '暗喻', '誇張', '沒有寫出月亮(本體)，直接用白玉盤(喻體)代替。'],
+            ['弟弟變成了一隻小泥猴。', '暗喻', '明喻', '借喻', '擬人', '用「變成」連接本體(弟弟)和喻體(小泥猴)。'],
+            ['這場雨下得宛如瀑布一樣。', '明喻', '暗喻', '借喻', '誇張', '有本體、喻體，並使用喻詞「宛如」。'],
+            ['時間是治癒傷痛的良藥。', '暗喻', '明喻', '借喻', '擬人', '本體(時間)與喻體(良藥)用「是」連接。'],
+            ['花園裡開滿了五顏六色的笑臉。', '借喻', '明喻', '暗喻', '擬人', '沒有寫出花朵(本體)，直接用笑臉(喻體)代替。'],
+            ['平靜的湖面猶如一面大鏡子。', '明喻', '暗喻', '借喻', '誇張', '有喻詞「猶如」，將湖面比作鏡子。'],
+            ['書籍是人類進步的階梯。', '暗喻', '明喻', '借喻', '擬物', '本體(書籍)與喻體(階梯)用「是」連接。'],
+            ['秋天到了，金黃色的蝴蝶在空中飛舞。', '借喻', '明喻', '暗喻', '擬人', '直接用「金黃色的蝴蝶」(喻體)代替落葉(本體)。'],
+            ['他的力氣大得像一頭牛。', '明喻', '暗喻', '借喻', '擬人', '有喻詞「像」，將力氣比作牛。'],
+            ['青春是一首美妙的歌曲。', '暗喻', '明喻', '借喻', '誇張', '用「是」連接本體(青春)和喻體(歌曲)。'],
+            ['夜空中的鑽石閃閃發光。', '借喻', '明喻', '暗喻', '擬物', '直接用「鑽石」(喻體)代替星星(本體)。'],
+            ['彎彎的彩虹彷彿一座天橋。', '明喻', '暗喻', '借喻', '擬人', '有喻詞「彷彿」，將彩虹比作天橋。'],
+            ['地球是孕育生命的搖籃。', '暗喻', '明喻', '借喻', '誇張', '用「是」連接本體(地球)和喻體(搖籃)。'],
+            ['滿樹的紅燈籠讓人看了真高興。', '借喻', '明喻', '暗喻', '擬人', '直接用「紅燈籠」(喻體)代替柿子或紅果實(本體)。'],
+            ['細細的春雨猶如牛毛。', '明喻', '暗喻', '借喻', '誇張', '有喻詞「猶如」，將春雨比作牛毛。'],
+            ['童年是一個五彩繽紛的夢。', '暗喻', '明喻', '借喻', '擬物', '用「是」連接本體和喻體。'],
+            ['大珠小珠落玉盤。', '借喻', '明喻', '暗喻', '擬人', '直接用「大珠小珠」(喻體)代替雨滴(本體)。'],
+            ['天上的白雲像一群綿羊。', '明喻', '暗喻', '借喻', '擬人', '有喻詞「像」，將白雲比作綿羊。'],
+            ['母愛是冬天裡的一把火。', '暗喻', '明喻', '借喻', '誇張', '用「是」連接本體(母愛)和喻體(火)。'],
+            ['海面上的白帆點點。', '借喻', '明喻', '暗喻', '擬物', '直接用「白帆」(喻體)代替船隻(本體)。'],
+            ['這棵大樹彷彿一把巨大的綠傘。', '明喻', '暗喻', '借喻', '擬人', '有喻詞「彷彿」，將大樹比作綠傘。'],
+            ['字典是我們無聲的老師。', '暗喻', '明喻', '借喻', '誇張', '用「是」連接本體(字典)和喻體(老師)。'],
+            ['草地上的綠地毯真柔軟。', '借喻', '明喻', '暗喻', '擬人', '直接用「綠地毯」(喻體)代替草地(本體)。'],
+            ['雪花像鵝毛一樣飄落下來。', '明喻', '暗喻', '借喻', '誇張', '有喻詞「像」，將雪花比作鵝毛。'],
+            ['挫折是成功路上的絆腳石。', '暗喻', '明喻', '借喻', '擬物', '用「是」連接本體(挫折)和喻體(絆腳石)。'],
+            ['看那滿山的火焰，秋天真的來了。', '借喻', '明喻', '暗喻', '擬人', '直接用「火焰」(喻體)代替紅葉(本體)。'],
+            ['清澈的泉水猶如一面明鏡。', '明喻', '暗喻', '借喻', '擬人', '有喻詞「猶如」，將泉水比作明鏡。'],
+            ['希望是黑暗中的一盞明燈。', '暗喻', '明喻', '借喻', '誇張', '用「是」連接本體(希望)和喻體(明燈)。'],
+            ['黑板上的白色精靈在跳舞。', '借喻', '明喻', '暗喻', '擬人', '直接用「白色精靈」(喻體)代替粉筆字(本體)。'],
+            ['夜晚的霓虹燈像繁星一樣閃爍。', '明喻', '暗喻', '借喻', '擬人', '有喻詞「像」，將霓虹燈比作繁星。'],
+            ['家是溫暖的避風港。', '暗喻', '明喻', '借喻', '擬物', '用「是」連接本體(家)和喻體(避風港)。'],
+            ['池塘裡的小綠傘隨風搖曳。', '借喻', '明喻', '暗喻', '擬人', '直接用「小綠傘」(喻體)代替荷葉(本體)。'],
+            ['馬路上的汽車多得像螞蟻。', '明喻', '暗喻', '借喻', '誇張', '有喻詞「像」，將汽車比作螞蟻。'],
+            ['音樂是洗滌心靈的清泉。', '暗喻', '明喻', '借喻', '誇張', '用「是」連接本體(音樂)和喻體(清泉)。'],
+            ['天空中的棉花糖真可愛。', '借喻', '明喻', '暗喻', '擬人', '直接用「棉花糖」(喻體)代替白雲(本體)。'],
+            ['小貓的眼睛像兩顆發光的燈泡。', '明喻', '暗喻', '借喻', '擬物', '有喻詞「像」，將眼睛比作燈泡。'],
+            ['友誼是寒冬裡的一杯熱茶。', '暗喻', '明喻', '借喻', '誇張', '用「是」連接本體和喻體。'],
+            ['水中的銀盤被打碎了。', '借喻', '明喻', '暗喻', '擬人', '直接用「銀盤」(喻體)代替月亮的倒影(本體)。']
+        ];
+
+        // --- 3. 擬人與誇張 (40題) ---
+        const personHyperPool = [
+            ['春風輕輕地撫摸著我的臉頰。', '擬人', '明喻', '誇張', '排比', '把春風當作人，賦予它「撫摸」的動作。'],
+            ['這個課室小得只有巴掌大。', '誇張', '暗喻', '擬人', '設問', '故意縮小課室的面積來突顯它的「小」。'],
+            ['牽牛花吹起了紫色的小喇叭。', '擬人', '明喻', '誇張', '反問', '牽牛花像人一樣「吹喇叭」。'],
+            ['我餓得可以吃下一頭大象。', '誇張', '擬人', '借喻', '排比', '故意誇大食量，突顯非常飢餓。'],
+            ['星星在夜空中向我們眨眼睛。', '擬人', '明喻', '誇張', '設問', '星星不會眨眼，這是人的動作。'],
+            ['他的呼嚕聲大得能把屋頂掀翻。', '誇張', '擬人', '暗喻', '反問', '故意誇大聲音的威力。'],
+            ['小鳥在枝頭快樂地唱歌。', '擬人', '誇張', '借喻', '排比', '把鳥叫比作人唱歌。'],
+            ['他瘦得像一根竹竿，風一吹就倒。', '誇張', '擬人', '設問', '反問', '故意誇大他瘦弱的程度。'],
+            ['太陽公公露出了慈祥的笑容。', '擬人', '明喻', '誇張', '排比', '賦予太陽人的稱呼和笑容。'],
+            ['這點水連塞牙縫都不夠。', '誇張', '擬人', '借喻', '設問', '故意縮小水的份量。'],
+            ['柳樹在微風中翩翩起舞。', '擬人', '誇張', '明喻', '反問', '柳枝搖擺像人在跳舞。'],
+            ['操場上靜得連一根針掉下都能聽見。', '誇張', '擬人', '暗喻', '排比', '故意誇大安靜的程度。'],
+            ['小草從泥土裡悄悄探出頭來。', '擬人', '誇張', '借喻', '設問', '把小草發芽當作人探頭。'],
+            ['那座山高得快要碰到天了。', '誇張', '擬人', '明喻', '反問', '故意誇大山的高度。'],
+            ['落葉依依不捨地告別了樹枝。', '擬人', '誇張', '暗喻', '排比', '賦予落葉人的情感和告別動作。'],
+            ['他跑得比火箭還要快。', '誇張', '擬人', '借喻', '設問', '故意誇大跑步的速度。'],
+            ['鬧鐘每天早上都會叫我起床。', '擬人', '誇張', '明喻', '反問', '把鬧鐘當作人會「叫」。'],
+            ['這個笑話讓我笑破了肚皮。', '誇張', '擬人', '暗喻', '排比', '故意誇大笑的程度。'],
+            ['海浪生氣地拍打著礁石。', '擬人', '誇張', '借喻', '設問', '賦予海浪「生氣」的情感。'],
+            ['他的眼淚像瀑布一樣流下來。', '誇張', '擬人', '明喻', '反問', '故意誇大流淚的數量。'],
+            ['冰箱在角落默默地工作著。', '擬人', '誇張', '暗喻', '排比', '把冰箱發聲當作人默默工作。'],
+            ['這個書包重得像一座山。', '誇張', '擬人', '借喻', '設問', '故意誇大書包的重量。'],
+            ['春雨洗淨了城市的灰塵。', '擬人', '誇張', '明喻', '反問', '把雨當作人會「洗淨」。'],
+            ['這條巷子窄得連一隻貓都過不去。', '誇張', '擬人', '暗喻', '排比', '故意縮小巷子的寬度。'],
+            ['螢火蟲提著燈籠在夜裡巡邏。', '擬人', '誇張', '借喻', '設問', '把螢火蟲發光當作提燈籠巡邏。'],
+            ['天氣熱得要把人烤熟了。', '誇張', '擬人', '明喻', '反問', '故意誇大天氣炎熱的程度。'],
+            ['微風親吻著平靜的湖面。', '擬人', '誇張', '暗喻', '排比', '賦予微風「親吻」的動作。'],
+            ['這道題簡單得閉著眼睛都能做出來。', '誇張', '擬人', '借喻', '設問', '故意誇大題目的簡單程度。'],
+            ['雷公公在天上大發脾氣。', '擬人', '誇張', '明喻', '反問', '把打雷當作人生氣發脾氣。'],
+            ['他的膽子小得像老鼠一樣。', '誇張', '擬人', '暗喻', '排比', '故意縮小膽量。'],
+            ['花兒換上了五顏六色的春裝。', '擬人', '誇張', '借喻', '設問', '把開花當作換衣服。'],
+            ['我等了你一萬年。', '誇張', '擬人', '明喻', '反問', '故意誇大等待的時間。'],
+            ['小雪花在空中跳起了芭蕾。', '擬人', '誇張', '暗喻', '排比', '雪花飄落像跳舞。'],
+            ['這個包裹輕得像一根羽毛。', '誇張', '擬人', '借喻', '設問', '故意縮小包裹的重量。'],
+            ['路燈在黑夜裡為我們站崗。', '擬人', '誇張', '明喻', '反問', '把路燈當作衛兵站崗。'],
+            ['他的怒火足以燒毀整座森林。', '誇張', '擬人', '暗喻', '排比', '故意誇大生氣的威力。'],
+            ['小溪不知疲倦地向前奔跑。', '擬人', '誇張', '借喻', '設問', '賦予小溪不知疲倦和奔跑的特質。'],
+            ['一眨眼的功夫，他就跑得無影無蹤。', '誇張', '擬人', '明喻', '反問', '故意誇大速度之快。'],
+            ['大樹張開雙臂擁抱著小鳥。', '擬人', '誇張', '暗喻', '排比', '把樹枝當作手臂擁抱。'],
+            ['這篇文章長得像一條沒有盡頭的河。', '誇張', '擬人', '借喻', '設問', '故意誇大文章的長度。']
+        ];
+
+        // --- 4. 排比與問句 (40題) ---
+        const structPool = [
+            ['難道我們不應該保護環境嗎？', '反問', '設問', '排比', '擬人', '只問不答，答案已經在問題中（應該保護）。'],
+            ['什麼是快樂？快樂是幫助別人。', '設問', '反問', '排比', '誇張', '自己提出問題，然後自己回答。'],
+            ['書本是海洋，是鑰匙，是導師。', '排比', '設問', '反問', '擬人', '三個結構相同、意思相關的句子排列在一起。'],
+            ['難道你可以隨便拿別人的東西嗎？', '反問', '設問', '排比', '借喻', '用反問語氣強調「不可以隨便拿」。'],
+            ['天上的雲，有的像羊，有的像馬，有的像獅子。', '排比', '設問', '反問', '誇張', '連續三個「有的像…」構成排比。'],
+            ['是誰帶來了春天？是溫暖的微風。', '設問', '反問', '排比', '明喻', '自問自答，引起讀者注意。'],
+            ['這點小事，怎麼能難倒我們呢？', '反問', '設問', '排比', '暗喻', '用反問語氣表示「不會難倒我們」。'],
+            ['我們要愛護花草，愛護動物，愛護大自然。', '排比', '設問', '反問', '擬人', '連續三個「愛護…」構成排比。'],
+            ['這件衣服好看嗎？我覺得非常漂亮。', '設問', '反問', '排比', '誇張', '自己提問後立刻給出答案。'],
+            ['天下哪有免費的午餐？', '反問', '設問', '排比', '借喻', '反問語氣，強調「天下沒有免費的午餐」。'],
+            ['他跑得快，跳得高，游得遠。', '排比', '設問', '反問', '明喻', '三個結構相似的短句排列。'],
+            ['你想考第一名嗎？那就必須努力溫習。', '設問', '反問', '排比', '暗喻', '自問自答。'],
+            ['我們怎能忘記父母的養育之恩？', '反問', '設問', '排比', '擬人', '強調「絕對不能忘記」。'],
+            ['春天是綠色的，夏天是紅色的，秋天是黃色的。', '排比', '設問', '反問', '誇張', '三個句式相同的句子排列。'],
+            ['成功的秘訣是什麼？是堅持不懈。', '設問', '反問', '排比', '借喻', '自問自答，強調堅持。'],
+            ['破壞公物難道是對的行為嗎？', '反問', '設問', '排比', '明喻', '強調「破壞公物是不對的」。'],
+            ['海浪拍打著礁石，拍打著沙灘，拍打著漁船。', '排比', '設問', '反問', '暗喻', '連續三個「拍打著…」構成排比。'],
+            ['這道題很難嗎？其實只要用心就能解開。', '設問', '反問', '排比', '擬人', '自己提問後給出解答。'],
+            ['難道他不是我們的好朋友嗎？', '反問', '設問', '排比', '誇張', '強調「他是我們的好朋友」。'],
+            ['這裡有山，有水，有花，有草。', '排比', '設問', '反問', '借喻', '連續四個「有…」構成排比。'],
+            ['明天的天氣如何？天氣預報說會下雨。', '設問', '反問', '排比', '明喻', '自問自答。'],
+            ['你做錯了事，怎麼能不道歉呢？', '反問', '設問', '排比', '暗喻', '強調「必須道歉」。'],
+            ['我們需要知識，需要勇氣，需要毅力。', '排比', '設問', '反問', '擬人', '連續三個「需要…」構成排比。'],
+            ['是誰發明了電燈？是愛迪生。', '設問', '反問', '排比', '誇張', '自問自答。'],
+            ['說謊難道能被原諒嗎？', '反問', '設問', '排比', '借喻', '強調「說謊不能被原諒」。'],
+            ['風吹過樹林，吹過草地，吹過湖面。', '排比', '設問', '反問', '明喻', '連續三個「吹過…」構成排比。'],
+            ['你知道這本書的作者是誰嗎？他就是魯迅。', '設問', '反問', '排比', '暗喻', '自問自答。'],
+            ['這點困難算得了什麼？', '反問', '設問', '排比', '擬人', '強調「這點困難不算什麼」。'],
+            ['童年是美好的，是純真的，是快樂的。', '排比', '設問', '反問', '誇張', '三個句式相同的短句排列。'],
+            ['為什麼要學習？為了擁有更好的未來。', '設問', '反問', '排比', '借喻', '自問自答。'],
+            ['難道這不是大家的責任嗎？', '反問', '設問', '排比', '明喻', '強調「這是大家的責任」。'],
+            ['我喜歡唱歌，喜歡跳舞，喜歡畫畫。', '排比', '設問', '反問', '暗喻', '連續三個「喜歡…」構成排比。'],
+            ['這個魔術是怎麼變的？讓我來告訴你。', '設問', '反問', '排比', '擬人', '自問自答。'],
+            ['我們怎能欺負弱小呢？', '反問', '設問', '排比', '誇張', '強調「不能欺負弱小」。'],
+            ['天上的星星，亮亮的，閃閃的，美美的。', '排比', '設問', '反問', '借喻', '三個結構相似的詞語排列。'],
+            ['誰是我們班的班長？是小明。', '設問', '反問', '排比', '明喻', '自問自答。'],
+            ['隨地吐痰難道是有公德心的表現嗎？', '反問', '設問', '排比', '暗喻', '強調「隨地吐痰沒有公德心」。'],
+            ['秋天帶來了涼爽，帶來了豐收，帶來了喜悅。', '排比', '設問', '反問', '擬人', '連續三個「帶來了…」構成排比。'],
+            ['這部電影好看嗎？我覺得非常精彩。', '設問', '反問', '排比', '誇張', '自問自答。'],
+            ['這麼簡單的問題，你怎麼會不懂呢？', '反問', '設問', '排比', '借喻', '強調「你應該懂」。']
+        ];
+
+        const rawQuestDataObj = [
+            ...formatData(puncAdvPool, 'r-punc-adv', '進階標點：選出適合放在 ___ 位置的標點符號。'),
+            ...formatData(metaAdvPool, 'r-rhet-meta', '比喻辨析：這句話運用了哪種修辭手法？'),
+            ...formatData(personHyperPool, 'r-rhet-person', '修辭辨析：這句話運用了哪種修辭手法？'),
+            ...formatData(structPool, 'r-rhet-struct', '句型辨析：這句話運用了哪種修辭手法？')
+        ];
+
+        let userProgress = JSON.parse(localStorage.getItem('rhetStdProgress')) || new Array(rawQuestDataObj.length).fill(0);
+
+        function renderDirectory() {
+            const dirContainer = document.getElementById('directory-content');
+            let html = '';
+            categories.forEach(cat => {
+                let hasQuestions = rawQuestDataObj.some(q => q.category === cat.id);
+                if (hasQuestions) {
+                    html += `
+                        <div class="mb-6">
+                            <div class="flex items-center justify-between border-b-2 border-${cat.color}-100 pb-2 mb-3">
+                                <h3 class="text-xl font-bold text-${cat.color}-700">${cat.title}</h3>
+                                <button onclick="showTutorial('${cat.id}')" class="bg-cyan-100 text-cyan-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-cyan-300 hover:bg-cyan-200 transition flex items-center gap-1 active:scale-95">📘 學習錦囊</button>
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                    `;
+                    rawQuestDataObj.forEach((q, idx) => {
+                        if(q.category === cat.id) {
+                            let status = userProgress[idx];
+                            let btnClass = 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50';
+                            let icon = (idx + 1);
+
+                            if (status === 1) {
+                                btnClass = 'bg-yellow-100 border-yellow-400 text-yellow-700 shadow-inner';
+                                icon = '🌟';
+                            } else if (status === 2) {
+                                btnClass = 'bg-emerald-100 border-emerald-400 text-emerald-700 shadow-inner';
+                                icon = '✅';
+                            } else if (status === -1) {
+                                btnClass = 'bg-rose-100 border-rose-400 text-rose-700 shadow-inner';
+                                icon = '❌';
+                            }
+
+                            html += `<button onclick="startQuestion(${idx})" class="lvl-btn ${btnClass} w-12 h-12 lg:w-14 lg:h-14 rounded-xl font-black text-base lg:text-lg border-b-4 flex items-center justify-center shadow-sm transition-transform">${icon}</button>`;
+                        }
+                    });
+                    html += `</div></div>`;
+                }
+            });
+            dirContainer.innerHTML = html;
+            updateTotalProgress();
+        }
+
+        function updateTotalProgress() {
+            let solved = userProgress.filter(p => p === 1 || p === 2).length;
+            let percent = (solved / rawQuestDataObj.length) * 100;
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+
+        function shuffleOptions(correct, wrongs) {
+            let opts = [correct, ...wrongs];
+            for (let i = opts.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [opts[i], opts[j]] = [opts[j], opts[i]];
+            }
+            return {
+                options: opts,
+                ansIdx: opts.indexOf(correct)
+            };
+        }
+
+        function startQuestion(idx, forceStart = false) {
+            const qData = rawQuestDataObj[idx];
+            const qType = qData.category;
+            
+            if (!forceStart && !localStorage.getItem('tut_seen_' + qType)) {
+                pendingQuestionIdx = idx; 
+                showTutorial(qType);      
+                return;                   
+            }
+
+            currentQuestionMistakes = 0; 
+            currentQuestionIdx = idx;
+            window.currentHints = []; // 重置該題的累積提示
+            
+            document.getElementById('quest-directory').style.display = 'none';
+            const questPlay = document.getElementById('quest-play');
+            questPlay.style.display = 'flex';
+            document.getElementById('main-scroll-area').scrollTop = 0;
+            
+            const qCatTitle = categories.find(c => c.id === qType).title;
+            const { options, ansIdx } = shuffleOptions(qData.correct, qData.wrongs);
+
+            let ttsText = qData.sentence.replace(/___/g, '什麼');
+            let sentenceHtml = qData.sentence.replace(/___/g, '<span class="text-cyan-600 border-b-4 border-cyan-500 px-6 font-black bg-cyan-50">?</span>');
+
+            let html = `
+                <div class="w-full flex justify-between items-center mb-4">
+                    <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
+                    <span class="bg-cyan-100 text-cyan-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${idx + 1} 題 / 共 160 題</span>
+                </div>
+                
+                <div class="slide-up w-full bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center relative transition-all duration-500">
+                    <span class="absolute -top-4 bg-cyan-600 text-white px-5 py-1.5 rounded-full font-bold shadow-md text-sm md:text-base">
+                        ${qCatTitle}
+                    </span>
+                    
+                    <div class="w-full flex items-center gap-3 mt-4 mb-6">
+                        <span class="bg-cyan-100 text-cyan-800 px-3 py-1 rounded text-sm font-bold whitespace-nowrap">任務</span>
+                        <h2 class="text-lg md:text-xl font-bold text-slate-700">${qData.task}</h2>
+                    </div>
+
+                    <div class="w-full flex items-start gap-4 mb-6 bg-cyan-50 p-6 rounded-2xl border border-cyan-100 shadow-inner">
+                        <button onclick="speakText('${ttsText}')" class="tts-btn flex-shrink-0 bg-white text-cyan-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-cyan-200">🔊</button>
+                        <div class="text-2xl md:text-3xl font-bold text-slate-800 leading-loose">${sentenceHtml}</div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl mt-auto" id="options-container">
+            `;
+            
+            // 標點符號的按鈕特別放大，修辭則是普通文字
+            let isPunc = qType.includes('punc');
+            let textClass = isPunc ? 'text-4xl md:text-5xl pb-6 pt-3' : 'text-2xl md:text-3xl py-6';
+
+            options.forEach((optText, oIdx) => {
+                const isCorr = (oIdx === ansIdx);
+                const safeOpt = optText.replace(/'/g, "\\'");
+                html += `<button onclick="checkAnswer(this, ${isCorr}, '${safeOpt}')" class="option-btn bg-white border-4 border-slate-200 text-slate-700 font-bold ${textClass} rounded-2xl hover:bg-cyan-50 hover:border-cyan-300 transition w-full text-center flex flex-col items-center justify-center">${optText}</button>`;
+            });
+            
+            html += `
+                    </div>
+                    <!-- 💡 動態提示框 -->
+                    <div id="dynamic-hint-box" class="hidden w-full max-w-2xl mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3">
+                        <div class="flex-1 space-y-2" id="hint-text"></div>
+                        <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
+                    </div>
+                </div>
+            `;
+            questPlay.innerHTML = html;
+        }
+
+        function backToDirectory() {
+            document.getElementById('quest-play').style.display = 'none';
+            document.getElementById('quest-directory').style.display = 'block';
+            renderDirectory();
+        }
+
+        function checkAnswer(btnElement, isCorrect, clickedOptText) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            const qData = rawQuestDataObj[currentQuestionIdx];
+            
+            if (isCorrect) {
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                btnElement.classList.add('correct');
+                const expText = qData.explanation; 
+                
+                let completeSentence = qData.sentence.replace('___', clickedOptText);
+                speakText("答對了！" + completeSentence);
+                
+                let finalStatus = currentQuestionMistakes === 0 ? 1 : 2;
+                let previousStatus = userProgress[currentQuestionIdx];
+                let expGained = 0;
+
+                if (previousStatus !== 1 && previousStatus !== 2) {
+                    expGained = finalStatus === 1 ? 20 : 10;
+                } else if (previousStatus === 2 && finalStatus === 1) {
+                    expGained = 10; 
+                }
+
+                if (expGained > 0) {
+                    stdExp += expGained;
+                    localStorage.setItem('rhetStdExp', stdExp);
+                    document.getElementById('exp-display').innerText = stdExp;
+                    document.getElementById('exp-display').classList.add('pop');
+                    setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+                }
+
+                if (finalStatus === 1 || previousStatus !== 1) {
+                    userProgress[currentQuestionIdx] = finalStatus;
+                    localStorage.setItem('rhetStdProgress', JSON.stringify(userProgress));
+                }
+
+                let modalIcon = finalStatus === 1 ? '🌟' : '✅';
+                let modalTitle = finalStatus === 1 ? '太棒了！一次答對！' : '成功找出正解！';
+                let expMsg = expGained > 0 
+                    ? `<span class="text-cyan-600 block text-xl mb-4">獲得 ${expGained} 點經驗值 ✨</span>` 
+                    : `<span class="text-slate-500 block text-lg mb-4">這題已經成功過關囉！</span>`;
+                
+                // 🔥 全選項深度解析
+                let combinedDesc = expMsg + `
+                    <div class="bg-cyan-50 border-l-4 border-cyan-500 p-4 text-left text-cyan-900 rounded-r-lg font-bold">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-cyan-200">
+                            <span class="text-xl">📚 選項全解析</span>
+                            <button onclick="speakText('${expText}')" class="bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm hover:bg-cyan-100 text-xl transition active:scale-95">🔊</button>
+                        </div>
+                        <div class="space-y-3 text-base leading-relaxed">${expText}</div>
+                    </div>`;
+
+                setTimeout(() => { showModal(modalIcon, modalTitle, combinedDesc); }, 800);
+            } else {
+                // ❌ 答錯邏輯：動態累積提示
+                btnElement.classList.add('wrong', 'shake');
+                currentQuestionMistakes++; 
+                userProgress[currentQuestionIdx] = -1;
+                localStorage.setItem('rhetStdProgress', JSON.stringify(userProgress));
+                
+                // 找出被點擊選項的解釋
+                let lines = qData.explanation.split('<br>');
+                let matchedLine = lines.find(l => l.includes(clickedOptText));
+                let newHint = "請再仔細想一想喔！";
+                
+                if (matchedLine) {
+                    newHint = matchedLine.replace(/^[✅❌]\s*/, ''); 
+                }
+
+                if (!window.currentHints) window.currentHints = [];
+                if (!window.currentHints.includes(newHint)) {
+                    window.currentHints.push(newHint);
+                }
+
+                let combinedHintsHtml = window.currentHints.map(h => `<div class="border-b border-yellow-200 pb-1 last:border-0 last:pb-0">💡 ${h}</div>`).join('');
+                
+                document.getElementById('hint-text').innerHTML = combinedHintsHtml;
+                document.getElementById('hint-tts-btn').onclick = () => speakText(window.currentHints.join('。'));
+                document.getElementById('dynamic-hint-box').classList.remove('hidden');
+                document.getElementById('dynamic-hint-box').classList.add('slide-up');
+                
+                speakText("不對喔，" + newHint);
+                
+                setTimeout(() => {
+                    btnElement.classList.remove('shake');
+                }, 500);
+            }
+        }
+
+        function showModal(icon, title, desc) {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            document.getElementById('feedback-icon').innerText = icon;
+            document.getElementById('feedback-title').innerText = title;
+            document.getElementById('feedback-desc').innerHTML = desc;
+            
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.onclick = () => {
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-90');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    let nextIdx = currentQuestionIdx + 1;
+                    if (nextIdx < rawQuestDataObj.length) startQuestion(nextIdx);
+                    else { showToast("恭喜完成所有挑戰！"); backToDirectory(); }
+                }, 300);
+            };
+
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+        }
+
+        function backToDirectoryFromModal() {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                backToDirectory();
+            }, 300);
+        }
+
+        window.onload = function() {
+            document.getElementById('exp-display').innerText = stdExp;
+            renderDirectory();
+        }
+    </script>
+</body>
+</html>
