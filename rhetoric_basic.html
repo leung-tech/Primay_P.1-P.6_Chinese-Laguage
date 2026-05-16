@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif;
-            background-color: #fffbeb; /* 溫暖的琥珀/淺黃背景 */
+            background-color: #fffbeb; 
             -webkit-tap-highlight-color: transparent;
         }
         
@@ -47,7 +47,7 @@
 </head>
 <body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
 
-    <!-- 頂部導覽列 (Amber 配色) -->
+    <!-- 頂部導覽列 -->
     <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
         <div class="p-3 lg:p-4 bg-amber-500 text-white flex justify-between items-center w-full">
             <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
@@ -59,7 +59,6 @@
                 <span class="font-bold text-sm lg:text-lg">EXP: <span id="exp-display" class="text-yellow-200">0</span></span>
             </div>
         </div>
-        
         <div id="progress-container" class="w-full bg-slate-200 h-2">
             <div id="progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
         </div>
@@ -69,28 +68,20 @@
     <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
         
         <div id="quest-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
-            <!-- 目錄 -->
             <div id="quest-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
                 <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">🎯 基礎修辭標點地圖</h2>
-                
                 <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
                     <div class="text-amber-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
                     <div class="flex flex-wrap gap-4 flex-1">
                         <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-lg shadow-sm">🌟</span> 一次答對 (+15)</div>
-                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 嘗試後答對 (+5)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 經提示答對 (+5)</div>
                         <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-rose-100 border-2 border-rose-400 flex items-center justify-center text-lg shadow-sm">❌</span> 未完成</div>
                     </div>
                 </div>
-
-                <div id="directory-content" class="flex flex-col gap-8">
-                    <!-- 目錄動態生成 -->
-                </div>
+                <div id="directory-content" class="flex flex-col gap-8"></div>
             </div>
             
-            <!-- 答題區 -->
-            <div id="quest-play" class="w-full hidden flex-col items-center">
-                <!-- 題目動態生成 -->
-            </div>
+            <div id="quest-play" class="w-full hidden flex-col items-center"></div>
         </div>
     </div>
 
@@ -98,25 +89,23 @@
     <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity">
         <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="tutorial-content">
             <div class="flex justify-between items-center mb-4 border-b-2 border-amber-100 pb-3">
-                <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-amber-600 flex items-center gap-2">📘 學習小教學</h2>
+                <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-amber-600 flex items-center gap-2">📘 學習錦囊</h2>
                 <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
             </div>
-            <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4">
-                <!-- 教學內容動態載入 -->
-            </div>
+            <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4"></div>
             <div class="mt-6 pt-4 border-t-2 border-slate-100">
                 <button onclick="closeTutorial()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-amber-700 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
             </div>
         </div>
     </div>
 
-    <!-- 反饋 Modal -->
+    <!-- 答對全解析 Modal -->
     <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity">
-        <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform" id="feedback-content">
-            <div id="feedback-icon" class="text-7xl mb-4">🎉</div>
-            <h2 id="feedback-title" class="text-3xl font-black text-slate-800 mb-2">答對了！</h2>
-            <div id="feedback-desc" class="text-slate-600 font-bold mb-6 text-lg leading-relaxed text-center"></div>
-            <div class="flex gap-3 w-full mt-4">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-xl text-center transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="feedback-content">
+            <div id="feedback-icon" class="text-6xl mb-2">🎉</div>
+            <h2 id="feedback-title" class="text-2xl md:text-3xl font-black text-slate-800 mb-2">答對了！</h2>
+            <div id="feedback-desc" class="text-slate-600 font-bold mb-4 text-base md:text-lg leading-relaxed text-left overflow-y-auto pr-2 flex-1 w-full"></div>
+            <div class="flex gap-3 w-full mt-2 pt-4 border-t border-slate-100">
                 <button onclick="backToDirectoryFromModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition text-lg">⬅️ 目錄</button>
                 <button id="next-btn" class="flex-[1.5] bg-amber-500 hover:bg-amber-600 text-white font-black py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-amber-700 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
             </div>
@@ -126,23 +115,39 @@
     <div id="toast" class="toast-msg">提示訊息</div>
 
     <script>
-        // ================= 1. 核心設定 =================
+        // ================= 1. 核心狀態與輔助函數 =================
         let rhetExp = parseInt(localStorage.getItem('rhetBasicExp')) || 0;
-        document.getElementById('exp-display').innerText = rhetExp;
         let currentQuestionMistakes = 0; 
-        let pendingQuestionIdx = -1; // 記錄被教學視窗攔截的題目 Index
+        let pendingQuestionIdx = -1;
+        let currentQuestionIdx = -1;
+
+        // 用於記錄該題學生點錯的選項解釋 (累積提示)
+        window.currentHints = [];
+
+        document.getElementById('exp-display').innerText = rhetExp;
 
         function speakText(text) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                let msg = new SpeechSynthesisUtterance(text);
+                // 斷句處理：將 <br> 替換為句號產生停頓，過濾 Emoji
+                let cleanText = text.replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】]/g, '').replace(/&nbsp;/g, ' ');
+                // 針對這模組的 Emoji 也過濾掉，避免語音朗讀奇怪的表情符號名稱
+                cleanText = cleanText.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDC00-\uDFFF]/g, '');
+                let msg = new SpeechSynthesisUtterance(cleanText);
                 msg.lang = 'zh-HK';
-                msg.rate = 0.85; 
+                msg.rate = 0.9; 
                 window.speechSynthesis.speak(msg);
             }
         }
 
-        // ================= 2. 學習錦囊內容 (教學資源庫) =================
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "toast-msg show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // ================= 2. 學習錦囊 (教學庫) =================
         const tutorialContents = {
             'r-punc-1': `
                 <p class="mb-4 font-bold text-slate-600">標點符號就像交通燈，告訴我們說話時要在哪裡停頓！</p>
@@ -170,16 +175,14 @@
                     <div><span class="font-black text-slate-800 text-xl">頓號：</span><br>用來分開一連串<span class="text-orange-600 font-bold">相同種類</span>的東西，像購物清單一樣！<br><span class="text-sm text-slate-500 bg-white px-2 py-1 rounded mt-2 inline-block">例：我喜歡吃蘋果、香蕉和西瓜。</span></div>
                 </div>
                 <div class="bg-teal-50 p-4 rounded-xl border-l-4 border-teal-500 mb-3 flex items-start gap-4">
-                    <span class="text-4xl font-black text-teal-600 tracking-tighter">：「」</span>
-                    <div><span class="font-black text-slate-800 text-xl">冒號 和 引號：</span><br>用來<span class="text-teal-600 font-bold">框住人物說的話</span>。冒號用在說話人之後，引號把話包起來。<br><span class="text-sm text-slate-500 bg-white px-2 py-1 rounded mt-2 inline-block">例：媽媽說：「快點來吃飯！」</span></div>
+                    <span class="text-4xl font-black text-teal-600 tracking-tighter">：「</span>
+                    <div><span class="font-black text-slate-800 text-xl">冒號 和 引號：</span><br>用來<span class="text-teal-600 font-bold">提示和框住說的話</span>。冒號用在說話人之後。<br><span class="text-sm text-slate-500 bg-white px-2 py-1 rounded mt-2 inline-block">例：媽媽說：「快點來吃飯！」</span></div>
                 </div>
             `,
             'r-meta': `
-                <div class="text-center mb-6">
-                    <span class="text-6xl">🍌 🌙</span>
-                </div>
-                <p class="font-bold text-slate-700 mb-4">什麼是「明喻」？</p>
-                <p class="mb-4 text-slate-600">明喻就是把兩種<span class="text-amber-600 font-bold">不一樣的東西</span>，因為它們有<span class="bg-amber-100 px-2 rounded">相似的地方</span>（例如形狀、顏色），用<span class="font-black text-amber-600">「像」</span>字連起來！</p>
+                <div class="text-center mb-6"><span class="text-6xl">🍌 🌙</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">什麼是「明喻」？</p>
+                <p class="mb-4 text-slate-600">明喻就是把兩種<span class="text-amber-600 font-bold">不一樣的東西</span>，因為它們有<span class="bg-amber-100 px-2 rounded">相似的地方</span>（形狀、顏色），用<span class="font-black text-amber-600">「像」</span>字連起來！</p>
                 <div class="bg-amber-50 p-4 rounded-xl border-2 border-amber-200">
                     <p class="font-black text-center text-xl mb-2 text-amber-800">🪄 明喻魔法公式：</p>
                     <p class="text-center font-bold text-lg"><span class="bg-white px-3 py-1 rounded shadow-sm">東西A</span> ➕ <span class="text-amber-600">像</span> ➕ <span class="bg-white px-3 py-1 rounded shadow-sm">東西B</span></p>
@@ -189,11 +192,9 @@
                 </div>
             `,
             'r-person': `
-                <div class="text-center mb-6">
-                    <span class="text-6xl">🌸 😄</span>
-                </div>
-                <p class="font-bold text-slate-700 mb-4">什麼是「擬人」？</p>
-                <p class="mb-4 text-slate-600">擬人就是把「死物」或「動植物」<span class="bg-emerald-100 px-2 rounded text-emerald-800 font-bold">當作真正的人</span>來寫，讓它們會做人類的動作、有表情和感情！</p>
+                <div class="text-center mb-6"><span class="text-6xl">🌸 😄</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">什麼是「擬人」？</p>
+                <p class="mb-4 text-slate-600">擬人就是把「死物」或「動植物」<span class="bg-emerald-100 px-2 rounded text-emerald-800 font-bold">當作真正的人</span>來寫，讓它們會做人類的動作！</p>
                 <div class="bg-emerald-50 p-4 rounded-xl border-2 border-emerald-200">
                     <p class="font-black text-center text-xl mb-2 text-emerald-800">🪄 讓死物活起來的魔法：</p>
                     <p class="text-center font-bold text-lg mb-3">給它加上<span class="text-emerald-600 bg-white px-2 py-1 rounded shadow-sm">人類的動作</span></p>
@@ -208,15 +209,9 @@
         function showTutorial(categoryId) {
             const modal = document.getElementById('tutorial-modal');
             const content = document.getElementById('tutorial-content');
-            
-            // 載入對應內容
             document.getElementById('tutorial-body').innerHTML = tutorialContents[categoryId];
-            
-            // 顯示
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
-            
-            // 記錄已看過此教學
             localStorage.setItem('tut_seen_' + categoryId, 'true');
         }
 
@@ -227,174 +222,229 @@
             content.classList.add('scale-90');
             setTimeout(() => {
                 modal.classList.add('hidden');
-                // 如果有被攔截的題目，關閉教學後自動進入題目
                 if (pendingQuestionIdx !== -1) {
                     let targetIdx = pendingQuestionIdx;
                     pendingQuestionIdx = -1;
-                    startQuestion(targetIdx, true); // force=true 表示跳過檢查
+                    startQuestion(targetIdx, true); 
                 }
             }, 300);
         }
 
-        // ================= 3. 基礎修辭與標點題庫 (120 題) =================
+        // ================= 3. 基礎標點與修辭題庫 (160題 全解析版) =================
         const categories = [
-            { id: 'r-punc-1', title: '🔴 基礎標點符號 (，。？！)', color: 'red' },
-            { id: 'r-punc-2', title: '🟠 進階標點符號 (、：「」)', color: 'orange' },
-            { id: 'r-meta', title: '🌟 圖文配對：明喻句 (A像B)', color: 'amber' },
-            { id: 'r-person', title: '🧚 圖文配對：擬人句', color: 'emerald' }
+            { id: 'r-punc-1', title: '🔴 基礎標點符號 (，。？！) - 40題', color: 'red' },
+            { id: 'r-punc-2', title: '🟠 進階標點符號 (、：「) - 40題', color: 'orange' },
+            { id: 'r-meta', title: '🌟 圖文配對：明喻句 (A像B) - 40題', color: 'amber' },
+            { id: 'r-person', title: '🧚 圖文配對：擬人句 - 40題', color: 'emerald' }
         ];
 
-        function generateData(pool, category, task, count) {
-            let result = [];
-            for (let i = 0; i < count; i++) {
-                let item = pool[i % pool.length];
-                result.push({ category: category, task: task, qData: item });
-            }
-            return result;
+        // 標點符號專用解釋產生器
+        function getPuncExp(punc) {
+            if(punc==='，') return '逗號，表示句子中間的短暫停頓。';
+            if(punc==='。') return '句號，表示一句話完整說完了。';
+            if(punc==='？') return '問號，表示這是一句發問的話。';
+            if(punc==='！') return '感嘆號，表示帶有強烈的感情或語氣。';
+            if(punc==='、') return '頓號，用來分開連續相同種類的物品。';
+            if(punc==='：') return '冒號，用來提示下面要說的話。';
+            return '標點符號錯誤。';
         }
 
-        // --- 題型 1：基礎標點 (30題) ---
-        const punc1Pool = [
-            ['今天的天氣真好_', '。', ['，', '？', '！']],
-            ['請問洗手間在哪裡_', '？', ['。', '，', '！']],
-            ['哇_這朵花真漂亮！', '，', ['。', '？', '！']],
-            ['太棒了，我考了第一名_', '！', ['。', '？', '，']],
-            ['媽媽去市場買菜_', '。', ['？', '！', '，']],
-            ['你最喜歡什麼顏色_', '？', ['。', '！', '，']],
-            ['哎呀_我忘記帶書本了！', '，', ['。', '？', '！']],
-            ['這真是一場精彩的比賽_', '！', ['。', '？', '，']],
-            ['我每天早上都喝一杯牛奶_', '。', ['？', '！', '，']],
-            ['你知道今天星期幾嗎_', '？', ['。', '！', '，']],
-            ['天啊_這隻小狗好可愛！', '，', ['。', '？', '！']],
-            ['救命啊_有小偷！', '！', ['。', '？', '，']],
-            ['圖書館裡非常安靜_', '。', ['？', '！', '，']],
-            ['這本書是誰的_', '？', ['。', '！', '，']],
-            ['你好_請問有人在家嗎？', '，', ['。', '？', '！']],
-            ['好痛啊_我不小心跌倒了！', '！', ['。', '？', '，']],
-            ['爸爸正在客廳看電視_', '。', ['？', '！', '，']],
-            ['我們明天一起去公園玩好嗎_', '？', ['。', '！', '，']],
-            ['糟了_快要遲到了！', '，', ['。', '？', '！']],
-            ['多麼美麗的夜空啊_', '！', ['。', '？', '，']],
-            ['小鳥在樹上唱歌_', '。', ['？', '！', '，']],
-            ['你為什麼不開心_', '？', ['。', '！', '，']],
-            ['真香啊_這是什麼菜？', '，', ['。', '？', '！']],
-            ['太危險了_快點過來！', '！', ['。', '？', '，']],
-            ['水池裡有很多魚_', '。', ['？', '！', '，']],
-            ['你可以幫我一個忙嗎_', '？', ['。', '！', '，']],
-            ['對不起_我不是故意的。', '，', ['。', '？', '！']],
-            ['這真是一個大驚喜_', '！', ['。', '？', '，']],
-            ['弟弟正在房間裡睡覺_', '。', ['？', '！', '，']],
-            ['這道題應該怎麼做_', '？', ['。', '！', '，']]
+        function formatPuncData(pool, category, task) {
+            return pool.map(item => {
+                let exp = `✅ ${item[1]}：${getPuncExp(item[1])}<br>❌ ${item[2][0]}：${getPuncExp(item[2][0])}<br>❌ ${item[2][1]}：${getPuncExp(item[2][1])}<br>❌ ${item[2][2]}：${getPuncExp(item[2][2])}`;
+                return { category: category, task: task, sentence: item[0], correct: item[1], wrongs: item[2], explanation: exp };
+            });
+        }
+
+        function formatImgData(pool, category, task) {
+            return pool.map(item => {
+                let exp = `✅ ${item[1]}：${item[2]}<br>❌ ${item[3]}：${item[4]}<br>❌ ${item[5]}：${item[6]}<br>❌ ${item[7]}：${item[8]}`;
+                return { category: category, task: task, sentence: item[0], correct: item[1], wrongs: [item[3], item[5], item[7]], explanation: exp };
+            });
+        }
+
+        // --- 1. 基礎標點 (40題) ---
+        const punc1Raw = [
+            ['今天的天氣真好___', '。', ['，','？','！']],
+            ['請問洗手間在哪裡___', '？', ['。','，','！']],
+            ['哇___這朵花真漂亮！', '，', ['。','？','！']],
+            ['太棒了，我考了第一名___', '！', ['。','？','，']],
+            ['媽媽去市場買菜___', '。', ['？','！','，']],
+            ['你最喜歡什麼顏色___', '？', ['。','！','，']],
+            ['哎呀___我忘記帶書本了！', '，', ['。','？','！']],
+            ['這真是一場精彩的比賽___', '！', ['。','？','，']],
+            ['我每天早上都喝一杯牛奶___', '。', ['？','！','，']],
+            ['你知道今天星期幾嗎___', '？', ['。','！','，']],
+            ['天啊___這隻小狗好可愛！', '，', ['。','？','！']],
+            ['救命啊___有小偷！', '！', ['。','？','，']],
+            ['圖書館裡非常安靜___', '。', ['？','！','，']],
+            ['這本書是誰的___', '？', ['。','！','，']],
+            ['你好___請問有人在家嗎？', '，', ['。','？','！']],
+            ['好痛啊___我不小心跌倒了！', '！', ['。','？','，']],
+            ['爸爸正在客廳看電視___', '。', ['？','！','，']],
+            ['我們明天一起去公園玩好嗎___', '？', ['。','！','，']],
+            ['糟了___快要遲到了！', '，', ['。','？','！']],
+            ['多麼美麗的夜空啊___', '！', ['。','？','，']],
+            ['小鳥在樹上唱歌___', '。', ['？','！','，']],
+            ['你為什麼不開心___', '？', ['。','！','，']],
+            ['真香啊___這是什麼菜？', '，', ['。','？','！']],
+            ['太危險了___快點過來！', '！', ['。','？','，']],
+            ['水池裡有很多魚___', '。', ['？','！','，']],
+            ['你可以幫我一個忙嗎___', '？', ['。','！','，']],
+            ['對不起___我不是故意的。', '，', ['。','？','！']],
+            ['這真是一個大驚喜___', '！', ['。','？','，']],
+            ['弟弟正在房間裡睡覺___', '。', ['？','！','，']],
+            ['這道題應該怎麼做___', '？', ['。','！','，']],
+            ['天黑了，大家準備睡覺___', '。', ['？','！','，']],
+            ['你是哪個學校的學生___', '？', ['。','！','，']],
+            ['小心___前面有水坑！', '，', ['。','？','！']],
+            ['多麼宏偉的建築物啊___', '！', ['。','？','，']],
+            ['我們班有三十個學生___', '。', ['？','！','，']],
+            ['這隻筆多少錢___', '？', ['。','！','，']],
+            ['不要跑___慢慢走。', '，', ['。','？','！']],
+            ['這蛋糕實在太好吃了___', '！', ['。','？','，']],
+            ['農夫在田裡辛勤地工作___', '。', ['？','！','，']],
+            ['你明天有空嗎___', '？', ['。','！','，']]
         ];
 
-        // --- 題型 2：進階標點 (30題) ---
-        const punc2Pool = [
-            ['我喜歡吃蘋果_橙和香蕉。', '、', ['，', '。', '？']],
-            ['桌上有鉛筆_橡皮擦和尺。', '、', ['，', '。', '！']],
-            ['媽媽說_「今天晚上吃火鍋。」', '：', ['，', '。', '、']],
-            ['老師問：「誰能回答這個問題_」', '？', ['。', '，', '！']],
-            ['大家齊聲歡呼_「我們贏了！」', '：', ['，', '。', '、']],
-            ['這間文具店有賣筆_簿和膠水。', '、', ['，', '。', '？']],
-            ['公園裡有紅的_黃的和紫的花。', '、', ['，', '。', '！']],
-            ['爸爸大喊：「小心_」', '！', ['。', '？', '，']],
-            ['哥哥說_「這本書真好看。」', '：', ['，', '。', '、']],
-            ['農場裡有牛_羊和馬。', '、', ['，', '。', '？']],
-            ['姐姐的愛好是唱歌_跳舞和畫畫。', '、', ['，', '。', '！']],
-            ['校長說_「各位同學早晨。」', '：', ['，', '。', '、']],
-            ['小明問：「你吃飯了嗎_」', '？', ['。', '，', '！']],
-            ['動物園裡有大象_獅子和老虎。', '、', ['，', '。', '？']],
-            ['春夏_秋冬是四季。', '、', ['，', '。', '！']],
-            ['她高興地說_「太謝謝你了！」', '：', ['，', '。', '、']],
-            ['我們去超市買了魚_肉和菜。', '、', ['，', '。', '？']],
-            ['他喜歡的運動是游泳_跑步和打球。', '、', ['，', '。', '！']],
-            ['醫生說_「你要多休息。」', '：', ['，', '。', '、']],
-            ['路人問：「圖書館怎麼走_」', '？', ['。', '，', '！']],
-            ['文具盒裡有剪刀_膠紙和螢光筆。', '、', ['，', '。', '？']],
-            ['天空中有星星_月亮和雲朵。', '、', ['，', '。', '！']],
-            ['廣播說_「請乘客繫好安全帶。」', '：', ['，', '。', '、']],
-            ['朋友問：「這件衣服好看嗎_」', '？', ['。', '，', '！']],
-            ['這裡有紅_綠、藍三種顏色。', '、', ['，', '。', '？']],
-            ['桌上放著書_報紙和雜誌。', '、', ['，', '。', '！']],
-            ['警察大喊_「站住，不許動！」', '：', ['，', '。', '、']],
-            ['妹妹問：「我可以吃糖果嗎_」', '？', ['。', '，', '！']],
-            ['我的書包裡有書_水樽和雨傘。', '、', ['，', '。', '？']]
+        // --- 2. 進階標點 (40題) ---
+        const punc2Raw = [
+            ['我喜歡吃蘋果___橙和香蕉。', '、', ['，','。','？']],
+            ['桌上有鉛筆___橡皮擦和尺。', '、', ['，','。','！']],
+            ['媽媽說___「今天晚上吃火鍋。」', '：', ['，','。','、']],
+            ['老師問：「誰能回答這個問題___」', '？', ['。','，','！']],
+            ['大家齊聲歡呼___「我們贏了！」', '：', ['，','。','、']],
+            ['文具店有賣筆___簿和膠水。', '、', ['，','。','？']],
+            ['公園裡有紅的___黃的和紫的花。', '、', ['，','。','！']],
+            ['爸爸大喊：「小心___」', '！', ['。','？','，']],
+            ['哥哥說___「這本書真好看。」', '：', ['，','。','、']],
+            ['農場裡有牛___羊和馬。', '、', ['，','。','？']],
+            ['姐姐的愛好是唱歌___跳舞和畫畫。', '、', ['，','。','！']],
+            ['校長說___「各位同學早晨。」', '：', ['，','。','、']],
+            ['小明問：「你吃飯了嗎___」', '？', ['。','，','！']],
+            ['動物園裡有大象___獅子和老虎。', '、', ['，','。','？']],
+            ['春夏___秋冬是四季。', '、', ['，','。','！']],
+            ['她高興地說___「太謝謝你了！」', '：', ['，','。','、']],
+            ['我們去超市買了魚___肉和菜。', '、', ['，','。','？']],
+            ['他喜歡游泳___跑步和打球。', '、', ['，','。','！']],
+            ['醫生說___「你要多休息。」', '：', ['，','。','、']],
+            ['路人問：「圖書館怎麼走___」', '？', ['。','，','！']],
+            ['文具盒裡有剪刀___膠紙和螢光筆。', '、', ['，','。','？']],
+            ['天空中有星星___月亮和雲朵。', '、', ['，','。','！']],
+            ['廣播說___「請乘客繫好安全帶。」', '：', ['，','。','、']],
+            ['朋友問：「這件衣服好看嗎___」', '？', ['。','，','！']],
+            ['這裡有紅___綠、藍三種顏色。', '、', ['，','。','？']],
+            ['桌上放著書___報紙和雜誌。', '、', ['，','。','！']],
+            ['警察大喊___「站住，不許動！」', '：', ['，','。','、']],
+            ['妹妹問：「我可以吃糖果嗎___」', '？', ['。','，','！']],
+            ['我的書包裡有書___水樽和雨傘。', '、', ['，','。','？']],
+            ['操場上有同學在跑步___跳繩和打球。', '、', ['，','。','！']],
+            ['經理說___「會議現在開始。」', '：', ['，','。','、']],
+            ['遊客問：「請問這是哪裡___」', '？', ['。','，','！']],
+            ['我們參觀了博物館___圖書館和公園。', '、', ['，','。','？']],
+            ['果園裡種了蘋果___梨子和葡萄。', '、', ['，','。','！']],
+            ['他驚訝地問___「真的嗎？」', '：', ['，','。','、']],
+            ['你喜歡看什麼電影___', '？', ['。','，','！']],
+            ['文具店裡有賣鉛筆___原子筆和塗改液。', '、', ['，','。','？']],
+            ['我會說中文___英文和日文。', '、', ['，','。','！']],
+            ['隊長宣佈___「我們獲得了冠軍！」', '：', ['，','。','、']],
+            ['媽媽問：「功課做完了嗎___」', '？', ['。','，','！']]
         ];
 
-        // --- 題型 3：圖文配對：明喻句 (30題) ---
+        // --- 3. 圖文配對：明喻句 (40題) ---
         const metaPool = [
-            ['彎彎的月亮像___。', '🍌 香蕉', ['🍎 蘋果', '🍉 西瓜', '🍇 葡萄']],
-            ['弟弟的臉蛋紅紅的，像___。', '🍎 蘋果', ['🍌 香蕉', '🍋 檸檬', '🍐 梨子']],
-            ['閃閃發光的星星像___。', '💎 寶石', ['🪨 石頭', '🪵 木頭', '🍂 樹葉']],
-            ['大象的耳朵大大的，像___。', '🪭 扇子', ['🌂 雨傘', '🪟 窗戶', '🚪 門']],
-            ['圓圓的太陽像___。', '🎈 火球', ['🧊 冰塊', '💧 水滴', '❄️ 雪花']],
-            ['小白兔的眼睛紅紅的，像___。', '🔴 紅寶石', ['🟢 綠寶石', '🔵 藍寶石', '⚫ 黑珍珠']],
-            ['天上飄著的白雲像___。', '🐑 羊群', ['🐘 大象', '🐍 蛇', '🦅 老鷹']],
-            ['妹妹的皮膚白白的，像___。', '❄️ 雪花', ['煤炭', '泥土', '樹皮']],
-            ['孔雀的翅膀五顏六色，像___。', '🌈 彩虹', ['烏雲', '黑夜', '白紙']],
-            ['大象的鼻子長長的，像___。', '🚿 水管', ['📺 電視', '💻 電腦', '📱 手機']],
-            ['這場大雨下得又急又大，像___一樣。', '🌊 瀑布', ['🔥 火焰', '🏜️ 沙漠', '🏔️ 高山']],
-            ['小狗的毛毛茸茸的，像___。', '🧶 毛線球', ['🧱 磚頭', '🪨 石頭', '🧊 冰塊']],
-            ['平靜的湖面像___。', '🪞 鏡子', ['🪟 窗戶', '🚪 門', '🛏️ 床']],
-            ['滿山的楓葉紅彤彤的，像___。', '🔥 火焰', ['🌊 海水', '☁️ 白雲', '❄️ 白雪']],
-            ['他的力氣很大，像___一樣。', '🐂 牛', ['🐭 老鼠', '🐰 兔子', '🐱 貓']],
-            ['秋天的落葉像___一樣飛舞。', '🦋 蝴蝶', ['🪱 毛蟲', '🐌 蝸牛', '🐜 螞蟻']],
-            ['那座高山像___一樣高聳入雲。', '🗡️ 利劍', ['饅頭', '包子', '雞蛋']],
-            ['馬路上的汽車多得像___一樣。', '🐜 螞蟻', ['🐘 大象', '🐋 鯨魚', '🦕 恐龍']],
-            ['清澈的泉水像___一樣透明。', '🧊 水晶', ['墨水', '泥漿', '石油']],
-            // 擴充
-            ['彎彎的彩虹像___。', '🌉 拱橋', ['高樓', '平房', '馬路']],
-            ['綠油油的草地像___。', '🟩 綠地毯', ['紅地毯', '黃地毯', '白地毯']],
-            ['細細的春雨像___。', '🧵 牛毛', ['大樹', '石頭', '房子']],
-            ['夜晚的霓虹燈閃爍，像___。', '✨ 繁星', ['黑夜', '烏雲', '濃霧']],
-            ['小貓的眼睛在夜裡亮得像___。', '💡 燈泡', ['黑洞', '泥土', '木頭']],
-            ['雪花飄落，像___一樣輕柔。', '🪶 羽毛', ['石頭', '鐵塊', '鉛球']],
-            ['她唱歌的聲音清脆得像___。', '🔔 銀鈴', ['打雷', '破鑼', '烏鴉']],
-            ['弟弟跑得非常快，像___一樣。', '🌪️ 飛風', ['烏龜', '蝸牛', '毛蟲']],
-            ['這棵大樹的樹冠像___。', '☂️ 大傘', ['筷子', '鉛筆', '吸管']],
-            ['天空藍得像___。', '🌊 海水', ['泥水', '墨汁', '黑炭']]
+            ['彎彎的月亮像___。', '🍌 香蕉', '形狀彎彎的，顏色黃黃的，很相似。', '🍎 蘋果', '蘋果是圓的，不像月亮。', '🍉 西瓜', '又大又圓，不像月亮。', '🍇 葡萄', '葡萄是一串串的，不像月亮。'],
+            ['弟弟的臉蛋紅紅的，像___。', '🍎 蘋果', '蘋果紅紅圓圓的，跟紅臉蛋很像。', '🍌 香蕉', '香蕉是黃色長條的，不符合。', '🍋 檸檬', '檸檬是黃色酸的，不符合。', '🍐 梨子', '梨子不是紅色的。'],
+            ['閃閃發光的星星像___。', '💎 寶石', '寶石也會閃閃發光，十分相似。', '🪨 石頭', '普通石頭不會發光。', '🪵 木頭', '木頭不會發光。', '🍂 樹葉', '樹葉不會發光。'],
+            ['大象的耳朵大大的，像___。', '🪭 扇子', '大象的耳朵又大又扁，搧動時像扇子。', '🌂 雨傘', '雨傘是圓頂的，不太像。', '🪟 窗戶', '窗戶是硬的方形。', '🚪 門', '門的形狀完全不同。'],
+            ['圓圓的太陽像___。', '🎈 火球', '太陽又圓又熱，像燃燒的火球。', '🧊 冰塊', '冰塊是冷的，完全相反。', '💧 水滴', '水滴很小，不像太陽。', '❄️ 雪花', '雪花是冷的、白色的。'],
+            ['小白兔的眼睛紅紅的，像___。', '🔴 紅寶石', '兔子眼睛是紅色的且發亮，像紅寶石。', '🟢 綠寶石', '顏色不對，兔子眼睛不是綠色。', '🔵 藍寶石', '顏色不對，不是藍色。', '⚫ 黑珍珠', '顏色不對，不是黑色。'],
+            ['天上飄著的白雲像___。', '🐑 羊群', '白雲一團一團的，就像白色的羊群。', '🐘 大象', '大象是灰色的，不像白雲。', '🐍 蛇', '蛇是細長的，不像雲團。', '🦅 老鷹', '老鷹是黑褐色的。'],
+            ['妹妹的皮膚白白的，像___。', '❄️ 雪花', '雪花非常潔白，適合形容皮膚白。', '煤炭', '煤炭是黑色的。', '泥土', '泥土是棕色的。', '樹皮', '樹皮是粗糙深色的。'],
+            ['孔雀的翅膀五顏六色，像___。', '🌈 彩虹', '彩虹有很多顏色，跟孔雀羽毛很像。', '烏雲', '烏雲只有灰黑色。', '黑夜', '黑夜沒有豐富的顏色。', '白紙', '白紙只有一種顏色。'],
+            ['大象的鼻子長長的，像___。', '🚿 水管', '大象的鼻子長長軟軟的，還能噴水，像水管。', '📺 電視', '電視是方形的。', '💻 電腦', '電腦形狀完全不同。', '📱 手機', '手機是扁平的。'],
+            ['這場大雨下得又急又大，像___一樣。', '🌊 瀑布', '雨水像瀑布一樣傾瀉下來，形容雨極大。', '🔥 火焰', '火焰跟水完全相反。', '🏜️ 沙漠', '沙漠是極度缺水的地方。', '🏔️ 高山', '高山不會流動。'],
+            ['小狗的毛毛茸茸的，像___。', '🧶 毛線球', '毛線球也是毛茸茸、一團一團的。', '🧱 磚頭', '磚頭硬硬的，完全不像。', '🪨 石頭', '石頭很硬。', '🧊 冰塊', '冰塊是冷硬的。'],
+            ['平靜的湖面像___。', '🪞 鏡子', '平靜的水面能反光，就像鏡子一樣。', '🪟 窗戶', '窗戶雖然是玻璃但通常是直立的。', '🚪 門', '門不能反光。', '🛏️ 床', '床是軟的，不能反光。'],
+            ['滿山的楓葉紅彤彤的，像___。', '🔥 火焰', '紅色的楓葉連成一片，就像燃燒的火焰。', '🌊 海水', '海水是藍色的。', '☁️ 白雲', '白雲是白色的。', '❄️ 白雪', '白雪是白色的。'],
+            ['他的力氣很大，像___一樣。', '🐂 牛', '牛力氣很大，常用來形容力大無窮。', '🐭 老鼠', '老鼠力氣很小。', '🐰 兔子', '兔子力氣不大。', '🐱 貓', '貓力氣不大。'],
+            ['秋天的落葉像___一樣飛舞。', '🦋 蝴蝶', '落葉在空中飄揚的姿態，就像飛舞的蝴蝶。', '🪱 毛蟲', '毛蟲不會飛。', '🐌 蝸牛', '蝸牛爬得很慢。', '🐜 螞蟻', '螞蟻在地上爬。'],
+            ['那座高山像___一樣高聳入雲。', '🗡️ 利劍', '高聳挺拔的山峰，形狀像直指天空的劍。', '饅頭', '饅頭是圓扁的，不夠高聳。', '包子', '包子是圓的。', '雞蛋', '雞蛋是橢圓的。'],
+            ['馬路上的汽車多得像___一樣。', '🐜 螞蟻', '從高處看密密麻麻的車，就像成群的螞蟻。', '🐘 大象', '大象數量少且體型大。', '🐋 鯨魚', '鯨魚在海裡，數量不多。', '🦕 恐龍', '恐龍已經絕種。'],
+            ['清澈的泉水像___一樣透明。', '🧊 水晶', '水晶非常透明純淨，適合形容乾淨的水。', '墨水', '墨水是黑色的。', '泥漿', '泥漿是渾濁的。', '石油', '石油是黑黑的。'],
+            ['彎彎的彩虹像___。', '🌉 拱橋', '彩虹的弧形，就像一座跨越天空的拱橋。', '高樓', '高樓是直立的。', '平房', '平房是扁平的。', '馬路', '馬路是平的。'],
+            ['綠油油的草地像___。', '🟩 綠地毯', '草地平鋪在地上且是綠色，就像綠地毯。', '紅地毯', '顏色不對，草是綠的。', '黃地毯', '草地應該是綠的。', '白地毯', '顏色不對。'],
+            ['細細的春雨像___。', '🧵 牛毛', '春雨非常細密，古人常說「細如牛毛」。', '大樹', '大樹很粗壯。', '石頭', '石頭是一塊塊的。', '房子', '房子很大。'],
+            ['夜晚的霓虹燈閃爍，像___。', '✨ 繁星', '城市裡閃爍的燈光，就像天上繁密的星星。', '黑夜', '黑夜本身沒有光。', '烏雲', '烏雲是暗的。', '濃霧', '濃霧會遮擋光線。'],
+            ['小貓的眼睛在夜裡亮得像___。', '💡 燈泡', '貓的眼睛在暗處會反光，像兩個小燈泡。', '黑洞', '黑洞沒有光。', '泥土', '泥土不會發光。', '木頭', '木頭不會發光。'],
+            ['雪花飄落，像___一樣輕柔。', '🪶 羽毛', '雪花很輕，飄下來的感覺就像羽毛。', '石頭', '石頭很重，掉下來很快。', '鐵塊', '鐵塊非常重。', '鉛球', '鉛球非常重。'],
+            ['她唱歌的聲音清脆得像___。', '🔔 銀鈴', '銀鈴搖動的聲音非常清脆好聽。', '打雷', '打雷聲很大很粗。', '破鑼', '破鑼聲音難聽。', '烏鴉', '烏鴉叫聲不好聽。'],
+            ['弟弟跑得非常快，像___一樣。', '🌪️ 飛風', '形容速度極快，就像風刮過一樣。', '烏龜', '烏龜爬得很慢。', '蝸牛', '蝸牛爬得很慢。', '毛蟲', '毛蟲爬得很慢。'],
+            ['這棵大樹的樹冠像___。', '☂️ 大傘', '大樹枝葉茂密，可以在下面乘涼，像一把傘。', '筷子', '筷子是細長直的。', '鉛筆', '鉛筆是細長的。', '吸管', '吸管是細長的。'],
+            ['天空藍得像___。', '🌊 海水', '海水也是蔚藍色的，兩者顏色相似。', '泥水', '泥水是黃褐色的。', '墨汁', '墨汁是黑色的。', '黑炭', '黑炭是黑色的。'],
+            ['他急得像熱鍋上的___。', '🐜 螞蟻', '螞蟻在熱鍋上會亂跑，形容人非常焦急。', '冰塊', '冰塊只會融化。', '石頭', '石頭不會動。', '木頭', '木頭不會動。'],
+            ['時間過得真快，像___一樣。', '🏹 飛箭', '「光陰似箭」，箭飛得很快，代表時間飛逝。', '蝸牛', '蝸牛很慢。', '烏龜', '烏龜很慢。', '毛蟲', '毛蟲很慢。'],
+            ['這座橋像一條___橫跨在江面上。', '🐉 巨龍', '長長的橋很有氣勢，像一條龍。', '小蟲', '橋非常巨大，不像小蟲。', '螞蟻', '橋非常巨大。', '青蛙', '橋不是青蛙的形狀。'],
+            ['她的笑容像___一樣溫暖。', '☀️ 陽光', '陽光帶來溫暖，常用來形容親切的笑容。', '冰雪', '冰雪是寒冷的。', '寒風', '寒風是冷的。', '冰雹', '冰雹是冷的。'],
+            ['滿天的繁星像無數隻___。', '👀 眼睛', '星星一閃一閃的，就像在眨眼睛。', '嘴巴', '嘴巴不會發光閃爍。', '鼻子', '鼻子不會閃爍。', '耳朵', '耳朵不會閃爍。'],
+            ['高大的煙囪像___直指天空。', '🖍️ 巨筆', '煙囪又高又直，形狀像一枝大筆。', '圓球', '煙囪是長條形的。', '方盒', '煙囪是圓柱形。', '扁盤', '煙囪不扁。'],
+            ['平靜的海面像一塊巨大的___。', '💎 藍寶石', '海面呈現藍色且平靜反光，像藍寶石。', '紅磚', '顏色和材質都不對。', '黃沙', '顏色不對。', '黑炭', '顏色不對。'],
+            ['春天的小雨像___一樣細。', '🧵 絲線', '春雨細細長長的，像絲線一樣。', '水管', '水管太粗了。', '麻繩', '麻繩太粗了。', '柱子', '柱子太粗了。'],
+            ['圓圓的西瓜像一個大___。', '🏀 皮球', '西瓜又圓又大，形狀像球。', '扁擔', '扁擔是長條的。', '水管', '水管是長條的。', '方磚', '方磚是方形的。'],
+            ['老師的教誨像___滋潤了我們。', '🌧️ 春雨', '春雨能讓植物生長，老師的教導能讓我們進步。', '烈日', '烈日會讓人難受。', '狂風', '狂風會破壞。', '冰雹', '冰雹會破壞。'],
+            ['人群密集得像___一樣。', '🐟 沙丁魚', '「擠得像沙丁魚罐頭」，形容人非常多且擁擠。', '大象', '大象體型大，無法密集。', '鯨魚', '鯨魚體型龐大。', '恐龍', '恐龍體型龐大。']
         ];
 
-        // --- 題型 4：圖文配對：擬人句 (30題) ---
+        // --- 4. 圖文配對：擬人句 (40題) ---
         const personPool = [
-            ['春天來了，花兒開心地___。', '😄 笑了', ['😭 哭了', '😠 生氣了', '😴 睡了']],
-            ['小鳥在樹枝上快樂地___。', '🎵 唱歌', ['打字', '煮飯', '洗衣服']],
-            ['狂風發出可怕的___。', '🦁 吼叫', ['喵喵', '汪汪', '哞哞']],
-            ['星星在夜空中對著我___。', '😉 眨眼睛', ['吐舌頭', '皺鼻子', '掏耳朵']],
-            ['春風輕輕地___著我的臉。', '🤚 撫摸', ['踢', '打', '踩']],
-            ['柳樹在微風中___。', '💃 跳舞', ['打球', '看書', '寫字']],
-            ['太陽公公露出了慈祥的___。', '😊 笑容', ['生氣', '哭泣', '冷漠']],
-            ['秋天，落葉依依不捨地___了樹枝。', '👋 告別', ['毆打', '咬', '踢']],
-            ['小溪唱著___向東流去。', '🎶 歡歌', ['悲歌', '吵架聲', '哭聲']],
-            ['牽牛花吹起了紫色的___。', '🎺 小喇叭', ['鋼琴', '小提琴', '鼓']],
-            ['雷公公在天上發起了___。', '😡 脾氣', ['糖果', '禮物', '紅包']],
-            ['向日葵在清晨___了眼睛。', '👀 睜開', ['閉上', '瞎了', '遮住']],
-            ['小草從泥土裡悄悄地___了出來。', '🌱 探出頭', ['縮回去', '躲起來', '藏起來']],
-            ['浪花在沙灘上開心地___。', '🏃 奔跑', ['睡覺', '發呆', '發抖']],
-            ['白雲在天空中悠閒地___。', '🚶 散步', ['賽跑', '打架', '吵架']],
-            ['鬧鐘每天早上都會___我起床。', '🗣️ 叫醒', ['催眠', '打暈', '嚇暈']],
-            ['大樹張開雙臂，___著小鳥。', '🫂 擁抱', ['驅趕', '拍打', '恐嚇']],
-            ['雨滴在鐵皮屋頂上快樂地___。', '🥁 敲鼓', ['睡覺', '發呆', '看書']],
-            ['小河不知疲倦地___著前進。', '🏃 奔跑', ['停止', '休息', '睡覺']],
-            ['蜜蜂在花叢中辛勤地___。', '💼 工作', ['搗亂', '破壞', '偷懶']],
-            // 擴充
-            ['螢火蟲提著小___在夜裡巡邏。', '🏮 燈籠', ['水桶', '菜籃', '書包']],
-            ['高山披上了白色的___。', '🧥 外套', ['短褲', '鞋子', '襪子']],
-            ['微風___過水面，留下一圈圈波紋。', '💋 親吻', ['踢', '打', '砸']],
-            ['小雪花在空中跳起了優美的___。', '🩰 芭蕾', ['武術', '拳擊', '相撲']],
-            ['冰箱在角落裡___地工作著。', '🤫 默默', ['大喊', '大叫', '吵鬧']],
-            ['鉛筆在紙上沙沙地___。', '🗣️ 說話', ['睡覺', '發呆', '發抖']],
-            ['風兒輕輕地___著樹葉的頭髮。', '🪮 梳理', ['拔', '扯', '剪']],
-            ['書本安靜地___在書架上。', '🛌 躺', ['跑', '跳', '飛']],
-            ['紅綠燈每天都在路口___交通。', '👮 指揮', ['破壞', '搗亂', '無視']],
-            ['月亮姐姐害羞地___進了雲層裡。', '🫣 躲', ['跳', '跑', '飛']]
+            ['春天來了，花兒開心地___。', '😄 笑了', '花朵綻放就像人笑一樣，這是擬人。', '😭 哭了', '情境不符，春天花開是開心的。', '😠 生氣了', '情境不符。', '😴 睡了', '花開代表醒來，不是睡了。'],
+            ['小鳥在樹枝上快樂地___。', '🎵 唱歌', '把鳥叫聲比作人在唱歌，是擬人。', '打字', '小鳥不會打字。', '煮飯', '小鳥不會煮飯。', '洗衣服', '小鳥不會洗衣服。'],
+            ['狂風發出可怕的___。', '🦁 吼叫', '把風聲比作野獸或人的吼叫。', '喵喵', '風聲很大，不像貓叫。', '汪汪', '風聲不像狗叫。', '哞哞', '風聲不像牛叫。'],
+            ['星星在夜空中對著我___。', '😉 眨眼睛', '星星一閃一閃的，就像人在眨眼睛。', '吐舌頭', '星星不會吐舌頭。', '皺鼻子', '星星沒有鼻子。', '掏耳朵', '星星不會掏耳朵。'],
+            ['春風輕輕地___著我的臉。', '🤚 撫摸', '把春風當作人，有溫柔的手可以撫摸。', '踢', '春風很柔和，不會踢。', '打', '春風不會打人。', '踩', '春風不會踩。'],
+            ['柳樹在微風中___。', '💃 跳舞', '柳枝隨風搖擺，就像人在跳舞。', '打球', '柳樹不會打球。', '看書', '柳樹不會看書。', '寫字', '柳樹不會寫字。'],
+            ['太陽公公露出了慈祥的___。', '😊 笑容', '太陽出來帶來溫暖，就像老人慈祥的笑容。', '生氣', '情境通常是溫暖的。', '哭泣', '下雨才是哭泣。', '冷漠', '太陽是溫暖的。'],
+            ['秋天，落葉依依不捨地___了樹枝。', '👋 告別', '把落葉當作人，離開時會告別。', '毆打', '落葉不會打人。', '咬', '落葉不會咬。', '踢', '落葉不會踢。'],
+            ['小溪唱著___向東流去。', '🎶 歡歌', '把水流的聲音比作人在唱開心的歌。', '悲歌', '小溪流動通常是輕快的。', '吵架聲', '水聲通常是悅耳的。', '哭聲', '小溪不會哭。'],
+            ['牽牛花吹起了紫色的___。', '🎺 小喇叭', '牽牛花的形狀像喇叭，比作人在吹喇叭。', '鋼琴', '形狀不對。', '小提琴', '形狀不對。', '鼓', '形狀不對。'],
+            ['雷公公在天上發起了___。', '😡 脾氣', '打雷聲音很大，就像人生氣發脾氣。', '糖果', '天上不會掉糖果。', '禮物', '天上不會掉禮物。', '紅包', '天上不會掉紅包。'],
+            ['向日葵在清晨___了眼睛。', '👀 睜開', '向日葵朝向太陽，就像人早上睜開眼睛。', '閉上', '清晨是醒來睜眼的時候。', '瞎了', '不合邏輯。', '遮住', '向日葵是迎接陽光的。'],
+            ['小草從泥土裡悄悄地___了出來。', '🌱 探出頭', '把小草發芽比作人好奇地探出頭來。', '縮回去', '發芽是長出來。', '躲起來', '發芽是露出來。', '藏起來', '發芽是露出來。'],
+            ['浪花在沙灘上開心地___。', '🏃 奔跑', '海浪湧上沙灘的動作，就像人在奔跑。', '睡覺', '海浪是一直動的。', '發呆', '海浪是動態的。', '發抖', '海浪充滿力量。'],
+            ['白雲在天空中悠閒地___。', '🚶 散步', '白雲慢慢移動，就像人在悠閒散步。', '賽跑', '白雲移動通常很慢。', '打架', '白雲很和平。', '吵架', '白雲不會吵架。'],
+            ['鬧鐘每天早上都會___我起床。', '🗣️ 叫醒', '鬧鐘響起，就像人在叫你起床。', '催眠', '鬧鐘是讓人醒來的。', '打暈', '鬧鐘不會打人。', '嚇暈', '通常是叫醒。'],
+            ['大樹張開雙臂，___著小鳥。', '🫂 擁抱', '大樹的枝幹像手臂，保護著小鳥。', '驅趕', '大樹是鳥的家。', '拍打', '大樹不會打鳥。', '恐嚇', '大樹很友善。'],
+            ['雨滴在鐵皮屋頂上快樂地___。', '🥁 敲鼓', '雨滴落在鐵皮上的聲音，就像人在打鼓。', '睡覺', '雨滴會發出聲音。', '發呆', '雨滴是動態的。', '看書', '雨滴不會看書。'],
+            ['小河不知疲倦地___著前進。', '🏃 奔跑', '水流不斷向前，就像人不知疲倦地跑。', '停止', '小河是一直在流的。', '休息', '小河不休息。', '睡覺', '小河不睡覺。'],
+            ['蜜蜂在花叢中辛勤地___。', '💼 工作', '蜜蜂採蜜就像人在辛勤工作一樣。', '搗亂', '蜜蜂是在採蜜。', '破壞', '蜜蜂是在幫忙傳粉。', '偷懶', '蜜蜂非常勤勞。'],
+            ['螢火蟲提著小___在夜裡巡邏。', '🏮 燈籠', '螢火蟲會發光，就像人提著燈籠。', '水桶', '水桶不會發光。', '菜籃', '菜籃不會發光。', '書包', '書包不會發光。'],
+            ['高山披上了白色的___。', '🧥 外套', '高山被白雪覆蓋，就像人穿上了白外套。', '短褲', '雪是覆蓋整個山頂的。', '鞋子', '雪在山頂。', '襪子', '雪在山頂。'],
+            ['微風___過水面，留下一圈圈波紋。', '💋 親吻', '微風輕觸水面，就像人輕輕地親吻。', '踢', '微風很溫柔。', '打', '微風很溫柔。', '砸', '微風很溫柔。'],
+            ['小雪花在空中跳起了優美的___。', '🩰 芭蕾', '雪花飄落的姿態非常輕盈優美，像跳芭蕾舞。', '武術', '雪花很輕柔。', '拳擊', '雪花很輕柔。', '相撲', '雪花很輕柔。'],
+            ['冰箱在角落裡___地工作著。', '🤫 默默', '把冰箱發出低沉的聲音比作人默默做事。', '大喊', '冰箱聲音通常不大。', '大叫', '冰箱不會大叫。', '吵鬧', '冰箱通常比較安靜。'],
+            ['鉛筆在紙上沙沙地___。', '🗣️ 說話', '寫字的摩擦聲，就像鉛筆在說話。', '睡覺', '寫字會發出聲音。', '發呆', '寫字是動態的。', '發抖', '寫字是流暢的。'],
+            ['風兒輕輕地___著樹葉的頭髮。', '🪮 梳理', '風吹過樹葉，就像人用梳子梳頭髮一樣。', '拔', '風很輕。', '扯', '風很輕。', '剪', '風不會剪。'],
+            ['書本安靜地___在書架上。', '🛌 躺', '把平放或豎放的書本當作人在休息。', '跑', '書本不會動。', '跳', '書本不會動。', '飛', '書本不會動。'],
+            ['紅綠燈每天都在路口___交通。', '👮 指揮', '紅綠燈控制車流，就像警察在指揮一樣。', '破壞', '紅綠燈是維持秩序的。', '搗亂', '紅綠燈是維持秩序的。', '無視', '紅綠燈的作用很大。'],
+            ['月亮姐姐害羞地___進了雲層裡。', '🫣 躲', '雲遮住月亮，就像人害羞躲起來一樣。', '跳', '月亮移動很慢。', '跑', '月亮移動很慢。', '飛', '月亮移動很慢。'],
+            ['大雪為大地蓋上了厚厚的___。', '棉被', '雪覆蓋在地上，就像給大地蓋棉被保暖。', '報紙', '雪很厚很軟。', '樹葉', '雪是白色的。', '石頭', '雪是軟的。'],
+            ['知了在樹上不停地___著夏天很熱。', '抱怨', '知了的叫聲就像人在抱怨天氣太熱。', '讚美', '知了叫聲通常顯得煩躁。', '唱歌', '叫聲單調，用抱怨更擬人。', '歡呼', '天氣太熱通常不歡呼。'],
+            ['路燈在黑夜裡默默地為我們___。', '站崗', '路燈直立發光，就像衛兵在黑夜中站崗。', '睡覺', '路燈是亮著的。', '跳舞', '路燈不會動。', '跑步', '路燈不會動。'],
+            ['小樹苗在春雨的滋潤下，拼命地___。', '長高', '把樹苗生長當作人努力長高。', '變矮', '生長是變高。', '縮小', '生長是變大。', '隱形', '生長是變得明顯。'],
+            ['蜘蛛在牆角忙著___自己的網。', '編織', '蜘蛛結網的動作就像人在編織毛衣一樣。', '拆除', '蜘蛛需要網來捕食。', '燒毀', '蜘蛛需要網。', '撕裂', '蜘蛛需要網。'],
+            ['秋風像一把大掃帚，把落葉___乾淨。', '掃', '風把樹葉吹走，就像人用掃帚掃地。', '洗', '風不能洗。', '吃', '風不能吃。', '喝', '風不能喝。'],
+            ['海浪生氣地___著礁石。', '拍打', '海浪衝擊礁石，就像人生氣地拍打東西。', '撫摸', '生氣時動作很大。', '親吻', '生氣時動作很大。', '擁抱', '生氣時動作很大。'],
+            ['小汽車在公路上歡快地___著。', '奔馳', '車子開得快，就像人開心地奔跑。', '爬行', '汽車速度很快。', '睡覺', '汽車在行駛。', '發呆', '汽車在行駛。'],
+            ['鬧鐘盡職地___著它的工作。', '堅守', '鬧鐘每天定時響，就像人堅守崗位。', '放棄', '鬧鐘很準時。', '逃避', '鬧鐘很準時。', '抱怨', '鬧鐘不會抱怨。'],
+            ['夜空中的流星，像頑皮的孩子在___。', '溜滑梯', '流星滑落的軌跡，就像孩子在溜滑梯。', '睡覺', '流星是動態的。', '看書', '流星是動態的。', '發呆', '流星是動態的。']
         ];
 
         const rawQuestDataObj = [
-            ...generateData(punc1Pool, 'r-punc-1', '基礎標點：選出適合放在 _ 位置的標點符號。', 30),
-            ...generateData(punc2Pool, 'r-punc-2', '進階標點：選出適合放在 _ 位置的標點符號。', 30),
-            ...generateData(metaPool, 'r-meta', '明喻句配對：根據想像，選出最適合的圖片。', 30),
-            ...generateData(personPool, 'r-person', '擬人句配對：找出能讓事物「活起來」的動作。', 30)
-        ]; // 總共 120 題
+            ...formatPuncData(punc1Raw, 'r-punc-1', '基礎標點：選出適合放在 ___ 位置的標點符號。'),
+            ...formatPuncData(punc2Raw, 'r-punc-2', '進階標點：選出適合放在 ___ 位置的標點符號。'),
+            ...formatImgData(metaPool, 'r-meta', '明喻句配對：根據想像，選出最適合的選項。'),
+            ...formatImgData(personPool, 'r-person', '擬人句配對：找出能讓事物「活起來」的動作。')
+        ];
 
         let userProgress = JSON.parse(localStorage.getItem('rhetBasicProgress')) || new Array(rawQuestDataObj.length).fill(0);
 
@@ -402,35 +452,38 @@
             const dirContainer = document.getElementById('directory-content');
             let html = '';
             categories.forEach(cat => {
-                html += `
-                    <div class="mb-6">
-                        <div class="flex items-center justify-between border-b-2 border-${cat.color}-100 pb-2 mb-3">
-                            <h3 class="text-xl font-bold text-${cat.color}-700">${cat.title}</h3>
-                            <button onclick="showTutorial('${cat.id}')" class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-amber-300 hover:bg-amber-200 transition flex items-center gap-1 active:scale-95">📘 學習錦囊</button>
-                        </div>
-                        <div class="flex flex-wrap gap-3">
-                `;
-                rawQuestDataObj.forEach((q, idx) => {
-                    if(q.category === cat.id) {
-                        let status = userProgress[idx];
-                        let btnClass = 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50';
-                        let icon = (idx + 1);
+                let hasQuestions = rawQuestDataObj.some(q => q.category === cat.id);
+                if (hasQuestions) {
+                    html += `
+                        <div class="mb-6">
+                            <div class="flex items-center justify-between border-b-2 border-${cat.color}-100 pb-2 mb-3">
+                                <h3 class="text-xl font-bold text-${cat.color}-700">${cat.title}</h3>
+                                <button onclick="showTutorial('${cat.id}')" class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-amber-300 hover:bg-amber-200 transition flex items-center gap-1 active:scale-95">📘 學習錦囊</button>
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                    `;
+                    rawQuestDataObj.forEach((q, idx) => {
+                        if(q.category === cat.id) {
+                            let status = userProgress[idx];
+                            let btnClass = 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50';
+                            let icon = (idx + 1);
 
-                        if (status === 1) {
-                            btnClass = 'bg-yellow-100 border-yellow-400 text-yellow-700 shadow-inner';
-                            icon = '🌟';
-                        } else if (status === 2) {
-                            btnClass = 'bg-emerald-100 border-emerald-400 text-emerald-700 shadow-inner';
-                            icon = '✅';
-                        } else if (status === -1) {
-                            btnClass = 'bg-rose-100 border-rose-400 text-rose-700 shadow-inner';
-                            icon = '❌';
+                            if (status === 1) {
+                                btnClass = 'bg-yellow-100 border-yellow-400 text-yellow-700 shadow-inner';
+                                icon = '🌟';
+                            } else if (status === 2) {
+                                btnClass = 'bg-emerald-100 border-emerald-400 text-emerald-700 shadow-inner';
+                                icon = '✅';
+                            } else if (status === -1) {
+                                btnClass = 'bg-rose-100 border-rose-400 text-rose-700 shadow-inner';
+                                icon = '❌';
+                            }
+
+                            html += `<button onclick="startQuestion(${idx})" class="lvl-btn ${btnClass} w-12 h-12 lg:w-14 lg:h-14 rounded-xl font-black text-base lg:text-lg border-b-4 flex items-center justify-center shadow-sm transition-transform">${icon}</button>`;
                         }
-
-                        html += `<button onclick="startQuestion(${idx})" class="lvl-btn ${btnClass} w-12 h-12 lg:w-14 lg:h-14 rounded-xl font-black text-base lg:text-lg border-b-4 flex items-center justify-center shadow-sm transition-transform">${icon}</button>`;
-                    }
-                });
-                html += `</div></div>`;
+                    });
+                    html += `</div></div>`;
+                }
             });
             dirContainer.innerHTML = html;
             updateTotalProgress();
@@ -442,39 +495,47 @@
             document.getElementById('progress-bar').style.width = percent + '%';
         }
 
-        let currentQuestionIdx = -1;
-
-        function shuffleOptions(optionsArray, correctIndex) {
-            let opts = optionsArray.map((opt, i) => ({ text: opt, isCorrect: i === correctIndex }));
-            return opts.sort(() => Math.random() - 0.5);
+        function shuffleOptions(correct, wrongs) {
+            let opts = [correct, ...wrongs];
+            for (let i = opts.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [opts[i], opts[j]] = [opts[j], opts[i]];
+            }
+            return {
+                options: opts,
+                ansIdx: opts.indexOf(correct)
+            };
         }
 
         function startQuestion(idx, forceStart = false) {
             const qData = rawQuestDataObj[idx];
             const qType = qData.category;
             
-            // 🌟 自動攔截機制：如果這個類別的教學沒看過，強制彈出教學
             if (!forceStart && !localStorage.getItem('tut_seen_' + qType)) {
-                pendingQuestionIdx = idx; // 記住想進入的題目
-                showTutorial(qType);      // 彈出對應的教學視窗
-                return;                   // 中斷進入題目
+                pendingQuestionIdx = idx; 
+                showTutorial(qType);      
+                return;                   
             }
 
-            // --- 正式進入題目邏輯 ---
             currentQuestionMistakes = 0; 
             currentQuestionIdx = idx;
+            window.currentHints = []; // 重置該題的累積提示
+            
             document.getElementById('quest-directory').style.display = 'none';
             const questPlay = document.getElementById('quest-play');
             questPlay.style.display = 'flex';
             document.getElementById('main-scroll-area').scrollTop = 0;
             
             const qCatTitle = categories.find(c => c.id === qType).title;
-            const qTask = qData.task;
+            const { options, ansIdx } = shuffleOptions(qData.correct, qData.wrongs);
+
+            let ttsText = qData.sentence.replace('___', '什麼');
+            let sentenceHtml = qData.sentence.replace('___', '<span class="text-amber-600 border-b-4 border-amber-500 px-6 font-black bg-amber-50">?</span>');
 
             let html = `
                 <div class="w-full flex justify-between items-center mb-4">
                     <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
-                    <span class="bg-amber-100 text-amber-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${idx + 1} 題 / 共 120 題</span>
+                    <span class="bg-amber-100 text-amber-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${idx + 1} 題 / 共 160 題</span>
                 </div>
                 
                 <div class="slide-up w-full bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center relative transition-all duration-500">
@@ -482,110 +543,133 @@
                         ${qCatTitle}
                     </span>
                     
-                    <div class="w-full flex items-center gap-3 mt-4 mb-4">
+                    <div class="w-full flex items-center gap-3 mt-4 mb-6">
                         <span class="bg-amber-100 text-amber-800 px-3 py-1 rounded text-sm font-bold whitespace-nowrap">任務</span>
-                        <h2 class="text-lg md:text-xl font-bold text-slate-700">${qTask}</h2>
+                        <h2 class="text-lg md:text-xl font-bold text-slate-700">${qData.task}</h2>
                     </div>
-            `;
 
-            const sentence = qData.qData[0];
-            const correctAns = qData.qData[1];
-            const wrongAns = qData.qData[2];
+                    <div class="w-full flex items-start gap-4 mb-6 bg-amber-50 p-6 rounded-2xl border border-amber-100 shadow-inner">
+                        <button onclick="speakText('${ttsText}')" class="tts-btn flex-shrink-0 bg-white text-amber-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-amber-200">🔊</button>
+                        <div class="text-2xl md:text-3xl font-bold text-slate-800 leading-loose">${sentenceHtml}</div>
+                    </div>
 
-            const allOptions = [correctAns, ...wrongAns];
-            const shuffledOpts = shuffleOptions(allOptions, 0);
-
-            // 語音：遇到底線讀出「什麼」
-            let ttsText = sentence.replace(/[_]/g, '什麼');
-
-            // 畫面顯示：將底線替換成一個醒目的方塊
-            let sentenceHtml = sentence.replace(/[_]+/g, '<span class="text-amber-600 border-b-4 border-amber-500 px-4 md:px-6 mx-1 font-black bg-amber-50 inline-block">?</span>');
-
-            html += `
-                <div class="w-full flex items-start gap-4 mb-8 bg-amber-50 p-6 rounded-2xl border border-amber-100 shadow-inner mt-4">
-                    <button onclick="speakText('${ttsText}')" class="tts-btn flex-shrink-0 bg-white text-amber-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-amber-200">🔊</button>
-                    <div class="text-2xl md:text-3xl font-bold text-slate-800 leading-relaxed">${sentenceHtml}</div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 w-full mt-auto" id="options-container">
+                    <div class="grid grid-cols-2 gap-4 w-full max-w-2xl mt-auto" id="options-container">
             `;
             
-            // 如果是標點符號，按鈕文字要極大化
+            // 標點符號的按鈕特別放大
             let isPunc = qType.includes('punc');
-            let textClass = isPunc ? 'text-5xl md:text-6xl pb-8 pt-4' : 'text-xl md:text-2xl py-6';
+            let textClass = isPunc ? 'text-5xl md:text-6xl pb-8 pt-4' : 'text-2xl md:text-3xl py-6';
 
-            shuffledOpts.forEach((opt) => {
-                html += `<button onclick="checkSelectionAnswer(this, ${opt.isCorrect})" class="option-btn bg-white border-4 border-slate-200 text-slate-700 font-bold ${textClass} rounded-2xl hover:bg-amber-50 hover:border-amber-300 transition w-full text-center">${opt.text}</button>`;
+            options.forEach((optText, oIdx) => {
+                const isCorr = (oIdx === ansIdx);
+                const safeOpt = optText.replace(/'/g, "\\'");
+                html += `<button onclick="checkAnswer(this, ${isCorr}, '${safeOpt}')" class="option-btn bg-white border-4 border-slate-200 text-slate-700 font-bold ${textClass} rounded-2xl hover:bg-amber-50 hover:border-amber-300 transition w-full text-center flex flex-col items-center justify-center">${optText}</button>`;
             });
             
-            html += `</div></div>`;
+            html += `
+                    </div>
+                    <!-- 💡 動態提示框 -->
+                    <div id="dynamic-hint-box" class="hidden w-full max-w-2xl mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3">
+                        <div class="flex-1 space-y-2" id="hint-text"></div>
+                        <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
+                    </div>
+                </div>
+            `;
             questPlay.innerHTML = html;
         }
 
-        // --- 選擇題檢查邏輯 ---
-        function checkSelectionAnswer(btnElement, isCorrect) {
+        function backToDirectory() {
+            document.getElementById('quest-play').style.display = 'none';
+            document.getElementById('quest-directory').style.display = 'block';
+            renderDirectory();
+        }
+
+        function checkAnswer(btnElement, isCorrect, clickedOptText) {
             const allBtns = document.querySelectorAll('.option-btn');
-            allBtns.forEach(b => b.style.pointerEvents = 'none');
-
+            const qData = rawQuestDataObj[currentQuestionIdx];
+            
             if (isCorrect) {
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
                 btnElement.classList.add('correct');
-                const qData = rawQuestDataObj[currentQuestionIdx];
-                let answerText = qData.qData[1];
-                let sentence = qData.qData[0];
+                const expText = qData.explanation; 
                 
-                // 組合完整句子
-                let completeSentence = sentence.replace(/[_]+/g, answerText);
+                let completeSentence = qData.sentence.replace('___', clickedOptText);
+                speakText("答對了！" + completeSentence);
+                
+                let finalStatus = currentQuestionMistakes === 0 ? 1 : 2;
+                let previousStatus = userProgress[currentQuestionIdx];
+                let expGained = 0;
 
-                speakText("答對了！" + completeSentence.replace(/[A-Za-z0-9]/g, '')); // 語音過濾掉emoji
-                handleCorrectAnswer(completeSentence);
+                if (previousStatus !== 1 && previousStatus !== 2) {
+                    expGained = finalStatus === 1 ? 15 : 5;
+                } else if (previousStatus === 2 && finalStatus === 1) {
+                    expGained = 10; 
+                }
+
+                if (expGained > 0) {
+                    rhetExp += expGained;
+                    localStorage.setItem('rhetBasicExp', rhetExp);
+                    document.getElementById('exp-display').innerText = rhetExp;
+                    document.getElementById('exp-display').classList.add('pop');
+                    setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+                }
+
+                if (finalStatus === 1 || previousStatus !== 1) {
+                    userProgress[currentQuestionIdx] = finalStatus;
+                    localStorage.setItem('rhetBasicProgress', JSON.stringify(userProgress));
+                }
+
+                let modalIcon = finalStatus === 1 ? '🌟' : '✅';
+                let modalTitle = finalStatus === 1 ? '太棒了！一次答對！' : '成功找出正解！';
+                let expMsg = expGained > 0 
+                    ? `<span class="text-amber-600 block text-xl mb-4">獲得 ${expGained} 點經驗值 ✨</span>` 
+                    : `<span class="text-slate-500 block text-lg mb-4">這題已經成功過關囉！</span>`;
+                
+                // 🔥 全選項深度解析
+                let combinedDesc = expMsg + `
+                    <div class="bg-amber-50 border-l-4 border-amber-500 p-4 text-left text-amber-900 rounded-r-lg font-bold">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-amber-200">
+                            <span class="text-xl">📚 選項全解析</span>
+                            <button onclick="speakText('${expText}')" class="bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm hover:bg-amber-100 text-xl transition active:scale-95">🔊</button>
+                        </div>
+                        <div class="space-y-3 text-base leading-relaxed">${expText}</div>
+                    </div>`;
+
+                setTimeout(() => { showModal(modalIcon, modalTitle, combinedDesc); }, 800);
             } else {
+                // ❌ 答錯邏輯：動態累積提示
                 btnElement.classList.add('wrong', 'shake');
-                speakText("不對喔，請再想想看！");
                 currentQuestionMistakes++; 
                 userProgress[currentQuestionIdx] = -1;
                 localStorage.setItem('rhetBasicProgress', JSON.stringify(userProgress));
                 
+                // 找出被點擊選項的解釋
+                let lines = qData.explanation.split('<br>');
+                let matchedLine = lines.find(l => l.includes(clickedOptText));
+                let newHint = "請再仔細想一想喔！";
+                
+                if (matchedLine) {
+                    newHint = matchedLine.replace(/^[✅❌]\s*/, ''); 
+                }
+
+                if (!window.currentHints) window.currentHints = [];
+                if (!window.currentHints.includes(newHint)) {
+                    window.currentHints.push(newHint);
+                }
+
+                let combinedHintsHtml = window.currentHints.map(h => `<div class="border-b border-yellow-200 pb-1 last:border-0 last:pb-0">💡 ${h}</div>`).join('');
+                
+                document.getElementById('hint-text').innerHTML = combinedHintsHtml;
+                document.getElementById('hint-tts-btn').onclick = () => speakText(window.currentHints.join('。'));
+                document.getElementById('dynamic-hint-box').classList.remove('hidden');
+                document.getElementById('dynamic-hint-box').classList.add('slide-up');
+                
+                speakText("不對喔，" + newHint);
+                
                 setTimeout(() => {
-                    btnElement.classList.remove('wrong', 'shake');
-                    allBtns.forEach(b => { if (!b.classList.contains('correct')) b.style.pointerEvents = 'auto'; });
-                }, 1500);
+                    btnElement.classList.remove('shake');
+                }, 500);
             }
-        }
-
-        // --- 共通答對處理 ---
-        function handleCorrectAnswer(completeText) {
-            let finalStatus = currentQuestionMistakes === 0 ? 1 : 2;
-            let previousStatus = userProgress[currentQuestionIdx];
-            let expGained = 0;
-
-            if (previousStatus !== 1 && previousStatus !== 2) {
-                expGained = finalStatus === 1 ? 15 : 5;
-            } else if (previousStatus === 2 && finalStatus === 1) {
-                expGained = 10; 
-            }
-
-            if (expGained > 0) {
-                rhetExp += expGained;
-                localStorage.setItem('rhetBasicExp', rhetExp);
-                document.getElementById('exp-display').innerText = rhetExp;
-                document.getElementById('exp-display').classList.add('pop');
-                setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
-            }
-
-            if (finalStatus === 1 || previousStatus !== 1) {
-                userProgress[currentQuestionIdx] = finalStatus;
-                localStorage.setItem('rhetBasicProgress', JSON.stringify(userProgress));
-            }
-
-            let modalIcon = finalStatus === 1 ? '🌟' : '✅';
-            let modalTitle = finalStatus === 1 ? '太棒了！一次答對！' : '成功找出正解！';
-            let expMsg = expGained > 0 
-                ? `<span class="text-amber-600 block text-xl mb-4">獲得 ${expGained} 點經驗值 ✨</span>` 
-                : `<span class="text-slate-500 block text-lg mb-4">這題已經成功過關囉！</span>`;
-            
-            let combinedDesc = expMsg + `<div class="bg-amber-50 border-l-4 border-amber-500 p-4 text-left text-slate-800 rounded-r-lg font-bold text-2xl leading-relaxed">${completeText}</div>`;
-
-            setTimeout(() => { showModal(modalIcon, modalTitle, combinedDesc); }, 1000);
         }
 
         function showModal(icon, title, desc) {
@@ -595,14 +679,20 @@
             document.getElementById('feedback-title').innerText = title;
             document.getElementById('feedback-desc').innerHTML = desc;
             
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.onclick = () => {
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-90');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    let nextIdx = currentQuestionIdx + 1;
+                    if (nextIdx < rawQuestDataObj.length) startQuestion(nextIdx);
+                    else { showToast("恭喜完成所有挑戰！"); backToDirectory(); }
+                }, 300);
+            };
+
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
-        }
-
-        function backToDirectory() {
-            document.getElementById('quest-play').style.display = 'none';
-            document.getElementById('quest-directory').style.display = 'block';
-            renderDirectory();
         }
 
         function backToDirectoryFromModal() {
@@ -616,23 +706,9 @@
             }, 300);
         }
 
-        function goToNextQuestion() {
-            const modal = document.getElementById('feedback-modal');
-            const content = document.getElementById('feedback-content');
-            modal.classList.add('opacity-0');
-            content.classList.add('scale-90');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                let nextIdx = currentQuestionIdx + 1;
-                if (nextIdx < rawQuestDataObj.length) startQuestion(nextIdx);
-                else { showToast("恭喜完成所有挑戰！"); backToDirectory(); }
-            }, 300);
-        }
-
         window.onload = function() {
             document.getElementById('exp-display').innerText = rhetExp;
             renderDirectory();
-            document.getElementById('next-btn').onclick = goToNextQuestion;
         }
     </script>
 </body>
