@@ -48,7 +48,7 @@
 </head>
 <body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
 
-    <!-- 頂部導覽列 (Rose 配色) -->
+    <!-- 頂部導覽列 -->
     <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
         <div class="p-3 lg:p-4 bg-rose-600 text-white flex justify-between items-center w-full">
             <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
@@ -95,6 +95,22 @@
         </div>
     </div>
 
+    <!-- 學習小教學 Modal -->
+    <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="tutorial-content">
+            <div class="flex justify-between items-center mb-4 border-b-2 border-rose-100 pb-3">
+                <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-rose-600 flex items-center gap-2">📘 學習錦囊</h2>
+                <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
+            </div>
+            <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4">
+                <!-- 教學內容動態載入 -->
+            </div>
+            <div class="mt-6 pt-4 border-t-2 border-slate-100">
+                <button onclick="closeTutorial()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-rose-800 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 反饋 Modal -->
     <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity">
         <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform" id="feedback-content">
@@ -115,18 +131,117 @@
         let sentAdvExp = parseInt(localStorage.getItem('sentAdvExp')) || 0;
         document.getElementById('exp-display').innerText = sentAdvExp;
         let currentQuestionMistakes = 0; 
+        let pendingQuestionIdx = -1;
 
         function speakText(text) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 let msg = new SpeechSynthesisUtterance(text);
                 msg.lang = 'zh-HK';
-                msg.rate = 0.95; // 拔尖版語速可稍微接近正常
+                msg.rate = 0.95; 
                 window.speechSynthesis.speak(msg);
             }
         }
 
-        // ================= 2. 拔尖語法題庫 (絕對不重複，200 題純乾貨) =================
+        // ================= 1.5 學習錦囊內容 (教學資源庫) =================
+        const tutorialContents = {
+            's-adv-direct': `
+                <div class="text-center mb-4"><span class="text-6xl">🗣️ ➡️ 👥</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">直接敘述 轉換為 間接敘述</p>
+                <p class="mb-4 text-slate-600">當我們要轉述別人說的話時，就像一個小記者，記住「變身三部曲」：</p>
+                <div class="bg-rose-50 p-4 rounded-xl border-2 border-rose-200 mb-3 space-y-3">
+                    <p class="text-lg"><span class="bg-white font-black text-rose-700 border border-rose-300 px-2 py-1 rounded">1. 拆除符號</span> 👉 去掉冒號 [：] 和引號 [「」]</p>
+                    <p class="text-lg"><span class="bg-white font-black text-blue-700 border border-blue-300 px-2 py-1 rounded">2. 人物變身</span> 👉 「我」變成「他/她」</p>
+                    <p class="text-lg"><span class="bg-white font-black text-emerald-700 border border-emerald-300 px-2 py-1 rounded">3. 詞語變身</span> 👉 「這」變成「那」，「今天」變成「那天」</p>
+                    <hr class="border-rose-200 my-2">
+                    <p class="text-base text-slate-700 font-bold">例子：小明說：「<span class="text-blue-600">我</span>喜歡<span class="text-emerald-600">這</span>本書。」<br>✅ 小明說<span class="text-blue-600">他</span>喜歡<span class="text-emerald-600">那</span>本書。</p>
+                </div>
+            `,
+            's-adv-fault': `
+                <div class="text-center mb-4"><span class="text-6xl">🕵️‍♂️ 📝</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">語病大搜查 (找出錯在哪)</p>
+                <p class="mb-4 text-slate-600">做一個句子醫生，找出句子裡生病的地方。常見的語病有這三種：</p>
+                <div class="bg-purple-50 p-4 rounded-xl border-2 border-purple-200 mb-3 space-y-4">
+                    <div>
+                        <p class="font-black text-purple-800 text-lg border-b border-purple-200 pb-1 mb-1">1. 詞語重複 (囉嗦)</p>
+                        <p class="text-base text-slate-600 line-through">他<span class="text-rose-500 font-bold">非常十分</span>開心。</p>
+                    </div>
+                    <div>
+                        <p class="font-black text-purple-800 text-lg border-b border-purple-200 pb-1 mb-1">2. 意思矛盾 (不合邏輯)</p>
+                        <p class="text-base text-slate-600 line-through">他<span class="text-rose-500 font-bold">大約一定</span>會來參加派對。</p>
+                    </div>
+                    <div>
+                        <p class="font-black text-purple-800 text-lg border-b border-purple-200 pb-1 mb-1">3. 搭配不當 (好朋友配錯了)</p>
+                        <p class="text-base text-slate-600 line-through"><span class="text-rose-500 font-bold">發揮</span>良好的習慣。(應為：養成習慣)</p>
+                    </div>
+                </div>
+            `,
+            's-adv-passive': `
+                <div class="text-center mb-4"><span class="text-6xl">🔄 🛡️</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">進階「把/被」字句轉換</p>
+                <p class="mb-4 text-slate-600">面對長句子，只要緊抓<span class="text-blue-600 font-bold">「誰是動作的承受者」</span>，就不會亂！</p>
+                <div class="bg-blue-50 p-4 rounded-xl border-2 border-blue-200 mb-3 text-center">
+                    <p class="font-black text-lg text-blue-800 mb-2">主動 ➡️ 被動 (被字句)</p>
+                    <p class="text-left text-slate-700 text-base mb-2">原句：[強烈的颱風] 吹倒了 [路旁的大樹]。</p>
+                    <p class="text-left text-slate-700 text-base font-bold bg-white p-2 rounded">✅ [路旁的大樹] <span class="text-rose-500">被</span> [強烈的颱風] 吹倒了。</p>
+                    <p class="text-left text-sm text-slate-500 mt-2">💡 秘訣：把原本在「後面」的東西，搬到「最前面」當主角！</p>
+                </div>
+            `,
+            's-adv-conj': `
+                <div class="text-center mb-4"><span class="text-6xl">🧩 🧠</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">高級關聯詞魔法</p>
+                <p class="mb-4 text-slate-600">拔尖版的關聯詞更考驗你的邏輯推理能力：</p>
+                <div class="bg-amber-50 p-4 rounded-xl border-2 border-amber-200 mb-3 space-y-3">
+                    <p class="text-lg"><span class="bg-white font-black text-amber-700 border border-amber-300 px-2 py-1 rounded">與其...不如...</span> 👉 在兩個選項中，<span class="text-amber-600 font-bold">選擇後面</span>那個更好。</p>
+                    <p class="text-lg"><span class="bg-white font-black text-rose-700 border border-rose-300 px-2 py-1 rounded">寧可...也(不)...</span> 👉 <span class="text-rose-600 font-bold">堅持前面</span>的選擇，不願妥協後面。</p>
+                    <p class="text-lg"><span class="bg-white font-black text-emerald-700 border border-emerald-300 px-2 py-1 rounded">即使...也...</span> 👉 退一步假設，<span class="text-emerald-600 font-bold">結果依然不變</span>。</p>
+                    <p class="text-lg"><span class="bg-white font-black text-blue-700 border border-blue-300 px-2 py-1 rounded">只有...才...</span> 👉 唯一的條件，沒有其他方法。</p>
+                </div>
+            `,
+            's-adv-expand': `
+                <div class="text-center mb-4"><span class="text-6xl">🎨 ✨</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">句子變美的最高境界</p>
+                <p class="mb-4 text-slate-600">要選出最棒的擴充句，<span class="text-emerald-600 font-bold">不是選最長的那一個</span>，而是選「畫面感」最豐富的！</p>
+                <div class="bg-emerald-50 p-4 rounded-xl border-2 border-emerald-200 mb-3">
+                    <p class="font-black text-emerald-800 text-lg mb-2">如何判斷好句子？</p>
+                    <p class="text-base text-slate-700 mb-1">✔️ 有沒有用到<span class="text-emerald-600 font-bold">生動的形容詞</span>？(如：五顏六色、震耳欲聾)</p>
+                    <p class="text-base text-slate-700 mb-1">✔️ 有沒有用到<span class="text-emerald-600 font-bold">比喻(像...)</span> 或 <span class="text-emerald-600 font-bold">擬人</span>？</p>
+                    <hr class="border-emerald-200 my-2">
+                    <p class="text-sm text-slate-600">原句：風吹過。</p>
+                    <p class="text-base font-bold mt-1">❌ 風很大地吹過這裡。</p>
+                    <p class="text-base font-bold text-emerald-700">✅ <span class="bg-white px-1 rounded">微風輕輕地</span>吹過<span class="bg-white px-1 rounded">翠綠的草地</span>。</p>
+                </div>
+            `
+        };
+
+        function showTutorial(categoryId) {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            
+            document.getElementById('tutorial-body').innerHTML = tutorialContents[categoryId];
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+            
+            localStorage.setItem('tut_seen_' + categoryId, 'true');
+        }
+
+        function closeTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (pendingQuestionIdx !== -1) {
+                    let targetIdx = pendingQuestionIdx;
+                    pendingQuestionIdx = -1;
+                    startQuestion(targetIdx, true); // force=true 表示跳過攔截
+                }
+            }, 300);
+        }
+
+        // ================= 2. 拔尖語法題庫 (絕對不重複，200 題) =================
         const categories = [
             { id: 's-adv-direct', title: '🗣️ 直接與間接敘述轉換', color: 'rose' },
             { id: 's-adv-fault', title: '🕵️ 語病辨析 (找出無語病的句子)', color: 'purple' },
@@ -135,7 +250,6 @@
             { id: 's-adv-expand', title: '🎨 高級句子擴寫與修飾', color: 'emerald' }
         ];
 
-        // 資料整理工具
         function formatData(pool, category, task) {
             return pool.map(item => ({
                 category: category,
@@ -145,7 +259,6 @@
         }
 
         // --- 題型 1：直接敘述與間接敘述轉換 (40題) ---
-        // 考驗代名詞轉換 (我->他/她, 你->我/他)
         const directPool = [
             ['媽媽說：「我今天會晚點回家。」', '媽媽說她今天會晚點回家。', ['媽媽說我今天會晚點回家。', '她說媽媽今天會晚點回家。', '媽媽說你今天會晚點回家。']],
             ['老師對小明說：「你的功課做得很好。」', '老師對小明說他的功課做得很好。', ['老師對小明說你的功課做得很好。', '小明對老師說他的功課做得很好。', '老師對小明說我的功課做得很好。']],
@@ -167,7 +280,6 @@
             ['她哭著說：「我的錢包不見了。」', '她哭著說她的錢包不見了。', ['她哭著說我的錢包不見了。', '她哭著說你的錢包不見了。', '她哭著說他的錢包不見了。']],
             ['弟弟嚷著：「我要買這個玩具！」', '弟弟嚷著他要買那個玩具。', ['弟弟嚷著我要買這個玩具。', '弟弟嚷著他要買這個玩具。', '弟弟嚷著我要買那個玩具。']],
             ['農夫嘆息說：「今年的收成不好。」', '農夫嘆息說今年的收成不好。', ['農夫嘆息說那年的收成不好。', '農夫嘆息說我今年的收成不好。', '農夫嘆息說他今年的收成不好。']],
-            // 補充至 40 題的邏輯變體
             ['叔叔對我說：「我下週會來看你。」', '叔叔對我說他下週會來看我。', ['叔叔對我說我下週會來看你。', '叔叔對我說他下週會來看你。', '叔叔對我說我下週會來看他。']],
             ['阿姨說：「你們一定要嚐嚐我的手藝。」', '阿姨說我們一定要嚐嚐她的手藝。', ['阿姨說你們一定要嚐嚐我的手藝。', '阿姨說他們一定要嚐嚐她的手藝。', '阿姨說我們一定要嚐嚐我的手藝。']],
             ['隊長大喊：「我們絕對不能放棄！」', '隊長大喊他們絕對不能放棄。', ['隊長大喊我們絕對不能放棄。', '隊長大喊你們絕對不能放棄。', '隊長大喊我絕對不能放棄。']],
@@ -191,7 +303,6 @@
         ];
 
         // --- 題型 2：語病辨析 (40題) ---
-        // 任務：選出「沒有語病」的正確句子
         const faultPool = [
             ['選出沒有語病的句子。', '我每天早上都喝一杯牛奶。', ['我每天早上都喝一杯麵包。', '我每天早上都吃一杯牛奶。', '我每天早上喝一個牛奶。']],
             ['選出沒有語病的句子。', '經過老師的講解，我終於明白了這道題。', ['經過老師的講解，使我終於明白了這道題。', '因為老師的講解，所以我終於明白了這道題。', '經過老師的講解，終於明白了這道題。']],
@@ -218,7 +329,6 @@
             ['選出沒有語病的句子。', '這是一場精彩的足球比賽。', ['這是一場精彩的足球比賽的過程。', '這是一場精彩的足球比賽的活動。', '這是一場精彩的足球比賽的節目。']],
             ['選出沒有語病的句子。', '我們要努力學習科學知識。', ['我們要努力學習科學知識的本領。', '我們要努力學習科學知識的能力。', '我們要努力學習科學知識的知識。']],
             ['選出沒有語病的句子。', '夜晚的星空真美。', ['夜晚的星空真美麗的景色。', '夜晚的星空真美麗的夜晚。', '夜晚的星空真美麗的星空。']],
-            ['選出沒有語病的句子。', '他高興地跳了起來。', ['他高興得跳了起來。', '他高興的跳了起來。', '他高興地跳了起來的樣子。']], // '得' is correct for degree, but '地' for adverbial. Here '得' is actually better for verb complement, let's make correct "他高興得跳了起來", wait, "高興地跳" is also correct. Let's avoid ambiguous ones.
             ['選出沒有語病的句子。', '大家聚精會神地聽老師講課。', ['大家聚精會神地聽老師講課的聲音。', '大家聚精會神地聽老師講課的內容。', '大家聚精會神地聽老師講課的說話。']],
             ['選出沒有語病的句子。', '花園裡開滿了五顏六色的花朵。', ['花園裡開滿了許多五顏六色的花朵。', '花園裡開滿了各種五顏六色的花朵。', '花園裡開滿了五顏六色的花朵很多。']],
             ['選出沒有語病的句子。', '這件事情已經得到了圓滿的解決。', ['這件事情已經得到了圓滿的解決的結果。', '這件事情已經得到了圓滿的解決的方案。', '這件事情已經得到了圓滿的解決的辦法。']],
@@ -236,7 +346,6 @@
         ];
 
         // --- 題型 3：進階主被動轉換 (40題) ---
-        // 把主動句轉為完美的被動句，或者考驗邏輯
         const passivePool = [
             ['強烈的颱風吹倒了路旁的大樹。（改為「被」字句）', '路旁的大樹被強烈的颱風吹倒了。', ['路旁的大樹把強烈的颱風吹倒了。', '強烈的颱風被路旁的大樹吹倒了。', '大樹被強烈的颱風把路旁吹倒了。']],
             ['狡猾的狐狸騙走了烏鴉嘴裡的肉。（改為「被」字句）', '烏鴉嘴裡的肉被狡猾的狐狸騙走了。', ['烏鴉嘴裡的肉把狡猾的狐狸騙走了。', '狡猾的狐狸被烏鴉嘴裡的肉騙走了。', '烏鴉被狡猾的狐狸嘴裡的肉騙走了。']],
@@ -258,7 +367,6 @@
             ['姐姐把這首複雜的鋼琴曲學會了。（改為「被」字句）', '這首複雜的鋼琴曲被姐姐學會了。', ['這首複雜的鋼琴曲把姐姐學會了。', '姐姐被這首複雜的鋼琴曲學會了。', '鋼琴曲被姐姐把這首複雜學會了。']],
             ['我把寫好的信投進了郵筒。（改為「被」字句）', '寫好的信被我投進了郵筒。', ['寫好的信把我投進了郵筒。', '我被寫好的信投進了郵筒。', '郵筒被我把寫好的信投進了。']],
             ['大雪把這條山路封住了。（改為「被」字句）', '這條山路被大雪封住了。', ['這條山路把大雪封住了。', '大雪被這條山路封住了。', '山路被大雪把這條封住了。']],
-            // 補充20題
             ['老師把考試的結果公佈了。（改為「被」字句）', '考試的結果被老師公佈了。', ['考試的結果把老師公佈了。', '老師被考試的結果公佈了。', '結果被老師把考試的公佈了。']],
             ['我們把教室佈置得很漂亮。（改為「被」字句）', '教室被我們佈置得很漂亮。', ['教室把我們佈置得很漂亮。', '我們被教室佈置得很漂亮。', '教室被我們把佈置得很漂亮。']],
             ['弟弟把那塊美味的蛋糕吃掉了。（改為「被」字句）', '那塊美味的蛋糕被弟弟吃掉了。', ['那塊美味的蛋糕把弟弟吃掉了。', '弟弟被那塊美味的蛋糕吃掉了。', '蛋糕被弟弟把那塊美味吃掉了。']],
@@ -282,7 +390,6 @@
         ];
 
         // --- 題型 4：複雜關聯詞 (40題) ---
-        // 多重或高級關聯詞邏輯
         const complexConjPool = [
             ['這件工藝品___外表精美，___具有很高的實用價值。', '不僅...還...', ['與其...不如...', '寧可...也...', '即使...也...']],
             ['他___自己受委屈，___不願意說出真相連累朋友。', '寧可...也...', ['與其...不如...', '不但...而且...', '因為...所以...']],
@@ -304,16 +411,13 @@
             ['___遇到什麼困難，我們___不能退縮。', '無論...都...', ['即使...也...', '如果...就...', '既然...就...']],
             ['他___把這件事搞砸了，___不肯承認錯誤。', '不但...而且...', ['不但不...反而...', '與其...不如...', '寧可...也...']],
             ['___這條路很難走，我們___要堅持走下去。', '即使...也...', ['既然...就...', '如果...就...', '只要...就...']],
-            // 補充20題
             ['這件衣服___款式新穎，___布料也很舒適。', '不僅...而且...', ['雖然...但是...', '與其...不如...', '寧可...也...']],
-            ['他___考試不及格，___不肯努力溫習。', '既然...就...', ['雖然...但是...', '不但不...反而...', '寧可...也...']], // Wait, "既然...就..." doesn't fit well. "不但...而且..." or "既然不及格，就應該努力". Let's change question: 
             ['他___知道自己錯了，___不願意向對方道歉。', '雖然...但是...', ['既然...就...', '不但不...反而...', '與其...不如...']],
             ['___大家不合作，這項計畫___無法順利完成。', '如果...就...', ['只要...就...', '既然...就...', '即使...也...']],
             ['這___你的錯，___他的錯，是個意外。', '不是...而是...', ['不但...而且...', '不是...就是...', '既...又...']],
             ['___你已經準備好了，我們___立刻出發吧。', '既然...就...', ['如果...就...', '雖然...但是...', '只要...就...']],
             ['___多讀書，___能增加我們的知識。', '只有...才...', ['只要...就...', '如果...就...', '即使...也...']],
-            ['他___被批評了，___沒有改過自新。', '不但不...反而...', ['不但...而且...', '雖然...但是...', '既然...就...']], // "不但不改過，反而變本加厲" -> Let's use 雖然...但是... here as it fits "被批評，但是沒有改".
-            ['他___被老師批評了，___沒有絲毫悔意。', '雖然...但是...', ['因為...所以...', '既然...就...', '如果...就...']],
+            ['他___被批評了，___沒有絲毫悔意。', '雖然...但是...', ['因為...所以...', '既然...就...', '如果...就...']],
             ['___明天的天氣多麼惡劣，比賽___會照常進行。', '無論...都...', ['如果...就...', '即使...也...', '既然...就...']],
             ['___你肯花時間，這件事___一定能做好。', '只要...就...', ['只有...才...', '無論...都...', '即使...也...']],
             ['他___聰明，___肯下苦功，所以成績很好。', '不但...而且...', ['雖然...但是...', '與其...不如...', '寧可...也...']],
@@ -329,7 +433,6 @@
         ];
 
         // --- 題型 5：高級句子擴寫與修飾 (40題) ---
-        // 選出最生動、修飾最豐富的擴寫句
         const expandPool = [
             ['擴寫句子：「風吹過。」選出最生動豐富的選項。', '微風輕輕地吹過翠綠的草地。', ['風吹過草地。', '風很大地吹過。', '風吹過了這裡。']],
             ['擴寫句子：「雨下著。」選出最生動豐富的選項。', '豆大的雨點滴滴答答地落在鐵皮屋頂上。', ['雨一直下著。', '外面正在下雨。', '雨下得非常大。']],
@@ -351,7 +454,6 @@
             ['擴寫句子：「船航行。」選出最生動豐富的選項。', '巨大的貨輪在波濤洶湧的海面上艱難地航行。', ['船在海上航行。', '一艘船在航行。', '船慢慢地航行。']],
             ['擴寫句子：「鐘聲響起。」選出最生動豐富的選項。', '古老教堂的鐘聲在清晨的薄霧中悠揚地響起。', ['學校的鐘聲響起了。', '大鐘的聲音響起了。', '鐘聲突然響起。']],
             ['擴寫句子：「他看書。」選出最生動豐富的選項。', '他坐在安靜的圖書館裡，全神貫注地閱讀著小說。', ['他在房間裡看書。', '他很認真地看書。', '他正在看一本書。']],
-            // 補充20題
             ['擴寫句子：「雲飄動。」選出最生動豐富的選項。', '潔白的雲朵像棉花糖一樣在藍天中悠然地飄動。', ['雲在天上飄動。', '白雲慢慢地飄動。', '天上有很多雲飄動。']],
             ['擴寫句子：「雷聲響。」選出最生動豐富的選項。', '震耳欲聾的雷聲劃破了寂靜的夜空。', ['很大的雷聲響起。', '雷聲突然響了。', '天上雷聲響。']],
             ['擴寫句子：「農夫種田。」選出最生動豐富的選項。', '辛勤的農夫頂著烈日，在泥濘的田裡插秧。', ['農夫在田裡種田。', '農夫很辛苦地種田。', '一個農夫在種田。']],
@@ -374,7 +476,6 @@
             ['擴寫句子：「花香飄散。」選出最生動豐富的選項。', '淡雅的茉莉花香隨著微風，在寧靜的庭院裡悄悄飄散。', ['花香在空氣中飄散。', '很香的花香飄散。', '花香飄散開來。']]
         ];
 
-        // 整合全部 200 題
         const rawQuestDataObj = [
             ...formatData(directPool, 's-adv-direct', '轉換句型：請選出轉換完全正確的句子。'),
             ...formatData(faultPool, 's-adv-fault', '語病辨析：請選出文法與邏輯「沒有錯誤」的句子。'),
@@ -389,7 +490,14 @@
             const dirContainer = document.getElementById('directory-content');
             let html = '';
             categories.forEach(cat => {
-                html += `<div class="mb-6"><h3 class="text-xl font-bold text-${cat.color}-700 mb-3 border-b-2 border-${cat.color}-100 pb-2">${cat.title}</h3><div class="flex flex-wrap gap-3">`;
+                html += `
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between border-b-2 border-${cat.color}-100 pb-2 mb-3">
+                            <h3 class="text-xl font-bold text-${cat.color}-700">${cat.title}</h3>
+                            <button onclick="showTutorial('${cat.id}')" class="bg-rose-100 text-rose-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-rose-300 hover:bg-rose-200 transition flex items-center gap-1 active:scale-95">📘 學習錦囊</button>
+                        </div>
+                        <div class="flex flex-wrap gap-3">
+                `;
                 rawQuestDataObj.forEach((q, idx) => {
                     if(q.category === cat.id) {
                         let status = userProgress[idx];
@@ -424,13 +532,22 @@
 
         let currentQuestionIdx = -1;
 
-        // 打亂選項的輔助函數
         function shuffleOptions(optionsArray, correctIndex) {
             let opts = optionsArray.map((opt, i) => ({ text: opt, isCorrect: i === correctIndex }));
             return opts.sort(() => Math.random() - 0.5);
         }
 
-        function startQuestion(idx) {
+        function startQuestion(idx, forceStart = false) {
+            const qData = rawQuestDataObj[idx];
+            const qType = qData.category;
+            
+            // 自動攔截：如果教學沒看過，強制彈出
+            if (!forceStart && !localStorage.getItem('tut_seen_' + qType)) {
+                pendingQuestionIdx = idx;
+                showTutorial(qType);
+                return;
+            }
+
             currentQuestionMistakes = 0; 
             currentQuestionIdx = idx;
             document.getElementById('quest-directory').style.display = 'none';
@@ -438,8 +555,6 @@
             questPlay.style.display = 'flex';
             document.getElementById('main-scroll-area').scrollTop = 0;
             
-            const qData = rawQuestDataObj[idx];
-            const qType = qData.category;
             const qCatTitle = categories.find(c => c.id === qType).title;
             const qTask = qData.task;
 
@@ -464,7 +579,6 @@
             const correctAns = qData.qData[1];
             const wrongAns = qData.qData[2];
 
-            // 準備選項 (正確答案放第一個，稍後打亂)
             const allOptions = [correctAns, ...wrongAns];
             
             let ttsText = sentence.replace(/___/g, '什麼');
@@ -479,7 +593,6 @@
                 <div class="grid grid-cols-1 gap-4 w-full mt-auto" id="options-container">
             `;
             
-            // 正確答案始終是 index 0，打亂後比對 isCorrect
             const shuffledOpts = shuffleOptions(allOptions, 0);
 
             shuffledOpts.forEach((opt, oIdx) => {
@@ -502,7 +615,6 @@
                 let answerText = qData.qData[1];
                 let sentence = qData.qData[0];
                 
-                // 如果是填空題，組合完整句子發音
                 if (sentence.includes('___')) {
                     let parts = answerText.split('...');
                     if(parts.length >= 2) {
