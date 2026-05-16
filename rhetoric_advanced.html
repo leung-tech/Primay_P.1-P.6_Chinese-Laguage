@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>修辭與標點 - 拔尖擴充挑戰</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif;
+            background-color: #f5f3ff; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .bg-grid-pattern {
+            background-image: linear-gradient(to right, #e9d5ff 1px, transparent 1px), linear-gradient(to bottom, #e9d5ff 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .pop { animation: pop 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .option-btn { transition: all 0.2s; box-shadow: 0 4px 0 #c084fc; }
+        .option-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .option-btn.correct { background-color: #f3e8ff; border-color: #9333ea; color: #581c87; box-shadow: 0 0 0 transparent; transform: translateY(4px); pointer-events: none; }
+        .option-btn.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.6; pointer-events: none; }
+
+        /* 重組句子專用按鈕 */
+        .chunk-btn { transition: all 0.2s; box-shadow: 0 4px 0 #7e22ce; }
+        .chunk-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .chunk-slot { transition: all 0.2s; border: 2px dashed #d8b4fe; background-color: #f5f3ff; }
+
+        .tts-btn { transition: transform 0.2s; }
+        .tts-btn:active { transform: scale(0.9); }
+        .lvl-btn { transition: transform 0.2s; }
+        .lvl-btn:hover { transform: scale(1.05); }
+
+        .toast-msg {
+            visibility: hidden; min-width: 250px; background-color: #ef4444; color: #fff; text-align: center;
+            border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px;
+            transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
+        @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
+
+    <!-- 頂部導覽列 (Violet 配色) -->
+    <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
+        <div class="p-3 lg:p-4 bg-violet-700 text-white flex justify-between items-center w-full">
+            <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
+                <a href="index.html" class="hover:bg-violet-800 p-1 rounded transition bg-violet-900">⬅️ 返回</a>
+                <span>🎓 修辭與標點 (拔尖版)</span>
+            </h1>
+            <div class="flex gap-2 lg:gap-4 items-center bg-violet-900 px-3 py-1.5 rounded-full border border-violet-500 shadow-inner">
+                <span class="text-lg lg:text-xl">🏆</span>
+                <span class="font-bold text-sm lg:text-lg">EXP: <span id="exp-display" class="text-yellow-400">0</span></span>
+            </div>
+        </div>
+        <div id="progress-container" class="w-full bg-slate-200 h-2">
+            <div id="progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
+        </div>
+    </div>
+
+    <!-- 主畫面區 -->
+    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
+        <div id="quest-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
+            <div id="quest-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">🚀 高級修辭與轉換特訓</h2>
+                <div class="bg-violet-50 border border-violet-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
+                    <div class="text-violet-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
+                    <div class="flex flex-wrap gap-4 flex-1">
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-lg shadow-sm">🌟</span> 一次答對 (+30)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 經提示過關 (+10)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-rose-100 border-2 border-rose-400 flex items-center justify-center text-lg shadow-sm">❌</span> 未完成</div>
+                    </div>
+                </div>
+                <div id="directory-content" class="flex flex-col gap-8"></div>
+            </div>
+            
+            <div id="quest-play" class="w-full hidden flex-col items-center"></div>
+        </div>
+    </div>
+
+    <!-- 學習小教學 Modal -->
+    <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="tutorial-content">
+            <div class="flex justify-between items-center mb-4 border-b-2 border-violet-100 pb-3">
+                <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-violet-600 flex items-center gap-2">📘 學習錦囊</h2>
+                <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
+            </div>
+            <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4"></div>
+            <div class="mt-6 pt-4 border-t-2 border-slate-100">
+                <button onclick="closeTutorial()" class="w-full bg-violet-600 hover:bg-violet-700 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-violet-800 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 答對全解析 Modal -->
+    <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-xl text-center transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="feedback-content">
+            <div id="feedback-icon" class="text-6xl mb-2">🎉</div>
+            <h2 id="feedback-title" class="text-2xl md:text-3xl font-black text-slate-800 mb-2">答對了！</h2>
+            <div id="feedback-desc" class="text-slate-600 font-bold mb-4 text-base md:text-lg leading-relaxed text-left overflow-y-auto pr-2 flex-1 w-full"></div>
+            <div class="flex gap-3 w-full mt-2 pt-4 border-t border-slate-100">
+                <button onclick="backToDirectoryFromModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition text-lg">⬅️ 目錄</button>
+                <button id="next-btn" class="flex-[1.5] bg-violet-600 hover:bg-violet-700 text-white font-black py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-violet-800 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-msg">提示訊息</div>
+
+    <script>
+        // ================= 1. 核心狀態與大腦字典 =================
+        let advExp = parseInt(localStorage.getItem('rhetAdvExp')) || 0;
+        let currentQuestionMistakes = 0; 
+        let pendingQuestionIdx = -1;
+        let currentQuestionIdx = -1;
+        window.currentHints = []; 
+        
+        let reorderSource = []; 
+        let reorderTarget = []; 
+        let reorderCorrect = []; 
+
+        document.getElementById('exp-display').innerText = advExp;
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let cleanText = text.replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】]/g, '').replace(/&nbsp;/g, ' ');
+                cleanText = cleanText.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDC00-\uDFFF]/g, '');
+                let msg = new SpeechSynthesisUtterance(cleanText);
+                msg.lang = 'zh-HK';
+                msg.rate = 0.9; 
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "toast-msg show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        const genericExplanations = {
+            '表示特定稱謂': '引號：標示特定的名稱、綽號或專有名詞。',
+            '表示強調': '引號：標示句子中需要讀者特別注意、強調的詞語。',
+            '表示反語(諷刺)': '引號：表示該詞語的意思與字面完全相反，帶有諷刺意味。',
+            '表示直接引用': '引號：標示直接引用別人說的話或文獻內容。',
+            '表示解釋說明': '破折號：對前面的內容進行補充或解釋。',
+            '表示意思轉折': '破折號：表示話題突然轉變或意思出現大轉折。',
+            '表示聲音延長': '破折號：表示聲音的延續或拖長。',
+            '表示話語中斷': '破折號：表示話說到一半突然停頓或被打斷。',
+            '表示列舉的省略': '省略號：表示還有很多同類事物，沒有全部列出。',
+            '表示說話斷續': '省略號：表示因為緊張、害怕或虛弱而說話結結巴巴。',
+            '表示語意未盡': '省略號：表示話未說完，留給讀者想像空間。',
+            '表示靜默': '省略號：表示沉默不語或無言以對。',
+            '借代': '借代：不直接說出名稱，借用與它密切相關的特徵或物品代替（如「白衣天使」代護士）。',
+            '借喻': '借喻：比喻最高級，不出現本體和喻詞，直接把喻體當本體說。',
+            '明喻': '明喻：有本體、喻體，並使用「像」、「好像」、「猶如」等喻詞。',
+            '暗喻': '暗喻：有本體、喻體，不用「像」，而是用「是」、「變成」連接。',
+            '層遞': '層遞：把三個或以上事物，按大小、時間、輕重等順序，一層層遞進排列。',
+            '排比': '排比：把三個或以上結構相同、意思相關的短語或句子並列在一起。',
+            '頂真': '頂真：上一句的結尾，作為下一句的開頭，首尾相連（山接水，水連天）。',
+            '反復': '反復：同一個詞語或句子重複出現，用來強調語氣或情感（盼望著，盼望著）。',
+            '誇張': '誇張：故意放大或縮小事物的特徵，令人印象深刻。',
+            '雙關': '雙關：利用同音或多義，一句話包含兩種意思。',
+            '呼告': '呼告：突然拋開聽眾，直接對不在面前的人或物呼喚。',
+            '引用': '引用：故意借用古詩、名言、諺語來加強說服力。',
+            '反問': '反問：只問不答，答案已在問題中（難道...），加強語氣。',
+            '設問': '設問：為了引起注意，自己提出問題自己回答。',
+            '擬人': '擬人：把死物或動植物當「人」來寫，賦予人的動作或情感。',
+            '對偶': '對偶：兩句話字數相等、結構相同、意思相對或相關（如春聯）。'
+        };
+
+        function getGenericExp(term) {
+            return genericExplanations[term] || '這是一種修辭或標點手法。';
+        }
+
+        // ================= 2. 學習錦囊 (教學庫) =================
+        const tutorialContents = {
+            'r-punc-master': `
+                <div class="text-center mb-4"><span class="text-6xl">🕵️‍♂️ 💬</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">標點大師：引號與破折號的秘密</p>
+                <div class="bg-violet-50 p-4 rounded-xl border-2 border-violet-200 mb-3 space-y-4">
+                    <div>
+                        <p class="font-black text-violet-800 text-lg mb-1">「引號」的三種分身：</p>
+                        <p class="text-slate-700">1. <span class="font-bold text-violet-600">特定稱謂</span>：他被稱為「飛毛腿」。</p>
+                        <p class="text-slate-700">2. <span class="font-bold text-violet-600">強調</span>：請注意「安全」二字。</p>
+                        <p class="text-slate-700">3. <span class="font-bold text-violet-600">反語(諷刺)</span>：你這房間可真「乾淨」啊！(其實很髒)</p>
+                    </div>
+                    <hr class="border-violet-200">
+                    <div>
+                        <p class="font-black text-fuchsia-800 text-lg mb-1">——破折號的三種分身：</p>
+                        <p class="text-slate-700">1. <span class="font-bold text-fuchsia-600">解釋說明</span>：我最愛的水果——蘋果。</p>
+                        <p class="text-slate-700">2. <span class="font-bold text-fuchsia-600">意思轉折</span>：這天氣真好——哎呀，下雨了！</p>
+                        <p class="text-slate-700">3. <span class="font-bold text-fuchsia-600">聲音延長</span>：汪——汪——</p>
+                    </div>
+                </div>
+            `,
+            'r-rhet-sub': `
+                <div class="text-center mb-4"><span class="text-6xl">🎭 🔄</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">高階修辭：借代 VS 借喻</p>
+                <p class="text-slate-600 mb-3">這兩個修辭都是「用B代替A」，但原理完全不同！</p>
+                <div class="bg-blue-50 p-4 rounded-xl border-2 border-blue-200 mb-3 space-y-4">
+                    <div>
+                        <p class="font-black text-blue-800 text-lg mb-1">🎭 借代 (用特徵代整體)</p>
+                        <p class="text-slate-700">因為它們有<span class="font-bold text-blue-600">相關性</span>。<br>例：用「白衣天使」代替護士；用「烽火」代替戰爭。</p>
+                    </div>
+                    <hr class="border-blue-200">
+                    <div>
+                        <p class="font-black text-teal-800 text-lg mb-1">🥷 借喻 (不露痕跡的比喻)</p>
+                        <p class="text-slate-700">因為它們有<span class="font-bold text-teal-600">相似點</span>，只是省略了「像」字。<br>例：天上的「白玉盤」亮晶晶。(用白玉盤比喻月亮)</p>
+                    </div>
+                </div>
+            `,
+            'r-rhet-logic': `
+                <div class="text-center mb-4"><span class="text-6xl"> پ 🧱</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">邏輯修辭：層遞、排比、頂真與反復</p>
+                <div class="bg-rose-50 p-4 rounded-xl border-2 border-rose-200 mb-3 space-y-3">
+                    <p class="text-lg"><span class="bg-white font-black text-rose-700 border border-rose-300 px-2 py-1 rounded">排比</span> 👉 至少<span class="font-bold text-rose-600">三個</span>相同結構的句子<span class="font-bold text-rose-600">並列</span>。<br>例：有山，有水，有花，有草。</p>
+                    <p class="text-lg"><span class="bg-white font-black text-orange-700 border border-orange-300 px-2 py-1 rounded">層遞</span> 👉 按大小、時間等順序<span class="font-bold text-orange-600">一級級遞進</span>。<br>例：一天、一月、一年，他都在等。</p>
+                    <p class="text-lg"><span class="bg-white font-black text-purple-700 border border-purple-300 px-2 py-1 rounded">頂真</span> 👉 上一句的<span class="font-bold text-purple-600">結尾</span> = 下一句的<span class="font-bold text-purple-600">開頭</span>。<br>例：山接<span class="font-bold bg-white px-1">水</span>，<span class="font-bold bg-white px-1">水</span>連天。</p>
+                    <p class="text-lg"><span class="bg-white font-black text-indigo-700 border border-indigo-300 px-2 py-1 rounded">反復</span> 👉 同一個詞語<span class="font-bold text-indigo-600">重複出現</span>強調語氣。<br>例：盼望著，盼望著，東風來了。</p>
+                    <p class="text-lg"><span class="bg-white font-black text-pink-700 border border-pink-300 px-2 py-1 rounded">對偶</span> 👉 兩句話<span class="font-bold text-pink-600">字數相等、結構相同</span>。<br>例：白日依山盡，黃河入海流。</p>
+                </div>
+            `,
+            'r-rhet-quote': `
+                <div class="text-center mb-4"><span class="text-6xl">🗣️ 💬</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">引用、呼告 與 雙關</p>
+                <div class="bg-emerald-50 p-4 rounded-xl border-2 border-emerald-200 mb-3 space-y-4">
+                    <div>
+                        <p class="font-black text-emerald-800 text-lg mb-1">📢 呼告</p>
+                        <p class="text-slate-700">突然拋開讀者，直接對著不在面前的人或物<span class="font-bold text-emerald-600">呼喊</span>。<br>例：啊！祖國！我為你自豪。</p>
+                    </div>
+                    <hr class="border-emerald-200">
+                    <div>
+                        <p class="font-black text-cyan-800 text-lg mb-1">📖 引用</p>
+                        <p class="text-slate-700">借用<span class="font-bold text-cyan-600">名言、古詩、諺語</span>來加強說服力。<br>例：俗話說：「失敗乃成功之母」。</p>
+                    </div>
+                    <hr class="border-emerald-200">
+                    <div>
+                        <p class="font-black text-indigo-800 text-lg mb-1">🎭 雙關</p>
+                        <p class="text-slate-700">利用同音字或多義詞，一句話<span class="font-bold text-indigo-600">藏著兩種意思</span>。<br>例：春蠶到死「絲」(思)方盡。</p>
+                    </div>
+                </div>
+            `,
+            'r-rhet-transform': `
+                <div class="text-center mb-4"><span class="text-6xl">✨ ✍️</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">實戰：原句轉修辭句</p>
+                <p class="text-slate-600 mb-3">這關考驗你的綜合能力！把平淡的句子加上魔法：</p>
+                <div class="bg-amber-50 p-4 rounded-xl border-2 border-amber-200 mb-3 space-y-3 font-bold text-amber-900">
+                    <p>🎯 <span class="bg-white px-2 rounded">轉誇張句</span> 👉 必須故意<span class="text-rose-600">放大或縮小</span>事實。<br><span class="text-sm font-normal text-slate-600">例：很熱 ➡️ 熱得快把我烤熟了。</span></p>
+                    <p>🎯 <span class="bg-white px-2 rounded">轉擬人句</span> 👉 必須加上<span class="text-emerald-600">人類的動作或感情</span>。<br><span class="text-sm font-normal text-slate-600">例：花開了 ➡️ 花兒開心地笑了。</span></p>
+                    <p>🎯 <span class="bg-white px-2 rounded">轉反問句</span> 👉 加上<span class="text-blue-600">「難道...嗎？」</span>且意思不變。<br><span class="text-sm font-normal text-slate-600">例：我不能去 ➡️ 我難道能去嗎？</span></p>
+                    <p class="text-sm text-slate-500 font-normal mt-2">💡 秘訣：仔細看清楚題目要求的是哪一種修辭，不要被其他漂亮的選項騙了！</p>
+                </div>
+            `,
+            'r-rhet-reorder': `
+                <div class="text-center mb-4"><span class="text-6xl">🧩 🏗️</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">實戰：修辭句重組</p>
+                <p class="text-slate-600 mb-3">這關你要自己動手，把碎片排成完美的修辭句！</p>
+                <div class="bg-cyan-50 p-4 rounded-xl border-2 border-cyan-200 mb-3 text-cyan-900 font-bold">
+                    <p class="mb-2">1. 仔細看題目要求的<span class="bg-white px-2 rounded text-cyan-700">目標修辭</span>。</p>
+                    <p class="mb-2">2. 想想這個修辭的<span class="bg-white px-2 rounded text-cyan-700">特徵</span>（例如明喻要有「像」，擬人要有人類動作）。</p>
+                    <p>3. 依順序點擊碎片，排錯了系統會自動退回並給你專屬的提示喔！</p>
+                </div>
+            `,
+            'r-rhet-complex-reorder': `
+                <div class="text-center mb-4"><span class="text-6xl">🔥 🔗</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">終極實戰：修辭複句重組</p>
+                <p class="text-slate-600 mb-3">這關是呈分試大魔王！句子裡不僅有修辭，還包含了「關聯詞」。</p>
+                <div class="bg-indigo-50 p-4 rounded-xl border-2 border-indigo-200 mb-3 text-indigo-900 font-bold">
+                    <p class="mb-2">1. 破解秘訣：先找出<span class="bg-white px-2 rounded text-indigo-700">關聯詞</span>（如：因為...所以、雖然...但是）。</p>
+                    <p class="mb-2">2. 把關聯詞分別放在兩個小分句的開頭。</p>
+                    <p>3. 最後根據提示，把帶有<span class="bg-white px-2 rounded text-indigo-700">修辭</span>的詞語排進去！</p>
+                </div>
+            `
+        };
+
+        function showTutorial(categoryId) {
+            document.getElementById('tutorial-body').innerHTML = tutorialContents[categoryId];
+            const modal = document.getElementById('tutorial-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); document.getElementById('tutorial-content').classList.remove('scale-90'); }, 10);
+            localStorage.setItem('tut_seen_' + categoryId, 'true');
+        }
+
+        function closeTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            modal.classList.add('opacity-0');
+            document.getElementById('tutorial-content').classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (pendingQuestionIdx !== -1) {
+                    let targetIdx = pendingQuestionIdx;
+                    pendingQuestionIdx = -1;
+                    startQuestion(targetIdx, true); 
+                }
+            }, 300);
+        }
+
+        // ================= 3. 拔尖題庫 (280題 全覆蓋) =================
+        const categories = [
+            { id: 'r-punc-master', title: '👑 標點大師：引號與破折號 (40題)', color: 'fuchsia' },
+            { id: 'r-rhet-sub', title: '🎭 高階修辭：借代與借喻 (40題)', color: 'blue' },
+            { id: 'r-rhet-logic', title: '🧠 邏輯修辭：層遞、反復與對偶 (40題)', color: 'rose' },
+            { id: 'r-rhet-quote', title: '🗣️ 引用、呼告與雙關 (40題)', color: 'emerald' },
+            { id: 'r-rhet-transform', title: '🌟 實戰：原句轉修辭句 (40題)', color: 'amber' },
+            { id: 'r-rhet-reorder', title: '🧩 實戰：修辭句重組 (40題)', color: 'cyan' },
+            { id: 'r-rhet-complex-reorder', title: '🔥 終極實戰：修辭複句重組 (40題)', color: 'indigo' }
+        ];
+
+        function formatData(pool, category, task) {
+            return pool.map(item => {
+                let correctOpt = item[1];
+                let w1 = item[2], w2 = item[3], w3 = item[4];
+                let specificHint = item[5]; 
+                let exp = `✅ ${correctOpt}：${specificHint}<br>❌ ${w1}：${getGenericExp(w1)}<br>❌ ${w2}：${getGenericExp(w2)}<br>❌ ${w3}：${getGenericExp(w3)}`;
+                return { category: category, task: task, sentence: item[0], correct: correctOpt, wrongs: [w1, w2, w3], explanation: exp };
+            });
+        }
+
+        function formatTransformData(pool, category, task) {
+            return pool.map(item => {
+                let exp = `✅ ${item[1]}：${item[2]}<br>❌ ${item[3]}：${item[4]}<br>❌ ${item[5]}：${item[6]}<br>❌ ${item[7]}：${item[8]}`;
+                return { category: category, task: task, sentence: item[0], correct: item[1], wrongs: [item[3], item[5], item[7]], explanation: exp };
+            });
+        }
+
+        function formatReorderData(pool, category, task) {
+            return pool.map(item => {
+                return { category: category, task: task, sentence: '原句：' + item[0], chunks: item[1], target: item[2], hint: item[3], explanation: `【${item[2]}】${item[3]}` };
+            });
+        }
+
+        // 1. 標點大師 (40題)
+        const puncMasterPool = [
+            ['他被大家尊稱為「智多星」。此處的引號表示：', '表示特定稱謂', '表示強調', '表示反語(諷刺)', '表示直接引用', '「智多星」是他的特定綽號，故表示特定稱謂。'],
+            ['這房間真是太「乾淨」了，連個落腳的地方都沒有！', '表示反語(諷刺)', '表示特定稱謂', '表示強調', '表示直接引用', '房間其實很髒，引號表示反語諷刺。'],
+            ['我們必須牢記「安全第一」這個原則。', '表示強調', '表示反語(諷刺)', '表示特定稱謂', '表示直接引用', '引號標示需要特別強調的重點。'],
+            ['俗話說：「失敗乃成功之母」。', '表示直接引用', '表示強調', '表示反語(諷刺)', '表示特定稱謂', '引號框住了直接引用的俗語。'],
+            ['他那「高超」的駕駛技術，差點把車開進溝裡。', '表示反語(諷刺)', '表示強調', '表示特定稱謂', '表示直接引用', '駕駛技術其實很差，表示諷刺。'],
+            ['我國的「國寶」大熊貓深受世界人民喜愛。', '表示特定稱謂', '表示反語(諷刺)', '表示強調', '表示直接引用', '「國寶」是大熊貓的特定稱謂。'],
+            ['請注意這份文件上的「機密」字樣。', '表示強調', '表示反語(諷刺)', '表示特定稱謂', '表示直接引用', '提示讀者特別注意「機密」二字。'],
+            ['李白在詩中寫道：「床前明月光」。', '表示直接引用', '表示強調', '表示特定稱謂', '表示反語(諷刺)', '直接引用李白的詩句。'],
+            ['他真是個「大好人」，總是把麻煩推給別人。', '表示反語(諷刺)', '表示強調', '表示特定稱謂', '表示直接引用', '其實是個壞人，引號表示反語。'],
+            ['被譽為「東方之珠」的香港非常繁華。', '表示特定稱謂', '表示強調', '表示反語(諷刺)', '表示直接引用', '「東方之珠」是香港的特定稱謂。'],
+            ['這就是我最喜歡的季節——秋天。此處破折號表示：', '表示解釋說明', '表示意思轉折', '表示聲音延長', '表示話語中斷', '破折號對前面的「季節」進行了解釋說明。'],
+            ['他正要開門，突然——「砰」的一聲巨響！', '表示意思轉折', '表示解釋說明', '表示聲音延長', '表示話語中斷', '破折號表示事情發生了突然的轉折。'],
+            ['「嗚——」火車緩緩駛出車站。', '表示聲音延長', '表示解釋說明', '表示意思轉折', '表示話語中斷', '破折號表示汽笛聲音的拖長。'],
+            ['「我……我真的不知道。」此處省略號表示：', '表示說話斷續', '表示列舉的省略', '表示語意未盡', '表示靜默', '因緊張或害怕導致說話結巴斷續。'],
+            ['超市裡有蘋果、橙、香蕉……', '表示列舉的省略', '表示說話斷續', '表示語意未盡', '表示靜默', '表示還有許多其他水果沒有列舉出來。'],
+            ['看著這張舊照片，他陷入了沉思……', '表示語意未盡', '表示說話斷續', '表示列舉的省略', '表示靜默', '表示思緒萬千，留給讀者想像空間。'],
+            ['「你這人怎麼這樣——」話沒說完，他就氣沖沖地走了。', '表示話語中斷', '表示聲音延長', '表示意思轉折', '表示解釋說明', '破折號表示話說到一半突然中斷。'],
+            ['法官問他：「你有沒有偷東西？」他：「……」', '表示靜默', '表示語意未盡', '表示說話斷續', '表示列舉的省略', '表示他沉默不語，無言以對。'],
+            ['每年到了這個時候——中秋節，我都會想起外婆。', '表示解釋說明', '表示意思轉折', '表示聲音延長', '表示話語中斷', '破折號解釋了「這個時候」是中秋節。'],
+            ['今天天氣真好——哎呀，怎麼突然下雨了！', '表示意思轉折', '表示解釋說明', '表示聲音延長', '表示話語中斷', '表示天氣和話題突然發生了大轉變。'],
+            ['他被稱為「鐵娘子」。', '表示特定稱謂', '表示強調', '表示反語(諷刺)', '表示直接引用', '「鐵娘子」是特定的綽號稱謂。'],
+            ['這篇文章的中心思想是「愛與和平」。', '表示強調', '表示特定稱謂', '表示反語(諷刺)', '表示直接引用', '引號標示需要特別強調的中心思想。'],
+            ['你這件衣服洗得可真「白」啊，全都是泥！', '表示反語(諷刺)', '表示強調', '表示特定稱謂', '表示直接引用', '衣服其實很髒，引號表示諷刺。'],
+            ['孔子曰：「學而時習之」。', '表示直接引用', '表示強調', '表示特定稱謂', '表示反語(諷刺)', '直接引用古文名言。'],
+            ['這座橋的名字叫「青馬大橋」。', '表示特定稱謂', '表示強調', '表示反語(諷刺)', '表示直接引用', '標示特定的橋樑名稱。'],
+            ['請把「完成」兩個字圈起來。', '表示強調', '表示特定稱謂', '表示反語(諷刺)', '表示直接引用', '強調這兩個字。'],
+            ['他那「高雅」的品味，實在讓人不敢恭維。', '表示反語(諷刺)', '表示強調', '表示特定稱謂', '表示直接引用', '品味其實很差，表示諷刺。'],
+            ['我們班有「小書法家」之稱的李明。', '表示特定稱謂', '表示強調', '表示反語(諷刺)', '表示直接引用', '「小書法家」是特定的稱謂。'],
+            ['我們要發揚「刻苦耐勞」的精神。', '表示強調', '表示特定稱謂', '表示反語(諷刺)', '表示直接引用', '強調這種精神。'],
+            ['他真是個「聰明人」，把事情搞得一團糟。', '表示反語(諷刺)', '表示強調', '表示特定稱謂', '表示直接引用', '其實是在說他笨，表示反語。'],
+            ['我最害怕的動物——老鼠。', '表示解釋說明', '表示意思轉折', '表示聲音延長', '表示話語中斷', '解釋說明害怕的動物是什麼。'],
+            ['我正想出門——電話突然響了。', '表示意思轉折', '表示解釋說明', '表示聲音延長', '表示話語中斷', '表示動作被突然打斷轉折。'],
+            ['「啊——」他發出痛苦的尖叫。', '表示聲音延長', '表示解釋說明', '表示意思轉折', '表示話語中斷', '表示尖叫聲的延長。'],
+            ['「我……我不是故意的。」', '表示說話斷續', '表示列舉的省略', '表示語意未盡', '表示靜默', '因害怕而結巴。'],
+            ['文具、書本、筆袋……散落一地。', '表示列舉的省略', '表示說話斷續', '表示語意未盡', '表示靜默', '列舉沒有窮盡。'],
+            ['望著遠方，他的眼眶濕潤了……', '表示語意未盡', '表示說話斷續', '表示列舉的省略', '表示靜默', '留下無限的想像空間。'],
+            ['「你給我站——」他話音未落，門就關上了。', '表示話語中斷', '表示聲音延長', '表示意思轉折', '表示解釋說明', '話沒說完就被打斷。'],
+            ['老師：「是誰打破的？」全班：「……」', '表示靜默', '表示語意未盡', '表示說話斷續', '表示列舉的省略', '全班都沉默不語。'],
+            ['他買了一輛新車——保時捷。', '表示解釋說明', '表示意思轉折', '表示聲音延長', '表示話語中斷', '解釋說明新車的品牌。'],
+            ['這頓飯真好吃——不過實在太貴了！', '表示意思轉折', '表示解釋說明', '表示聲音延長', '表示話語中斷', '語氣和意思發生了轉折。']
+        ];
+
+        // 2. 借代 VS 借喻 (40題)
+        const rhetSubPool = [
+            ['自古以來，無數「巾幗」不讓鬚眉。此處運用了哪種修辭？', '借代', '借喻', '明喻', '暗喻', '「巾幗」是古代婦女的頭巾，借代為婦女，因為兩者有相關性。'],
+            ['戰火連天，多少百姓流離失所。「戰火」運用了：', '借代', '借喻', '明喻', '暗喻', '「戰火」借代為戰爭。'],
+            ['天上的「白玉盤」又圓又亮。此處運用了：', '借喻', '借代', '明喻', '暗喻', '用「白玉盤」比喻月亮，沒有出現本體和喻詞，是借喻。'],
+            ['那群「紅領巾」在路上幫助了老奶奶。', '借代', '借喻', '明喻', '暗喻', '「紅領巾」借代為少先隊員或學生。'],
+            ['醫院裡的「白衣天使」日夜照顧病人。', '借代', '借喻', '明喻', '暗喻', '「白衣天使」是護士的特徵稱呼，借代為護士。'],
+            ['秋天到了，滿山的「火焰」燃燒著。', '借喻', '借代', '明喻', '暗喻', '用「火焰」比喻紅色的楓葉，是借喻。'],
+            ['這件事如果讓「上面」知道了，我們就慘了。', '借代', '借喻', '明喻', '暗喻', '「上面」借代為上級或領導。'],
+            ['大珠小珠落玉盤。此處的「大珠小珠」運用了：', '借喻', '借代', '明喻', '暗喻', '用「大珠小珠」比喻雨滴，是借喻。'],
+            ['他把畢生心血都傾注在「三尺講台」上。', '借代', '借喻', '明喻', '暗喻', '「三尺講台」借代為教育事業或教師工作。'],
+            ['他家徒四壁，連個「瓦遮頭」都沒有。', '借代', '借喻', '明喻', '暗喻', '「瓦遮頭」借代為房屋或住所。'],
+            ['黑板上的「白色精靈」在跳舞。', '借喻', '借代', '明喻', '暗喻', '用「白色精靈」比喻粉筆字，是借喻。'],
+            ['他每天都在為「五斗米」折腰。', '借代', '借喻', '明喻', '暗喻', '「五斗米」借代為微薄的薪水或生計。'],
+            ['不要以為穿上「龍袍」就是太子。', '借代', '借喻', '明喻', '暗喻', '「龍袍」借代為皇帝或高貴的身分。'],
+            ['夜空中的「鑽石」閃閃發光。', '借喻', '借代', '明喻', '暗喻', '用「鑽石」比喻星星，是借喻。'],
+            ['我們絕不向「黑惡勢力」低頭。', '借代', '借喻', '明喻', '暗喻', '「黑惡勢力」借代為壞人集團。'],
+            ['她頭上的「銀絲」越來越多了。', '借喻', '借代', '明喻', '暗喻', '用「銀絲」比喻白頭髮，是借喻。'],
+            ['這家公司需要注入新的「血液」。', '借喻', '借代', '明喻', '暗喻', '用「血液」比喻新人才或新活力，是借喻。'],
+            ['無數的「綠色小傘」撐滿了池塘。', '借喻', '借代', '明喻', '暗喻', '用「綠色小傘」比喻荷葉，是借喻。'],
+            ['這支軍隊是國家的「鋼鐵長城」。', '暗喻', '借喻', '借代', '明喻', '有本體(軍隊)和喻體(鋼鐵長城)，用「是」連接，是暗喻。'],
+            ['那人是個有名的「鐵公雞」。', '借喻', '借代', '明喻', '暗喻', '用「鐵公雞」比喻極度吝嗇的人，是借喻。'],
+            ['自從「南冠」以來，他便鬱鬱寡歡。', '借代', '借喻', '明喻', '暗喻', '「南冠」是楚國囚犯的帽子，借代為囚犯。'],
+            ['過盡千帆皆不是。此處「帆」運用了：', '借代', '借喻', '明喻', '暗喻', '用船的特徵「帆」來代替整艘船。'],
+            ['天上飄著一朵朵「棉花糖」。', '借喻', '借代', '明喻', '暗喻', '用「棉花糖」比喻白雲，是借喻。'],
+            ['他把「烏紗帽」看得比生命還重要。', '借代', '借喻', '明喻', '暗喻', '「烏紗帽」借代為官職。'],
+            ['花園裡的「金黃蝴蝶」隨風飄落。', '借喻', '借代', '明喻', '暗喻', '用「蝴蝶」比喻落葉，是借喻。'],
+            ['為了保衛祖國，無數「熱血青年」奔赴前線。', '借代', '借喻', '明喻', '暗喻', '「熱血青年」借代為愛國青年。'],
+            ['他的話像一把「尖刀」刺入我的心。', '明喻', '借喻', '借代', '暗喻', '有本體(話)、喻詞(像)和喻體(尖刀)，是明喻。'],
+            ['這個國家的「掌舵人」非常有遠見。', '借喻', '借代', '明喻', '暗喻', '用「掌舵人」比喻國家的領導者，是借喻。'],
+            ['他每天都與「黃土」打交道。', '借代', '借喻', '明喻', '暗喻', '「黃土」借代為農田或農作。'],
+            ['無數的「螢火蟲」在城市中穿梭。', '借喻', '借代', '明喻', '暗喻', '用「螢火蟲」比喻夜晚的車燈，是借喻。'],
+            ['他退伍後就放下了「槍桿子」。', '借代', '借喻', '明喻', '暗喻', '「槍桿子」借代為軍事或軍隊生活。'],
+            ['這個班級有很多「書呆子」。', '借喻', '借代', '明喻', '暗喻', '用「書呆子」比喻只會死讀書的人，是借喻。'],
+            ['他靠著一支「筆桿子」養活全家。', '借代', '借喻', '明喻', '暗喻', '「筆桿子」借代為寫作或文職工作。'],
+            ['天空中的「火球」烤得大地發燙。', '借喻', '借代', '明喻', '暗喻', '用「火球」比喻太陽，是借喻。'],
+            ['我們要堅決打擊「黃賭毒」。', '借代', '借喻', '明喻', '暗喻', '「黃賭毒」借代為各種不良違法行為。'],
+            ['那一片「汪洋」淹沒了整個村莊。', '借喻', '借代', '明喻', '暗喻', '用「汪洋」比喻大水，是借喻。'],
+            ['這是一本無字的「天書」。', '借喻', '借代', '明喻', '暗喻', '用「天書」比喻極難懂的事物，是借喻。'],
+            ['這家店的老闆是個「吸血鬼」。', '暗喻', '借喻', '借代', '明喻', '有本體和喻體用是連接。'],
+            ['這隻球隊的「靈魂人物」受傷了。', '借喻', '借代', '明喻', '暗喻', '用「靈魂人物」比喻核心隊員，是借喻。'],
+            ['他把「孔方兄」看得很重。', '借代', '借喻', '明喻', '暗喻', '「孔方兄」是古代銅錢的形狀，借代為金錢。']
+        ];
+
+        // 3. 層遞、反復、頂真、對偶、排比 (40題)
+        const logicPool = [
+            ['「盼望著，盼望著，東風來了，春天的腳步近了。」這運用了：', '反復', '層遞', '頂真', '對偶', '「盼望著」重複出現了兩次，強調期盼的心情，這是反復。'],
+            ['「白日依山盡，黃河入海流。」這運用了：', '對偶', '排比', '反復', '頂真', '上下兩句字數相等，結構相同（白日對黃河，依山對入海）。'],
+            ['「一天、一月、一年，他始終沒有放棄。」這運用了：', '層遞', '排比', '頂真', '對偶', '時間由短到長，按照大小順序一級級遞進。'],
+            ['「山接水，水連天，天高雲淡。」這運用了：', '頂真', '層遞', '排比', '反復', '上一句的結尾「水/天」作為下一句的開頭，首尾相連。'],
+            ['「書本是海洋，是鑰匙，是導師。」這運用了：', '排比', '層遞', '反復', '對偶', '三個結構相同、意思相關的短語並列。'],
+            ['「海內存知己，天涯若比鄰。」這運用了：', '對偶', '排比', '層遞', '頂真', '兩句話字數相等，結構對稱。'],
+            ['「沉默啊，沉默啊！不在沉默中爆發，就在沉默中滅亡。」這運用了：', '反復', '排比', '頂真', '層遞', '「沉默啊」重複出現，強調了壓抑的情感。'],
+            ['「從一個人，到一個家庭，再到整個國家。」這運用了：', '層遞', '排比', '反復', '對偶', '範圍由小到大遞進排列。'],
+            ['「歸來見天子，天子坐明堂。」這運用了：', '頂真', '層遞', '排比', '對偶', '「天子」首尾相連。'],
+            ['「我們要愛護花草，愛護動物，愛護大自然。」這運用了：', '排比', '層遞', '頂真', '對偶', '三個「愛護...」並列。'],
+            ['「大魚吃小魚，小魚吃蝦米，蝦米吃泥巴。」這運用了：', '頂真', '層遞', '排比', '反復', '「小魚」、「蝦米」首尾相連。'],
+            ['「這不僅關係到你的前途，更關係到家族的榮譽，甚至國家的興亡。」這運用了：', '層遞', '排比', '頂真', '對偶', '程度由淺入深遞進。'],
+            ['「海浪拍打著礁石，拍打著沙灘，拍打著漁船。」這運用了：', '排比', '層遞', '頂真', '對偶', '三個「拍打著...」並列。'],
+            ['「春蠶到死絲方盡，蠟炬成灰淚始乾。」這運用了：', '對偶', '排比', '層遞', '反復', '上下兩句字數相等，結構嚴謹對稱。'],
+            ['「走吧，走吧，不要再回頭了。」這運用了：', '反復', '排比', '層遞', '頂真', '「走吧」重複出現，強調堅決的語氣。'],
+            ['「百里、千里、萬里，他終於走回了故鄉。」這運用了：', '層遞', '排比', '頂真', '反復', '距離由短到長遞進。'],
+            ['「出門看天色，天色看雲彩，雲彩看風向。」這運用了：', '頂真', '層遞', '排比', '對偶', '「天色」、「雲彩」首尾相連。'],
+            ['「我們需要知識，需要勇氣，需要毅力。」這運用了：', '排比', '層遞', '頂真', '反復', '三個「需要...」並列。'],
+            ['「星垂平野闊，月湧大江流。」這運用了：', '對偶', '排比', '層遞', '頂真', '字數相等，詞性相對（星對月，垂對湧）。'],
+            ['「再見了，母校！再見了，親愛的老師！」這運用了：', '反復', '排比', '層遞', '對偶', '「再見了」重複出現，抒發不捨之情。'],
+            ['「一秒鐘、一分鐘、一小時，時間悄悄流逝。」這運用了：', '層遞', '排比', '頂真', '對偶', '時間由短到長遞進。'],
+            ['「人傳人，傳到滿城風雨。」這運用了：', '頂真', '層遞', '排比', '反復', '「傳」字首尾相連。'],
+            ['「天上的星星，亮亮的，閃閃的，美美的。」這運用了：', '排比', '層遞', '頂真', '對偶', '三個結構相似的形容詞並列。'],
+            ['「鄉鎮、城市、乃至全世界，都在關注這件事。」這運用了：', '層遞', '排比', '頂真', '反復', '範圍由小到大遞進。'],
+            ['「綠樹村邊合，青山郭外斜。」這運用了：', '對偶', '排比', '層遞', '頂真', '上下兩句字數相等，結構對稱。'],
+            ['「別了，我愛的故鄉；別了，我愛的家人。」這運用了：', '反復', '層遞', '頂真', '對偶', '「別了」重複，情緒最為強烈。'],
+            ['「風生水，水生波，波生浪。」這運用了：', '頂真', '層遞', '排比', '反復', '「水」、「波」首尾相連。'],
+            ['「童年是美好的，是純真的，是快樂的。」這運用了：', '排比', '層遞', '頂真', '對偶', '三個「是...的」並列。'],
+            ['「小學、中學、大學，他的成績一直很好。」這運用了：', '層遞', '排比', '頂真', '反復', '教育階段的遞進。'],
+            ['「將軍生大將，大將生元帥。」這運用了：', '頂真', '層遞', '排比', '對偶', '「大將」首尾相連。'],
+            ['「明月松間照，清泉石上流。」這運用了：', '對偶', '排比', '層遞', '反復', '上下句結構極其對稱。'],
+            ['「努力！努力！我們一定會成功！」這運用了：', '反復', '層遞', '頂真', '排比', '「努力」重複出現，激勵士氣。'],
+            ['「一兩、一斤、十斤，重量越來越大。」這運用了：', '層遞', '排比', '頂真', '對偶', '重量由輕到重遞進。'],
+            ['「水滴石穿，石穿成洞，洞大如屋。」這運用了：', '頂真', '層遞', '排比', '反復', '「石穿」、「洞」首尾相連。'],
+            ['「春天是綠色的，夏天是紅色的，秋天是黃色的。」這運用了：', '排比', '層遞', '頂真', '對偶', '三個句式相同的句子並列。'],
+            ['「縣長、市長、省長，都在開會。」這運用了：', '層遞', '排比', '頂真', '對偶', '職位由低到高遞進。'],
+            ['「野火燒不盡，春風吹又生。」這運用了：', '對偶', '排比', '層遞', '頂真', '這是一副經典的對偶句。'],
+            ['「就是他！就是他！他就是那個小偷！」這運用了：', '反復', '排比', '層遞', '頂真', '「就是他」連續重複，加強肯定的語氣。'],
+            ['「心連心，心印心，心心相印。」這運用了：', '頂真', '層遞', '排比', '對偶', '「心」首尾相連。'],
+            ['「從村級、市級到國家級比賽，他都贏了。」這運用了：', '層遞', '排比', '頂真', '反復', '級別由低到高遞進。']
+        ];
+
+        // 4. 呼告、引用、雙關、問句 (40題)
+        const quotePool = [
+            ['「啊！祖國！我為你自豪。」這運用了：', '呼告', '引用', '雙關', '反問', '突然拋開聽眾，直接對著祖國呼喚。'],
+            ['俗話說：「失敗乃成功之母。」這運用了：', '引用', '呼告', '雙關', '設問', '故意借用俗語來加強說服力。'],
+            ['春蠶到死絲方盡。此處的「絲」運用了：', '雙關', '呼告', '引用', '反問', '「絲」同音「思」，表面是蠶絲，暗指思念。'],
+            ['難道我們不應該保護環境嗎？', '反問', '設問', '呼告', '雙關', '只問不答，答案已經在問題中。'],
+            ['什麼是快樂？快樂是幫助別人。', '設問', '反問', '引用', '雙關', '自己提出問題，然後自己回答。'],
+            ['「天啊！為什麼要這樣對我？」這運用了：', '呼告', '引用', '雙關', '設問', '對著「天」呼喊情感。'],
+            ['正如李白所說：「天生我材必有用。」', '引用', '呼告', '雙關', '反問', '借用古詩名句。'],
+            ['東邊日出西邊雨，道是無晴卻有晴。「晴」運用了：', '雙關', '呼告', '引用', '設問', '「晴」同音「情」，暗含情感之意。'],
+            ['這點小事，怎麼能難倒我們呢？', '反問', '設問', '呼告', '雙關', '反問語氣，強調不會難倒。'],
+            ['成功的秘訣是什麼？是堅持不懈。', '設問', '反問', '引用', '雙關', '自問自答。'],
+            ['「哦，大海！你多麼廣闊。」這運用了：', '呼告', '引用', '雙關', '反問', '直接對著大海呼喚。'],
+            ['他常把「吃虧就是占便宜」掛在嘴邊。', '引用', '呼告', '雙關', '設問', '引用常言俗語。'],
+            ['這家餐廳的廣告是：「食」全「食」美。', '雙關', '呼告', '引用', '反問', '利用同音字雙關「十全十美」。'],
+            ['天下哪有免費的午餐？', '反問', '設問', '呼告', '雙關', '強調天下沒有免費的午餐。'],
+            ['你想考第一名嗎？那就必須努力。', '設問', '反問', '引用', '雙關', '自問自答。'],
+            ['「母親啊！請您原諒我吧。」這運用了：', '呼告', '引用', '雙關', '設問', '對著不在面前的母親呼喚。'],
+            ['古人云：「一寸光陰一寸金。」', '引用', '呼告', '雙關', '反問', '引用古人名言。'],
+            ['這是一家賣鞋的店，招牌寫著「鞋」路相逢。', '雙關', '呼告', '引用', '設問', '同音雙關「狹路相逢」。'],
+            ['我們怎能忘記父母的恩情？', '反問', '設問', '呼告', '雙關', '強調絕對不能忘記。'],
+            ['明天的天氣如何？預報說會下雨。', '設問', '反問', '引用', '雙關', '自問自答。'],
+            ['「蒼天啊！救救這可憐的孩子吧。」這運用了：', '呼告', '引用', '雙關', '反問', '對著蒼天呼喊。'],
+            ['老師常說：「學如逆水行舟，不進則退。」', '引用', '呼告', '雙關', '設問', '引用名言警句。'],
+            ['這家理髮店的名字叫「頂上功夫」。', '雙關', '呼告', '引用', '反問', '利用頭頂的雙關語。'],
+            ['破壞公物難道是對的行為嗎？', '反問', '設問', '呼告', '雙關', '強調破壞公物是不對的。'],
+            ['這道題很難嗎？其實只要用心就能解開。', '設問', '反問', '引用', '雙關', '自己提問後給出解答。'],
+            ['「朋友們！讓我們一起努力吧。」這運用了：', '呼告', '引用', '雙關', '設問', '對著朋友們呼喚。'],
+            ['有句諺語說得好：「種瓜得瓜，種豆得豆。」', '引用', '呼告', '雙關', '反問', '引用諺語。'],
+            ['眼鏡店的廣告：「鏡」在不言中。', '雙關', '呼告', '引用', '設問', '同音雙關「盡在不言中」。'],
+            ['難道他不是我們的好朋友嗎？', '反問', '設問', '呼告', '雙關', '強調他是我們的好朋友。'],
+            ['你知道作者是誰嗎？他就是魯迅。', '設問', '反問', '引用', '雙關', '自問自答。'],
+            ['「清風啊！請帶走我的哀愁。」這運用了：', '呼告', '引用', '雙關', '反問', '對著清風呼喊。'],
+            ['書上寫著：「知己知彼，百戰百勝。」', '引用', '呼告', '雙關', '設問', '引用兵法名言。'],
+            ['賣傘的廣告：「傘」亮登場。', '雙關', '呼告', '引用', '反問', '同音雙關「閃亮登場」。'],
+            ['這點困難算得了什麼？', '反問', '設問', '呼告', '雙關', '強調這點困難不算什麼。'],
+            ['為什麼要學習？為了擁有更好的未來。', '設問', '反問', '引用', '雙關', '自問自答。'],
+            ['「歲月啊！你為何如此匆匆。」這運用了：', '呼告', '引用', '雙關', '設問', '對著歲月呼喚。'],
+            ['俗語云：「人不可貌相。」', '引用', '呼告', '雙關', '反問', '引用俗語。'],
+            ['賣手錶的廣告：「錶」裡如一。', '雙關', '呼告', '引用', '設問', '同音雙關「表裡如一」。'],
+            ['說謊難道能被原諒嗎？', '反問', '設問', '呼告', '雙關', '強調說謊不能被原諒。'],
+            ['誰是班長？是小明。', '設問', '反問', '引用', '雙關', '自問自答。']
+        ];
+
+        // --- 5. 原句轉修辭句 (40題 全覆蓋小學修辭) ---
+        const transformPool = [
+            ['將「今天天氣很熱。」改寫為誇張句。', '今天天氣熱得快把我烤熟了。', '故意誇大熱的程度。', '今天天氣像火爐一樣。', '這是明喻，不是誇張。', '難道今天天氣不熱嗎？', '這是反問，沒有誇張。', '今天天氣非常炎熱。', '這只是普通的擴寫。'],
+            ['將「這朵花很漂亮。」改寫為擬人句。', '這朵花在風中對我微笑。', '賦予花朵「微笑」的人類動作。', '這朵花漂亮得像仙女。', '這是明喻，用了「像」。', '這朵花難道不漂亮嗎？', '這是反問。', '這朵花真是世界上最漂亮的！', '這是誇張。'],
+            ['將「我不能去。」改寫為反問句。', '我難道能去嗎？', '用「難道」和問號，表達肯定的「不能去」。', '為什麼我不能去呢？', '這是普通疑問句。', '我真的不能去。', '這是強調的陳述句。', '我不能去，因為我有事。', '這是原因解釋。'],
+            ['將「月亮很圓。」改寫為明喻句。', '月亮圓得像一個大玉盤。', '出現了本體(月亮)、喻詞(像)和喻體(大玉盤)。', '天上的大玉盤很圓。', '這是借喻，沒有寫出月亮。', '月亮圓圓地笑著。', '這是擬人。', '月亮真圓啊！', '這是感嘆句。'],
+            ['將「老師教導我們。」改寫為暗喻句。', '老師是辛勤的園丁，教導著我們。', '用「是」連接本體(老師)和喻體(園丁)。', '老師像園丁一樣教導我們。', '這是明喻，用了「像」。', '辛勤的園丁教導著我們。', '這是借喻，沒有寫出老師。', '老師溫柔地教導我們。', '這是普通擴寫。'],
+            ['將「樹葉掉下來。」改寫為擬人句。', '樹葉依依不捨地離開了樹枝。', '賦予樹葉「依依不捨」的情感。', '樹葉像蝴蝶一樣飄落。', '這是明喻。', '樹葉全部掉光了。', '這是普通陳述。', '落葉像鋪了地毯。', '這是明喻。'],
+            ['將「這座山很高。」改寫為誇張句。', '這座山高得快要碰到天了。', '故意誇大山的高度。', '這座山像一把利劍直插雲霄。', '這是明喻。', '這座山難道不高嗎？', '這是反問。', '這座山非常高大。', '這是普通陳述。'],
+            ['將「我們必須保護環境。」改寫為設問句。', '我們應該做什麼？我們必須保護環境。', '自己提出問題，然後自己回答。', '難道我們不必須保護環境嗎？', '這是反問句。', '保護環境是我們的責任。', '這是陳述句。', '我們要愛護花草、保護環境。', '這是排比的雛形。'],
+            ['將「他跑得很快。」改寫為誇張句。', '他跑得比火箭還要快。', '極度誇大他跑步的速度。', '他跑得像風一樣快。', '這是明喻。', '他難道跑得不快嗎？', '這是反問。', '他飛快地向前跑去。', '這是普通擴寫。'],
+            ['將「星星在天上。」改寫為擬人句。', '星星在夜空中調皮地眨眼睛。', '賦予星星「調皮眨眼」的人類動作。', '星星像寶石一樣掛在天上。', '這是明喻。', '夜空中的鑽石閃閃發光。', '這是借喻。', '天上的星星很多。', '這是普通陳述。'],
+            ['將「這本書很好看。」改寫為反問句。', '這本書難道不好看嗎？', '用反問表達「很好看」的肯定意思。', '這本書真的很好看！', '這是感嘆句。', '這本書為什麼好看？', '這是疑問句。', '這本書是世界上最好看的書。', '這是誇張。'],
+            ['將「弟弟的臉很紅。」改寫為明喻句。', '弟弟的臉紅得像一個熟透的蘋果。', '有本體(臉)、喻詞(像)和喻體(蘋果)。', '弟弟的臉是一個紅蘋果。', '這是暗喻，用了「是」。', '那個紅蘋果真可愛。', '這是借喻。', '弟弟的臉紅通通的。', '這是疊字擴寫。'],
+            ['將「時間過得很快。」改寫為暗喻句。', '時間是一把無情的利刃。', '用「是」連接本體(時間)和喻體(利刃)。', '時間像飛箭一樣快。', '這是明喻。', '時間飛快地溜走了。', '這是擬人。', '時間快得讓人抓不住。', '這是誇張。'],
+            ['將「雨下得很大。」改寫為誇張句。', '大雨像要把整個城市淹沒了。', '故意誇大雨的威力。', '大雨像瀑布一樣下著。', '這是明喻。', '雨水歡快地在大街上奔跑。', '這是擬人。', '難道雨下得不大嗎？', '這是反問。'],
+            ['將「小鳥在叫。」改寫為擬人句。', '小鳥在枝頭快樂地唱著歌。', '把鳥叫寫成「唱歌」，賦予人的動作。', '小鳥的叫聲像音樂一樣。', '這是明喻。', '小鳥嘰嘰喳喳地叫。', '這是疊字擬聲。', '枝頭的音樂家在叫。', '這是借喻。'],
+            ['將「這道題很簡單。」改寫為反問句。', '這道題難道不簡單嗎？', '用反問語氣強調題目很簡單。', '這道題簡單得閉著眼都能做。', '這是誇張。', '這道題像一加一一樣簡單。', '這是明喻。', '這道題非常簡單。', '這是陳述句。'],
+            ['將「柳樹在風中搖擺。」改寫為擬人句。', '柳樹在微風中輕盈地跳著舞。', '賦予柳樹「跳舞」的人類動作。', '柳枝像綠色的絲帶一樣搖擺。', '這是明喻。', '風中的綠絲帶搖擺著。', '這是借喻。', '柳樹被風吹得搖來搖去。', '這是陳述句。'],
+            ['將「會場很安靜。」改寫為誇張句。', '會場靜得連一根針掉在地上都聽得見。', '極度誇大安靜的程度。', '會場安靜得像沒有人一樣。', '這是明喻。', '難道會場不安靜嗎？', '這是反問。', '會場裡一點聲音都沒有。', '這是陳述句。'],
+            ['將「什麼是成功？」擴充為設問句。', '什麼是成功？成功就是不斷超越自己。', '自己提出問題並給出答案。', '難道這就是成功嗎？', '這是反問。', '成功像一座高峰。', '這是明喻。', '成功就是不斷超越自己。', '這是沒有提問的陳述句。'],
+            ['將「雲在天上飄。」改寫為明喻句。', '白雲像一團團棉花糖在天上飄。', '有本體(雲)、喻詞(像)和喻體(棉花糖)。', '天上的棉花糖在飄。', '這是借喻。', '白雲在天上悠閒地散步。', '這是擬人。', '白雲是天上的棉花糖。', '這是暗喻。'],
+            ['將「教室裡很熱。」改寫為誇張句。', '教室裡熱得快要燒起來了。', '極度誇大熱的感覺。', '教室裡像蒸籠一樣熱。', '這是明喻。', '教室裡熱得大家都在流汗。', '這是普通擴寫。', '難道教室裡不熱嗎？', '這是反問。'],
+            ['將「太陽出來了。」改寫為擬人句。', '太陽公公露出了溫暖的笑臉。', '賦予太陽「公公」的稱呼和「笑臉」。', '太陽像一個大火球出來了。', '這是明喻。', '天上的大火球出來了。', '這是借喻。', '太陽出來了，天氣變熱了。', '這是陳述句。'],
+            ['將「我們不能浪費食物。」改寫為反問句。', '我們怎麼能浪費食物呢？', '用反問表達「絕對不能浪費」。', '我們必須珍惜食物。', '這是陳述句。', '浪費食物是不對的。', '這是陳述句。', '為什麼我們不能浪費食物？', '這是普通疑問句。'],
+            ['將「雪花落下。」改寫為明喻句。', '雪花像白色的羽毛一樣落下。', '有本體(雪花)、喻詞(像)和喻體(羽毛)。', '白色的羽毛落下了。', '這是借喻。', '雪花在空中跳著芭蕾舞。', '這是擬人。', '雪花是白色的精靈。', '這是暗喻。'],
+            ['將「他很生氣。」改寫為誇張句。', '他的怒火快要把屋頂掀翻了。', '誇大生氣的威力。', '他氣得像一頭獅子。', '這是明喻。', '他難道不生氣嗎？', '這是反問。', '他非常生氣地大吼。', '這是普通擴寫。'],
+            ['將「秋天到了。」改寫為擬人句。', '秋姑娘悄悄地來到了人間。', '把秋天當作「姑娘」，賦予人的動作。', '秋天像一幅美麗的畫。', '這是明喻。', '金色的季節到了。', '這是借代。', '秋天到了，樹葉黃了。', '這是陳述句。'],
+            ['將「這座橋很長。」改寫為明喻句。', '這座橋長得像一條巨龍橫跨江面。', '有本體(橋)、喻詞(像)和喻體(巨龍)。', '這座橋是一條巨龍。', '這是暗喻。', '江面上的巨龍非常長。', '這是借喻。', '這座橋長得看不到盡頭。', '這是誇張。'],
+            ['將「水很清。」改寫為暗喻句。', '清澈的湖水是一面大鏡子。', '用「是」連接本體(水)和喻體(鏡子)。', '湖水清得像一面鏡子。', '這是明喻。', '這面大鏡子真清澈。', '這是借喻。', '湖水清得能看見底。', '這是誇張。'],
+            ['將「風吹過。」改寫為擬人句。', '微風溫柔地親吻著我的臉。', '賦予風「溫柔親吻」的人類動作。', '風吹過，像刀割一樣。', '這是明喻。', '風呼呼地吹過。', '這是擬聲。', '風吹過草地。', '這是普通陳述。'],
+            ['將「他很瘦。」改寫為誇張句。', '他瘦得只剩下一把骨頭了。', '極度誇大瘦的程度。', '他瘦得像一根竹竿。', '這是明喻。', '他難道不瘦嗎？', '這是反問。', '他非常瘦弱。', '這是陳述句。'],
+            ['將「我們應該努力。」改寫為設問句。', '我們應該怎麼做？我們應該努力。', '自問自答。', '難道我們不應該努力嗎？', '這是反問。', '我們必須努力。', '這是陳述句。', '我們像牛一樣努力。', '這是明喻。'],
+            ['將「草地很綠。」改寫為借喻句。', '這塊綠地毯真柔軟。', '沒有出現草地，直接用「綠地毯」代替。', '草地綠得像一塊大地毯。', '這是明喻。', '草地是一塊綠地毯。', '這是暗喻。', '草地綠油油的。', '這是疊字。'],
+            ['將「我喜歡運動。」改寫為排比句。', '我喜歡跑步，喜歡游泳，喜歡打球。', '連續三個「喜歡...」構成排比。', '我喜歡運動，因為能強身健體。', '這是原因解釋。', '難道我不喜歡運動嗎？', '這是反問。', '我非常非常喜歡運動。', '這是反復。'],
+            ['將「山接水。」改寫為頂真句。', '山接水，水連天。', '上一句結尾「水」作下一句開頭。', '山和水連在一起。', '這是普通陳述。', '山接水，天連雲。', '這是對偶，不是頂真。', '山像水一樣清澈。', '這是明喻。'],
+            ['將「他一直等待。」改寫為層遞句。', '一天、一月、一年，他都在等待。', '時間由小到大遞進排列。', '他等了很久很久。', '這是普通擴寫。', '他等得像一尊石像。', '這是明喻。', '他在等待，他在等待。', '這是反復。'],
+            ['將「大家很開心。」改寫為反復句。', '大家笑了，大家都笑了！', '「笑了」重複出現強調情感。', '大家開心得像花兒一樣。', '這是明喻。', '大家開心得跳了起來。', '這是普通擴寫。', '難道大家不開心嗎？', '這是反問。'],
+            ['將「白日依山盡。」改寫為對偶句。', '白日依山盡，黃河入海流。', '字數相等，結構對稱。', '白日依山盡，鳥兒回巢去。', '不符合嚴格的對仗。', '白日依山盡，天色暗下來。', '這是普通陳述。', '白日像火球一樣落下。', '這是明喻。'],
+            ['將「護士照顧病人。」改寫為借代句。', '白衣天使日夜照顧病人。', '用護士的特徵「白衣天使」代替護士。', '護士像天使一樣照顧病人。', '這是明喻。', '護士是照顧病人的天使。', '這是暗喻。', '溫柔的護士照顧病人。', '這是擴寫。'],
+            ['將「戰爭很殘酷。」改寫為借代句。', '無情的烽火摧毀了家園。', '用「烽火」借代為戰爭。', '戰爭像野獸一樣殘酷。', '這是明喻。', '殘酷的戰爭摧毀了家園。', '這是普通擴寫。', '難道戰爭不殘酷嗎？', '這是反問。'],
+            ['將「這點困難不算什麼。」改寫為反問句。', '這點困難算得了什麼呢？', '用反問表達「不算什麼」。', '這點困難像螞蟻一樣小。', '這是明喻。', '我們不怕這點困難。', '這是陳述句。', '這點困難非常微小。', '這是陳述句。']
+        ];
+
+        // --- 6. 實戰：修辭句重組 (40題) ---
+        // 格式: [原句, [chunks], 目標修辭, 提示]
+        const reorderPool = [
+            ['月亮很圓。', ['彎彎的', '月亮', '像', '一條小船。'], '明喻', '找出本體(月亮)、喻詞(像)和喻體(小船)。'],
+            ['老師教導我們。', ['老師', '是', '辛勤的', '園丁。'], '暗喻', '用「是」把老師比作園丁。'],
+            ['護士照顧病人。', ['白衣天使', '在', '照顧', '病人。'], '借代', '用特徵「白衣天使」代替護士。'],
+            ['小鳥在叫。', ['小鳥', '在枝頭', '快樂地', '唱歌。'], '擬人', '把鳥叫變成人的動作「唱歌」。'],
+            ['很安靜。', ['安靜得', '連一根針', '掉下', '都能聽見。'], '誇張', '要把情況說得很極端。'],
+            ['有很多東西。', ['有山，', '有水，', '有花，', '有草。'], '排比', '把相同結構的「有...」排在一起。'],
+            ['我們不能浪費。', ['我們', '怎麼能', '浪費', '食物呢？'], '反問', '用問號結尾，表達強烈語氣。'],
+            ['快樂是助人。', ['什麼', '是快樂？', '快樂', '是助人。'], '設問', '先提出問題，然後自己回答。'],
+            ['他一直在等。', ['一天、', '一月、', '一年，', '他都在等。'], '層遞', '把時間由短到長排列遞進。'],
+            ['山和水相連。', ['山接水，', '水連天，', '天高雲淡。'], '頂真', '上一句的結尾，要接下一句的開頭。'],
+            ['春天來了。', ['盼望著，', '盼望著，', '春天來了。'], '反復', '把相同的詞語「盼望著」排在一起強調。'],
+            ['天很寬廣。', ['天高', '任鳥飛，', '海闊', '憑魚躍。'], '對偶', '字數相等，結構相對（天對海，高對闊）。'],
+            ['太陽出來了。', ['太陽公公', '露出了', '慈祥的', '笑容。'], '擬人', '給太陽加上稱呼和人的表情。'],
+            ['很熱。', ['熱得', '快把人', '烤熟了。'], '誇張', '用極端的情況來形容熱的程度。'],
+            ['他跑得快。', ['他跑得', '像一陣風', '一樣快。'], '明喻', '找出本體(他)、喻詞(像)和喻體(風)。'],
+            ['時間過得快。', ['時間', '是', '一把', '無情的利刃。'], '暗喻', '用「是」把時間比作利刃。'],
+            ['粉筆字很好看。', ['黑板上的', '白色精靈', '在跳舞。'], '借喻', '不寫粉筆，直接用「白色精靈」代替。'],
+            ['戰爭很可怕。', ['無情的', '烽火', '摧毀了', '家園。'], '借代', '用「烽火」代替戰爭。'],
+            ['大家很開心。', ['大家笑了，', '大家都', '笑了！'], '反復', '重複「笑了」來強調開心的情緒。'],
+            ['我們必須努力。', ['難道', '我們', '不應該', '努力嗎？'], '反問', '用「難道」和問號來表達肯定。'],
+            ['誰是班長？是小明。', ['誰是', '我們班的', '班長？', '是小明。'], '設問', '先問問題，緊接著給出答案。'],
+            ['需要很多東西。', ['需要知識，', '需要勇氣，', '需要毅力。'], '排比', '三個「需要...」並列排好。'],
+            ['重量越來越大。', ['一兩、', '一斤、', '十斤，', '重量越來越大。'], '層遞', '重量單位由小排到大。'],
+            ['波浪相連。', ['風生水，', '水生波，', '波生浪。'], '頂真', '前句的結尾字要是後句的開頭字。'],
+            ['風景很美。', ['綠樹村邊合，', '青山', '郭外斜。'], '對偶', '綠對青，樹對山，字字相對。'],
+            ['風吹過。', ['微風', '溫柔地', '親吻著', '我的臉。'], '擬人', '把風吹的動作變成「親吻」。'],
+            ['包包很重。', ['這個包包', '重得像', '裝了', '一座山。'], '誇張', '用「一座山」來誇大重量。'],
+            ['草地很綠。', ['草地', '綠得', '像一塊', '大地毯。'], '明喻', '草地(本體) 像(喻詞) 大地毯(喻體)。'],
+            ['家很溫暖。', ['家', '是', '溫暖的', '避風港。'], '暗喻', '用「是」把家比作避風港。'],
+            ['星星閃爍。', ['夜空中的', '鑽石', '閃閃', '發光。'], '借喻', '不寫星星，直接用「鑽石」代替。'],
+            ['皇帝發怒了。', ['龍顏', '大怒，', '群臣', '發抖。'], '借代', '用「龍顏」代替皇帝的臉/情緒。'],
+            ['很害怕。', ['嚇得', '心臟', '快要', '跳出來了。'], '誇張', '用不可能發生的事來誇大害怕。'],
+            ['花兒開了。', ['花兒', '換上了', '五顏六色的', '春裝。'], '擬人', '把開花比作人「換上春裝」。'],
+            ['天下沒有免費午餐。', ['天下', '哪有', '免費的', '午餐呢？'], '反問', '用問句形式表達沒有。'],
+            ['為什麼學習？為了未來。', ['為什麼', '要學習？', '為了擁有', '更好的未來。'], '設問', '自問自答的結構。'],
+            ['喜歡很多活動。', ['喜歡唱歌，', '喜歡跳舞，', '喜歡畫畫。'], '排比', '三個「喜歡...」排列在一起。'],
+            ['級別越來越高。', ['從村級、', '市級', '到國家級，', '他都贏了。'], '層遞', '級別從小排到大。'],
+            ['心心相連。', ['心連心，', '心印心，', '心心相印。'], '頂真', '利用「心」字首尾相連。'],
+            ['努力會成功。', ['努力！', '努力！', '我們', '一定會成功！'], '反復', '重複「努力」來激勵士氣。'],
+            ['日月相對。', ['星垂', '平野闊，', '月湧', '大江流。'], '對偶', '星對月，垂對湧，結構相對。']
+        ];
+
+        // --- 7. 終極實戰：修辭複句重組 (40題 全新) ---
+        // 結合了關聯詞與修辭的長句子重組
+        const complexReorderPool = [
+            ['雖然天氣冷，但他堅持晨跑。', ['雖然', '天氣', '冷得像冰窖，', '但是', '他依然', '堅持晨跑。'], '轉折 + 誇張', '先排關聯詞「雖然...但是...」，並找出誇張的部分「冷得像冰窖」。'],
+            ['因為會場安靜，大家不敢說話。', ['因為', '會場', '靜得能聽見針掉下，', '所以', '大家都', '不敢說話。'], '因果 + 誇張', '先排「因為...所以...」，再排誇張的「聽見針掉下」。'],
+            ['春風吹綠柳樹，喚醒小草。', ['春風', '不但', '吹綠了柳樹，', '而且', '還喚醒了', '沉睡的小草。'], '遞進 + 擬人', '先排「不但...而且...」，再排擬人的「喚醒沉睡的小草」。'],
+            ['如果不保護環境，地球會變沙漠。', ['如果', '我們', '不保護環境，', '地球', '難道不會', '變成沙漠嗎？'], '假設 + 反問', '先排「如果」，結尾要用反問語氣「難道不會...嗎？」。'],
+            ['經歷風雨才能見彩虹。', ['只有', '經歷過', '風雨的洗禮，', '才能', '見到', '美麗的彩虹。'], '條件 + 暗喻', '先排「只有...才能...」，風雨和彩虹都有暗喻意味。'],
+            ['我們聽鳥唱、賞花笑、受風吹。', ['我們', '一邊聽著', '小鳥的歌唱，', '一邊欣賞著', '花兒的微笑。'], '並列 + 擬人', '先排「一邊...一邊...」，再接擬人動作。'],
+            ['他只是平民，卻憂國憂民。', ['雖然', '他只是個', '「布衣」，', '卻有著', '憂國憂民的', '情懷。'], '轉折 + 借代', '「雖然...卻...」，平民的借代是「布衣」。'],
+            ['既然同意，為什麼不執行？', ['既然', '大家都', '同意這個方案，', '我們', '為什麼不', '立刻執行呢？'], '因果 + 反問', '「既然...為什麼不...」，帶有強烈反問。'],
+            ['他騙了朋友、家人和社會。', ['他', '不僅', '騙了朋友，', '騙了家人，', '甚至', '騙了全社會。'], '遞進 + 層遞', '「不僅...甚至...」，對象範圍由小到大。'],
+            ['就算天塌，我也不改變。', ['就算', '天塌下來，', '我也', '絕對不會', '改變主意。'], '假設 + 誇張', '「就算...也...」，誇張的部分是「天塌下來」。'],
+            ['不管多難，我們不退縮。', ['無論', '前方的路', '有多麼崎嶇，', '我們都', '絕不', '退縮。'], '條件 + 借喻', '「無論...都...」，用「崎嶇的路」借喻困難。'],
+            ['與其等，不如去找。', ['與其', '在這裡', '傻傻地等，', '我們', '為什麼不', '自己去找呢？'], '選擇 + 反問', '「與其...為什麼不...」，用反問取代「不如」。'],
+            ['寧可吃虧，也不佔便宜。', ['他', '寧可', '自己吃虧，', '也絕不', '去佔', '別人的便宜。'], '選擇 + 對比', '「寧可...也絕不...」。'],
+            ['這不是失敗，是考驗。', ['這', '不是', '令人絕望的失敗，', '而是', '老天給我們的', '一場考驗。'], '並列 + 暗喻', '「不是...而是...」，把挫折暗喻為考驗。'],
+            ['只要努力，就能成功。', ['只要', '你肯', '播下汗水的種子，', '就一定能', '收穫成功。'], '條件 + 暗喻', '「只要...就...」，把努力暗喻為播下種子。'],
+            ['他不但不改，反而更壞。', ['他', '不但不', '承認錯誤，', '反而', '變本加厲地', '欺負人。'], '遞進 + 誇飾', '「不但不...反而...」。'],
+            ['因為他生氣，所以大聲罵。', ['因為', '他的怒火', '快把屋頂掀翻了，', '所以', '他大聲地', '責罵別人。'], '因果 + 誇張', '「因為...所以...」，加入誇張「掀翻屋頂」。'],
+            ['即使失敗，也不灰心。', ['即使', '跌倒了', '一百次，', '我們也要', '第一百零一次', '站起來。'], '假設 + 誇張', '「即使...也要...」，次數的誇張。'],
+            ['大家不同意，就無法完成。', ['如果', '大家', '不齊心協力，', '這座大山', '怎麼可能', '被移走呢？'], '假設 + 反問', '「如果...怎麼可能...」，大山借喻困難。'],
+            ['他很聰明也很用功。', ['他', '既是', '聰明的「智多星」，', '又是', '勤奮的', '「老黃牛」。'], '並列 + 借代', '「既是...又是...」，加入借代稱呼。'],
+            ['這不是小事，是大事。', ['這', '絕不是', '微不足道的小事，', '而是', '驚天動地的', '大事啊！'], '並列 + 誇張', '「絕不是...而是...」，加入誇張。'],
+            ['因為下雨，比賽取消。', ['因為', '老天爺', '傷心地哭了，', '所以', '今天的比賽', '只好取消。'], '因果 + 擬人', '「因為...所以...」，把下雨擬人化。'],
+            ['與其浪費，不如買書。', ['與其', '把錢', '丟進大海裡，', '不如', '買幾本', '有用的書。'], '選擇 + 誇張', '「與其...不如...」，丟進大海形容浪費。'],
+            ['只要堅持，夢想實現。', ['只要', '我們', '插上堅持的翅膀，', '夢想', '就能', '飛向藍天。'], '條件 + 暗喻', '「只要...就能...」，暗喻堅持為翅膀。'],
+            ['雖然很累，但他不休息。', ['雖然', '他累得', '像一灘爛泥，', '但是', '他依然', '不肯休息。'], '轉折 + 明喻', '「雖然...但是...」，加入明喻。'],
+            ['就算很遠，我也要去。', ['就算', '目的地', '在天涯海角，', '我也', '一定要', '走到那裡。'], '假設 + 誇張', '「就算...也...」，天涯海角是誇張。'],
+            ['他不但會彈琴，還會畫畫。', ['她', '不但', '能彈出高山流水，', '而且', '能畫出', '鳥語花香。'], '遞進 + 借代', '「不但...而且...」，用高山流水代音樂。'],
+            ['只有讀書，才能長知識。', ['只有', '在書海中', '不斷遨遊，', '才能', '尋找到', '智慧的寶藏。'], '條件 + 暗喻', '「只有...才能...」，書海、寶藏為暗喻。'],
+            ['既然答應，就要做到。', ['既然', '你已經', '拍了胸脯保證，', '就應該', '說到做到，', '不是嗎？'], '因果 + 反問', '「既然...就...」，結尾反問。'],
+            ['他很窮，連飯都吃不起。', ['他', '窮得', '連鍋都揭不開了，', '哪裡', '還有錢', '買新衣服？'], '因果 + 反問', '前句誇張，後句反問。'],
+            ['因為風大，樹倒了。', ['因為', '狂風', '發出了怒吼，', '所以', '路邊的大樹', '都被連根拔起。'], '因果 + 擬人', '「因為...所以...」，風發怒吼是擬人。'],
+            ['雖然失敗，他卻笑了。', ['雖然', '遭遇了', '滑鐵盧，', '他卻', '依然', '笑對人生。'], '轉折 + 借代', '「雖然...卻...」，滑鐵盧代指失敗。'],
+            ['如果不努力，就會退步。', ['如果', '你選擇', '逆水行舟，', '不努力向前，', '難道不會', '退步嗎？'], '假設 + 反問', '「如果...難道不會...」，引用逆水行舟。'],
+            ['這不是水，是汗水。', ['這', '流淌下來的', '不是水，', '而是', '運動員', '辛勤的汗水！'], '並列 + 強調', '「不是...而是...」。'],
+            ['只要春天來，花就會開。', ['只要', '春姑娘', '邁著輕盈的腳步走來，', '百花', '就會', '爭相綻放。'], '條件 + 擬人', '「只要...就會...」，春姑娘是擬人。'],
+            ['就算下雪，也要上學。', ['就算', '鵝毛大雪', '封住了道路，', '我們', '也要', '堅持去學校。'], '假設 + 明喻', '「就算...也要...」，鵝毛大雪是明喻。'],
+            ['因為高興，他跳起來。', ['因為', '心裡', '樂開了花，', '所以', '他高興得', '一蹦三尺高。'], '因果 + 誇張', '「因為...所以...」，一蹦三尺高。'],
+            ['無論如何，我不放棄。', ['無論', '前方是', '刀山還是火海，', '我都', '絕對不會', '半途而廢。'], '條件 + 借喻', '「無論...都...」，刀山火海借喻險境。'],
+            ['與其抱怨，不如行動。', ['與其', '在這裡', '怨天尤人，', '不如', '馬上行動起來，', '用雙手創造未來。'], '選擇 + 對比', '「與其...不如...」。'],
+            ['他不但錯了，還不認錯。', ['他', '不但', '犯下了大錯，', '而且', '還死鴨子嘴硬，', '堅不認錯。'], '遞進 + 歇後語', '「不但...而且...」，死鴨子嘴硬。']
+        ];
+
+        const rawQuestDataObj = [
+            ...formatData(puncMasterPool, 'r-punc-master', '進階標點：這句話中的標點符號有什麼深層含義？'),
+            ...formatData(rhetSubPool, 'r-rhet-sub', '高階修辭：這句話運用了借代還是借喻？'),
+            ...formatData(logicPool, 'r-rhet-logic', '邏輯修辭：辨析層遞、反復、排比、頂真與對偶。'),
+            ...formatData(quotePool, 'r-rhet-quote', '語氣與引用：辨析呼告、引用、雙關與問句。'),
+            ...formatTransformData(transformPool, 'r-rhet-transform', '實戰轉換：選出最符合指定修辭的改寫句。'),
+            ...formatReorderData(reorderPool, 'r-rhet-reorder', '實戰重組：把碎片排成完美的修辭句'),
+            ...formatReorderData(complexReorderPool, 'r-rhet-complex-reorder', '終極實戰：結合關聯詞，重組修辭複句')
+        ];
+
+        let userProgress = JSON.parse(localStorage.getItem('rhetAdvProgress')) || new Array(rawQuestDataObj.length).fill(0);
+
+        function renderDirectory() {
+            const dirContainer = document.getElementById('directory-content');
+            let html = '';
+            categories.forEach(cat => {
+                let hasQuestions = rawQuestDataObj.some(q => q.category === cat.id);
+                if (hasQuestions) {
+                    // 對於重組題，共用同一個錦囊
+                    let tutId = cat.id === 'r-rhet-complex-reorder' ? 'r-rhet-reorder' : cat.id;
+                    html += `
+                        <div class="mb-6">
+                            <div class="flex items-center justify-between border-b-2 border-${cat.color}-100 pb-2 mb-3">
+                                <h3 class="text-xl font-bold text-${cat.color}-700">${cat.title}</h3>
+                                <button onclick="showTutorial('${tutId}')" class="bg-violet-100 text-violet-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-violet-300 hover:bg-violet-200 transition flex items-center gap-1 active:scale-95">📘 高級錦囊</button>
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                    `;
+                    rawQuestDataObj.forEach((q, idx) => {
+                        if(q.category === cat.id) {
+                            let status = userProgress[idx];
+                            let btnClass = 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50';
+                            let icon = (idx + 1);
+
+                            if (status === 1) {
+                                btnClass = 'bg-yellow-100 border-yellow-400 text-yellow-700 shadow-inner';
+                                icon = '🌟';
+                            } else if (status === 2) {
+                                btnClass = 'bg-emerald-100 border-emerald-400 text-emerald-700 shadow-inner';
+                                icon = '✅';
+                            } else if (status === -1) {
+                                btnClass = 'bg-rose-100 border-rose-400 text-rose-700 shadow-inner';
+                                icon = '❌';
+                            }
+
+                            html += `<button onclick="startQuestion(${idx})" class="lvl-btn ${btnClass} w-12 h-12 lg:w-14 lg:h-14 rounded-xl font-black text-base lg:text-lg border-b-4 flex items-center justify-center shadow-sm transition-transform">${icon}</button>`;
+                        }
+                    });
+                    html += `</div></div>`;
+                }
+            });
+            dirContainer.innerHTML = html;
+            updateTotalProgress();
+        }
+
+        function updateTotalProgress() {
+            let solved = userProgress.filter(p => p === 1 || p === 2).length;
+            let percent = (solved / rawQuestDataObj.length) * 100;
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+
+        function shuffleOptions(correct, wrongs) {
+            let opts = [correct, ...wrongs];
+            for (let i = opts.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [opts[i], opts[j]] = [opts[j], opts[i]];
+            }
+            return {
+                options: opts,
+                ansIdx: opts.indexOf(correct)
+            };
+        }
+
+        function startQuestion(idx, forceStart = false) {
+            const qData = rawQuestDataObj[idx];
+            const qType = qData.category;
+            let tutKey = qType === 'r-rhet-complex-reorder' ? 'r-rhet-reorder' : qType;
+            
+            if (!forceStart && !localStorage.getItem('tut_seen_' + tutKey)) {
+                pendingQuestionIdx = idx; 
+                showTutorial(tutKey);      
+                return;                   
+            }
+
+            currentQuestionMistakes = 0; 
+            currentQuestionIdx = idx;
+            window.currentHints = []; 
+            
+            // 每次進入新題目時，確保隱藏動態提示框
+            let hintBox = document.getElementById('dynamic-hint-box');
+            if(hintBox) hintBox.classList.add('hidden');
+
+            document.getElementById('quest-directory').style.display = 'none';
+            const questPlay = document.getElementById('quest-play');
+            questPlay.style.display = 'flex';
+            document.getElementById('main-scroll-area').scrollTop = 0;
+            
+            const qCatTitle = categories.find(c => c.id === qType).title;
+
+            let html = `
+                <div class="w-full flex justify-between items-center mb-4">
+                    <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
+                    <span class="bg-violet-100 text-violet-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${idx + 1} 題 / 共 280 題</span>
+                </div>
+                
+                <div class="slide-up w-full bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center relative transition-all duration-500">
+                    <span class="absolute -top-4 bg-violet-600 text-white px-5 py-1.5 rounded-full font-bold shadow-md text-sm md:text-base">
+                        ${qCatTitle}
+                    </span>
+                    
+                    <div class="w-full flex items-center gap-3 mt-4 mb-6">
+                        <span class="bg-violet-100 text-violet-800 px-3 py-1 rounded text-sm font-bold whitespace-nowrap">終極任務</span>
+                        <h2 class="text-lg md:text-xl font-bold text-slate-700">${qData.task}</h2>
+                    </div>
+            `;
+
+            if (qType.includes('reorder')) {
+                // 🧩 實戰重組句子 UI
+                reorderCorrect = [...qData.chunks];
+                reorderSource = [...reorderCorrect].sort(() => Math.random() - 0.5);
+                reorderTarget = [];
+
+                html += `
+                    <div class="w-full text-center mb-4">
+                        <span class="bg-slate-100 text-slate-600 font-bold px-4 py-2 rounded-xl text-lg">${qData.sentence}</span>
+                    </div>
+                    <div class="text-2xl md:text-3xl font-black text-violet-800 mb-6 text-center">
+                        目標：排成 <span class="text-white bg-violet-600 px-3 py-1 rounded-lg">${qData.target}</span> 句
+                    </div>
+                    
+                    <div class="w-full bg-slate-50 p-4 md:p-6 rounded-2xl border-2 border-slate-200 min-h-[120px] flex flex-wrap content-start gap-2 mb-6" id="reorder-target-area"></div>
+                    <div class="w-full border-t-2 border-dashed border-slate-200 my-2"></div>
+                    <div class="text-center text-slate-500 font-bold mb-2 text-sm">👇 點擊下方詞語加入句子</div>
+                    <div class="w-full flex flex-wrap justify-center gap-3" id="reorder-source-area"></div>
+
+                    <!-- 動態提示框 -->
+                    <div id="dynamic-hint-box" class="hidden w-full max-w-3xl mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3">
+                        <div class="flex-1 space-y-2" id="hint-text"></div>
+                        <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
+                    </div>
+                </div>`;
+                questPlay.innerHTML = html;
+                renderReorderUI();
+            } else {
+                // 常規選擇題 UI
+                const { options, ansIdx } = shuffleOptions(qData.correct, qData.wrongs);
+                let ttsText = qData.task + "。 " + qData.sentence;
+                let sentenceHtml = qData.sentence;
+
+                if(sentenceHtml.includes('___')) {
+                    sentenceHtml = sentenceHtml.replace('___', '<span class="text-violet-600 border-b-4 border-violet-500 px-6 font-black bg-violet-50">?</span>');
+                }
+
+                html += `
+                    <div class="w-full flex items-start gap-4 mb-6 bg-violet-50 p-6 rounded-2xl border border-violet-100 shadow-inner">
+                        <button onclick="speakText('${ttsText}')" class="tts-btn flex-shrink-0 bg-white text-violet-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-violet-200">🔊</button>
+                        <div class="text-2xl md:text-3xl font-bold text-slate-800 leading-loose">${sentenceHtml}</div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-3xl mt-auto" id="options-container">
+                `;
+                
+                options.forEach((optText, oIdx) => {
+                    const isCorr = (oIdx === ansIdx);
+                    const safeOpt = optText.replace(/'/g, "\\'");
+                    let textClass = qType === 'r-rhet-transform' ? 'text-lg md:text-xl' : 'text-xl md:text-2xl';
+                    html += `<button onclick="checkAnswer(this, ${isCorr}, '${safeOpt}')" class="option-btn bg-white border-4 border-slate-200 text-slate-700 font-bold ${textClass} py-6 px-4 rounded-2xl hover:bg-violet-50 hover:border-violet-300 transition w-full text-center flex flex-col items-center justify-center break-words"><span class="bg-slate-100 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 mb-2">${['A','B','C','D'][oIdx]}</span> <span>${optText}</span></button>`;
+                });
+                
+                html += `
+                        </div>
+                        <!-- 動態提示框 -->
+                        <div id="dynamic-hint-box" class="hidden w-full max-w-3xl mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3">
+                            <div class="flex-1 space-y-2" id="hint-text"></div>
+                            <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
+                        </div>
+                    </div>
+                `;
+                questPlay.innerHTML = html;
+            }
+        }
+
+        // --- 重組句子相關邏輯 ---
+        function renderReorderUI() {
+            const tArea = document.getElementById('reorder-target-area');
+            const sArea = document.getElementById('reorder-source-area');
+            if(!tArea || !sArea) return;
+
+            let tHtml = '';
+            if (reorderTarget.length === 0) {
+                tHtml = '<span class="text-slate-400 font-bold m-auto">點擊下方詞語排成句子...</span>';
+            } else {
+                reorderTarget.forEach((chunk, idx) => {
+                    tHtml += `<button onclick="removeFromTarget(${idx})" class="chunk-btn bg-violet-600 text-white font-black text-xl md:text-2xl py-3 px-5 rounded-xl shadow-md pop">${chunk}</button>`;
+                });
+            }
+            tArea.innerHTML = tHtml;
+
+            let sHtml = '';
+            reorderSource.forEach((chunk, idx) => {
+                if (chunk === null) {
+                    sHtml += `<div class="chunk-slot w-24 h-14 md:w-32 md:h-16 rounded-xl"></div>`; 
+                } else {
+                    sHtml += `<button onclick="moveToTarget(${idx})" class="chunk-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-violet-400 hover:bg-violet-50 font-black text-xl md:text-2xl py-3 px-5 rounded-xl shadow">${chunk}</button>`;
+                }
+            });
+            sArea.innerHTML = sHtml;
+
+            if (reorderTarget.length > 0 && reorderTarget.length === reorderCorrect.length) {
+                checkReorderAnswer();
+            }
+        }
+
+        function moveToTarget(sourceIdx) {
+            let chunk = reorderSource[sourceIdx];
+            reorderSource[sourceIdx] = null; 
+            reorderTarget.push(chunk);
+            speakText(chunk);
+            renderReorderUI();
+        }
+
+        function removeFromTarget(targetIdx) {
+            let chunk = reorderTarget[targetIdx];
+            reorderTarget.splice(targetIdx, 1);
+            let emptyIdx = reorderSource.indexOf(null);
+            if(emptyIdx !== -1) reorderSource[emptyIdx] = chunk;
+            renderReorderUI();
+        }
+
+        function checkReorderAnswer() {
+            let isCorrect = true;
+            let correctCount = 0;
+            // 找出前面正確排列的數量
+            for(let i=0; i<reorderTarget.length; i++) {
+                if(reorderTarget[i] === reorderCorrect[i]) {
+                    correctCount++;
+                } else {
+                    isCorrect = false;
+                    break;
+                }
+            }
+
+            const qData = rawQuestDataObj[currentQuestionIdx];
+
+            if (isCorrect && reorderTarget.length === reorderCorrect.length) {
+                speakText("完美的重組！" + reorderCorrect.join(''));
+                triggerSuccess(qData.explanation);
+            } else if (reorderTarget.length === reorderCorrect.length) {
+                // 只有當全部填滿才進行檢查
+                currentQuestionMistakes++;
+                userProgress[currentQuestionIdx] = -1;
+                localStorage.setItem('rhetAdvProgress', JSON.stringify(userProgress));
+                
+                // 將排錯的部分退回 Source
+                let chunksToReturn = reorderTarget.splice(correctCount);
+                for (let chunk of chunksToReturn) {
+                    let emptyIdx = reorderSource.indexOf(null);
+                    if(emptyIdx !== -1) {
+                        reorderSource[emptyIdx] = chunk;
+                    } else {
+                        reorderSource.push(chunk);
+                    }
+                }
+
+                // 產生專屬提示：告訴他下一個正確的積木是什麼
+                let hintWord = reorderCorrect[correctCount];
+                let newHint = `排錯了喔！正確的部分已保留。<br>👉 下一個詞語應該是：「<span class="text-rose-600">${hintWord}</span>」<br>💡 技巧：${qData.hint}`;
+
+                document.getElementById('hint-text').innerHTML = newHint;
+                document.getElementById('hint-tts-btn').onclick = () => speakText(`排錯了喔。下一個詞語應該是，${hintWord}`);
+                document.getElementById('dynamic-hint-box').classList.remove('hidden');
+                document.getElementById('dynamic-hint-box').classList.add('slide-up');
+                
+                speakText("順序不對喔，請看提示！");
+                
+                const tArea = document.getElementById('reorder-target-area');
+                tArea.classList.add('bg-rose-100', 'border-rose-400', 'shake');
+                setTimeout(() => tArea.classList.remove('bg-rose-100', 'border-rose-400', 'shake'), 800);
+
+                renderReorderUI();
+            }
+        }
+
+        // --- 選擇題檢查邏輯 ---
+        function checkAnswer(btnElement, isCorrect, clickedOptText) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            const qData = rawQuestDataObj[currentQuestionIdx];
+            
+            if (isCorrect) {
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                btnElement.classList.add('correct');
+                speakText("完美的判斷！");
+                triggerSuccess(qData.explanation);
+            } else {
+                btnElement.classList.add('wrong', 'shake');
+                currentQuestionMistakes++; 
+                userProgress[currentQuestionIdx] = -1;
+                localStorage.setItem('rhetAdvProgress', JSON.stringify(userProgress));
+                
+                let lines = qData.explanation.split('<br>');
+                let matchedLine = lines.find(l => l.includes(clickedOptText));
+                let newHint = "請再仔細想一想喔！";
+                
+                if (matchedLine) {
+                    newHint = matchedLine.replace(/^[✅❌]\s*/, ''); 
+                }
+
+                if (!window.currentHints) window.currentHints = [];
+                if (!window.currentHints.includes(newHint)) window.currentHints.push(newHint);
+
+                let combinedHintsHtml = window.currentHints.map(h => `<div class="border-b border-yellow-200 pb-1 last:border-0 last:pb-0">💡 ${h}</div>`).join('');
+                document.getElementById('hint-text').innerHTML = combinedHintsHtml;
+                document.getElementById('hint-tts-btn').onclick = () => speakText(window.currentHints.join('。'));
+                document.getElementById('dynamic-hint-box').classList.remove('hidden');
+                document.getElementById('dynamic-hint-box').classList.add('slide-up');
+                
+                speakText("不對喔，" + newHint);
+                setTimeout(() => { btnElement.classList.remove('shake'); }, 500);
+            }
+        }
+
+        // --- 成功處理共通邏輯 ---
+        function triggerSuccess(expText) {
+            let finalStatus = currentQuestionMistakes === 0 ? 1 : 2;
+            let previousStatus = userProgress[currentQuestionIdx];
+            let expGained = 0;
+
+            if (previousStatus !== 1 && previousStatus !== 2) {
+                expGained = finalStatus === 1 ? 30 : 10;
+            } else if (previousStatus === 2 && finalStatus === 1) {
+                expGained = 20; 
+            }
+
+            if (expGained > 0) {
+                advExp += expGained;
+                localStorage.setItem('rhetAdvExp', advExp);
+                document.getElementById('exp-display').innerText = advExp;
+                document.getElementById('exp-display').classList.add('pop');
+                setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+            }
+
+            if (finalStatus === 1 || previousStatus !== 1) {
+                userProgress[currentQuestionIdx] = finalStatus;
+                localStorage.setItem('rhetAdvProgress', JSON.stringify(userProgress));
+            }
+
+            let modalIcon = finalStatus === 1 ? '🌟' : '✅';
+            let modalTitle = finalStatus === 1 ? '完美答對！' : '成功過關！';
+            let expMsg = expGained > 0 
+                ? `<span class="text-violet-600 block text-xl mb-4">獲得 ${expGained} 點經驗值 ✨</span>` 
+                : `<span class="text-slate-500 block text-lg mb-4">這題已經成功過關囉！</span>`;
+            
+            let combinedDesc = expMsg + `
+                <div class="bg-violet-50 border-l-4 border-violet-500 p-4 text-left text-violet-900 rounded-r-lg font-bold">
+                    <div class="flex justify-between items-center mb-3 pb-2 border-b border-violet-200">
+                        <span class="text-xl">📚 深度解析</span>
+                        <button onclick="speakText('${expText}')" class="bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm hover:bg-violet-100 text-xl transition active:scale-95">🔊</button>
+                    </div>
+                    <div class="space-y-3 text-base leading-relaxed">${expText}</div>
+                </div>`;
+
+            setTimeout(() => { showModal(modalIcon, modalTitle, combinedDesc); }, 800);
+        }
+
+        function showModal(icon, title, desc) {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            document.getElementById('feedback-icon').innerText = icon;
+            document.getElementById('feedback-title').innerText = title;
+            document.getElementById('feedback-desc').innerHTML = desc;
+            
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.onclick = () => {
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-90');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    let nextIdx = currentQuestionIdx + 1;
+                    if (nextIdx < rawQuestDataObj.length) startQuestion(nextIdx);
+                    else { showToast("恭喜完成所有挑戰！"); backToDirectory(); }
+                }, 300);
+            };
+
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+        }
+
+        function backToDirectory() {
+            // 在返回目錄時隱藏可能殘留的提示框
+            let hintBox = document.getElementById('dynamic-hint-box');
+            if(hintBox) hintBox.classList.add('hidden');
+            
+            document.getElementById('quest-play').style.display = 'none';
+            document.getElementById('quest-directory').style.display = 'block';
+            renderDirectory();
+        }
+
+        function backToDirectoryFromModal() {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                backToDirectory();
+            }, 300);
+        }
+
+        window.onload = function() {
+            document.getElementById('exp-display').innerText = advExp;
+            renderDirectory();
+        }
+    </script>
+</body>
+</html>
