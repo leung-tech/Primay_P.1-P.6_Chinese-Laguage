@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>段落與實用文 - 基礎訓練</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif;
+            background-color: #eef2ff; /* 靛藍/淺紫背景 */
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .bg-grid-pattern {
+            background-image: linear-gradient(to right, #e0e7ff 1px, transparent 1px), linear-gradient(to bottom, #e0e7ff 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .pop { animation: pop 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .option-btn { transition: all 0.2s; box-shadow: 0 4px 0 #818cf8; }
+        .option-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .option-btn.correct { background-color: #e0e7ff; border-color: #4f46e5; color: #312e81; box-shadow: 0 0 0 transparent; transform: translateY(4px); pointer-events: none; }
+        .option-btn.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.6; pointer-events: none; }
+
+        /* 段落重組專用按鈕 (長條狀，支援多行文字) */
+        .chunk-btn { transition: all 0.2s; box-shadow: 0 4px 0 #4f46e5; width: 100%; text-align: left; white-space: normal; line-height: 1.5; }
+        .chunk-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .chunk-slot { transition: all 0.2s; border: 2px dashed #a5b4fc; background-color: #eef2ff; width: 100%; height: 60px; border-radius: 0.75rem; margin-bottom: 0.5rem; }
+
+        /* 模擬信紙背景 */
+        .letter-pad {
+            background-color: #fffbeb;
+            background-image: repeating-linear-gradient(transparent, transparent 39px, #fde68a 39px, #fde68a 40px);
+            border: 2px solid #fcd34d;
+        }
+
+        .tts-btn { transition: transform 0.2s; }
+        .tts-btn:active { transform: scale(0.9); }
+        .lvl-btn { transition: transform 0.2s; }
+        .lvl-btn:hover { transform: scale(1.05); }
+
+        .toast-msg {
+            visibility: hidden; min-width: 250px; background-color: #ef4444; color: #fff; text-align: center;
+            border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px;
+            transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
+        @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
+
+    <!-- 頂部導覽列 (Indigo 配色) -->
+    <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
+        <div class="p-3 lg:p-4 bg-indigo-600 text-white flex justify-between items-center w-full">
+            <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
+                <a href="index.html" class="hover:bg-indigo-700 p-1 rounded transition bg-indigo-800">⬅️ 返回</a>
+                <span>📝 段落與實用文 (基礎版)</span>
+            </h1>
+            <div class="flex gap-2 lg:gap-4 items-center bg-indigo-800 px-3 py-1.5 rounded-full border border-indigo-500 shadow-inner">
+                <span class="text-lg lg:text-xl">🏆</span>
+                <span class="font-bold text-sm lg:text-lg">EXP: <span id="exp-display" class="text-yellow-400">0</span></span>
+            </div>
+        </div>
+        <div id="progress-container" class="w-full bg-slate-200 h-2">
+            <div id="progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
+        </div>
+    </div>
+
+    <!-- 主畫面區 -->
+    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
+        
+        <div id="quest-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
+            <div id="quest-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">🎯 兩大核心：排句成段 ＆ 實用文格式</h2>
+                <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
+                    <div class="text-indigo-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
+                    <div class="flex flex-wrap gap-4 flex-1">
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-lg shadow-sm">🌟</span> 一次答對 (+30)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 經提示過關 (+10)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-rose-100 border-2 border-rose-400 flex items-center justify-center text-lg shadow-sm">❌</span> 未完成</div>
+                    </div>
+                </div>
+                <div id="directory-content" class="flex flex-col gap-8"></div>
+            </div>
+            
+            <div id="quest-play" class="w-full hidden flex-col items-center"></div>
+        </div>
+    </div>
+
+    <!-- 學習小教學 Modal -->
+    <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="tutorial-content">
+            <div class="flex justify-between items-center mb-4 border-b-2 border-indigo-100 pb-3">
+                <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-indigo-600 flex items-center gap-2">📘 學習錦囊</h2>
+                <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
+            </div>
+            <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4"></div>
+            <div class="mt-6 pt-4 border-t-2 border-slate-100">
+                <button onclick="closeTutorial()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 答對全解析 Modal -->
+    <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-xl text-center transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="feedback-content">
+            <div id="feedback-icon" class="text-6xl mb-2">🎉</div>
+            <h2 id="feedback-title" class="text-2xl md:text-3xl font-black text-slate-800 mb-2">答對了！</h2>
+            <div id="feedback-desc" class="text-slate-600 font-bold mb-4 text-base md:text-lg leading-relaxed text-left overflow-y-auto pr-2 flex-1 w-full"></div>
+            <div class="flex gap-3 w-full mt-2 pt-4 border-t border-slate-100">
+                <button onclick="backToDirectoryFromModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition text-lg">⬅️ 目錄</button>
+                <button id="next-btn" class="flex-[1.5] bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-msg">提示訊息</div>
+
+    <script>
+        // ================= 1. 核心狀態與大腦字典 =================
+        let paraExp = parseInt(localStorage.getItem('paraBasicExp')) || 0;
+        let currentQuestionMistakes = 0; 
+        let pendingQuestionIdx = -1;
+        let currentQuestionIdx = -1;
+        window.currentHints = []; 
+        
+        let reorderSource = []; 
+        let reorderTarget = []; 
+        let reorderCorrect = []; 
+
+        document.getElementById('exp-display').innerText = paraExp;
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let cleanText = text.replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】]/g, '').replace(/&nbsp;/g, ' ');
+                let msg = new SpeechSynthesisUtterance(cleanText);
+                msg.lang = 'zh-HK';
+                msg.rate = 0.9; 
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "toast-msg show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        const genericExplanations = {
+            '上款': '上款：寫在信件最開頭，稱呼收信人（如：親愛的媽媽：）。',
+            '下款': '下款：寫在信件最後，署名寫信人是誰（如：兒子 小明 上）。',
+            '問候語': '問候語：在正文開始前，向收信人打招呼（如：你好嗎？）。',
+            '祝頌語': '祝頌語：在正文結束後，對收信人的祝福（如：祝 身體健康）。',
+            '正文': '正文：信件或日記的主要內容，你想說的話。',
+            '日期': '日期：寫信或寫日記的那一天（如：十月一日）。',
+            '天氣': '天氣：寫日記時，通常在第一行記錄當天的天氣（如：晴）。',
+            '稱呼': '稱呼：與上款類似，指叫對方的名字。',
+            '署名': '署名：與下款類似，指簽上自己的名字。',
+            '標題': '標題：文章或通告最上方的名字，告訴別人這篇文的主題。'
+        };
+
+        function getGenericExp(term) {
+            return genericExplanations[term] || '這是實用文的一個重要部分。';
+        }
+
+        // ================= 2. 學習錦囊 (教學庫) =================
+        const tutorialContents = {
+            'p-reorder-time': `
+                <div class="text-center mb-4"><span class="text-6xl">⏰ ➡️ 🏁</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">Part 1：排句成段 (時間順序)</p>
+                <p class="mb-4 text-slate-600">把散亂的句子排成一段通順的文章，最簡單的方法就是找<span class="text-indigo-600 font-bold">「時間提示詞」</span>！</p>
+                <div class="bg-indigo-50 p-4 rounded-xl border-2 border-indigo-200 mb-3 space-y-3 font-bold text-indigo-900">
+                    <p>1️⃣ <span class="bg-white px-2 py-1 rounded shadow-sm text-indigo-600">先 / 首先 / 早上</span> 👉 通常排在<span class="text-rose-500">最前面</span>。</p>
+                    <p>2️⃣ <span class="bg-white px-2 py-1 rounded shadow-sm text-indigo-600">接著 / 然後 / 中午</span> 👉 排在<span class="text-blue-500">中間</span>。</p>
+                    <p>3️⃣ <span class="bg-white px-2 py-1 rounded shadow-sm text-indigo-600">最後 / 終於 / 晚上</span> 👉 通常排在<span class="text-emerald-500">最後面</span>。</p>
+                </div>
+            `,
+            'p-reorder-logic': `
+                <div class="text-center mb-4"><span class="text-6xl">🧠 🔗</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">Part 1：排句成段 (邏輯因果)</p>
+                <p class="mb-4 text-slate-600">如果沒有時間詞，我們就要找句子裡的<span class="text-teal-600 font-bold">「因果關係」</span>或<span class="text-teal-600 font-bold">「代名詞」</span>！</p>
+                <div class="bg-teal-50 p-4 rounded-xl border-2 border-teal-200 mb-3 space-y-4">
+                    <div>
+                        <p class="font-black text-teal-800 text-lg mb-1">因果線索：</p>
+                        <p class="text-slate-700">一定要先發生「<span class="font-bold text-rose-500">因為...</span>」，才會導致「<span class="font-bold text-blue-500">所以...</span>」的結果。</p>
+                    </div>
+                    <hr class="border-teal-200">
+                    <div>
+                        <p class="font-black text-teal-800 text-lg mb-1">代名詞線索：</p>
+                        <p class="text-slate-700">看到「<span class="font-bold text-emerald-600">他/這/那</span>」，代表前面一定有一句話已經提過這個人或東西了！</p>
+                    </div>
+                </div>
+            `,
+            'p-practical-letter': `
+                <div class="text-center mb-4"><span class="text-6xl">✉️ ✍️</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">Part 2：書信的六大金剛</p>
+                <p class="mb-4 text-slate-600">寫信有一定的格式，就像穿衣服不能穿反一樣！</p>
+                <div class="bg-amber-50 p-4 rounded-xl border-2 border-amber-200 mb-3 text-sm font-bold text-amber-900 leading-loose">
+                    <p><span class="bg-white px-2 rounded text-amber-700">親愛的媽媽：</span> 👈 <span class="text-rose-500">上款 (收信人)</span></p>
+                    <p class="pl-4"><span class="bg-white px-2 rounded text-amber-700">你好嗎？</span> 👈 <span class="text-blue-500">問候語</span></p>
+                    <p class="pl-4"><span class="bg-white px-2 rounded text-amber-700">我今天在學校很開心...</span> 👈 <span class="text-emerald-500">正文 (主要內容)</span></p>
+                    <p class="pl-4"><span class="bg-white px-2 rounded text-amber-700">祝 身體健康</span> 👈 <span class="text-purple-500">祝頌語 (祝福)</span></p>
+                    <p class="text-right"><span class="bg-white px-2 rounded text-amber-700">兒子 小明 上</span> 👈 <span class="text-orange-500">下款 (寫信人)</span></p>
+                    <p class="text-right"><span class="bg-white px-2 rounded text-amber-700">十月一日</span> 👈 <span class="text-teal-500">日期</span></p>
+                </div>
+            `,
+            'p-practical-diary': `
+                <div class="text-center mb-4"><span class="text-6xl">📓 🌤️</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">Part 2：日記與便條格式</p>
+                <div class="bg-cyan-50 p-4 rounded-xl border-2 border-cyan-200 mb-3 space-y-4">
+                    <div>
+                        <p class="font-black text-cyan-800 text-lg mb-1">📓 日記的秘密</p>
+                        <p class="text-slate-700">日記是寫給自己看的，所以<span class="font-bold text-rose-500">不需要上款和下款</span>！但第一行一定要寫：<br><span class="bg-white px-2 py-1 rounded font-bold text-cyan-700 shadow-sm">日期 ＋ 星期 ＋ 天氣</span></p>
+                    </div>
+                    <hr class="border-cyan-200">
+                    <div>
+                        <p class="font-black text-blue-800 text-lg mb-1">📝 便條的秘密</p>
+                        <p class="text-slate-700">便條是「簡短的信」，所以<span class="font-bold text-blue-600">有上款、正文、下款和日期</span>，但通常省略問候語和祝頌語，因為重點是快點交代事情！</p>
+                    </div>
+                </div>
+            `,
+            'p-practical-reorder': `
+                <div class="text-center mb-4"><span class="text-6xl">🧩 🏗️</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">實用文：全文重組實戰</p>
+                <p class="mb-4 text-slate-600">這關你要把整篇實用文拼出來！點擊下方段落，依正確的上下格式排列到上方信紙中。</p>
+                <div class="bg-emerald-50 p-4 rounded-xl border-2 border-emerald-200 mb-3 text-emerald-900 font-bold">
+                    <p class="mb-2">1. 判斷這是一封<span class="bg-white px-2 rounded text-emerald-700">書信、便條還是日記</span>。</p>
+                    <p class="mb-2">2. 回想它的<span class="bg-white px-2 rounded text-emerald-700">格式順序</span>（例如書信是：上款 👉 問候語 👉 正文 👉 祝頌語 👉 下款 👉 日期）。</p>
+                    <p>3. 依順序點擊段落，排錯了系統會自動退回並給你提示喔！</p>
+                </div>
+            `
+        };
+
+        function showTutorial(categoryId) {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            document.getElementById('tutorial-body').innerHTML = tutorialContents[categoryId];
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+            localStorage.setItem('tut_seen_' + categoryId, 'true');
+        }
+
+        function closeTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (pendingQuestionIdx !== -1) {
+                    let targetIdx = pendingQuestionIdx;
+                    pendingQuestionIdx = -1;
+                    startQuestion(targetIdx, true); 
+                }
+            }, 300);
+        }
+
+        // ================= 3. 段落與實用文題庫 (200題) =================
+        const categories = [
+            { id: 'p-reorder-time', title: '⏳ 排句成段：時間與順序 (40題)', color: 'indigo' },
+            { id: 'p-reorder-logic', title: '🧠 排句成段：邏輯與因果 (40題)', color: 'blue' },
+            { id: 'p-practical-letter', title: '✉️ 實用文結構：書信篇 (40題)', color: 'amber' },
+            { id: 'p-practical-diary', title: '📓 實用文結構：日記與便條 (40題)', color: 'cyan' },
+            { id: 'p-practical-reorder', title: '🧩 實用文實戰：全文格式重組 (40題)', color: 'emerald' }
+        ];
+
+        // 資料產生器 1：排句成段 (傳入 chunks 和提示)
+        function formatReorderData(pool, category, task) {
+            return pool.map(item => {
+                return { category: category, task: task, isReorder: true, chunks: item[0], hint: item[1] };
+            });
+        }
+
+        // 資料產生器 2：實用文選擇題
+        function formatMCQData(pool, category, task) {
+            return pool.map(item => {
+                let correctOpt = item[1];
+                let w1 = item[2], w2 = item[3], w3 = item[4];
+                let specificHint = item[5]; 
+                let exp = `✅ ${correctOpt}：${specificHint}<br>❌ ${w1}：${getGenericExp(w1)}<br>❌ ${w2}：${getGenericExp(w2)}<br>❌ ${w3}：${getGenericExp(w3)}`;
+                return { category: category, task: task, sentence: item[0], isReorder: false, correct: correctOpt, wrongs: [w1, w2, w3], explanation: exp };
+            });
+        }
+
+        // 資料產生器 3：實用文全文格式重組
+        function formatPracticalReorderData(pool, category, task) {
+            return pool.map(item => {
+                // pool 格式: [標題, [全文組件], 實用文類型, 提示]
+                return { category: category, task: task, isReorder: true, sentence: '目標格式：' + item[2] + ' (' + item[0] + ')', chunks: item[1], target: item[2], hint: item[3] };
+            });
+        }
+
+        // --- 1. 排句成段：時間順序 (40題) ---
+        const reorderTimePool = [
+            [['早上起床後，', '我先刷牙洗臉，', '然後吃早餐，', '最後背著書包上學去。'], '注意「先、然後、最後」的時間順序。'],
+            [['春天播種，', '夏天生長，', '秋天收割，', '冬天儲藏。'], '依照春夏秋冬的四季順序。'],
+            [['第一節上中文課，', '小息時去操場玩，', '第三節上數學課，', '中午在學校吃午飯。'], '按照學校一天的時間順序。'],
+            [['走進公園大門，', '先看到一個大噴水池，', '再往前走是一片草地，', '草地盡頭有一個涼亭。'], '按照遊覽的空間順序(走進、先、再、盡頭)。'],
+            [['洗手的時候，', '先用水把手弄濕，', '再塗上洗手液搓揉，', '最後用水沖洗乾淨。'], '注意洗手步驟的「先、再、最後」。'],
+            [['種花的第一步是鬆土，', '接著把種子放進土裡，', '然後輕輕蓋上泥土，', '最後澆上一點水。'], '注意種花步驟的順序。'],
+            [['昨天晚上下了大雨，', '今天早上天空放晴，', '中午出了大太陽，', '到了傍晚又起風了。'], '依照早、中、晚的時間順序。'],
+            [['星期一我們上體育課，', '星期三有音樂課，', '星期五要交美術功課，', '週末就可以休息了。'], '依照星期一到週末的順序。'],
+            [['把水燒開後，', '先放入麵條煮熟，', '接著加入蔬菜和肉片，', '最後加上調味料就可以吃了。'], '注意煮麵的順序。'],
+            [['看電影前要先買票，', '然後排隊入場，', '接著找到自己的座位，', '最後安靜地欣賞電影。'], '注意看電影的步驟順序。'],
+            [['一月一日是元旦，', '四月四日是兒童節，', '十月一日是國慶日，', '十二月二十五日是聖誕節。'], '依照月份的先後順序。'],
+            [['天色漸漸變暗了，', '月亮慢慢升上天空，', '星星也跟著出來閃爍，', '大家進入了夢鄉。'], '依照夜晚發生的自然順序。'],
+            [['幼蟲從卵裡孵出來，', '接著慢慢長大變成蛹，', '然後在蛹裡發生變化，', '最後破繭而出變成蝴蝶。'], '依照蝴蝶生長的順序。'],
+            [['拿出一張正方形的紙，', '先對摺成一個三角形，', '然後把兩角向上摺，', '最後畫上眼睛就變成小狗了。'], '注意摺紙的步驟順序。'],
+            [['過馬路時要先停下來，', '然後看看左邊，', '接著看看右邊，', '最後確認沒有車才走過去。'], '注意過馬路的安全步驟。'],
+            [['剛出生時我是個嬰兒，', '幾年後去上幼稚園，', '現在我是一名小學生，', '將來我要上中學。'], '依照人生成長的順序。'],
+            [['聽到鬧鐘響起，', '我立刻從床上爬起來，', '換上整齊的校服，', '準備出門上學。'], '依照早上起床的動作順序。'],
+            [['我們先在山腳集合，', '接著沿著山路往上爬，', '中午在半山腰休息，', '下午終於到達了山頂。'], '依照爬山的空間與時間順序。'],
+            [['他先拿出一本書，', '然後翻到第三十頁，', '接著開始認真閱讀，', '最後做完了閱讀筆記。'], '依照閱讀的動作順序。'],
+            [['把衣服放進洗衣機，', '接著加入洗衣粉，', '然後按下開關按鈕，', '最後把洗好的衣服晾起來。'], '注意洗衣服的步驟。'],
+            [['清晨太陽剛升起，', '農夫就下田工作，', '中午在樹下吃便當，', '傍晚才回家休息。'], '依照一天的時間順序。'],
+            [['買了新玩具後，', '先拆開包裝盒，', '再拿出說明書看，', '最後開始拼裝。'], '注意玩新玩具的順序。'],
+            [['上車後先找座位，', '然後扣好安全帶，', '接著安靜地坐好，', '到達目的地才下車。'], '注意乘車的安全順序。'],
+            [['準備好畫紙後，', '先用鉛筆畫草圖，', '接著用水彩上色，', '最後等顏料晾乾。'], '注意畫畫的步驟。'],
+            [['下課鐘聲一響，', '同學們衝出課室，', '在操場上開心地玩，', '上課鐘響才回去。'], '依照小息的時間順序。'],
+            [['把米洗乾淨，', '放入電飯煲裡，', '加入適量的水，', '按下煮飯鍵。'], '注意煮飯的步驟。'],
+            [['他走進圖書館，', '在書架上找書，', '找到後坐在椅子上，', '安靜地看起書來。'], '依照進入圖書館的動作順序。'],
+            [['先打開電腦，', '然後輸入密碼，', '接著點開瀏覽器，', '最後開始查資料。'], '注意使用電腦的順序。'],
+            [['洗澡時先開熱水，', '再用沐浴露洗身體，', '接著用水沖乾淨，', '最後用毛巾擦乾。'], '注意洗澡的步驟。'],
+            [['春天萬物復甦，', '夏天烈日當空，', '秋天涼風習習，', '冬天白雪皚皚。'], '依照四季的順序。'],
+            [['先把地掃乾淨，', '然後用拖把拖地，', '接著擦拭桌椅，', '最後把垃圾倒掉。'], '注意大掃除的順序。'],
+            [['他跑到終點，', '氣喘吁吁地停下來，', '喝了一大口水，', '然後坐在地上休息。'], '依照跑完步的動作順序。'],
+            [['太陽下山了，', '路燈一盞盞亮起，', '路上行人漸漸變少，', '城市進入了黑夜。'], '依照傍晚到黑夜的順序。'],
+            [['先準備好材料，', '接著把材料切碎，', '然後放進鍋裡炒，', '最後裝盤上桌。'], '注意煮菜的步驟。'],
+            [['他打開信箱，', '拿出一封信，', '拆開信封看內容，', '開心地笑了起來。'], '依照收信的動作順序。'],
+            [['火車進站了，', '乘客排隊上車，', '火車關上車門，', '緩緩駛出車站。'], '依照火車停站的順序。'],
+            [['先戴上頭盔，', '然後跨上單車，', '接著雙腳踩踏板，', '最後平穩地向前駛去。'], '注意騎單車的步驟。'],
+            [['天空佈滿烏雲，', '接著打起雷來，', '然後下起大雨，', '最後雨停出彩虹。'], '依照下雨的過程順序。'],
+            [['把信紙對摺，', '放進信封裡，', '貼上郵票，', '投進郵筒裡。'], '注意寄信的步驟。'],
+            [['他敲了敲門，', '聽到裡面有人回應，', '然後推開門走進去，', '向主人打招呼。'], '依照拜訪的動作順序。']
+        ];
+
+        // --- 2. 排句成段：邏輯與因果 (40題) ---
+        const reorderLogicPool = [
+            [['因為今天下大雨，', '所以我們取消了郊遊，', '大家都感到很失望，', '只好留在家裡看書。'], '找出「因為...所以」的因果關係。'],
+            [['雖然這道題很難，', '但是小明沒有放棄，', '他思考了很久，', '終於把答案算出來了。'], '找出「雖然...但是」的轉折關係。'],
+            [['小狗看起來很餓，', '於是我拿了一根骨頭，', '牠開心地搖著尾巴，', '大口大口地吃了起來。'], '注意行為導致的結果和代名詞「牠」。'],
+            [['這個花瓶很漂亮，', '可惜我不小心打破了，', '媽媽知道後很生氣，', '我連忙向她道歉。'], '注意事情發展的因果與補救。'],
+            [['他平時不努力讀書，', '考試時什麼都不會，', '結果考了最後一名，', '現在後悔也來不及了。'], '注意行為導致的最終結果。'],
+            [['公園裡有很多垃圾，', '我們決定一起清理，', '大家分工合作，', '很快就讓公園變乾淨了。'], '注意發現問題到解決問題的邏輯。'],
+            [['妹妹不小心跌倒了，', '痛得哭了起來，', '哥哥馬上扶起她，', '並幫她擦了藥。'], '注意事件發生和人物的連貫動作。'],
+            [['這本書內容很有趣，', '所以我看了很多遍，', '裡面的故事我都記住了，', '甚至能講給別人聽。'], '因果關係以及程度的遞進。'],
+            [['小樹苗本來很弱小，', '經過農夫的細心照顧，', '它慢慢長出了新葉，', '最後變成了一棵大樹。'], '注意事物發展的邏輯順序。'],
+            [['因為他生病了，', '所以沒有來上學，', '老師請同學把功課帶給他，', '希望他能早日康復。'], '「因為...所以」以及後續的關心行動。'],
+            [['這隻流浪貓很可憐，', '我在路邊發現了牠，', '便把牠帶回家照顧，', '現在牠成了我的寵物。'], '注意代名詞「牠」的指代對象。'],
+            [['如果明天下雨，', '我們就在室內活動，', '如果不下雨，', '我們就去操場打球。'], '注意假設條件的對比邏輯。'],
+            [['他是一個誠實的孩子，', '從來不說謊，', '所以大家都信任他，', '願意和他做朋友。'], '性格特徵導致的結果。'],
+            [['因為路上塞車，', '所以我遲到了，', '老師問我原因，', '我如實地解釋了。'], '因果關係和後續動作。'],
+            [['這件衣服太小了，', '我穿不下了，', '於是把它送給了弟弟，', '弟弟穿上剛剛好。'], '發現問題並解決的邏輯。'],
+            [['他不小心打破了窗戶，', '心裡感到很害怕，', '但最後還是鼓起勇氣，', '主動向主人認錯。'], '心理變化到實際行動的轉折。'],
+            [['只要你肯努力，', '就一定會有進步，', '成績自然會提高，', '將來也能實現夢想。'], '條件導致的連鎖結果。'],
+            [['外面天氣很冷，', '你要多穿件衣服，', '不然會著涼感冒，', '到時候就辛苦了。'], '情況、建議以及不聽建議的後果。'],
+            [['這是一隻受傷的小鳥，', '飛不起來了，', '我們把牠放進紙盒裡，', '等牠傷好再放飛。'], '發現狀況並處理的邏輯。'],
+            [['他不僅學習成績好，', '而且很喜歡幫助別人，', '所以他在班上很受歡迎，', '大家都選他當班長。'], '遞進關係和導致的結果。'],
+            [['因為昨晚沒睡好，', '所以他今天很睏，', '上課時忍不住打瞌睡，', '結果被老師責罵了。'], '找出因果關係的連鎖反應。'],
+            [['雖然他跑得很慢，', '但是他堅持到了最後，', '大家都為他鼓掌，', '稱讚他的體育精神。'], '轉折關係與別人的反應。'],
+            [['這道菜太辣了，', '我吃了一口就喝水，', '喝完水還是覺得辣，', '只好放棄不吃了。'], '感受與連續反應的邏輯。'],
+            [['他的筆不見了，', '急得滿頭大汗，', '同桌借了一支給他，', '他連忙說謝謝。'], '問題發生到別人幫助。'],
+            [['天空佈滿了烏雲，', '看起來快要下雨了，', '我趕緊加快腳步，', '幸好在下雨前回到家。'], '觀察環境與採取的行動。'],
+            [['小貓在樹上不敢下來，', '喵喵地叫著求救，', '消防員爬上梯子，', '安全地把牠救了下來。'], '發現危機與解決危機。'],
+            [['他平時喜歡閱讀，', '積累了很多知識，', '所以在寫作比賽中，', '輕鬆地獲得了冠軍。'], '原因與最終的成就。'],
+            [['因為忘記帶鑰匙，', '所以我進不了家門，', '只好坐在門口等，', '直到媽媽下班回來。'], '因果關係與無奈的行動。'],
+            [['這雙鞋子破了，', '已經不能穿了，', '媽媽帶我去鞋店，', '買了一雙新的。'], '物品損壞與替換的邏輯。'],
+            [['如果我們不節約用水，', '水資源就會枯竭，', '到時候連喝水都成問題，', '所以我們要珍惜水。'], '假設後果與最終結論。'],
+            [['他是一個樂觀的人，', '遇到困難從不抱怨，', '總是想辦法解決，', '因此大家都喜歡他。'], '性格特徵與行動表現。'],
+            [['因為沒有認真聽課，', '所以功課不會做，', '他只好打電話問同學，', '同學耐心地教了他。'], '因果關係與求助行動。'],
+            [['這部電影很好看，', '情節非常感人，', '很多人看了都流淚，', '我也忍不住哭了。'], '評價與具體表現的邏輯。'],
+            [['他不小心摔碎了碗，', '害怕被媽媽罵，', '躲在房間裡不敢出來，', '媽媽發現後原諒了他。'], '事件發生與心理恐懼。'],
+            [['只要多做運動，', '身體就會更健康，', '生病的機會也會減少，', '所以我們要堅持運動。'], '條件與結果的推論。'],
+            [['外面太陽很大，', '出門記得撐傘，', '不然會被曬傷，', '皮膚會變得很痛。'], '環境情況與警告。'],
+            [['這是一隻迷路的狗，', '在街上到處亂跑，', '警察找到了牠的主人，', '讓牠平安回家了。'], '事件發生與圓滿結局。'],
+            [['她不僅會唱歌，', '而且跳舞也很好看，', '在才藝表演中，', '贏得了熱烈的掌聲。'], '遞進關係與獲得的讚賞。'],
+            [['因為天氣太冷，', '河面結了一層冰，', '孩子們在冰上滑冰，', '玩得非常開心。'], '因果關係與後續活動。'],
+            [['雖然他失敗了，', '但他吸取了教訓，', '決定重新開始，', '相信下次一定能成功。'], '轉折與積極的態度。']
+        ];
+
+        // --- 3. 實用文：書信篇 (40題) ---
+        const letterPool = [
+            ['在書信中，「親愛的媽媽：」屬於哪一部分？', '上款', '下款', '正文', '祝頌語', '寫在信件最開頭，稱呼收信人的部分是上款。'],
+            ['在書信中，寫在最後署名「兒子 小明 上」的部分是？', '下款', '上款', '問候語', '祝頌語', '寫在信件最後，署名寫信人是誰的部分是下款。'],
+            ['在書信正文開始前，寫上「您近來身體好嗎？」是屬於？', '問候語', '祝頌語', '上款', '日期', '向收信人打招呼關心的話語是問候語。'],
+            ['在書信結束時，寫上「祝 身體健康」是屬於？', '祝頌語', '問候語', '下款', '正文', '對收信人表達祝福的話語是祝頌語。'],
+            ['在書信中，交代自己最近在學校發生的趣事，屬於哪一部分？', '正文', '上款', '祝頌語', '日期', '信件的主要內容你想說的話就是正文。'],
+            ['書信的最後一行通常寫著「十月一日」，這是什麼？', '日期', '下款', '上款', '祝頌語', '標示寫信時間的是日期。'],
+            ['如果寫信給長輩，上款後面的標點符號應該用什麼？', '冒號 (：)', '逗號 (，)', '句號 (。)', '感嘆號 (！)', '上款後要用冒號，提示下面要說的話。'],
+            ['祝頌語通常分為兩行，例如「祝」寫在左邊，「身體健康」應該寫在哪裡？', '下一行頂格', '同一行', '上款旁邊', '下款後面', '祝頌語的祝福內容通常在下一行頂格寫以示尊重。'],
+            ['寫信給朋友小華，上款應該怎麼寫最合適？', '親愛的小華：', '小華 啟', '小華 上', '致小華', '給平輩的信通常用「親愛的XXX：」。'],
+            ['如果我是小明，寫信給校長，下款應該怎麼寫？', '學生 小明 敬上', '小明 啟', '兒子 小明 上', '小明 給', '寫給長輩或上級，下款要用「敬上」。'],
+            ['在書信中，哪個部分是用來告訴對方寫信的目的？', '正文', '上款', '祝頌語', '問候語', '寫信的目的和主要事情都寫在正文中。'],
+            ['「敬愛的陳老師：」這句話應該寫在信紙的哪裡？', '第一行頂格', '最後一行', '正文中間', '右下角', '上款必須寫在信紙的第一行，並且頂格(不留空)。'],
+            ['哪一個不屬於書信的基本格式？', '天氣', '上款', '下款', '祝頌語', '天氣是日記的格式，書信不需要寫天氣。'],
+            ['寫信給長輩時，問候語通常會怎麼寫？', '您近來好嗎？', '你吃飯了嗎？', '你今天開心嗎？', '好久不見！', '對長輩要用尊稱「您」。'],
+            ['「祝 學業進步」這句祝頌語最適合寫給誰？', '同學或朋友', '爺爺', '校長', '醫生', '「學業進步」是祝福學生或讀書人的。'],
+            ['在下款「小明 上」中，「上」字代表什麼意思？', '呈上信件的敬語', '在上面', '上去', '上課', '「上」是書信中表示尊敬地呈交的意思。'],
+            ['書信格式中，緊接著正文後面的是哪一部分？', '祝頌語', '上款', '問候語', '日期', '正文寫完後，接下來就是寫祝福的祝頌語。'],
+            ['「展信快樂！」通常作為書信的哪個部分？', '問候語', '祝頌語', '上款', '下款', '這是一句打招呼的話，希望對方打開信就快樂。'],
+            ['寫給遠方的外婆，最好的祝頌語是：', '祝 身體健康', '祝 學業進步', '祝 工作順利', '祝 生日快樂', '長輩最需要的是身體健康的祝福。'],
+            ['書信的日期通常寫在哪個位置？', '下款的下一行', '上款的旁邊', '正文的開頭', '祝頌語的中間', '日期通常寫在整封信的最後，也就是下款的下面。'],
+            ['在書信中，「親愛的哥哥：」屬於哪一部分？', '上款', '下款', '正文', '祝頌語', '寫在最開頭稱呼對方的是上款。'],
+            ['「祝 生活愉快」是實用文中的哪一部分？', '祝頌語', '問候語', '下款', '上款', '這是在信末對別人的祝福。'],
+            ['信件中詳細講述自己旅行見聞的部分是：', '正文', '祝頌語', '問候語', '下款', '主要內容都屬於正文。'],
+            ['下款「摯友 小志 上」適合寫給誰？', '好朋友', '老師', '校長', '爺爺', '「摯友」是指最要好的朋友。'],
+            ['書信第一行寫了「敬愛的校長：」，這是什麼格式？', '上款', '下款', '稱呼', '署名', '書信開頭的稱呼叫上款。'],
+            ['寫信給老師，下款用「敬上」，表示什麼？', '尊敬', '生氣', '隨便', '催促', '「敬上」表示恭敬地呈上。'],
+            ['在信中問「最近工作忙嗎？」，這是哪一部分？', '問候語', '正文', '祝頌語', '上款', '在正文前關心對方的話是問候語。'],
+            ['哪一個祝頌語適合寫給正在工作的爸爸？', '祝 工作順利', '祝 學業進步', '祝 青春常駐', '祝 早生貴子', '對工作的人祝福工作順利。'],
+            ['書信中沒有寫「下款」會怎樣？', '收信人不知道是誰寫的', '信寄不出去', '郵差不收', '信會變長', '下款是署名，沒有下款就不知道寫信人是誰。'],
+            ['「祝 大個仔」這句祝頌語不適合寫給誰？', '外婆', '弟弟', '表弟', '剛出生的嬰兒', '「大個仔」是祝福小男孩快高長大，不能寫給長輩。'],
+            ['寫信給同班同學，問候語可以寫：', '好久不見，最近好嗎？', '敬祝 安康', '您老人家好嗎？', '請安', '對平輩可以用輕鬆親切的問候。'],
+            ['書信的六大元素中，哪一個必定在最後？', '日期', '上款', '問候語', '正文', '日期通常在下款之後，是最後一個元素。'],
+            ['「敬祝」通常接在什麼人的信件中？', '長輩', '平輩', '晚輩', '弟弟', '「敬祝」帶有尊敬之意，多對長輩或上級使用。'],
+            ['信封上寫的「王大明 先生 收」，這是信封格式還是信件格式？', '信封格式', '信件格式', '日記格式', '便條格式', '這是寫在信封外面的。'],
+            ['如果信件內容是邀請朋友參加生日會，正文應該寫什麼？', '時間、地點和活動內容', '祝你生日快樂', '你好嗎', '十月十日', '邀請信的正文必須包含活動的詳細資訊。'],
+            ['「此致」通常用在哪裡？', '正文結束，祝頌語之前', '上款前面', '日期後面', '信封上', '「此致」用來引出後面的祝頌對象。'],
+            ['寫信給長輩，上款不應該用哪個詞？', '親愛的長輩', '敬愛的', '尊貴的', '親愛的', '對長輩通常用「敬愛的」較有禮貌。'],
+            ['寫信給長輩，上款不應該用哪個詞？', '喂，大伯', '敬愛的爺爺', '親愛的奶奶', '尊敬的叔叔', '「喂」非常沒有禮貌，不可用在上款。'],
+            ['書信中「問候語」的作用是什麼？', '表達關心和禮貌', '告訴對方日期', '寫信人的名字', '結束這封信', '問候語是打開話題、表示關心的禮貌用語。'],
+            ['在書信中，如果忘了寫正文，會發生什麼事？', '對方不知道你寫信的目的', '對方不知道你是誰', '對方不知道今天幾號', '對方會生氣', '正文是信件的核心內容。']
+        ];
+
+        // --- 4. 實用文：日記與便條 (40題) ---
+        const diaryNotePool = [
+            ['寫日記時，第一行必須寫上哪三樣東西？', '日期、星期、天氣', '上款、下款、日期', '問候語、正文、祝頌語', '標題、正文、署名', '日記的標準開頭是紀錄當天的日期、星期幾和天氣狀況。'],
+            ['日記需不需要寫「上款」和「下款」？', '不需要', '需要', '只需上款', '只需下款', '日記是寫給自己看的，所以不需要稱呼別人和署名。'],
+            ['「今天我在公園玩得很開心。」這句話適合放在日記的哪裡？', '正文', '第一行', '祝頌語', '下款', '這是紀錄今天發生的事和感受，屬於正文。'],
+            ['便條和書信很像，但便條通常缺少了哪兩部分？', '問候語和祝頌語', '上款和下款', '正文和日期', '上款和正文', '便條為了快速交代事情，通常省略客套的問候和祝福。'],
+            ['如果你要留一張紙條告訴媽媽你去了圖書館，你應該寫什麼實用文？', '便條', '日記', '賀卡', '邀請卡', '留給別人簡短的訊息交代去向，最適合用便條。'],
+            ['便條的「正文」特色是什麼？', '簡短、清楚交代事情', '長篇大論', '寫很多感受', '不用寫字', '便條的目的是快速傳達訊息，所以要簡潔明瞭。'],
+            ['「十月五日 星期四 晴」這行字通常出現在哪種實用文？', '日記', '書信', '便條', '海報', '這是日記標準的第一行格式。'],
+            ['在便條中，「媽媽：」屬於哪一部分？', '上款', '下款', '正文', '日期', '寫在最前面稱呼要看便條的人，是上款。'],
+            ['在便條中，「我去了同學家做功課。」屬於哪一部分？', '正文', '上款', '下款', '祝頌語', '交代的主要事情就是正文。'],
+            ['在便條中，寫在最後的「兒子 晚上六時」包含哪兩個部分？', '下款和時間', '上款和正文', '問候語和祝頌語', '標題和下款', '「兒子」是署名(下款)，「晚上六時」是留言時間。'],
+            ['寫日記的主要目的是什麼？', '記錄自己的生活和感受', '交代別人做事', '邀請朋友去玩', '祝賀別人生日', '日記是個人的生活紀錄。'],
+            ['哪一項「不」適合寫在日記的第一行？', '親愛的日記：', '十月一日', '星期一', '晴天', '日記不需要上款稱呼，直接寫日期天氣即可。'],
+            ['便條通常寫在什麼地方？', '隨手可見的小紙條上', '厚厚的書本裡', '信封外面', '黑板上', '便條通常是寫在小紙張上貼在冰箱或桌面上。'],
+            ['如果你在別人家借了書要歸還，但主人不在，你可以留下一張什麼？', '便條', '日記', '書信', '賀卡', '留下簡短的說明，用便條最合適。'],
+            ['日記的最後通常會寫什麼？', '自己對這件事的感受或想法', '祝頌語', '下款', '日期', '寫完事情後，通常會抒發一下自己的心情。'],
+            ['「媽媽，桌上的蘋果我吃掉了。小明」這是一張標準的便條嗎？', '不是，欠缺了時間/日期', '是，非常標準', '不是，欠缺了祝頌語', '不是，欠缺了天氣', '便條最好寫上留言的時間，讓對方知道你是何時留的。'],
+            ['「今天下大雨，我被淋濕了，真倒霉。」這句話最可能出現在哪裡？', '日記', '邀請卡', '便條', '賀卡', '紀錄個人倒霉經歷和心情，最適合在日記裡。'],
+            ['便條的下款通常要寫什麼？', '寫便條人的名字', '收便條人的名字', '不用寫名字', '寫天氣', '下款就是署名，告訴對方是誰留的言。'],
+            ['寫便條時，正文的語氣應該如何？', '直接了當，清楚明白', '優美抒情', '長篇大論', '生氣罵人', '便條只求傳達訊息，所以要直接清楚。'],
+            ['哪一個是日記特有的格式？', '天氣紀錄', '上款', '下款', '祝頌語', '只有日記會特別在開頭記錄天氣。'],
+            ['「星期五 陰天」這是日記的哪一部分？', '開頭的日期天氣紀錄', '正文', '結尾感受', '標題', '這是日記特有的開頭格式。'],
+            ['如果你要提醒同學明天帶畫筆，應該寫：', '便條', '日記', '自傳', '食譜', '簡短提醒事情用便條。'],
+            ['便條上的「時間」為什麼很重要？', '讓對方知道你何時留的言', '為了湊字數', '老師規定的', '為了好看', '知道時間才能判斷留言的時效性。'],
+            ['日記可以寫給別人看嗎？', '通常是私人的，不給人看', '必須給所有人看', '要寄給校長看', '要貼在佈告欄', '日記是私密的生活紀錄。'],
+            ['「李老師：我今天生病請假一天。學生 小華 早上八時」這是一張什麼？', '請假便條', '日記', '賀卡', '投訴信', '這是一張有上款、正文、下款和時間的標準便條。'],
+            ['寫日記時，如果今天沒發生特別的事，可以寫什麼？', '自己的心情或想法', '別人的秘密', '抄課文', '不用寫了', '日記可以純粹記錄當下的心情。'],
+            ['便條的「上款」如果不寫會怎樣？', '別人不知道這張紙條是留給誰的', '別人不知道是誰寫的', '別人不知道時間', '別人看不懂字', '沒有上款就不知道對象是誰。'],
+            ['「昨天去了迪士尼，真好玩！」這是一篇完整的日記嗎？', '不是，欠缺日期和天氣', '是，很完整', '不是，欠缺上款', '不是，欠缺下款', '日記必須要有日期和天氣。'],
+            ['便條可以用來做什麼？', '留言交代事情', '寫很長的故事', '紀錄一整天的心情', '寫詩', '便條的功能就是簡短留言。'],
+            ['「陳伯伯，謝謝您的禮物。」這張便條的正文是：', '謝謝您的禮物', '陳伯伯', '您的禮物', '這張便條', '正文是表達感謝的內容。'],
+            ['日記的「正文」通常用哪個人稱來寫？', '第一人稱 (我)', '第二人稱 (你)', '第三人稱 (他)', '不用人稱', '日記是寫自己的事，所以用「我」。'],
+            ['便條需要放進信封貼郵票寄出去嗎？', '通常不需要，直接放在對方看得到的地方', '必須要', '要寄掛號信', '要貼兩張郵票', '便條通常是當面留下的。'],
+            ['「今天考試拿到一百分，我太高興了！」這句是日記裡的：', '感受/心情', '日期', '天氣', '地點', '這是表達內心的情緒。'],
+            ['如果明天要去露營，媽媽留便條給你，可能會寫什麼？', '記得帶水壺和外套', '今天天氣晴朗', '我愛你', '祝你生日快樂', '便條通常會交代具體要辦的事。'],
+            ['日記的「星期」寫錯了會怎樣？', '紀錄的時間不準確', '會被警察抓', '字會消失', '沒有影響', '日記是時間紀錄，寫錯會影響準確性。'],
+            ['便條的字數通常：', '很少，只有幾句話', '很多，好幾頁', '規定要一百字', '不能超過十個字', '便條講求簡潔。'],
+            ['「大雨」這兩個字在日記中屬於哪一部分？', '天氣', '日期', '星期', '心情', '這是記錄當下的天氣狀況。'],
+            ['寫便條給老師，語氣應該：', '有禮貌、尊敬', '隨便', '生氣', '搞笑', '對象是老師，所以要有禮貌。'],
+            ['日記能幫助我們做什麼？', '記住美好的回憶和反省自己', '賺錢', '變漂亮', '考試拿滿分', '日記是很好的生活紀錄與自我反省工具。'],
+            ['便條的「下款」寫了「同學 小美」，這代表什麼？', '這張便條是小美寫的', '這張便條是寫給小美的', '小美是老師', '小美不在家', '下款代表留言人的身分和名字。']
+        ];
+
+        // --- 5. 實用文實戰：格式全文重組 (40題) ---
+        const practicalReorderPool = [
+            ['拼出一封完整的便條。', ['哥哥：', '桌上的蛋糕我吃掉了。', '弟弟', '下午五時'], '便條', '這是一封便條，順序是：上款 👉 正文 👉 下款署名 👉 時間。'],
+            ['拼出一封請假便條。', ['李老師：', '我今天發燒，請假一天。', '學生 小美', '早上七時'], '請假便條', '這是一封便條，順序是：上款 👉 正文 👉 下款署名 👉 時間。'],
+            ['拼出一篇完整的日記。', ['十月一日 星期四 晴天', '今天學校舉行了陸運會。', '我參加了跑步比賽並得了冠軍。', '今天真是快樂的一天！'], '日記', '這是一篇日記，順序是：日期天氣 👉 事件起因 👉 事件經過 👉 結尾感受。'],
+            ['拼出一封給長輩的書信。', ['親愛的爺爺：', '您最近身體好嗎？', '我們下個月會回鄉下探望您。', '祝 身體健康', '孫兒 小華 敬上', '十一月五日'], '書信', '這是一封書信，順序是：上款 👉 問候語 👉 正文 👉 祝頌語 👉 下款 👉 日期。'],
+            ['拼出一封邀請卡。', ['大文：', '誠意邀請你參加我的生日派對。', '地點在我家，星期六下午三時。', '好朋友 小強 上', '三月二日'], '邀請信/卡', '這是邀請信，順序是：上款 👉 邀請目的 👉 時間地點 👉 下款署名 👉 日期。'],
+            ['拼出一封便條(出門交代)。', ['媽媽：', '我去了圖書館溫習功課。', '兒子 小明', '下午二時'], '便條', '這是一封便條，順序是：上款 👉 正文 👉 下款署名 👉 時間。'],
+            ['拼出一篇日記(下雨天)。', ['五月五日 星期一 大雨', '今天出門時下起了大雨。', '我的鞋子和襪子都濕透了。', '真是一個倒霉的早上。'], '日記', '這是一篇日記，順序是：日期天氣 👉 事件發生 👉 事件細節 👉 結尾感受。'],
+            ['拼出一封給朋友的信。', ['親愛的小麗：', '好久不見，你最近好嗎？', '我在新學校認識了很多新朋友。', '祝 學業進步', '好朋友 小芳 上', '九月十日'], '書信', '這是一封書信，順序是：上款 👉 問候語 👉 正文 👉 祝頌語 👉 下款 👉 日期。'],
+            ['拼出一張生日賀卡。', ['小美：', '祝你生日快樂！', '希望你每天都開開心心。', '同學 小剛 上', '十二月八日'], '賀卡', '這是賀卡，順序是：上款 👉 祝賀語 👉 正文祝福 👉 下款署名 👉 日期。'],
+            ['拼出一封便條(借東西)。', ['小光：', '我借了你的字典一用。', '同桌 大雄', '早上十時'], '便條', '這是一封便條，順序是：上款 👉 正文 👉 下款署名 👉 時間。'],
+            ['拼出一篇日記(閱讀)。', ['三月三日 星期三 多雲', '下午我去了圖書館看書。', '我借了一本關於恐龍的書。', '這本書真的很有趣！'], '日記', '這是一篇日記，順序是：日期天氣 👉 事件起因 👉 事件經過 👉 結尾感受。'],
+            ['拼出一封寫給校長的信。', ['敬愛的校長：', '您好！', '感謝您為我們舉辦中秋晚會。', '祝 工作順利', '學生代表 小強 敬上', '九月三十日'], '書信', '這是一封書信，順序是：上款 👉 問候語 👉 正文 👉 祝頌語 👉 下款 👉 日期。'],
+            ['拼出一封便條(提醒)。', ['妹妹：', '出門記得帶雨傘。', '姐姐', '早上七時半'], '便條', '這是一封便條，順序是：上款 👉 正文 👉 下款署名 👉 時間。'],
+            ['拼出一篇日記(比賽)。', ['七月二日 星期五 晴', '今天參加了校際朗誦比賽。', '雖然很緊張，但我表現得很好。', '希望下次能拿到更好的成績。'], '日記', '這是一篇日記，順序是：日期天氣 👉 事件起因 👉 事件經過 👉 結尾期望。'],
+            ['拼出一封便條(道歉)。', ['陳伯伯：', '對不起，我不小心打破了您的花盆。', '鄰居 小明', '下午四時'], '便條', '這是一封便條，順序是：上款 👉 正文(道歉) 👉 下款署名 👉 時間。'],
+            ['拼出一封慰問信。', ['親愛的姑媽：', '聽說您生病了，現在好點了嗎？', '請您多多休息，按時吃藥。', '祝 早日康復', '侄女 小芬 敬上', '二月十二日'], '書信', '這是一封書信，順序是：上款 👉 問候語 👉 正文 👉 祝頌語 👉 下款 👉 日期。'],
+            ['拼出一篇日記(家務)。', ['八月八日 星期日 晴', '今天我幫媽媽做家務。', '我學會了掃地和洗碗。', '原來做家務這麼辛苦，我要多幫忙。'], '日記', '這是一篇日記，順序是：日期天氣 👉 事件起因 👉 事件經過 👉 結尾反思。'],
+            ['拼出一封感謝卡。', ['王老師：', '謝謝您這一年來的教導。', '我會永遠記住您的用心。', '學生 小志 敬上', '七月十五日'], '賀卡/感謝信', '這是感謝信，順序是：上款 👉 正文感謝 👉 正文感受 👉 下款署名 👉 日期。'],
+            ['拼出一封便條(交收)。', ['大明：', '你的筆記本我放在櫃面了。', '小華', '中午十二時'], '便條', '這是一封便條，順序是：上款 👉 正文 👉 下款署名 👉 時間。'],
+            ['拼出一篇日記(生病)。', ['一月十日 星期一 寒冷', '今天我發高燒，沒有上學。', '媽媽帶我去看醫生，吃了苦苦的藥。', '希望明天病能好起來。'], '日記', '這是一篇日記，順序是：日期天氣 👉 事件起因 👉 事件經過 👉 結尾期望。'],
+            ['拼出一封信(分享見聞)。', ['親愛的小軍：', '你最近忙嗎？', '我去了北京旅行，看到了長城。', '祝 生活愉快', '好朋友 大雄 上', '六月五日'], '書信', '這是一封書信，順序是：上款 👉 問候語 👉 正文 👉 祝頌語 👉 下款 👉 日期。'],
+            ['拼出一封便條(晚歸)。', ['爸爸：', '我今天放學後要練球，會晚點回家。', '兒子 小建', '早上八時'], '便條', '這是一封便條，順序是：上款 👉 正文 👉 下款署名 👉 時間。'],
+            ['拼出一篇日記(看電影)。', ['十一月三日 星期六 陰天', '晚上我和家人去看電影。', '這是一部關於太空探險的電影。', '裡面的特效真是太精彩了！'], '日記', '這是一篇日記，順序是：日期天氣 👉 事件起因 👉 事件經過 👉 結尾評價。'],
+            ['拼出一封中秋賀卡。', ['外婆：', '中秋節快樂！', '祝您人月兩團圓。', '孫女 小花 敬上', '九月二十日'], '賀卡', '這是賀卡，順序是：上款 👉 節日祝賀 👉 具體祝福 👉 下款署名 👉 日期。'],
+            ['拼出一封便條(代領)。', ['張阿姨：', '您的包裹我先代領了。', '鄰居 陳師奶', '下午一時'], '便條', '這是一封便條，順序是：上款 👉 正文 👉 下款署名 👉 時間。'],
+            ['拼出一篇日記(考試)。', ['四月十日 星期二 晴', '今天是期中考試的第一天。', '我認真地完成了中文和數學卷。', '希望這次能取得好成績。'], '日記', '這是一篇日記，順序是：日期天氣 👉 事件起因 👉 事件經過 👉 結尾期望。'],
+            ['拼出一封邀請函(看劇)。', ['大雄：', '這星期天我們學校有話劇表演。', '誠意邀請你來觀賞。', '同學 靜香 上', '五月八日'], '邀請信', '這是邀請信，順序是：上款 👉 活動資訊 👉 邀請目的 👉 下款署名 👉 日期。'],
+            ['拼出一封便條(還書)。', ['圖書管理員：', '這三本書是我昨天借的，現在歸還。', '學生 4A班李明', '早上九時'], '便條', '這是一封便條，順序是：上款 👉 正文 👉 下款署名 👉 時間。'],
+            ['拼出一篇日記(停電)。', ['十二月二日 星期四 大風', '昨晚家裡突然停電了。', '我們點起蠟燭，玩起了手影遊戲。', '原來停電也可以很有趣。'], '日記', '這是一篇日記，順序是：日期天氣 👉 事件起因 👉 事件經過 👉 結尾反思。'],
+            ['拼出一封給遠方朋友的信。', ['親愛的約翰：', '你那邊的天氣好嗎？', '香港現在是夏天，非常炎熱。', '祝 暑假快樂', '朋友 彼得 上', '七月八日'], '書信', '這是一封書信，順序是：上款 👉 問候語 👉 正文 👉 祝頌語 👉 下款 👉 日期。'],
+            ['拼出一封母親節賀卡。', ['親愛的媽媽：', '母親節快樂！', '謝謝您每天辛勤地照顧我。', '愛您的女兒 小心 敬上', '五月第二個星期日'], '賀卡', '這是賀卡，順序是：上款 👉 節日祝賀 👉 感謝正文 👉 下款署名 👉 日期。'],
+            ['拼出一封便條(餵寵物)。', ['哥哥：', '我出門了，請記得餵小狗吃飯。', '妹妹', '中午十二時'], '便條', '這是一封便條，順序是：上款 👉 正文 👉 下款署名 👉 時間。'],
+            ['拼出一篇日記(做手工)。', ['二月四日 星期五 晴', '勞作課上，我們做了一個燈籠。', '我給燈籠畫上了美麗的圖案。', '看著自己的作品，我很有滿足感。'], '日記', '這是一篇日記，順序是：日期天氣 👉 事件起因 👉 事件經過 👉 結尾感受。'],
+            ['拼出一封道歉信。', ['小美：', '你好嗎？', '昨天我不小心弄壞了你的筆，真的很抱歉。', '祝 生活愉快', '同學 小麗 上', '十月十二日'], '書信', '這是一封書信，順序是：上款 👉 問候語 👉 正文道歉 👉 祝頌語 👉 下款 👉 日期。'],
+            ['拼出一封便條(買東西)。', ['爸爸：', '下班回來時，請順便買一瓶牛奶。', '媽媽', '下午四時'], '便條', '這是一封便條，順序是：上款 👉 正文 👉 下款署名 👉 時間。'],
+            ['拼出一篇日記(參觀)。', ['九月十八日 星期二 多雲', '今天學校組織去參觀科學館。', '我看到了很多奇妙的科學實驗。', '科學的世界真是太奧妙了！'], '日記', '這是一篇日記，順序是：日期天氣 👉 事件起因 👉 事件經過 👉 結尾評價。'],
+            ['拼出一封給弟弟的信。', ['親愛的弟弟：', '你在夏令營過得開心嗎？', '家裡的小貓很想念你。', '祝 玩得開心', '姐姐 上', '八月五日'], '書信', '這是一封書信，順序是：上款 👉 問候語 👉 正文 👉 祝頌語 👉 下款 👉 日期。'],
+            ['拼出一封便條(取消活動)。', ['小明：', '今天下雨，我們不去踢球了。', '大志', '早上九時'], '便條', '這是一封便條，順序是：上款 👉 正文 👉 下款署名 👉 時間。'],
+            ['拼出一篇日記(養寵物)。', ['十月二十日 星期日 晴', '爸爸今天買了一隻小金魚回家。', '牠在水缸裡游來游去，十分可愛。', '我一定會好好照顧牠。'], '日記', '這是一篇日記，順序是：日期天氣 👉 事件起因 👉 事件經過 👉 結尾承諾。'],
+            ['拼出一封畢業感謝卡。', ['敬愛的校長：', '感謝您這六年來的栽培。', '我會銘記學校的教導，努力向前。', '畢業生 李華 敬上', '七月十日'], '賀卡/感謝信', '這是感謝信，順序是：上款 👉 正文感謝 👉 正文承諾 👉 下款署名 👉 日期。']
+        ];
+
+        const rawQuestDataObj = [
+            ...formatReorderData(reorderTimePool, 'p-reorder-time', '排句成段：把句子按「時間先後」排成通順的段落。'),
+            ...formatReorderData(reorderLogicPool, 'p-reorder-logic', '排句成段：把句子按「邏輯因果」排成通順的段落。'),
+            ...formatMCQData(letterPool, 'p-practical-letter', '書信格式：選出正確的實用文格式答案。'),
+            ...formatMCQData(diaryNotePool, 'p-practical-diary', '日記與便條：選出正確的實用文格式答案。'),
+            ...formatPracticalReorderData(practicalReorderPool, 'p-practical-reorder', '全文重組：點擊下方段落，依正確的上下格式排入信紙中。')
+        ];
+
+        let userProgress = JSON.parse(localStorage.getItem('paraBasicProgress')) || new Array(rawQuestDataObj.length).fill(0);
+
+        function renderDirectory() {
+            const dirContainer = document.getElementById('directory-content');
+            let html = '';
+            categories.forEach(cat => {
+                let hasQuestions = rawQuestDataObj.some(q => q.category === cat.id);
+                if (hasQuestions) {
+                    let tutId = '';
+                    if (cat.id.includes('time')) tutId = 'p-reorder-time';
+                    else if (cat.id.includes('logic')) tutId = 'p-reorder-logic';
+                    else if (cat.id.includes('letter')) tutId = 'p-practical-letter';
+                    else if (cat.id.includes('diary')) tutId = 'p-practical-diary';
+                    else if (cat.id.includes('practical-reorder')) tutId = 'p-practical-reorder';
+
+                    html += `
+                        <div class="mb-6">
+                            <div class="flex items-center justify-between border-b-2 border-${cat.color}-100 pb-2 mb-3">
+                                <h3 class="text-xl font-bold text-${cat.color}-700">${cat.title}</h3>
+                                <button onclick="showTutorial('${tutId}')" class="bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-indigo-300 hover:bg-indigo-200 transition flex items-center gap-1 active:scale-95">📘 學習錦囊</button>
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                    `;
+                    rawQuestDataObj.forEach((q, idx) => {
+                        if(q.category === cat.id) {
+                            let status = userProgress[idx];
+                            let btnClass = 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50';
+                            let icon = (idx + 1);
+
+                            if (status === 1) {
+                                btnClass = 'bg-yellow-100 border-yellow-400 text-yellow-700 shadow-inner';
+                                icon = '🌟';
+                            } else if (status === 2) {
+                                btnClass = 'bg-emerald-100 border-emerald-400 text-emerald-700 shadow-inner';
+                                icon = '✅';
+                            } else if (status === -1) {
+                                btnClass = 'bg-rose-100 border-rose-400 text-rose-700 shadow-inner';
+                                icon = '❌';
+                            }
+
+                            html += `<button onclick="startQuestion(${idx})" class="lvl-btn ${btnClass} w-12 h-12 lg:w-14 lg:h-14 rounded-xl font-black text-base lg:text-lg border-b-4 flex items-center justify-center shadow-sm transition-transform">${icon}</button>`;
+                        }
+                    });
+                    html += `</div></div>`;
+                }
+            });
+            dirContainer.innerHTML = html;
+            updateTotalProgress();
+        }
+
+        function updateTotalProgress() {
+            let solved = userProgress.filter(p => p === 1 || p === 2).length;
+            let percent = (solved / rawQuestDataObj.length) * 100;
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+
+        function shuffleOptions(correct, wrongs) {
+            let opts = [correct, ...wrongs];
+            for (let i = opts.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [opts[i], opts[j]] = [opts[j], opts[i]];
+            }
+            return {
+                options: opts,
+                ansIdx: opts.indexOf(correct)
+            };
+        }
+
+        function startQuestion(idx, forceStart = false) {
+            const qData = rawQuestDataObj[idx];
+            const qType = qData.category;
+            
+            let tutId = '';
+            if (qType.includes('time')) tutId = 'p-reorder-time';
+            else if (qType.includes('logic')) tutId = 'p-reorder-logic';
+            else if (qType.includes('letter')) tutId = 'p-practical-letter';
+            else if (qType.includes('diary')) tutId = 'p-practical-diary';
+            else if (qType.includes('practical-reorder')) tutId = 'p-practical-reorder';
+
+            if (!forceStart && !localStorage.getItem('tut_seen_' + tutId)) {
+                pendingQuestionIdx = idx; 
+                showTutorial(tutId);      
+                return;                   
+            }
+
+            currentQuestionMistakes = 0; 
+            currentQuestionIdx = idx;
+            window.currentHints = []; 
+            
+            let hintBox = document.getElementById('dynamic-hint-box');
+            if(hintBox) hintBox.classList.add('hidden');
+
+            document.getElementById('quest-directory').style.display = 'none';
+            const questPlay = document.getElementById('quest-play');
+            questPlay.style.display = 'flex';
+            document.getElementById('main-scroll-area').scrollTop = 0;
+            
+            const qCatTitle = categories.find(c => c.id === qType).title;
+
+            let html = `
+                <div class="w-full flex justify-between items-center mb-4">
+                    <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
+                    <span class="bg-indigo-100 text-indigo-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${idx + 1} 題 / 共 200 題</span>
+                </div>
+                
+                <div class="slide-up w-full bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center relative transition-all duration-500">
+                    <span class="absolute -top-4 bg-indigo-600 text-white px-5 py-1.5 rounded-full font-bold shadow-md text-sm md:text-base">
+                        ${qCatTitle}
+                    </span>
+                    
+                    <div class="w-full flex items-center gap-3 mt-4 mb-6">
+                        <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded text-sm font-bold whitespace-nowrap">任務</span>
+                        <h2 class="text-lg md:text-xl font-bold text-slate-700">${qData.task}</h2>
+                    </div>
+            `;
+
+            if (qData.isReorder) {
+                // 🧩 排句成段 / 格式重組 UI
+                reorderCorrect = [...qData.chunks];
+                reorderSource = [...reorderCorrect].sort(() => Math.random() - 0.5);
+                reorderTarget = [];
+
+                let isPractical = qType.includes('practical-reorder');
+                
+                // 段落/實用文排版樣式：全部改為垂直排列 (flex-col) 且等寬
+                let targetAreaClass = isPractical 
+                    ? "w-full letter-pad p-4 md:p-6 rounded-2xl min-h-[250px] flex flex-col gap-2 mb-6" // 實用文用信紙背景
+                    : "w-full bg-slate-50 p-4 md:p-6 rounded-2xl border-2 border-slate-200 min-h-[250px] flex flex-col gap-2 mb-6"; // 排句成段用普通背景
+                
+                let sourceAreaClass = "w-full flex flex-col gap-3"; // 來源區一律垂直排列
+
+                if (isPractical) {
+                    html += `
+                        <div class="w-full text-center mb-4">
+                            <span class="bg-slate-100 text-slate-600 font-bold px-4 py-2 rounded-xl text-lg">${qData.sentence.replace('原句：', '目標格式：')}</span>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="w-full text-center mb-4">
+                            <span class="bg-slate-100 text-slate-600 font-bold px-4 py-2 rounded-xl text-lg">排成通順的段落</span>
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <!-- 目標放置區 -->
+                    <div class="${targetAreaClass}" id="reorder-target-area"></div>
+                    <div class="w-full border-t-2 border-dashed border-slate-200 my-2"></div>
+                    <div class="text-center text-slate-500 font-bold mb-2 text-sm">👇 點擊下方段落依序排好</div>
+                    <div class="${sourceAreaClass}" id="reorder-source-area"></div>
+
+                    <!-- 動態提示框 -->
+                    <div id="dynamic-hint-box" class="hidden w-full max-w-3xl mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3">
+                        <div class="flex-1 space-y-2" id="hint-text"></div>
+                        <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
+                    </div>
+                </div>`;
+                questPlay.innerHTML = html;
+                renderReorderUI(true); // 這裡強制 isParagraph = true，讓樣式統一為長條狀
+            } else {
+                // 常規選擇題 UI
+                const { options, ansIdx } = shuffleOptions(qData.correct, qData.wrongs);
+                let ttsText = qData.sentence;
+
+                html += `
+                    <div class="w-full flex items-start gap-4 mb-6 bg-indigo-50 p-6 rounded-2xl border border-indigo-100 shadow-inner">
+                        <button onclick="speakText('${ttsText}')" class="tts-btn flex-shrink-0 bg-white text-indigo-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-indigo-200">🔊</button>
+                        <div class="text-2xl md:text-3xl font-bold text-slate-800 leading-loose">${qData.sentence}</div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-3xl mt-auto" id="options-container">
+                `;
+                
+                options.forEach((optText, oIdx) => {
+                    const isCorr = (oIdx === ansIdx);
+                    const safeOpt = optText.replace(/'/g, "\\'");
+                    html += `<button onclick="checkAnswer(this, ${isCorr}, '${safeOpt}')" class="option-btn bg-white border-4 border-slate-200 text-slate-700 font-bold text-xl md:text-2xl py-6 px-4 rounded-2xl hover:bg-indigo-50 hover:border-indigo-300 transition w-full text-center flex flex-col items-center justify-center break-words"><span class="bg-slate-100 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 mb-2">${['A','B','C','D'][oIdx]}</span> <span>${optText}</span></button>`;
+                });
+                
+                html += `
+                        </div>
+                        <!-- 動態提示框 -->
+                        <div id="dynamic-hint-box" class="hidden w-full max-w-3xl mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3">
+                            <div class="flex-1 space-y-2" id="hint-text"></div>
+                            <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
+                        </div>
+                    </div>
+                `;
+                questPlay.innerHTML = html;
+            }
+        }
+
+        // --- 重組句子相關邏輯 ---
+        function renderReorderUI(isParagraph = true) {
+            const tArea = document.getElementById('reorder-target-area');
+            const sArea = document.getElementById('reorder-source-area');
+            if(!tArea || !sArea) return;
+
+            let btnClassBase = "chunk-btn bg-indigo-600 text-white font-bold text-lg md:text-xl py-4 px-5 rounded-xl shadow-md pop w-full text-left leading-relaxed";
+            let sourceBtnClassBase = "chunk-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-indigo-400 hover:bg-indigo-50 font-bold text-lg md:text-xl py-4 px-5 rounded-xl shadow w-full text-left leading-relaxed";
+            let slotClassBase = "chunk-slot w-full h-16 rounded-xl";
+
+            let tHtml = '';
+            if (reorderTarget.length === 0) {
+                tHtml = '<span class="text-slate-400 font-bold m-auto">點擊下方句子排在這裡...</span>';
+            } else {
+                reorderTarget.forEach((chunk, idx) => {
+                    // 對於排句成段加數字序號，對於實用文重組不加數字，保持原味
+                    let prefix = rawQuestDataObj[currentQuestionIdx].category.includes('practical') ? '' : (idx+1)+'. ';
+                    tHtml += `<button onclick="removeFromTarget(${idx})" class="${btnClassBase}">${prefix}${chunk}</button>`;
+                });
+            }
+            tArea.innerHTML = tHtml;
+
+            let sHtml = '';
+            reorderSource.forEach((chunk, idx) => {
+                if (chunk === null) {
+                    sHtml += `<div class="${slotClassBase}"></div>`; 
+                } else {
+                    sHtml += `<button onclick="moveToTarget(${idx})" class="${sourceBtnClassBase}">${chunk}</button>`;
+                }
+            });
+            sArea.innerHTML = sHtml;
+
+            if (reorderTarget.length > 0 && reorderTarget.length === reorderCorrect.length) {
+                checkReorderAnswer();
+            }
+        }
+
+        function moveToTarget(sourceIdx) {
+            let chunk = reorderSource[sourceIdx];
+            reorderSource[sourceIdx] = null; 
+            reorderTarget.push(chunk);
+            speakText(chunk);
+            renderReorderUI();
+        }
+
+        function removeFromTarget(targetIdx) {
+            let chunk = reorderTarget[targetIdx];
+            reorderTarget.splice(targetIdx, 1);
+            let emptyIdx = reorderSource.indexOf(null);
+            if(emptyIdx !== -1) reorderSource[emptyIdx] = chunk;
+            renderReorderUI();
+        }
+
+        function checkReorderAnswer() {
+            let isCorrect = true;
+            let correctCount = 0;
+            for(let i=0; i<reorderTarget.length; i++) {
+                if(reorderTarget[i] === reorderCorrect[i]) {
+                    correctCount++;
+                } else {
+                    isCorrect = false;
+                    break;
+                }
+            }
+
+            const qData = rawQuestDataObj[currentQuestionIdx];
+
+            if (isCorrect && reorderTarget.length === reorderCorrect.length) {
+                speakText("完美的重組！");
+                let joinChar = qData.category.includes('practical') ? '<br><br>' : ' ';
+                let expText = `✅ 正確順序：<br><br>${reorderCorrect.join(joinChar)}<br><br>💡 解析：${qData.hint}`;
+                triggerSuccess(expText);
+            } else if (reorderTarget.length === reorderCorrect.length) {
+                currentQuestionMistakes++;
+                userProgress[currentQuestionIdx] = -1;
+                localStorage.setItem('paraBasicProgress', JSON.stringify(userProgress));
+                
+                let chunksToReturn = reorderTarget.splice(correctCount);
+                for (let chunk of chunksToReturn) {
+                    let emptyIdx = reorderSource.indexOf(null);
+                    if(emptyIdx !== -1) {
+                        reorderSource[emptyIdx] = chunk;
+                    } else {
+                        reorderSource.push(chunk);
+                    }
+                }
+
+                let hintWord = reorderCorrect[correctCount];
+                let newHint = `排錯了喔！正確的部分已保留。<br>👉 下接的應該是：「<span class="text-rose-600">${hintWord}</span>」<br>💡 技巧：${qData.hint}`;
+
+                document.getElementById('hint-text').innerHTML = newHint;
+                document.getElementById('hint-tts-btn').onclick = () => speakText(`排錯了喔。下一個應該是，${hintWord}`);
+                document.getElementById('dynamic-hint-box').classList.remove('hidden');
+                document.getElementById('dynamic-hint-box').classList.add('slide-up');
+                
+                speakText("順序不對喔，請看提示！");
+                
+                const tArea = document.getElementById('reorder-target-area');
+                tArea.classList.add('bg-rose-100', 'border-rose-400', 'shake');
+                setTimeout(() => tArea.classList.remove('bg-rose-100', 'border-rose-400', 'shake'), 800);
+
+                renderReorderUI();
+            }
+        }
+
+        // --- 選擇題檢查邏輯 ---
+        function checkAnswer(btnElement, isCorrect, clickedOptText) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            const qData = rawQuestDataObj[currentQuestionIdx];
+            
+            if (isCorrect) {
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                btnElement.classList.add('correct');
+                const expText = qData.explanation; 
+                
+                speakText("完美的判斷！");
+                triggerSuccess(expText);
+            } else {
+                btnElement.classList.add('wrong', 'shake');
+                currentQuestionMistakes++; 
+                userProgress[currentQuestionIdx] = -1;
+                localStorage.setItem('paraBasicProgress', JSON.stringify(userProgress));
+                
+                let lines = qData.explanation.split('<br>');
+                let matchedLine = lines.find(l => l.includes(clickedOptText));
+                let newHint = "請再仔細想一想喔！";
+                
+                if (matchedLine) {
+                    newHint = matchedLine.replace(/^[✅❌]\s*/, ''); 
+                }
+
+                if (!window.currentHints) window.currentHints = [];
+                if (!window.currentHints.includes(newHint)) window.currentHints.push(newHint);
+
+                let combinedHintsHtml = window.currentHints.map(h => `<div class="border-b border-yellow-200 pb-1 last:border-0 last:pb-0">💡 ${h}</div>`).join('');
+                document.getElementById('hint-text').innerHTML = combinedHintsHtml;
+                document.getElementById('hint-tts-btn').onclick = () => speakText(window.currentHints.join('。'));
+                document.getElementById('dynamic-hint-box').classList.remove('hidden');
+                document.getElementById('dynamic-hint-box').classList.add('slide-up');
+                
+                speakText("不對喔，" + newHint);
+                setTimeout(() => { btnElement.classList.remove('shake'); }, 500);
+            }
+        }
+
+        // --- 成功處理共通邏輯 ---
+        function triggerSuccess(expText) {
+            let finalStatus = currentQuestionMistakes === 0 ? 1 : 2;
+            let previousStatus = userProgress[currentQuestionIdx];
+            let expGained = 0;
+
+            if (previousStatus !== 1 && previousStatus !== 2) {
+                expGained = finalStatus === 1 ? 30 : 10;
+            } else if (previousStatus === 2 && finalStatus === 1) {
+                expGained = 20; 
+            }
+
+            if (expGained > 0) {
+                paraExp += expGained;
+                localStorage.setItem('paraBasicExp', paraExp);
+                document.getElementById('exp-display').innerText = paraExp;
+                document.getElementById('exp-display').classList.add('pop');
+                setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+            }
+
+            if (finalStatus === 1 || previousStatus !== 1) {
+                userProgress[currentQuestionIdx] = finalStatus;
+                localStorage.setItem('paraBasicProgress', JSON.stringify(userProgress));
+            }
+
+            let modalIcon = finalStatus === 1 ? '🌟' : '✅';
+            let modalTitle = finalStatus === 1 ? '完美答對！' : '成功過關！';
+            let expMsg = expGained > 0 
+                ? `<span class="text-indigo-600 block text-xl mb-4">獲得 ${expGained} 點經驗值 ✨</span>` 
+                : `<span class="text-slate-500 block text-lg mb-4">這題已經成功過關囉！</span>`;
+            
+            let combinedDesc = expMsg + `
+                <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 text-left text-indigo-900 rounded-r-lg font-bold">
+                    <div class="flex justify-between items-center mb-3 pb-2 border-b border-indigo-200">
+                        <span class="text-xl">📚 深度解析</span>
+                        <button onclick="speakText('${expText}')" class="bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm hover:bg-indigo-100 text-xl transition active:scale-95">🔊</button>
+                    </div>
+                    <div class="space-y-3 text-base leading-relaxed">${expText}</div>
+                </div>`;
+
+            setTimeout(() => { showModal(modalIcon, modalTitle, combinedDesc); }, 800);
+        }
+
+        function showModal(icon, title, desc) {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            document.getElementById('feedback-icon').innerText = icon;
+            document.getElementById('feedback-title').innerText = title;
+            document.getElementById('feedback-desc').innerHTML = desc;
+            
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.onclick = () => {
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-90');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    let nextIdx = currentQuestionIdx + 1;
+                    if (nextIdx < rawQuestDataObj.length) startQuestion(nextIdx);
+                    else { showToast("恭喜完成所有挑戰！"); backToDirectory(); }
+                }, 300);
+            };
+
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+        }
+
+        function backToDirectory() {
+            let hintBox = document.getElementById('dynamic-hint-box');
+            if(hintBox) hintBox.classList.add('hidden');
+            document.getElementById('quest-play').style.display = 'none';
+            document.getElementById('quest-directory').style.display = 'block';
+            renderDirectory();
+        }
+
+        function backToDirectoryFromModal() {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                backToDirectory();
+            }, 300);
+        }
+
+        window.onload = function() {
+            document.getElementById('exp-display').innerText = paraExp;
+            renderDirectory();
+        }
+    </script>
+</body>
+</html>
