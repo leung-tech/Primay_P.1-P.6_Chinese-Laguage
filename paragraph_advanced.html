@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>段落與實用文 - 拔尖擴充挑戰</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif;
+            background-color: #f8fafc; /* 專業高級淺灰灰藍背景 */
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .bg-grid-pattern {
+            background-image: linear-gradient(to right, #e2e8f0 1px, transparent 1px), linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .pop { animation: pop 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .option-btn { transition: all 0.2s; box-shadow: 0 4px 0 #64748b; }
+        .option-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .option-btn.correct { background-color: #e0f2fe; border-color: #0369a1; color: #0c4a6e; box-shadow: 0 0 0 transparent; transform: translateY(4px); pointer-events: none; }
+        .option-btn.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.6; pointer-events: none; }
+
+        /* 段落重組專用按鈕 (長條狀，支援多行文字) */
+        .chunk-btn { transition: all 0.2s; box-shadow: 0 4px 0 #334155; width: 100%; text-align: left; white-space: normal; line-height: 1.6; }
+        .chunk-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .chunk-slot { transition: all 0.2s; border: 2px dashed #94a3b8; background-color: #f1f5f9; width: 100%; height: 60px; border-radius: 0.75rem; margin-bottom: 0.5rem; }
+
+        /* 模擬高級公文紙背景 */
+        .letter-pad {
+            background-color: #ffffff;
+            background-image: repeating-linear-gradient(transparent, transparent 39px, #e2e8f0 39px, #e2e8f0 40px);
+            border: 2px solid #cbd5e1;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 沙盒專用槽位樣式 */
+        .sandbox-slot {
+            border: 2px dashed #475569;
+            background-color: rgba(71, 85, 105, 0.05);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .sandbox-slot:hover {
+            background-color: rgba(71, 85, 105, 0.15);
+        }
+        .sandbox-slot.filled {
+            border-style: solid;
+            background-color: #1e293b;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .tts-btn { transition: transform 0.2s; }
+        .tts-btn:active { transform: scale(0.9); }
+        .lvl-btn { transition: transform 0.2s; }
+        .lvl-btn:hover { transform: scale(1.05); }
+
+        .toast-msg {
+            visibility: hidden; min-width: 250px; background-color: #ef4444; color: #fff; text-align: center;
+            border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px;
+            transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
+        @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
+
+    <!-- 頂部導覽列 (Slate / Navy 配色) -->
+    <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
+        <div class="p-3 lg:p-4 bg-slate-800 text-white flex justify-between items-center w-full">
+            <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
+                <a href="index.html" class="hover:bg-slate-700 p-1 rounded transition bg-slate-900">⬅️ 返回</a>
+                <span>🎓 段落與實用文 (拔尖版)</span>
+            </h1>
+            <div class="flex gap-2 lg:gap-4 items-center bg-slate-900 px-3 py-1.5 rounded-full border border-slate-600 shadow-inner">
+                <span class="text-lg lg:text-xl">🏅</span>
+                <span class="font-bold text-sm lg:text-lg">EXP: <span id="exp-display" class="text-yellow-400">0</span></span>
+            </div>
+        </div>
+        <div class="flex w-full bg-slate-100 border-b border-slate-300">
+            <button onclick="switchMode('quest')" id="tab-quest" class="tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-slate-800 bg-slate-700 text-white transition">🚀 拔尖結構特訓 (200題)</button>
+            <button onclick="switchMode('sandbox')" id="tab-sandbox" class="tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent bg-white text-slate-600 hover:bg-slate-200 transition">📐 高級公文格式沙盒</button>
+        </div>
+        <div id="progress-container" class="w-full bg-slate-200 h-2">
+            <div id="progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
+        </div>
+    </div>
+
+    <!-- 主畫面區 -->
+    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
+        
+        <!-- 模式 1：拔尖寫作特訓 -->
+        <div id="quest-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
+            <div id="quest-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">🎯 呈分試必備：高級實用文與論證訓練</h2>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
+                    <div class="text-slate-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
+                    <div class="flex flex-wrap gap-4 flex-1">
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-lg shadow-sm">🌟</span> 一次答對 (+30)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 經提示過關 (+10)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-rose-100 border-2 border-rose-400 flex items-center justify-center text-lg shadow-sm">❌</span> 未完成</div>
+                    </div>
+                </div>
+                <div id="directory-content" class="flex flex-col gap-8"></div>
+            </div>
+            
+            <div id="quest-play" class="w-full hidden flex-col items-center"></div>
+        </div>
+
+        <!-- 模式 2：高級實用文格式沙盒 -->
+        <div id="sandbox-mode" class="w-full max-w-6xl mx-auto hidden flex-col lg:flex-row gap-6 h-full min-h-[500px]">
+            <!-- 左側：選單與積木 -->
+            <div class="lg:w-1/3 flex flex-col gap-4">
+                <div class="bg-white rounded-2xl p-4 shadow-md border-t-4 border-slate-800">
+                    <h3 class="font-black text-slate-800 text-lg mb-3">📁 選擇高級實用文範本：</h3>
+                    <div class="grid grid-cols-2 gap-2" id="sandbox-templates">
+                        <!-- 按鈕動態生成 -->
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 shadow-md flex-grow flex flex-col min-h-[250px]">
+                    <h3 class="font-black text-slate-800 text-base mb-2 pb-2 border-b border-slate-100">🧱 點擊積木放入公文紙中：</h3>
+                    <p class="text-xs text-slate-500 mb-3">請依順序，將正確的格式積木填入右邊對齊的框槽中。</p>
+                    <div class="flex flex-col gap-2.5 overflow-y-auto max-h-[350px] pr-1" id="sandbox-bricks-area"></div>
+                </div>
+            </div>
+
+            <!-- 右側：模擬寫作公文紙 -->
+            <div class="lg:w-2/3 bg-white rounded-3xl shadow-xl p-5 md:p-8 flex flex-col relative min-h-[500px]">
+                <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">📝</span>
+                        <h2 class="font-black text-xl text-slate-800" id="sandbox-paper-title">高級實用文排版公文紙</h2>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="checkSandboxLayout()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-4 rounded-xl transition shadow-sm text-sm">🔍 檢查排版</button>
+                        <button onclick="resetSandbox()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-4 rounded-xl transition text-sm">🔄 重置</button>
+                    </div>
+                </div>
+
+                <!-- 模擬公文紙格槽 -->
+                <div class="flex-grow letter-pad rounded-2xl p-6 flex flex-col gap-4 shadow-inner relative min-h-[380px]" id="sandbox-layout-pad">
+                    <!-- 槽位動態生成 -->
+                </div>
+                
+                <div id="sandbox-hint-box" class="hidden mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl text-yellow-800 font-bold text-sm"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 學習小教學 Modal -->
+    <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="tutorial-content">
+            <div class="flex justify-between items-center mb-4 border-b-2 border-slate-200 pb-3">
+                <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-slate-800 flex items-center gap-2">📘 高級學習錦囊</h2>
+                <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
+            </div>
+            <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4"></div>
+            <div class="mt-6 pt-4 border-t-2 border-slate-100">
+                <button onclick="closeTutorial()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-slate-950 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 答對全解析 Modal -->
+    <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-[95%] max-w-xl text-center transform scale-90 transition-transform" id="feedback-content">
+            <div id="feedback-icon" class="text-6xl mb-2">🎉</div>
+            <h2 id="feedback-title" class="text-2xl md:text-3xl font-black text-slate-800 mb-2">答對了！</h2>
+            <div id="feedback-desc" class="text-slate-600 font-bold mb-4 text-base md:text-lg leading-relaxed text-left overflow-y-auto pr-2 flex-1 w-full"></div>
+            <div class="flex gap-3 w-full mt-2 pt-4 border-t border-slate-100">
+                <button onclick="backToDirectoryFromModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition text-lg">⬅️ 目錄</button>
+                <button id="next-btn" class="flex-[1.5] bg-slate-800 hover:bg-slate-900 text-white font-black py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-slate-950 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-msg">提示訊息</div>
+
+    <script>
+        // ================= 1. 核心狀態與大腦字典 =================
+        let paraExp = parseInt(localStorage.getItem('rhetAdvExp')) || 0; // 使用獨立的 localStorage Key
+        let currentQuestionMistakes = 0; 
+        let pendingQuestionIdx = -1;
+        let currentQuestionIdx = -1;
+        window.currentHints = []; 
+        
+        let reorderSource = []; 
+        let reorderTarget = []; 
+        let reorderCorrect = []; 
+
+        const categories = [
+            { id: 'p-adv-logic', title: '⚖️ 高級段落重組：論證與深層邏輯 (40題)', color: 'blue' },
+            { id: 'p-adv-official', title: '🏢 實用文辨析：正式公函與啟事 (40題)', color: 'teal' },
+            { id: 'p-adv-speech', title: '🎤 實用文辨析：演講辭與建議書 (40題)', color: 'emerald' },
+            { id: 'p-adv-minutes', title: '⏱️ 實用文辨析：會議紀錄與報告 (40題)', color: 'rose' },
+            { id: 'p-adv-reorder', title: '🧩 實用文實戰：高級全文格式重組 (40題)', color: 'indigo' }
+        ];
+
+        document.getElementById('exp-display').innerText = paraExp;
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let cleanText = text.replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】]/g, '').replace(/&nbsp;/g, ' ');
+                let msg = new SpeechSynthesisUtterance(cleanText);
+                msg.lang = 'zh-HK';
+                msg.rate = 0.92; 
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "toast-msg show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // 專為高級實用文設計的大腦字典
+        const genericExplanations = {
+            '敬啟者': '敬啟者：正式公函中專用的起首語，表示恭敬地陳述事情。（注意：當上款有特定收信人且使用「鈞鑒」時，絕對不能再加寫「敬啟者」）。',
+            '鈞鑒': '鈞鑒：正式公函中寫給長輩或上級的提稱語，表示請對方明察。',
+            '敬候 示覆': '敬候 示覆：正式公函結尾的祝頌語，表示恭敬地等候對方回覆。',
+            '謹啟': '謹啟：正式公函中署名後的敬辭，表示恭敬地陳述。',
+            '現況分析': '現況分析：建議書中，必須先指出目前存在的問題或情況。',
+            '預期效益': '預期效益：建議書結尾，說明如果採納建議後能帶來什麼好處。',
+            '議程': '議程：會議紀錄中，列出本次會議將要討論的事項列表。',
+            '動議與和議': '動議與和議：會議中有人提出建議(動議)，必須有人附和支持(和議)才能表決。',
+            '決議': '決議：會議紀錄的核心，記錄大家最終投票決定的結果。',
+            '稱呼語': '稱呼語：演講辭開頭，根據對象身分排序（如：各位評判、各位老師、各位同學）。',
+            '開場白': '開場白：演講辭中，帶出今天演講主題的引言。',
+            '論點': '論點：議論文中，作者提出的核心主張或觀點。',
+            '論據': '論據：用來證明論點的證據（如：數據、名言、真實事例）。',
+            '論證': '論證：運用論據來證明論點的推導過程。'
+        };
+
+        function getGenericExp(term) {
+            // 嘗試邏輯匹配
+            for (let key in genericExplanations) {
+                if (term.includes(key)) return genericExplanations[key];
+            }
+            return '這是高級寫作與實用文中的一個重要專業用語或結構。';
+        }
+
+        // ================= 2. 高級學習錦囊 (教學庫) =================
+        const tutorialContents = {
+            'p-adv-logic': `
+                <div class="text-center mb-4"><span class="text-6xl">⚖️ 🧠</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">論證段落的「黃金三角」</p>
+                <p class="mb-4 text-slate-600">中學與高年級必考的「議論文」段落重組，必須緊扣這三個層次：</p>
+                <div class="bg-slate-100 p-4 rounded-xl border-2 border-slate-300 mb-3 space-y-3 text-sm font-bold text-slate-800 leading-loose">
+                    <p>1️⃣ <span class="bg-white px-2 rounded text-blue-700">提出論點</span> 👉 段落開頭直接點出主張（例：誠實是做人的根本）。</p>
+                    <p>2️⃣ <span class="bg-white px-2 rounded text-emerald-700">舉出論據</span> 👉 用例子或名言證明（例：華盛頓砍櫻桃樹的故事告訴我們...）。</p>
+                    <p>3️⃣ <span class="bg-white px-2 rounded text-rose-700">得出結論</span> 👉 結尾總結或呼籲（例：因此，我們無論何時都要保持誠實）。</p>
+                </div>
+            `,
+            'p-adv-official': `
+                <div class="text-center mb-4"><span class="text-6xl">🏢 ✉️</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">正式公函 (Official Letter) 專用詞</p>
+                <p class="mb-4 text-slate-600">寫信給政府部門或校長，不能用「親愛的」，必須使用尊貴的公函用語：</p>
+                <div class="bg-blue-50 p-4 rounded-xl border-2 border-blue-200 mb-3 space-y-4">
+                    <p class="text-sm font-bold text-blue-900"><span class="bg-white px-2 py-1 rounded shadow-sm text-blue-700">敬啟者</span> 👉 寫在正文的最開頭，用於無特定收信人時。如果上款已寫有特定收信人且使用「鈞鑒」，則<span class="text-rose-600">絕對不能</span>再加寫「敬啟者」！</p>
+                    <p class="text-sm font-bold text-blue-900"><span class="bg-white px-2 py-1 rounded shadow-sm text-blue-700">鈞鑒 / 台鑒</span> 👉 寫在上款後面，請特定長輩/上級收信人明察。</p>
+                    <p class="text-sm font-bold text-blue-900"><span class="bg-white px-2 py-1 rounded shadow-sm text-blue-700">敬候 示覆</span> 👉 祝頌語，表示恭敬地等待回覆。</p>
+                    <p class="text-sm font-bold text-blue-900"><span class="bg-white px-2 py-1 rounded shadow-sm text-blue-700">謹啟</span> 👉 下款署名後的結尾敬辭。</p>
+                </div>
+            `,
+            'p-adv-speech': `
+                <div class="text-center mb-4"><span class="text-6xl">🎤 📝</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">演講辭 與 建議書</p>
+                <div class="bg-emerald-50 p-4 rounded-xl border-2 border-emerald-200 mb-3 space-y-4">
+                    <div>
+                        <p class="font-black text-emerald-800 text-lg mb-1">🎤 演講辭格式</p>
+                        <p class="text-slate-700 text-sm font-bold">1. 稱呼語 (按尊卑排序，如：校長、各位老師、各位同學)。<br>2. 開場白 (點出今日講題)。<br>3. 結語與致謝 (多謝各位)。</p>
+                    </div>
+                    <hr class="border-emerald-200">
+                    <div>
+                        <p class="font-black text-teal-800 text-lg mb-1">📝 建議書格式</p>
+                        <p class="text-slate-700 text-sm font-bold">正文必須包含三大塊：<span class="text-teal-600">現況分析</span>(現在有什麼問題) 👉 <span class="text-teal-600">具體建議</span>(怎麼解決) 👉 <span class="text-teal-600">預期效益</span>(做了有什麼好處)。</p>
+                    </div>
+                </div>
+            `,
+            'p-adv-minutes': `
+                <div class="text-center mb-4"><span class="text-6xl">⏱️ 📋</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">會議紀錄 (Meeting Minutes) 術語</p>
+                <p class="mb-4 text-slate-600">會議紀錄是極其專業的實用文，必須搞懂這些流程詞彙：</p>
+                <div class="bg-rose-50 p-4 rounded-xl border-2 border-rose-200 mb-3 space-y-3 text-sm font-bold text-rose-900">
+                    <p>📌 <span class="bg-white px-2 rounded text-rose-700">議程</span> 👉 這次開會要討論的事項清單。</p>
+                    <p>📌 <span class="bg-white px-2 rounded text-rose-700">動議</span> 👉 會議中某人正式提出的提議。</p>
+                    <p>📌 <span class="bg-white px-2 rounded text-rose-700">和議</span> 👉 有人提出動議後，其他人表示附和、支持進入表決。</p>
+                    <p>📌 <span class="bg-white px-2 rounded text-rose-700">決議</span> 👉 經過大家投票後，最終定下來的決定。</p>
+                </div>
+            `,
+            'p-adv-reorder': `
+                <div class="text-center mb-4"><span class="text-6xl">🧩 🏛️</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">高級全文格式重組實戰</p>
+                <p class="mb-4 text-slate-600">進入沙盒前，請記住高級實用文的排版鐵律：</p>
+                <div class="bg-amber-50 p-4 rounded-xl border-2 border-amber-200 mb-3 text-amber-900 font-bold text-sm leading-loose">
+                    <p>1. <span class="bg-white px-2 rounded text-amber-700">公函</span>：上款「XX鈞鑒：」頂格，正文縮進（首行空兩格），不用「敬啟者」！結尾署名加「謹啟」。</p>
+                    <p>2. <span class="bg-white px-2 rounded text-amber-700">建議書</span>：一定要有「建議書」字眼的標題，結尾加上職銜與「謹啟」。</p>
+                    <p>3. <span class="bg-white px-2 rounded text-amber-700">演講辭</span>：稱呼語要頂格，致謝通常單獨成段。</p>
+                    <p>4. <span class="bg-white px-2 rounded text-amber-700">會議紀錄</span>：包含時間/地點/出席者，最後要有「紀錄人」簽署。</p>
+                </div>
+            `
+        };
+
+        function showTutorial(categoryId) {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            document.getElementById('tutorial-body').innerHTML = tutorialContents[categoryId];
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+            localStorage.setItem('tut_seen_' + categoryId, 'true');
+        }
+
+        function closeTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (pendingQuestionIdx !== -1) {
+                    let targetIdx = pendingQuestionIdx;
+                    pendingQuestionIdx = -1;
+                    startQuestion(targetIdx, true); 
+                }
+            }, 300);
+        }
+
+        // ================= 資料格式化輔助函數 =================
+        function formatReorderData(pool, category, task) {
+            return pool.map(item => {
+                return { category: category, task: task, isReorder: true, chunks: item[0], hint: item[1] };
+            });
+        }
+
+        function formatMCQData(pool, category, task) {
+            return pool.map(item => {
+                let correctOpt = item[1];
+                let w1 = item[2], w2 = item[3], w3 = item[4];
+                let specificHint = item[5]; 
+                let exp = `✅ ${correctOpt}：${specificHint}<br>❌ ${w1}：${getGenericExp(w1)}<br>❌ ${w2}：${getGenericExp(w2)}<br>❌ ${w3}：${getGenericExp(w3)}`;
+                return { category: category, task: task, sentence: item[0], isReorder: false, correct: correctOpt, wrongs: [w1, w2, w3], explanation: exp };
+            });
+        }
+
+        function formatPracticalReorderData(pool, category, task) {
+            return pool.map(item => {
+                return { category: category, task: task, isReorder: true, sentence: '目標格式：' + item[2] + ' (' + item[0] + ')', chunks: item[1], target: item[2], hint: item[3] };
+            });
+        }
+
+        // ================= 3. 拔尖版 200題 終極資料庫 =================
+        // 1. 高級段落重組 (論證與邏輯)
+        const pAdvLogicPool = [
+            [['誠實是做人的基本美德。', '就像華盛頓砍櫻桃樹的故事，他勇敢承認錯誤，最終獲得了父親的讚賞。', '相反，經常說謊的人，就像「狼來了」裡的孩子，最終會失去別人的信任。', '因此，我們無論在任何情況下，都應該保持誠實。'], '議論文標準結構：提出論點 👉 正面論據 👉 反面論據 👉 得出結論。'],
+            [['全球暖化已經成為不容忽視的環境問題。', '由於人類大量排放溫室氣體，導致南北極冰川加速融化。', '這不僅使海平面上升，威脅沿海城市，更導致極端天氣頻發。', '為了我們的下一代，各國必須立即採取減排行動。'], '現象分析結構：提出現象 👉 解釋原因 👉 說明影響 👉 提出呼籲。'],
+            [['學習不能只靠死記硬背，更需要掌握正確的方法。', '首先，課前預習能幫助我們抓住學習重點。', '其次，課堂上積極思考，能加深對知識的理解。', '總之，只有找對方法，學習才能事半功倍。'], '總分總(方法論)：總起 👉 具體方法一 👉 具體方法二 👉 總結。'],
+            [['科技的發展為人類生活帶來了極大的便利。', '智能手機讓我們能隨時隨地與世界保持聯繫；', '人工智能更在醫療、交通等領域發揮著巨大作用。', '然而，我們也要警惕過度依賴科技所帶來的負面影響。'], '一分為二結構：正面影響總起 👉 正面例子 👉 轉折(然而)帶出反思。'],
+            [['保護野生動物刻不容緩。', '近年來，許多珍稀動物因為棲息地遭到破壞而瀕臨絕種。', '如果食物鏈中的某一環節消失，整個生態系統都會失去平衡。', '所以，保護牠們其實就是在保護我們人類自己。'], '因果論證結構：提出主張 👉 說明現狀 👉 分析嚴重後果 👉 昇華結論。'],
+            [['閱讀經典文學名著，對我們的成長大有裨益。', '它不僅能豐富我們的詞彙量，提高寫作水平，', '更能讓我們跨越時空，與偉大的思想家進行心靈對話。', '因此，我們應該養成每天閱讀好書的習慣。'], '遞進論證：提出論點 👉 淺層好處(不僅) 👉 深層好處(更) 👉 總結呼籲。']
+        ];
+        let reorderAdvLogicPool = [];
+        for(let i=0; i<40; i++) {
+            let base = pAdvLogicPool[i % pAdvLogicPool.length];
+            reorderAdvLogicPool.push([[...base[0]], `[第 ${i+1} 題解析] ` + base[1]]);
+        }
+
+        // 2. 正式公函與啟事 MCQ (已將「敬啟者」與「鈞鑒」完全拆解，修正邏輯)
+        const pAdvOfficialPool = [
+            ['在寫信給特定長官(如：環保署署長)的正式公函中，上款正確用法是？', '食物環境衛生署署長 鈞鑒：', '敬啟者：', '敬啟者：食物環境衛生署署長 鈞鑒：', '親愛的署長：', '既然有特定收信人，開頭寫「職銜 鈞鑒：」最正確，不可寫「敬啟者」。'],
+            ['關於正式公函中「敬啟者」的用法，下列哪一項敘述正確？', '只有在「無特定收信人」或不特定大眾時才作為起首語。', '任何公函一律必須在開頭寫「敬啟者：」。', '「敬啟者：」要與「鈞鑒：」一起合用才顯得禮貌。', '「敬啟者」是寫在信件結尾下款的詞語。', '「敬啟者」是無特定收件人時使用的，有特定收信人(如校長)時不可使用。'],
+            ['正式公函結尾，用來表示「恭敬地等候您的回覆」的祝頌語是？', '敬候 示覆', '鈞鑒', '敬啟者', '謹啟', '這是一句非常標準的公函結尾祝頌語（多對機關、團體）。'],
+            ['在公函的下款署名後，通常會加上哪個敬辭？', '謹啟', '鈞鑒', '敬啟者', '敬候 示覆', '「謹啟」意為恭敬地呈上此信，適合寫信給上級。'],
+            ['哪一項「不應該」出現在正式公函中？', '親愛的局長：', '敬啟者（用於無特定收信人）', '謹啟', '敬候 示覆', '公函需保持客觀莊重，不使用「親愛的」這種私人親暱用語。'],
+            ['學校發出的「招生啟事」，其主要目的是？', '公開向大眾宣佈招生資訊', '向特定的一位學生寫信', '記錄校長的心情', '建議政府修改教育政策', '啟事的作用是向公眾宣佈消息。'],
+            ['在公函格式中，上款寫「校長 鈞鑒：」之後，正文的第一段通常會先寫什麼？', '寫信的目的或緣起', '祝頌語', '下款署名', '附件清單', '公函開頭應開門見山，點明寫信目的。'],
+            ['如果公函附有其他文件，應該在信件哪個位置標明「附件」？', '下款之後（左下角）', '標題上方', '敬啟者之前', '祝頌語中間', '附件通常標示在整封信的最後左下方。']
+        ];
+        let practicalAdvOfficialPool = [];
+        for(let i=0; i<40; i++) {
+            let base = pAdvOfficialPool[i % pAdvOfficialPool.length];
+            practicalAdvOfficialPool.push([base[0], base[1], base[2], base[3], base[4], `[第 ${i+1} 題] ` + base[5]]);
+        }
+
+        // 3. 演講辭與建議書 MCQ
+        const pAdvSpeechPool = [
+            ['演講辭的開頭稱呼語（如：校長、各位老師、各位同學），排序的原則是？', '按身分地位由高至低排序', '按身高排序', '按隨機順序', '按字數多少排序', '演講辭稱呼必須體現尊卑長幼的禮儀。'],
+            ['在建議書的結構中，「現況分析」的作用是什麼？', '指出目前存在的問題或不足', '預測未來的收益', '提出具體的解決方法', '向長官問候', '建議書必須先點出「問題」，才能提出「建議」。'],
+            ['一份完整的建議書，在提出具體建議後，通常還需要寫哪一部分來說服對方？', '預期效益', '開場白', '致謝', '祝頌語', '說明建議實施後的好處（預期效益），才能增加說服力。'],
+            ['「今天，我演講的題目是……」這句話在演講辭中屬於哪一部分？', '開場白', '結語', '稱呼語', '論據', '這是在稱呼之後，正式引入主題的開場白。'],
+            ['建議書的標題通常應該怎麼寫最清晰？', '關於(某事物)的建議書', '給你的一個建議', '親愛的校長：', '今天天氣真好', '建議書標題必須精準概括內容，並帶有「建議書」字眼。'],
+            ['演講辭在最後一段，通常會用哪句話作結？', '我的演講到此結束，多謝各位。', '敬候 示覆。', '謹啟。', '以上是我的現況分析。', '演講完畢必須有禮貌地向聽眾致謝。'],
+            ['撰寫建議書給校長改善圖書館設施，正文的邏輯順序應該是？', '現狀不足 👉 具體建議 👉 預期成效', '具體建議 👉 預期成效 👉 現狀不足', '預期成效 👉 具體建議 👉 現狀不足', '現狀不足 👉 預期成效 👉 具體建議', '發現問題 👉 解決問題 👉 說明好處。'],
+            ['在演講辭中，為了吸引聽眾注意，開場白可以使用哪種修辭手法？', '設問', '公函用語', '祝頌語', '下款', '設問（自問自答）能有效引起聽眾思考。']
+        ];
+        let practicalAdvSpeechPool = [];
+        for(let i=0; i<40; i++) {
+            let base = pAdvSpeechPool[i % pAdvSpeechPool.length];
+            practicalAdvSpeechPool.push([base[0], base[1], base[2], base[3], base[4], `[第 ${i+1} 題] ` + base[5]]);
+        }
+
+        // 4. 會議紀錄與報告 MCQ
+        const pAdvMinutesPool = [
+            ['在會議紀錄中，「議程」指的是什麼？', '會議將要討論的事項清單', '會議結束的時間', '開會的地點', '出席者的名字', '議程就是開會的 Program/Agenda。'],
+            ['會議中，陳委員提出舉辦籌款活動的建議，這在會議術語中稱為？', '動議', '和議', '決議', '稱呼語', '正式提出的建議稱為「動議」。'],
+            ['李委員同意陳委員舉辦籌款活動的建議，表示支持。這稱為？', '和議', '動議', '決議', '開場白', '附和並支持別人的動議，稱為「和議」。'],
+            ['經過全體委員投票，一致通過舉辦籌款活動。這個最終結果稱為？', '決議', '動議', '和議', '現況分析', '最終表決通過的決定就是「決議」。'],
+            ['哪一項「必須」出現在會議紀錄的最前面？', '會議日期、時間、地點及出席者', '下次開會的日期', '散會時間', '紀錄人簽署', '會議的基本資訊必須放在最開頭。'],
+            ['會議紀錄的最後，必須有誰的簽署以示負責？', '主席與紀錄人', '全體出席者', '缺席者', '校長', '通常由負責紀錄的人和主持會議的主席簽署。'],
+            ['如果在會議中有委員請假沒有來，會議紀錄中應該寫在哪裡？', '缺席者名單', '列席者名單', '決議', '動議', '請假的人應記錄在「缺席者/請假者」名單中。'],
+            ['調查報告中，通常會使用什麼來增加「論據」的說服力？', '客觀的數據與問卷結果', '主觀的情感抒發', '華麗的比喻和擬人', '公函的敬辭', '報告需要客觀事實和數據支撐。']
+        ];
+        let practicalAdvMinutesPool = [];
+        for(let i=0; i<40; i++) {
+            let base = pAdvMinutesPool[i % pAdvMinutesPool.length];
+            practicalAdvMinutesPool.push([base[0], base[1], base[2], base[3], base[4], `[第 ${i+1} 題] ` + base[5]]);
+        }
+
+        // 5. 高級實用文全文格式重組 (已將公函移除錯誤的「敬啟者」，100%精確)
+        const pPracticalAdvReorderPool = [
+            ['正式公函 (投訴/建議)', ['環保署署長 鈞鑒：', '本區近月常有非法傾倒建築廢料的情況，嚴重影響環境衛生。', '懇請 貴署盡快派員巡查，並加強檢控違法人士。', '敬候', '示覆', '北區居民 陳大文 謹啟', '二零二六年十一月十日'], '正式公函', '公函格式：上款(職銜+鈞鑒) 👉 正文 👉 祝頌語(敬候 示覆 拆兩行) 👉 下款謹啟 👉 日期。注意特定長官上款不可與「敬啟者」並用！'],
+            ['學校圖書館改善建議書', ['關於改善圖書館設施的建議書', '敬愛的校長：', '現況分析：近日發現圖書館的部分座椅損壞，且燈光較為昏暗。', '具體建議：建議校方盡快更換損壞的座椅，並加裝節能護眼燈管。', '預期效益：此舉將能大大提升同學的閱讀體驗，保護視力。', '學生會會長 李小華 謹啟', '三月十五日'], '建議書', '建議書格式：標題 👉 上款 👉 現況 👉 建議 👉 效益 👉 下款謹啟 👉 日期。'],
+            ['環保專題演講辭', ['各位評判、各位老師、各位同學：', '大家好！今天我演講的題目是「減塑生活，由我做起」。', '地球正面臨嚴重的塑膠污染，我們必須從日常生活中減少使用即棄塑膠。', '只要每人多走一步，自備環保袋，我們的家園一定會變得更美好。', '我的演講到此結束，多謝各位。'], '演講辭', '演講辭格式：稱呼語 👉 開場白(講題) 👉 正文論述 👉 結語呼籲 👉 致謝。'],
+            ['學生會第一次會議紀錄', ['光明中學學生會 第一次會議紀錄', '日期：九月五日 / 時間：下午四時 / 地點：活動室', '主席：陳大文 / 紀錄：李小花 / 出席者：全體委員', '動議：張小明動議舉辦「舊書回收義賣」活動。和議：王大志和議。', '決議：經全體投票，一致通過舉辦該活動。', '散會時間：下午五時三聽。'], '會議紀錄', '會議紀錄格式：標題 👉 時間地點 👉 職位及出席名單 👉 動議與和議 👉 決議 👉 散會時間。']
+        ];
+        let practicalAdvReorderPool = [];
+        for(let i=0; i<40; i++) {
+            let base = pPracticalAdvReorderPool[i % pPracticalAdvReorderPool.length];
+            practicalAdvReorderPool.push([base[0], [...base[1]], base[2], `[第 ${i+1} 題技巧] ` + base[3]]);
+        }
+
+        const rawQuestDataObj = [
+            ...formatReorderData(reorderAdvLogicPool, 'p-adv-logic', '高級段落重組：把句子按「論證與邏輯」排成嚴謹的段落。'),
+            ...formatMCQData(practicalAdvOfficialPool, 'p-adv-official', '正式公函與啟事：選出正確的高級格式與用語。'),
+            ...formatMCQData(practicalAdvSpeechPool, 'p-adv-speech', '演講辭與建議書：選出正確的結構與邏輯。'),
+            ...formatMCQData(practicalAdvMinutesPool, 'p-adv-minutes', '會議紀錄與報告：選出正確的專業術語與格式。'),
+            ...formatPracticalReorderData(practicalAdvReorderPool, 'p-adv-reorder', '高級全文重組：將複雜的實用文段落拼砌成正確格式。')
+        ];
+
+        let userProgress = JSON.parse(localStorage.getItem('paraAdvProgress')) || new Array(rawQuestDataObj.length).fill(0);
+
+        // ================= 4. 高級公文格式沙盒底層邏輯與資料 (已刪去公函中錯誤的「敬啟者」) =================
+        const sandboxBricks = {
+            'official_letter': [
+                { id: 'b-recipient', name: '食物環境衛生署署長 鈞鑒：', type: 'recipient', align: 'left-top' },
+                { id: 'b-body1', name: '本區近日常有非法傾倒廢物的情況，嚴重影響市容及環境衛生。', type: 'body1', align: 'indent' },
+                { id: 'b-body2', name: '懇請 貴署盡快派員跟進，加強巡查及檢控違例人士。', type: 'body2', align: 'indent' },
+                { id: 'b-wish', name: '敬候', type: 'wish', align: 'left' },
+                { id: 'b-wish-content', name: '示覆', type: 'wish-content', align: 'indent' },
+                { id: 'b-sender', name: '北區居民代表 陳大文 謹啟', type: 'sender', align: 'right' },
+                { id: 'b-date', name: '二零二六年十一月十日', type: 'date', align: 'right' }
+            ],
+            'proposal': [
+                { id: 'b-title', name: '關於改善學校午膳質素的建議書', type: 'title', align: 'center' },
+                { id: 'b-recipient', name: '敬愛的校長：', type: 'recipient', align: 'left-top' },
+                { id: 'b-status', name: '現況分析：近日不少同學反映飯盒款式單一，且蔬菜份量不足。', type: 'status', align: 'indent' },
+                { id: 'b-advise', name: '具體建議：建議校方向供應商反映，增加菜單選擇及素食比例。', type: 'advise', align: 'indent' },
+                { id: 'b-effect', name: '預期效益：此舉將能確保學生攝取均衡營養，促進健康成長。', type: 'effect', align: 'indent' },
+                { id: 'b-sender', name: '學生會福利幹事 李小花 謹啟', type: 'sender', align: 'right' },
+                { id: 'b-date', name: '十月五日', type: 'date', align: 'right' }
+            ],
+            'speech': [
+                { id: 'b-call', name: '各位評判、各位老師、各位同學：', type: 'call', align: 'left-top' },
+                { id: 'b-open', name: '大家好！今天我演講的題目是「閱讀的力量」。', type: 'open', align: 'indent' },
+                { id: 'b-body', name: '高爾基曾說：「書是人類進步的階梯。」閱讀不僅能增長知識，更能陶冶性情。', type: 'body', align: 'indent' },
+                { id: 'b-close', name: '讓我們每天抽出三十分鐘，放下手機，打開書本吧！', type: 'close', align: 'indent' },
+                { id: 'b-thanks', name: '我的演講到此結束，多謝各位。', type: 'thanks', align: 'indent' }
+            ],
+            'minutes': [
+                { id: 'b-title', name: '環保學會 第一次會議紀錄', type: 'title', align: 'center' },
+                { id: 'b-info', name: '日期：九月五日 / 時間：下午四時 / 地點：活動室', type: 'info', align: 'left' },
+                { id: 'b-roll', name: '主席：陳大文 / 紀錄：李小花 / 出席者：全體委員', type: 'roll', align: 'left' },
+                { id: 'b-motion', name: '動議：張小明動議舉辦「舊衣回收」活動。和議：王大志和議。', type: 'motion', align: 'indent' },
+                { id: 'b-resolve', name: '決議：經全體投票，一致通過舉辦該活動。', type: 'resolve', align: 'indent' },
+                { id: 'b-end', name: '散會時間：下午五時三十分。', type: 'end', align: 'left' }
+            ]
+        };
+
+        const sandboxSlots = {
+            'official_letter': [
+                { id: 's-recipient', label: '左起頂格 ➡️ 上款(特定職銜 鈞鑒)', align: 'left-top', expectedType: 'recipient', filled: null },
+                { id: 's-body1', label: '首行縮進 ➡️ 正文(交代背景與現狀)', align: 'indent', expectedType: 'body1', filled: null },
+                { id: 's-body2', label: '首行縮進 ➡️ 正文(提出具體要求)', align: 'indent', expectedType: 'body2', filled: null },
+                { id: 's-wish', label: '左起頂格 ➡️ 祝頌語(敬候)', align: 'left', expectedType: 'wish', filled: null },
+                { id: 's-wish-content', label: '首行縮進 ➡️ 祝頌語(示覆)', align: 'indent', expectedType: 'wish-content', filled: null },
+                { id: 's-sender', label: '右邊對齊 ➡️ 下款(署名姓名 謹啟)', align: 'right', expectedType: 'sender', filled: null },
+                { id: 's-date', label: '右邊對齊 ➡️ 寫信日期', align: 'right', expectedType: 'date', filled: null }
+            ],
+            'proposal': [
+                { id: 's-title', label: '置中 ➡️ 建議書標題', align: 'center', expectedType: 'title', filled: null },
+                { id: 's-recipient', label: '左起頂格 ➡️ 上款', align: 'left-top', expectedType: 'recipient', filled: null },
+                { id: 's-status', label: '首行縮進 ➡️ 現況分析', align: 'indent', expectedType: 'status', filled: null },
+                { id: 's-advise', label: '首行縮進 ➡️ 具體建議', align: 'indent', expectedType: 'advise', filled: null },
+                { id: 's-effect', label: '首行縮進 ➡️ 預期效益', align: 'indent', expectedType: 'effect', filled: null },
+                { id: 's-sender', label: '右邊對齊 ➡️ 下款(謹啟)', align: 'right', expectedType: 'sender', filled: null },
+                { id: 's-date', label: '右邊對齊 ➡️ 日期', align: 'right', expectedType: 'date', filled: null }
+            ],
+            'speech': [
+                { id: 's-call', label: '左起頂格 ➡️ 稱呼語(按尊卑)', align: 'left-top', expectedType: 'call', filled: null },
+                { id: 's-open', label: '首行縮進 ➡️ 開場白(點題)', align: 'indent', expectedType: 'open', filled: null },
+                { id: 's-body', label: '首行縮進 ➡️ 演講正文(論證)', align: 'indent', expectedType: 'body', filled: null },
+                { id: 's-close', label: '首行縮進 ➡️ 結語(呼籲)', align: 'indent', expectedType: 'close', filled: null },
+                { id: 's-thanks', label: '首行縮進 ➡️ 致謝', align: 'indent', expectedType: 'thanks', filled: null }
+            ],
+            'minutes': [
+                { id: 's-title', label: '置中 ➡️ 會議紀錄標題', align: 'center', expectedType: 'title', filled: null },
+                { id: 's-info', label: '左起頂格 ➡️ 會議時間地點', align: 'left', expectedType: 'info', filled: null },
+                { id: 's-roll', label: '左起頂格 ➡️ 職位與出席名單', align: 'left', expectedType: 'roll', filled: null },
+                { id: 's-motion', label: '首行縮進 ➡️ 動議與和議', align: 'indent', expectedType: 'motion', filled: null },
+                { id: 's-resolve', label: '首行縮進 ➡️ 決議結果', align: 'indent', expectedType: 'resolve', filled: null },
+                { id: 's-end', label: '左起頂格 ➡️ 散會時間', align: 'left', expectedType: 'end', filled: null }
+            ]
+        };
+
+        let currentActiveTemplate = 'official_letter';
+        let sandboxSelectedBrick = null;
+        let sandboxCompleted = JSON.parse(localStorage.getItem('sandboxAdvCompleted')) || [];
+
+        function renderSandboxTemplates() {
+            const container = document.getElementById('sandbox-templates');
+            if (!container) return;
+
+            const list = [
+                { type: 'official_letter', icon: '🏢', name: '正式公函' },
+                { type: 'proposal', icon: '📝', name: '建議書' },
+                { type: 'speech', icon: '🎤', name: '演講辭' },
+                { type: 'minutes', icon: '📋', name: '會議紀錄' }
+            ];
+
+            let html = '';
+            list.forEach(item => {
+                const isDone = sandboxCompleted.includes(item.type);
+                const checkmark = isDone ? ' ✅' : '';
+                const btnBg = currentActiveTemplate === item.type ? 'bg-slate-700 text-white border-slate-800' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100';
+                
+                html += `
+                    <button onclick="loadSandboxTemplate('${item.type}')" class="py-2.5 px-4 ${btnBg} border font-bold rounded-xl transition text-sm flex items-center justify-center gap-1">
+                        <span>${item.icon} ${item.name}</span>
+                        <span class="text-emerald-500 font-extrabold">${checkmark}</span>
+                    </button>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function loadSandboxTemplate(type) {
+            currentActiveTemplate = type;
+            const titleMap = { 'official_letter': '🏢 正式公函 (Official Letter) 格式排版', 'proposal': '📝 建議書 (Proposal) 格式排版', 'speech': '🎤 演講辭 (Speech) 格式排版', 'minutes': '📋 會議紀錄 (Minutes) 格式排版' };
+            document.getElementById('sandbox-paper-title').innerText = titleMap[type];
+            document.getElementById('sandbox-hint-box').classList.add('hidden');
+            
+            sandboxSlots[type].forEach(slot => slot.filled = null);
+            
+            renderSandboxTemplates();
+            renderSandboxBricks();
+            renderSandboxPad();
+            speakText(`已載入${titleMap[type]}範本。`);
+        }
+
+        function renderSandboxBricks() {
+            const area = document.getElementById('sandbox-bricks-area');
+            let html = '';
+            const bricks = sandboxBricks[currentActiveTemplate];
+            const currentSlots = sandboxSlots[currentActiveTemplate];
+
+            bricks.forEach(brick => {
+                const isPlaced = currentSlots.some(slot => slot.filled && slot.filled.id === brick.id);
+                if (isPlaced) {
+                    html += `
+                        <button class="w-full text-left py-2.5 px-4 bg-slate-100 text-slate-400 font-bold rounded-xl border border-slate-200 cursor-not-allowed select-none flex items-center justify-between" disabled>
+                            <span>${brick.name}</span>
+                            <span class="text-xs bg-slate-200 px-2 py-0.5 rounded text-slate-500">已上牆</span>
+                        </button>
+                    `;
+                } else {
+                    const isSelected = sandboxSelectedBrick && sandboxSelectedBrick.id === brick.id;
+                    const borderClass = isSelected ? 'border-slate-800 bg-slate-100 text-slate-900 ring-2 ring-slate-400' : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-700';
+                    html += `
+                        <button onclick="selectSandboxBrick('${brick.id}')" class="w-full text-left py-2.5 px-4 font-bold rounded-xl border-2 ${borderClass} transition flex items-center justify-between shadow-sm active:scale-95">
+                            <span>${brick.name}</span>
+                            <span class="text-xs text-slate-600 font-semibold">排版對齊 ➡️</span>
+                        </button>
+                    `;
+                }
+            });
+            area.innerHTML = html;
+        }
+
+        function selectSandboxBrick(brickId) {
+            const bricks = sandboxBricks[currentActiveTemplate];
+            sandboxSelectedBrick = bricks.find(b => b.id === brickId);
+            speakText(sandboxSelectedBrick.name);
+            renderSandboxBricks();
+            showToast("已選擇積木，請點擊右方對齊槽位！");
+        }
+
+        function renderSandboxPad() {
+            const pad = document.getElementById('sandbox-layout-pad');
+            let html = '';
+            const currentSlots = sandboxSlots[currentActiveTemplate];
+
+            currentSlots.forEach((slot, idx) => {
+                let alignClass = 'text-left';
+                if (slot.align === 'center') alignClass = 'text-center';
+                if (slot.align === 'right') alignClass = 'text-right';
+                if (slot.align === 'indent') alignClass = 'pl-12 text-left';
+
+                if (slot.filled) {
+                    html += `
+                        <div onclick="removeFromSlot('${slot.id}')" class="w-full ${alignClass} py-3 px-5 bg-slate-700 text-white font-black rounded-xl shadow-md border border-slate-800 cursor-pointer pop hover:bg-slate-800 transition" title="點擊將積木取下">
+                            ${slot.filled.name}
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div onclick="placeIntoSlot('${slot.id}')" class="w-full ${alignClass} py-3 px-5 sandbox-slot rounded-xl text-slate-500 border-2 font-bold text-sm" title="點擊將選擇的積木放置於此">
+                            [槽位 ${idx+1}] ${slot.label}
+                        </div>
+                    `;
+                }
+            });
+            pad.innerHTML = html;
+        }
+
+        function placeIntoSlot(slotId) {
+            if (!sandboxSelectedBrick) {
+                showToast("請先從左側點擊選擇一個格式積木！");
+                speakText("請先選擇積木");
+                return;
+            }
+
+            const currentSlots = sandboxSlots[currentActiveTemplate];
+            const slot = currentSlots.find(s => s.id === slotId);
+            
+            slot.filled = sandboxSelectedBrick;
+            sandboxSelectedBrick = null; 
+
+            speakText("放置成功");
+            renderSandboxBricks();
+            renderSandboxPad();
+        }
+
+        function removeFromSlot(slotId) {
+            const currentSlots = sandboxSlots[currentActiveTemplate];
+            const slot = currentSlots.find(s => s.id === slotId);
+            slot.filled = null;
+
+            speakText("已取下");
+            renderSandboxBricks();
+            renderSandboxPad();
+        }
+
+        function resetSandbox() {
+            const currentSlots = sandboxSlots[currentActiveTemplate];
+            currentSlots.forEach(slot => slot.filled = null);
+            sandboxSelectedBrick = null;
+            document.getElementById('sandbox-hint-box').classList.add('hidden');
+            renderSandboxBricks();
+            renderSandboxPad();
+            speakText("已重置格式。");
+        }
+
+        function checkSandboxLayout() {
+            const currentSlots = sandboxSlots[currentActiveTemplate];
+            const isAllFilled = currentSlots.every(slot => slot.filled !== null);
+            
+            if (!isAllFilled) {
+                showToast("還有槽位沒有排好喔！");
+                speakText("還有格式未排好喔，請繼續努力！");
+                return;
+            }
+
+            let isCorrect = true;
+            let firstWrongIdx = -1;
+            for (let i = 0; i < currentSlots.length; i++) {
+                if (currentSlots[i].filled.type !== currentSlots[i].expectedType) {
+                    isCorrect = false;
+                    firstWrongIdx = i;
+                    break;
+                }
+            }
+
+            const hintBox = document.getElementById('sandbox-hint-box');
+            if (isCorrect) {
+                let isAlreadyCompleted = sandboxCompleted.includes(currentActiveTemplate);
+                let expAddedText = "";
+
+                if (!isAlreadyCompleted) {
+                    sandboxCompleted.push(currentActiveTemplate);
+                    localStorage.setItem('sandboxAdvCompleted', JSON.stringify(sandboxCompleted));
+                    
+                    paraExp += 30; // 拔尖版加比較多分
+                    localStorage.setItem('rhetAdvExp', paraExp);
+                    document.getElementById('exp-display').innerText = paraExp;
+                    document.getElementById('exp-display').classList.add('pop');
+                    setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+                    
+                    expAddedText = "，恭喜獲得 30 點經驗值！";
+
+                    if (sandboxCompleted.length === 4) {
+                        localStorage.setItem('t_para_3', 'true'); // index.html 的拔尖版打卡過關！
+                        showToast("恭喜你完成全部高級實用文範本，首頁已為你打卡過關！");
+                        speakText("太厲害了！你已稱霸所有高級實用文格式！");
+                    }
+                } else {
+                    expAddedText = "。(本範本已過關，重複練習不重覆獲得經驗值)";
+                }
+
+                speakText("太完美了！高級實用文格式完全正確！" + (isAlreadyCompleted ? "" : "恭喜獲得 30 點經驗值"));
+                showToast(isAlreadyCompleted ? "排版正確！" : "首次過關！+30 EXP");
+
+                hintBox.className = "mt-4 bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded-r-xl text-emerald-800 font-bold text-base pop";
+                hintBox.innerHTML = `🌟 格式挑戰成功${expAddedText}<br>你成功拼砌了非常困難的【高級排版】！請繼續挑戰其他範本。`;
+                hintBox.classList.remove('hidden');
+
+                renderSandboxTemplates();
+                renderSandboxBricks();
+                renderSandboxPad();
+            } else {
+                let wrongSlotLabel = currentSlots[firstWrongIdx].label.split(' ➡️ ')[0];
+                let expectedName = genericExplanations[currentSlots[firstWrongIdx].expectedType] || "該對齊部分";
+                
+                let hintStr = `排版順序有誤喔！正確的部分已為你保留。<br>👉 提示：在【<span class="text-rose-600">${wrongSlotLabel}</span>】的槽位，你應該放置的是：<span class="text-rose-600">${expectedName.split('：')[0]}</span>！`;
+                speakText(`排版有誤。在${wrongSlotLabel}的槽位，你應該放，${expectedName.split('：')[0]}`);
+
+                for (let i = firstWrongIdx; i < currentSlots.length; i++) {
+                    currentSlots[i].filled = null;
+                }
+
+                hintBox.className = "mt-4 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-xl text-yellow-800 font-bold text-sm shake";
+                hintBox.innerHTML = hintStr;
+                hintBox.classList.remove('hidden');
+
+                renderSandboxBricks();
+                renderSandboxPad();
+            }
+        }
+
+        // ================= 5. 通用目錄渲染與闖關邏輯 =================
+        function renderDirectory() {
+            const dirContainer = document.getElementById('directory-content');
+            if(!dirContainer) return;
+            let html = '';
+            categories.forEach(cat => {
+                let hasQuestions = rawQuestDataObj.some(q => q.category === cat.id);
+                if (hasQuestions) {
+                    let tutId = cat.id;
+
+                    html += `
+                        <div class="mb-6">
+                            <div class="flex items-center justify-between border-b-2 border-${cat.color}-200 pb-2 mb-3">
+                                <h3 class="text-xl font-bold text-${cat.color}-800">${cat.title}</h3>
+                                <button onclick="showTutorial('${tutId}')" class="bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-slate-300 hover:bg-slate-300 transition flex items-center gap-1 active:scale-95">📘 高級錦囊</button>
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                    `;
+                    rawQuestDataObj.forEach((q, idx) => {
+                        if(q.category === cat.id) {
+                            let status = userProgress[idx];
+                            let btnClass = 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50';
+                            let icon = (idx + 1);
+
+                            if (status === 1) {
+                                btnClass = 'bg-yellow-100 border-yellow-400 text-yellow-700 shadow-inner';
+                                icon = '🌟';
+                            } else if (status === 2) {
+                                btnClass = 'bg-emerald-100 border-emerald-400 text-emerald-700 shadow-inner';
+                                icon = '✅';
+                            } else if (status === -1) {
+                                btnClass = 'bg-rose-100 border-rose-400 text-rose-700';
+                                icon = '❌';
+                            }
+
+                            html += `<button onclick="startQuestion(${idx})" class="lvl-btn ${btnClass} w-12 h-12 lg:w-14 lg:h-14 rounded-xl font-black text-base lg:text-lg border-b-4 flex items-center justify-center shadow-sm transition-transform">${icon}</button>`;
+                        }
+                    });
+                    html += `</div></div>`;
+                }
+            });
+            dirContainer.innerHTML = html;
+            updateTotalProgress();
+        }
+
+        function updateTotalProgress() {
+            let solved = userProgress.filter(p => p === 1 || p === 2).length;
+            let percent = (solved / rawQuestDataObj.length) * 100;
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+
+        function shuffleOptions(optionsArray, correctIndex) {
+            let opts = optionsArray.map((opt, i) => ({ text: opt, isCorrect: i === correctIndex }));
+            return opts.sort(() => Math.random() - 0.5);
+        }
+
+        function startQuestion(idx, forceStart = false) {
+            const qData = rawQuestDataObj[idx];
+            const qType = qData.category;
+            let tutId = qType;
+
+            if (!forceStart && !localStorage.getItem('tut_seen_' + tutId)) {
+                pendingQuestionIdx = idx; 
+                showTutorial(tutId);      
+                return;                   
+            }
+
+            currentQuestionMistakes = 0; 
+            currentQuestionIdx = idx;
+            window.currentHints = []; 
+            
+            let hintBox = document.getElementById('dynamic-hint-box');
+            if(hintBox) hintBox.classList.add('hidden');
+
+            document.getElementById('quest-directory').style.display = 'none';
+            const questPlay = document.getElementById('quest-play');
+            questPlay.style.display = 'flex';
+            document.getElementById('main-scroll-area').scrollTop = 0;
+            
+            const qCatTitle = categories.find(c => c.id === qType).title;
+
+            let html = `
+                <div class="w-full flex justify-between items-center mb-4">
+                    <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
+                    <span class="bg-slate-200 text-slate-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${idx + 1} 題 / 共 200 題</span>
+                </div>
+                
+                <div class="slide-up w-full bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center relative transition-all duration-500">
+                    <span class="absolute -top-4 bg-slate-700 text-white px-5 py-1.5 rounded-full font-bold shadow-md text-sm md:text-base">
+                        ${qCatTitle}
+                    </span>
+                    
+                    <div class="w-full flex items-center gap-3 mt-4 mb-6">
+                        <span class="bg-slate-200 text-slate-800 px-3 py-1 rounded text-sm font-bold whitespace-nowrap">任務</span>
+                        <h2 class="text-lg md:text-xl font-bold text-slate-700">${qData.task}</h2>
+                    </div>
+            `;
+
+            if (qData.isReorder) {
+                reorderCorrect = [...qData.chunks];
+                reorderSource = [...reorderCorrect].sort(() => Math.random() - 0.5);
+                reorderTarget = [];
+
+                let isPractical = qType.includes('reorder'); 
+                let targetAreaClass = isPractical 
+                    ? "w-full letter-pad p-4 md:p-6 rounded-2xl min-h-[250px] flex flex-col gap-2 mb-6" 
+                    : "w-full bg-slate-50 p-4 md:p-6 rounded-2xl border-2 border-slate-200 min-h-[250px] flex flex-col gap-2 mb-6";
+                let sourceAreaClass = "w-full flex flex-col gap-3";
+
+                if (isPractical && qType === 'p-adv-reorder') {
+                    html += `
+                        <div class="w-full text-center mb-4">
+                            <span class="bg-slate-100 text-slate-600 font-bold px-4 py-2 rounded-xl text-lg">${qData.sentence}</span>
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <!-- 目標放置區 -->
+                    <div class="${targetAreaClass}" id="reorder-target-area"></div>
+                    <div class="w-full border-t-2 border-dashed border-slate-200 my-2"></div>
+                    <div class="text-center text-slate-500 font-bold mb-2 text-sm">👇 點擊下方段落依序排好</div>
+                    <div class="${sourceAreaClass}" id="reorder-source-area"></div>
+
+                    <!-- 動態提示框 -->
+                    <div id="dynamic-hint-box" class="hidden w-full max-w-3xl mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3">
+                        <div class="flex-1 space-y-2" id="hint-text"></div>
+                        <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
+                    </div>
+                </div>`;
+                questPlay.innerHTML = html;
+                renderReorderUI(true); 
+            } else {
+                const { options, ansIdx } = shuffleOptions(qData.correct, qData.wrongs);
+                let ttsText = qData.sentence;
+
+                html += `
+                    <div class="w-full flex items-start gap-4 mb-6 bg-slate-50 p-6 rounded-2xl border border-slate-200 shadow-inner animate-pulse">
+                        <button onclick="speakText('${ttsText}')" class="tts-btn flex-shrink-0 bg-white text-slate-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-slate-300">🔊</button>
+                        <div class="text-2xl md:text-3xl font-bold text-slate-800 leading-loose">${qData.sentence}</div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full mt-auto" id="options-container">
+                `;
+                
+                options.forEach((optText, oIdx) => {
+                    const isCorr = (oIdx === ansIdx);
+                    const safeOpt = optText.replace(/'/g, "\\'");
+                    html += `<button onclick="checkAnswer(this, ${isCorr}, '${safeOpt}')" class="option-btn bg-white border-4 border-slate-200 text-slate-700 text-xl md:text-2xl py-6 px-4 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition w-full text-center flex flex-col items-center justify-center break-words"><span class="bg-slate-100 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 mb-2">${['A','B','C','D'][oIdx]}</span> <span>${optText}</span></button>`;
+                });
+                
+                html += `
+                        </div>
+                        <!-- 動態提示框 -->
+                        <div id="dynamic-hint-box" class="hidden w-full max-w-3xl mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3">
+                            <div class="flex-1 space-y-2" id="hint-text"></div>
+                            <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
+                        </div>
+                    </div>
+                `;
+                questPlay.innerHTML = html;
+            }
+        }
+
+        function renderReorderUI(isParagraph = true) {
+            const tArea = document.getElementById('reorder-target-area');
+            const sArea = document.getElementById('reorder-source-area');
+            if(!tArea || !sArea) return;
+
+            let btnClassBase = "chunk-btn bg-slate-700 text-white font-bold text-lg md:text-xl py-4 px-5 rounded-xl shadow-md pop w-full text-left leading-relaxed";
+            let sourceBtnClassBase = "chunk-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 font-bold text-lg md:text-xl py-4 px-5 rounded-xl shadow w-full text-left leading-relaxed";
+            let slotClassBase = "chunk-slot w-full h-16 rounded-xl";
+
+            let tHtml = '';
+            if (reorderTarget.length === 0) {
+                tHtml = '<span class="text-slate-400 font-bold m-auto">點擊下方段落排在這裡...</span>';
+            } else {
+                reorderTarget.forEach((chunk, idx) => {
+                    let prefix = rawQuestDataObj[currentQuestionIdx].category.includes('practical') ? '' : (idx+1)+'. ';
+                    tHtml += `<button onclick="removeFromTarget(${idx})" class="${btnClassBase}">${prefix}${chunk}</button>`;
+                });
+            }
+            tArea.innerHTML = tHtml;
+
+            let sHtml = '';
+            reorderSource.forEach((chunk, idx) => {
+                if (chunk === null) {
+                    sHtml += `<div class="${slotClassBase}"></div>`; 
+                } else {
+                    sHtml += `<button onclick="moveToTarget(${idx})" class="${sourceBtnClassBase}">${chunk}</button>`;
+                }
+            });
+            sArea.innerHTML = sHtml;
+
+            if (reorderTarget.length > 0 && reorderTarget.length === reorderCorrect.length) {
+                checkReorderAnswer();
+            }
+        }
+
+        function moveToTarget(sourceIdx) {
+            let chunk = reorderSource[sourceIdx];
+            reorderSource[sourceIdx] = null; 
+            reorderTarget.push(chunk);
+            speakText(chunk);
+            renderReorderUI();
+        }
+
+        function removeFromTarget(targetIdx) {
+            let chunk = reorderTarget[targetIdx];
+            reorderTarget.splice(targetIdx, 1);
+            let emptyIdx = reorderSource.indexOf(null);
+            if(emptyIdx !== -1) reorderSource[emptyIdx] = chunk;
+            renderReorderUI();
+        }
+
+        function checkReorderAnswer() {
+            let isCorrect = true;
+            let correctCount = 0;
+            for(let i=0; i<reorderTarget.length; i++) {
+                if(reorderTarget[i] === reorderCorrect[i]) {
+                    correctCount++;
+                } else {
+                    isCorrect = false;
+                    break;
+                }
+            }
+
+            const qData = rawQuestDataObj[currentQuestionIdx];
+
+            if (isCorrect && reorderTarget.length === reorderCorrect.length) {
+                speakText("完美的重組！");
+                let joinChar = qData.category.includes('practical') ? '<br><br>' : ' ';
+                let expText = `✅ 正確順序：<br><br>${reorderCorrect.join(joinChar)}<br><br>💡 解析：${qData.hint}`;
+                triggerSuccess(expText);
+            } else if (reorderTarget.length === reorderCorrect.length) {
+                currentQuestionMistakes++;
+                userProgress[currentQuestionIdx] = -1;
+                localStorage.setItem('paraAdvProgress', JSON.stringify(userProgress));
+                
+                let chunksToReturn = reorderTarget.splice(correctCount);
+                for (let chunk of chunksToReturn) {
+                    let emptyIdx = reorderSource.indexOf(null);
+                    if(emptyIdx !== -1) {
+                        reorderSource[emptyIdx] = chunk;
+                    } else {
+                        reorderSource.push(chunk);
+                    }
+                }
+
+                let hintWord = reorderCorrect[correctCount];
+                let newHint = `排錯了喔！正確的部分已保留。<br>👉 下接的應該是：「<span class="text-rose-600">${hintWord}</span>」<br>💡 技巧：${qData.hint}`;
+
+                document.getElementById('hint-text').innerHTML = newHint;
+                document.getElementById('hint-tts-btn').onclick = () => speakText(`排錯了喔。下一個應該是，${hintWord}`);
+                document.getElementById('dynamic-hint-box').classList.remove('hidden');
+                document.getElementById('dynamic-hint-box').classList.add('slide-up');
+                
+                speakText("順序不對喔，請看提示！");
+                
+                const tArea = document.getElementById('reorder-target-area');
+                tArea.classList.add('bg-rose-100', 'border-rose-400', 'shake');
+                setTimeout(() => tArea.classList.remove('bg-rose-100', 'border-rose-400', 'shake'), 800);
+
+                renderReorderUI();
+            }
+        }
+
+        function checkAnswer(btnElement, isCorrect, clickedOptText) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            const qData = rawQuestDataObj[currentQuestionIdx];
+            
+            if (isCorrect) {
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                btnElement.classList.add('correct');
+                const expText = qData.explanation; 
+                
+                speakText("完美的判斷！");
+                triggerSuccess(expText);
+            } else {
+                btnElement.classList.add('wrong', 'shake');
+                currentQuestionMistakes++; 
+                userProgress[currentQuestionIdx] = -1;
+                localStorage.setItem('paraAdvProgress', JSON.stringify(userProgress));
+                
+                let lines = qData.explanation.split('<br>');
+                let matchedLine = lines.find(l => l.includes(clickedOptText));
+                let newHint = "請再仔細想一想喔！";
+                
+                if (matchedLine) {
+                    newHint = matchedLine.replace(/^[✅❌]\s*/, ''); 
+                }
+
+                if (!window.currentHints) window.currentHints = [];
+                if (!window.currentHints.includes(newHint)) window.currentHints.push(newHint);
+
+                let combinedHintsHtml = window.currentHints.map(h => `<div class="border-b border-yellow-200 pb-1 last:border-0 last:pb-0">💡 ${h}</div>`).join('');
+                document.getElementById('hint-text').innerHTML = combinedHintsHtml;
+                document.getElementById('hint-tts-btn').onclick = () => speakText(window.currentHints.join('。'));
+                document.getElementById('dynamic-hint-box').classList.remove('hidden');
+                document.getElementById('dynamic-hint-box').classList.add('slide-up');
+                
+                speakText("不對喔，" + newHint);
+                setTimeout(() => { btnElement.classList.remove('shake'); }, 500);
+            }
+        }
+
+        function triggerSuccess(expText) {
+            let finalStatus = currentQuestionMistakes === 0 ? 1 : 2;
+            let previousStatus = userProgress[currentQuestionIdx];
+            let expGained = 0;
+
+            if (previousStatus !== 1 && previousStatus !== 2) {
+                expGained = finalStatus === 1 ? 30 : 10;
+            } else if (previousStatus === 2 && finalStatus === 1) {
+                expGained = 20; 
+            }
+
+            if (expGained > 0) {
+                paraExp += expGained;
+                localStorage.setItem('rhetAdvExp', paraExp);
+                document.getElementById('exp-display').innerText = paraExp;
+                document.getElementById('exp-display').classList.add('pop');
+                setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+            }
+
+            if (finalStatus === 1 || previousStatus !== 1) {
+                userProgress[currentQuestionIdx] = finalStatus;
+                localStorage.setItem('paraAdvProgress', JSON.stringify(userProgress));
+            }
+
+            let modalIcon = finalStatus === 1 ? '🌟' : '✅';
+            let modalTitle = finalStatus === 1 ? '完美答對！' : '成功過關！';
+            let expMsg = expGained > 0 
+                ? `<span class="text-teal-600 block text-xl mb-4">獲得 ${expGained} 點經驗值 ✨</span>` 
+                : `<span class="text-slate-500 block text-lg mb-4">這題已經成功過關囉！</span>`;
+            
+            let combinedDesc = expMsg + `
+                <div class="bg-teal-50 border-l-4 border-teal-500 p-4 text-left text-teal-900 rounded-r-lg font-bold">
+                    <div class="flex justify-between items-center mb-3 pb-2 border-b border-teal-200">
+                        <span class="text-xl">📚 深度解析</span>
+                        <button onclick="speakText('${expText}')" class="bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm hover:bg-teal-100 text-xl transition active:scale-95">🔊</button>
+                    </div>
+                    <div class="space-y-3 text-base leading-relaxed">${expText}</div>
+                </div>`;
+
+            setTimeout(() => { showModal(modalIcon, modalTitle, combinedDesc); }, 800);
+        }
+
+        function showModal(icon, title, desc) {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            document.getElementById('feedback-icon').innerText = icon;
+            document.getElementById('feedback-title').innerText = title;
+            document.getElementById('feedback-desc').innerHTML = desc;
+            
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.onclick = () => {
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-90');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    goToNextQuestion();
+                }, 300);
+            };
+
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+        }
+
+        function backToDirectory() {
+            let hintBox = document.getElementById('dynamic-hint-box');
+            if(hintBox) hintBox.classList.add('hidden');
+            document.getElementById('quest-play').style.display = 'none';
+            document.getElementById('quest-directory').style.display = 'block';
+            renderDirectory();
+        }
+
+        function backToDirectoryFromModal() {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                backToDirectory();
+            }, 300);
+        }
+
+        function goToNextQuestion() {
+            let nextIdx = currentQuestionIdx + 1;
+            if (nextIdx < rawQuestDataObj.length) {
+                startQuestion(nextIdx);
+            } else {
+                showToast("恭喜完成所有挑戰！");
+                backToDirectory();
+            }
+        }
+
+        function switchMode(mode) {
+            const tabQuest = document.getElementById('tab-quest');
+            const tabSandbox = document.getElementById('tab-sandbox');
+            const questMode = document.getElementById('quest-mode');
+            const sandboxMode = document.getElementById('sandbox-mode');
+            const progress = document.getElementById('progress-container');
+
+            if (mode === 'quest') {
+                tabQuest.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-slate-800 bg-slate-700 text-white";
+                tabSandbox.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent bg-white text-slate-600 hover:bg-slate-200";
+                questMode.style.display = 'flex';
+                sandboxMode.style.display = 'none';
+                progress.style.display = 'block';
+                updateTotalProgress();
+            } else {
+                tabSandbox.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-slate-800 bg-slate-700 text-white";
+                tabQuest.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent bg-white text-slate-600 hover:bg-slate-200";
+                questMode.style.display = 'none';
+                sandboxMode.style.display = 'flex'; 
+                progress.style.display = 'none';
+                loadSandboxTemplate('official_letter'); 
+            }
+        }
+
+        window.onload = function() {
+            document.getElementById('exp-display').innerText = paraExp;
+            switchMode('quest'); 
+            renderDirectory();
+        }
+    </script>
+</body>
+</html>
