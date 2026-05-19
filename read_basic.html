@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>閱讀理解 - 基礎拆段訓練</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif;
+            background-color: #f0f9ff; /* 天空藍淺色背景 */
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .bg-grid-pattern {
+            background-image: linear-gradient(to right, #e0f2fe 1px, transparent 1px), linear-gradient(to bottom, #e0f2fe 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .pop { animation: pop 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        
+        /* 隱藏滾動條但保留功能 */
+        .no-scrollbar::-webkit-scrollbar { width: 6px; }
+        .no-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .no-scrollbar::-webkit-scrollbar-thumb { background-color: #bae6fd; border-radius: 10px; }
+        
+        .option-btn { transition: all 0.2s; box-shadow: 0 4px 0 #7dd3fc; }
+        .option-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .option-btn.correct { background-color: #e0f2fe; border-color: #0ea5e9; color: #0369a1; box-shadow: 0 0 0 transparent; transform: translateY(4px); pointer-events: none; }
+        .option-btn.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.6; pointer-events: none; }
+
+        .tts-btn { transition: transform 0.2s; }
+        .tts-btn:active { transform: scale(0.9); }
+        .lvl-btn { transition: transform 0.2s; }
+        .lvl-btn:hover { transform: scale(1.05); }
+
+        /* 閱讀文本專用樣式 - 加入自然段落縮進與日記格式區分 */
+        .reading-text { line-height: 2.2; font-size: 1.125rem; color: #334155; }
+        .reading-text p { margin-bottom: 1rem; text-indent: 2em; } /* 首行空兩格，區分自然段落 */
+        /* 日記專屬格式：不縮進、置中或靠左、醒目樣式 */
+        .reading-text p.diary-date { text-indent: 0; font-weight: 900; color: #0369a1; border-bottom: 2px dashed #bae6fd; padding-bottom: 0.5rem; margin-bottom: 1.5rem; text-align: center; }
+        @media (min-width: 768px) { .reading-text { font-size: 1.25rem; } }
+
+        /* 🌟 句段點擊與高亮樣式 */
+        .read-sentence { cursor: pointer; border-radius: 6px; padding: 2px 4px; margin: 0 -4px; transition: all 0.2s; display: inline; }
+        .read-sentence:hover { background-color: #bae6fd; color: #0369a1; }
+        .active-sentence { background-color: #fef08a; color: #0f172a; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+        .toast-msg {
+            visibility: hidden; min-width: 250px; background-color: #ef4444; color: #fff; text-align: center;
+            border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px;
+            transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
+        @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
+
+    <!-- 頂部導覽列 (Sky 配色) -->
+    <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
+        <div class="p-3 lg:p-4 bg-sky-500 text-white flex justify-between items-center w-full">
+            <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
+                <a href="index.html" class="hover:bg-sky-600 p-1 rounded transition bg-sky-700">⬅️ 返回</a>
+                <span>📖 閱讀理解 (基礎版)</span>
+            </h1>
+            <div class="flex gap-2 lg:gap-4 items-center bg-sky-700 px-3 py-1.5 rounded-full border border-sky-400 shadow-inner">
+                <span class="text-lg lg:text-xl">🏆</span>
+                <span class="font-bold text-sm lg:text-lg">EXP: <span id="exp-display" class="text-yellow-300">0</span></span>
+            </div>
+        </div>
+        <div id="progress-container" class="w-full bg-slate-200 h-2">
+            <div id="progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
+        </div>
+    </div>
+
+    <!-- 主畫面區 -->
+    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
+        
+        <!-- 篇章目錄 -->
+        <div id="quest-directory" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
+            <div class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">📚 拆段小步子閱讀特訓</h2>
+                <p class="text-slate-600 font-bold mb-4">掌握六要素、自然段落與標點符號，打好閱讀基本功！</p>
+                
+                <div class="bg-sky-50 border border-sky-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
+                    <div class="text-sky-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
+                    <div class="flex flex-wrap gap-4 flex-1">
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-lg shadow-sm">🌟</span> 完美過關 (+50)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 順利過關 (+30)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-white border-2 border-slate-300 flex items-center justify-center text-lg shadow-sm text-slate-400">#</span> 尚未挑戰</div>
+                    </div>
+                </div>
+
+                <div id="directory-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- 目錄動態生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 雙屏閱讀與答題區 -->
+        <div id="quest-play" class="w-full max-w-7xl mx-auto hidden flex-col lg:flex-row gap-4 lg:gap-6 min-h-[600px]">
+            
+            <!-- 左側：文章顯示區 -->
+            <div class="lg:w-1/2 bg-white rounded-3xl shadow-xl border-t-8 border-sky-400 flex flex-col overflow-hidden max-h-[40vh] lg:max-h-[70vh]">
+                <div class="p-3 md:p-4 bg-sky-50 border-b border-sky-100 flex flex-col gap-2 z-10 shadow-sm">
+                    <div class="flex justify-between items-center w-full">
+                        <h2 class="text-xl md:text-2xl font-black text-sky-800" id="passage-title">文章標題</h2>
+                        <button id="btn-read-all" onclick="speakPassage()" class="bg-white text-sky-600 px-4 py-2 rounded-xl font-bold shadow-sm border border-sky-200 hover:bg-sky-100 transition flex items-center gap-2 flex-shrink-0">
+                            <span class="text-xl">▶️</span> <span class="hidden md:inline">全文朗讀</span>
+                        </button>
+                    </div>
+                    <p class="text-xs md:text-sm text-sky-600 font-bold">💡 點擊文章中的任何一句話，系統會為你發聲朗讀喔！</p>
+                </div>
+                <div class="p-5 md:p-8 overflow-y-auto no-scrollbar flex-1 bg-white">
+                    <div id="passage-content" class="reading-text text-justify">
+                        <!-- 文章內容 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側：答題區 -->
+            <div class="lg:w-1/2 bg-white rounded-3xl shadow-xl border-2 border-slate-200 flex flex-col relative p-5 md:p-8">
+                <div class="flex justify-between items-center mb-4 pb-4 border-b-2 border-slate-100">
+                    <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition text-sm md:text-base">⬅️ 暫停並返回</button>
+                    <span class="bg-sky-100 text-sky-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm md:text-base" id="question-progress">第 1 / 5 題</span>
+                </div>
+                
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="bg-amber-100 text-amber-800 px-3 py-1 rounded text-sm font-bold whitespace-nowrap" id="question-type">任務類型</span>
+                </div>
+
+                <div class="w-full flex items-start gap-4 mb-6 bg-slate-50 p-4 md:p-6 rounded-2xl border border-slate-200 shadow-inner">
+                    <button onclick="speakQuestion()" class="tts-btn flex-shrink-0 bg-white text-sky-500 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-sky-200">🔊</button>
+                    <h3 class="text-xl md:text-2xl font-bold text-slate-800 leading-relaxed" id="question-text">題目內容</h3>
+                </div>
+
+                <div class="flex flex-col gap-3 w-full mt-2" id="options-container">
+                    <!-- 選項動態生成 -->
+                </div>
+
+                <!-- 動態提示框 -->
+                <div id="dynamic-hint-box" class="hidden w-full mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-base md:text-lg flex items-start gap-3 slide-up">
+                    <div class="flex-1 space-y-2" id="hint-text"></div>
+                    <button onclick="speakHint()" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 學習小教學 Modal -->
+    <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform duration-300 flex flex-col max-h-[90vh]" id="tutorial-content">
+            <div class="flex justify-between items-center mb-4 border-b-2 border-sky-100 pb-3">
+                <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-sky-600 flex items-center gap-2">📘 閱讀小錦囊</h2>
+                <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
+            </div>
+            <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4"></div>
+            <div class="mt-6 pt-4 border-t-2 border-slate-100">
+                <button onclick="closeTutorial()" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-sky-700 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 答對全解析 Modal -->
+    <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity pointer-events-none">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-xl text-center transform scale-90 transition-transform duration-300 flex flex-col max-h-[90vh] pointer-events-auto" id="feedback-content">
+            <div id="feedback-icon" class="text-6xl mb-2">🎉</div>
+            <h2 id="feedback-title" class="text-2xl md:text-3xl font-black text-slate-800 mb-2">答對了！</h2>
+            <div id="feedback-desc" class="text-slate-600 font-bold mb-4 text-base md:text-lg leading-relaxed text-left overflow-y-auto pr-2 flex-1 w-full"></div>
+            <div class="flex gap-3 w-full mt-2 pt-4 border-t border-slate-100">
+                <button id="next-btn" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-sky-700 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 篇章完成 Modal -->
+    <div id="finish-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm hidden opacity-0 transition-opacity pointer-events-none">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform duration-300 pointer-events-auto" id="finish-content">
+            <div class="text-7xl mb-4">🏆</div>
+            <h2 class="text-3xl font-black text-slate-800 mb-2">篇章過關！</h2>
+            <p id="finish-desc" class="text-slate-600 font-bold mb-6 text-xl leading-relaxed">恭喜你讀完了一篇文章！</p>
+            <button onclick="backToDirectoryFromFinish()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">領取獎勵並返回目錄 ✨</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-msg">提示訊息</div>
+
+    <script>
+        // ================= 1. 核心狀態與語音引擎 =================
+        let readExp = parseInt(localStorage.getItem('readBasicExp')) || 0;
+        document.getElementById('exp-display').innerText = readExp;
+        
+        let currentPassageIdx = -1;
+        let currentQuestionIdx = -1;
+        let currentPassageMistakes = 0; 
+        let currentQuestionMistakes = 0; 
+        let pendingTutorial = '';
+
+        // 語音播放控制狀態
+        window.currentUtterance = null;
+        let isReadingAll = false;
+        let readingIndex = 0;
+        let sentenceSpans = [];
+
+        // 清理文字，避免讀出奇怪符號
+        function cleanTextForSpeech(text) {
+            return text.replace(/<br\s*\/?>/gi, '。')
+                       .replace(/<[^>]*>?/gm, '')
+                       .replace(/[✅❌💡【】]/g, '')
+                       .replace(/&nbsp;/g, ' ')
+                       .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDC00-\uDFFF]/g, ''); 
+        }
+
+        function speakText(text, rate = 0.9) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let cleanText = cleanTextForSpeech(text);
+                let msg = new SpeechSynthesisUtterance(cleanText);
+                msg.lang = 'zh-HK';
+                msg.rate = rate; 
+                window.currentUtterance = msg; 
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        function stopAllSpeechAndHighlights() {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            isReadingAll = false;
+            document.querySelectorAll('.read-sentence').forEach(span => {
+                span.classList.remove('active-sentence');
+            });
+            let readBtn = document.getElementById('btn-read-all');
+            if(readBtn) readBtn.innerHTML = '<span class="text-xl">▶️</span> <span class="hidden md:inline">全文朗讀</span>';
+        }
+
+        function speakPassage() {
+            if (isReadingAll) {
+                stopAllSpeechAndHighlights();
+                return;
+            }
+            stopAllSpeechAndHighlights();
+            isReadingAll = true;
+            sentenceSpans = document.querySelectorAll('.read-sentence');
+            readingIndex = 0;
+            
+            let readBtn = document.getElementById('btn-read-all');
+            if(readBtn) readBtn.innerHTML = '<span class="text-xl">⏸️</span> <span class="hidden md:inline">停止朗讀</span>';
+            
+            if(sentenceSpans.length > 0) readNextSentence();
+        }
+
+        function readNextSentence() {
+            if (readingIndex >= sentenceSpans.length || !isReadingAll) {
+                stopAllSpeechAndHighlights();
+                return;
+            }
+            
+            document.querySelectorAll('.read-sentence').forEach(s => s.classList.remove('active-sentence'));
+            let span = sentenceSpans[readingIndex];
+            span.classList.add('active-sentence');
+            
+            span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            let text = span.innerText;
+            let msg = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
+            msg.lang = 'zh-HK';
+            msg.rate = 0.85; 
+            window.currentUtterance = msg;
+            
+            msg.onend = function() {
+                if (isReadingAll) {
+                    readingIndex++;
+                    readNextSentence();
+                } else {
+                    stopAllSpeechAndHighlights();
+                }
+            };
+            
+            msg.onerror = function() { stopAllSpeechAndHighlights(); };
+            window.speechSynthesis.speak(msg);
+        }
+
+        function speakSpecificSentence(spanElement) {
+            stopAllSpeechAndHighlights();
+            spanElement.classList.add('active-sentence');
+            
+            let text = spanElement.innerText;
+            let msg = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
+            msg.lang = 'zh-HK';
+            msg.rate = 0.85;
+            window.currentUtterance = msg;
+            
+            msg.onend = function() {
+                spanElement.classList.remove('active-sentence');
+            };
+            
+            window.speechSynthesis.speak(msg);
+        }
+
+        function parseAndWrapSentences(htmlString) {
+            let tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlString;
+            let pTags = tempDiv.querySelectorAll('p');
+            pTags.forEach(p => {
+                let html = p.innerHTML;
+                let parts = html.split(/([。！？][」』]?)/);
+                let finalHtml = "";
+                let current = "";
+                
+                for(let i=0; i<parts.length; i++) {
+                    current += parts[i];
+                    if (/[。！？]/.test(parts[i]) || i === parts.length - 1) {
+                        if (current.trim() !== "") {
+                            finalHtml += `<span class="read-sentence" onclick="speakSpecificSentence(this)">${current}</span>`;
+                        }
+                        current = "";
+                    }
+                }
+                p.innerHTML = finalHtml;
+            });
+            return tempDiv.innerHTML;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "toast-msg show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // ================= 2. 學習錦囊 (符合基礎藍圖) =================
+        const tutorialContents = {
+            't-narrative': `
+                <div class="text-center mb-4"><span class="text-6xl">🕵️‍♂️ 🔎</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">找答案的「5W1H 尋寶法」</p>
+                <p class="mb-4 text-slate-600">讀故事時，就像小偵探一樣，在文章裡找出這幾個重要線索：</p>
+                <div class="bg-sky-50 p-4 rounded-xl border-2 border-sky-200 mb-3 space-y-3 font-bold text-sky-900">
+                    <p><span class="bg-white px-2 py-1 rounded shadow-sm text-sky-600">何人 (Who)</span> 👉 故事裡有誰？</p>
+                    <p><span class="bg-white px-2 py-1 rounded shadow-sm text-sky-600">何時 (When)</span> 👉 發生在早上、晚上還是星期天？</p>
+                    <p><span class="bg-white px-2 py-1 rounded shadow-sm text-sky-600">何地 (Where)</span> 👉 他們在哪裡？(公園、學校)</p>
+                    <p><span class="bg-white px-2 py-1 rounded shadow-sm text-sky-600">何事 (What)</span> 👉 發生了什麼事？</p>
+                </div>
+            `,
+            't-vocab': `
+                <div class="text-center mb-4"><span class="text-6xl">✨ 🧩</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">字詞與句式魔法</p>
+                <p class="mb-4 text-slate-600">我們要學會認識詞語的好朋友和敵人，還要懂得找出事情的原因！</p>
+                <div class="bg-amber-50 p-4 rounded-xl border-2 border-amber-200 mb-3 space-y-3">
+                    <p class="text-slate-700"><span class="font-bold text-amber-700 bg-white px-2 py-1 rounded">近義詞</span> 👉 意思很像的詞（例：開心 = 高興）</p>
+                    <p class="text-slate-700"><span class="font-bold text-amber-700 bg-white px-2 py-1 rounded">反義詞</span> 👉 意思相反的詞（例：巨大 ↔️ 微小）</p>
+                    <hr class="border-amber-200">
+                    <p class="text-slate-700"><span class="font-bold text-rose-600 bg-white px-2 py-1 rounded">因為...所以...</span> 👉 找出事情發生的「原因」和「結果」。</p>
+                </div>
+            `,
+            't-para-punc': `
+                <div class="text-center mb-4"><span class="text-6xl">🧱 ❗</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">段落與標點的秘密</p>
+                <p class="mb-4 text-slate-600">文章是由「段落」和「標點符號」組成的，它們會說話喔！</p>
+                <div class="bg-emerald-50 p-4 rounded-xl border-2 border-emerald-200 mb-3">
+                    <p class="font-black text-emerald-800 text-lg mb-2">1. 怎麼數「自然段落」？</p>
+                    <p class="text-slate-700 mb-3">看文章正文！每次看到<span class="bg-white px-1 rounded font-bold text-emerald-600">前面空了兩格</span>，就代表這是一個新的自然段。（💡注意：日記的日期屬於格式，不計入自然段喔！）</p>
+                    <p class="font-black text-emerald-800 text-lg mb-2">2. 標點符號的心情：</p>
+                    <p class="text-slate-700">看到 <span class="text-2xl font-black text-rose-500">！</span> 👉 代表驚訝、開心或生氣。<br>看到 <span class="text-2xl font-black text-blue-500">？</span> 👉 代表心裡有疑問想問別人。</p>
+                </div>
+            `
+        };
+
+        function showTutorial(tutKey) {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            document.getElementById('tutorial-body').innerHTML = tutorialContents[tutKey];
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+            localStorage.setItem('tut_seen_' + tutKey, 'true');
+        }
+
+        function closeTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (currentPassageIdx !== -1) {
+                    startPassage(currentPassageIdx, true); 
+                }
+            }, 300);
+        }
+
+        // ================= 3. 基礎閱讀篇章題庫 =================
+        const rawQuestDataObj = [
+            {
+                id: 'p1', category: '記敘文', tut: 't-para-punc', title: '快樂的週末',
+                text: '<p>星期天早上，天氣非常晴朗。小明和爸爸媽媽一起去維多利亞公園野餐。</p><p>媽媽在草地上鋪了一塊紅色的格仔布，上面放滿了三文治、蘋果和果汁。小明開心地在草地上放風箏，爸爸則靠在樹下看書。他們玩到傍晚，才依依不捨地收拾東西回家。</p>',
+                questions: [
+                    { type: '提取時間', q: '這個故事發生在什麼時候？', options: ['星期六下午', '星期天早上', '星期天晚上', '星期一早上'], ans: 1, hint: '請在文章的第一句話尋找「時間」的字眼。', exp: '文章第一句寫著：「星期天早上，天氣非常晴朗。」' },
+                    { type: '自然段落', q: '這篇文章共有幾個自然段？', options: ['一個', '兩個', '三個', '四個'], ans: 1, hint: '數一數文章有幾次「開頭空兩格」的地方。', exp: '文章有兩個段落，每個段落的開頭都空了兩格。' },
+                    { type: '字詞積累', q: '第一段中「晴朗」的反義詞是什麼？', options: ['美麗', '炎熱', '陰沉', '明亮'], ans: 2, hint: '晴朗代表天氣很好、有太陽，相反詞是沒有太陽、天黑黑的。', exp: '「晴朗」的相反是天空佈滿雲的「陰沉」。' },
+                    { type: '句式結構', q: '為什麼小明一家要去野餐？', options: ['因為小明考了一百分', '因為天氣非常晴朗，適逢週末', '因為家裡沒有食物了', '因為公園有免費禮物'], ans: 1, hint: '看看第一句話告訴了我們什麼原因。', exp: '因為「星期天」且「天氣非常晴朗」，所以他們去野餐。' },
+                    { type: '初步推論', q: '他們玩到傍晚「依依不捨」地回家，這表示他們覺得怎樣？', options: ['覺得很無聊', '覺得很生氣', '覺得很開心，捨不得離開', '覺得很害怕'], ans: 2, hint: '玩了一整天還不想走，代表心情是怎樣的？', exp: '「依依不捨」形容非常留戀，捨不得離開，代表他們玩得很開心。' }
+                ]
+            },
+            {
+                id: 'p2', category: '描寫文', tut: 't-vocab', title: '我的寵物貓',
+                text: '<p>我家有一隻小貓，名叫「雪球」。牠全身長滿了白色的毛，摸起來像棉花一樣柔軟。雪球有一雙圓溜溜的藍眼睛，像兩顆發光的寶石。</p><p>牠最喜歡吃魚，吃飽後就會在客廳的沙發上睡午覺。每次我回到家，牠都會跑到門口「喵喵」叫著迎接我！</p>',
+                questions: [
+                    { type: '直接提取', q: '這隻小貓的名字叫什麼？', options: ['小白', '雪球', '棉花', '寶石'], ans: 1, hint: '第一段的第一句介紹了小貓的名字。', exp: '文章寫道：「名叫『雪球』。」' },
+                    { type: '字詞積累', q: '第二段中，哪一個量詞用來形容「沙發」最合適？', options: ['一張沙發', '一隻沙發', '一條沙發', '一粒沙發'], ans: 0, hint: '沙發是一件有平面的家具，想想桌子、椅子用什麼量詞。', exp: '家具如沙發、桌子、椅子通常用量詞「張」。' },
+                    { type: '標點符號', q: '文章最後一句用了感嘆號「！」，代表作者當時的心情是怎樣的？', options: ['很害怕貓', '很生氣', '看到貓咪迎接自己，感到很開心', '覺得很無聊'], ans: 2, hint: '感嘆號表示強烈的感情。看到寵物迎接自己，應該是什麼感覺？', exp: '感嘆號加強了語氣，表現出作者回到家看到小貓迎接時的喜悅之情。' },
+                    { type: '自然段落', q: '第二段主要寫了雪球的什麼？', options: ['牠的毛色', '牠的眼睛', '牠的生活習慣和喜歡做的事', '牠的年紀'], ans: 2, hint: '看看第二段寫了牠吃什麼、在哪裡睡覺、做什麼動作。', exp: '第二段寫了牠愛吃魚、睡沙發和迎接主人，這些都是生活習慣。' },
+                    { type: '句式結構', q: '因為雪球吃飽了，所以牠會去做什麼事？', options: ['跑去抓老鼠', '在客廳的沙發上睡午覺', '跑到門口叫', '吃更多的魚'], ans: 1, hint: '在第二段找找「吃飽後」接著發生的事情。', exp: '文章提到：「吃飽後就會在客廳的沙發上睡午覺。」' }
+                ]
+            },
+            {
+                id: 'p3', category: '說明文', tut: 't-narrative', title: '神奇的企鵝',
+                text: '<p>企鵝是一種非常特別的鳥類。雖然牠們有翅膀，但卻不會在天上飛。企鵝主要生活在冰天雪地的南極。牠們的背部是黑色的，肚子是白色的，看起來就像穿著一套整齊的「燕尾服」。</p><p>企鵝是游泳的高手，牠們在海裡游得非常快。因為海裡有豐富的食物，所以牠們經常潛入水中，捕捉小魚和磷蝦來吃。</p>',
+                questions: [
+                    { type: '直接提取', q: '企鵝屬於哪一種動物？', options: ['魚類', '鳥類', '爬行類', '昆蟲'], ans: 1, hint: '文章第一句話就告訴了我們企鵝的分類。', exp: '文章第一句寫道：「企鵝是一種非常特別的鳥類。」' },
+                    { type: '標點符號', q: '「雖然牠們有翅膀，但卻不會在天上飛。」這句用句號「。」結尾，表示什麼？', options: ['表示這是一個問句', '表示作者很生氣', '表示這是一句完整敘述事實的話', '表示話還沒說完'], ans: 2, hint: '句號的作用是結束一個完整的句子。', exp: '這是一句陳述客觀事實的句子，說完了就用句號。' },
+                    { type: '字詞積累', q: '第一段中，「黑」的反義詞是什麼？', options: ['紅', '黃', '白', '綠'], ans: 2, hint: '企鵝的背部是黑的，肚子是什麼顏色的？這兩個顏色剛好相反。', exp: '「黑」的相反詞是「白」，文中也提到了牠的肚子是白色的。' },
+                    { type: '直接提取', q: '企鵝主要生活在哪裡？', options: ['北極', '沙漠', '南極', '森林'], ans: 2, hint: '找找看「生活在」後面的地點。', exp: '文章明確指出：「企鵝主要生活在冰天雪地的南極。」' },
+                    { type: '句式結構', q: '為什麼企鵝經常潛入水中？', options: ['因為牠們想洗澡', '因為海裡有豐富的食物', '因為水裡比較溫暖', '因為牠們怕黑'], ans: 1, hint: '看看第二段「因為...所以...」的句子。', exp: '文章寫道：「因為海裡有豐富的食物，所以牠們經常潛入水中...」' }
+                ]
+            },
+            {
+                id: 'p4', category: '寓言故事', tut: 't-para-punc', title: '聰明的烏鴉',
+                text: '<p>一隻烏鴉口渴了，到處尋找水喝。牠看見一個瓶子，裡面有半瓶水。可是瓶口太小，烏鴉的嘴伸不進去，喝不到水。烏鴉急得在瓶子旁邊飛來飛去。</p><p>突然，牠看到地上有很多小石子，於是想到了一個好辦法！烏鴉把小石子一顆一顆地銜進瓶子裡。瓶子裡的水漸漸升高，烏鴉終於喝到水了。</p>',
+                questions: [
+                    { type: '句式結構', q: '烏鴉為什麼要到處找水喝？', options: ['因為牠想洗澡', '因為牠口渴了', '因為天氣太熱', '因為水很好喝'], ans: 1, hint: '故事的第一句話告訴了我們原因。', exp: '文章開頭寫道：「一隻烏鴉口渴了，到處尋找水喝。」' },
+                    { type: '自然段落', q: '這篇文章的第二段主要說什麼？', options: ['烏鴉找不到水喝', '烏鴉發現瓶子太小', '烏鴉想出用石子喝到水的辦法', '烏鴉飛走了'], ans: 2, hint: '看看第二段烏鴉做了什麼動作，最後結果怎樣。', exp: '第二段記述了烏鴉看到石子、想到辦法，最後成功喝到水。' },
+                    { type: '字詞積累', q: '第二段中，「升高」的反義詞是什麼？', options: ['變大', '降低', '變滿', '流出'], ans: 1, hint: '水往上是升高，往下是什麼？', exp: '「升高」的相反詞是「降低」。' },
+                    { type: '標點符號', q: '「於是想到了一個好辦法！」這句用了感嘆號，表示烏鴉當時的心情怎樣？', options: ['非常生氣', '非常害怕', '非常驚喜和激動', '很無聊'], ans: 2, hint: '原本喝不到水很著急，突然想到了辦法，心情會怎樣轉變？', exp: '感嘆號表達了烏鴉想到辦法時的驚喜與激動。' },
+                    { type: '初步推論', q: '烏鴉遇到喝不到水的困難時，牠沒有放棄，這說明牠是一隻怎樣的鳥？', options: ['很懶惰的鳥', '很貪吃的鳥', '會動腦筋、聰明的鳥', '很膽小的鳥'], ans: 2, hint: '遇到問題自己想辦法解決，代表牠很怎樣？', exp: '故事透過烏鴉用石子喝到水，顯示出牠會冷靜思考、動腦筋解決問題。' }
+                ]
+            },
+            {
+                id: 'p5', category: '記敘文', tut: 't-vocab', title: '幫忙做家務',
+                text: '<p>星期六是我們家的大掃除日。一大早，全家人都動起手來。爸爸負責抹窗戶，媽媽負責洗衣服。</p><p>我自告奮勇地對媽媽說：「讓我來掃地吧！」我拿起一把掃帚，認真地把客廳和房間的灰塵掃得一乾二淨。因為大家都很努力，所以房子很快就變得乾淨明亮了。</p>',
+                questions: [
+                    { type: '直接提取', q: '這家人在哪一天進行大掃除？', options: ['星期五', '星期六', '星期天', '星期一'], ans: 1, hint: '文章第一句提到了日子。', exp: '文章開頭寫道：「星期六是我們家的大掃除日。」' },
+                    { type: '直接提取', q: '爸爸負責做什麼家務？', options: ['掃地', '洗衣服', '抹窗戶', '煮飯'], ans: 2, hint: '找找看「爸爸負責」後面的字。', exp: '文章中提到：「爸爸負責抹窗戶」。' },
+                    { type: '字詞積累', q: '第二段中，用來量度「掃帚」的量詞是什麼？', options: ['一張', '一隻', '一把', '一條'], ans: 2, hint: '掃帚是有長長手柄的工具，看看文章裡寫了「一___掃帚」。', exp: '文章寫道：「我拿起一把掃帚」。有柄的工具通常用「把」。' },
+                    { type: '句式結構', q: '為什麼房子很快就變得乾淨明亮了？', options: ['因為請了工人幫忙', '因為大家都很努力大掃除', '因為房子本來就很乾淨', '因為媽媽買了新房子'], ans: 1, hint: '看看第二段最後一句的「因為...所以...」。', exp: '文章寫道：「因為大家都很努力，所以房子很快就變得乾淨明亮了。」' },
+                    { type: '字詞積累', q: '「一乾二淨」的近義詞是什麼？', options: ['亂七八糟', '十分乾淨', '有點濕', '很骯髒'], ans: 1, hint: '把灰塵掃完了，代表地上很怎樣？', exp: '「一乾二淨」形容清理得十分徹底，近義詞是「十分乾淨」。' }
+                ]
+            },
+            {
+                id: 'p6', category: '童話故事', tut: 't-narrative', title: '粗心的小豬',
+                text: '<p>豬媽媽叫小豬去市場買三條紅蘿蔔用來煮湯。小豬提著籃子出門，一邊走一邊開心地唱歌。</p><p>到了市場，小豬看見又紅又大的蘋果，心想：「這些蘋果真漂亮！」於是，牠買了一大籃蘋果回家。</p><p>豬媽媽看到後，嘆了口氣說：「你這個粗心的孩子，我叫你買蘿蔔，你怎麼買了蘋果呢？」小豬低下了頭，紅著臉說：「對不起，媽媽。」</p>',
+                questions: [
+                    { type: '自然段落', q: '這篇故事共有幾個自然段？', options: ['一個', '兩個', '三個', '四個'], ans: 2, hint: '數一數文章有幾次開頭空了兩格。', exp: '文章分為出門前、在市場、回家後三個段落。' },
+                    { type: '直接提取', q: '豬媽媽本來叫小豬去買什麼？', options: ['蘋果', '紅蘿蔔', '白菜', '西瓜'], ans: 1, hint: '第一段第一句寫了豬媽媽的要求。', exp: '文章第一句：「豬媽媽叫小豬去市場買三條紅蘿蔔」。' },
+                    { type: '標點符號', q: '小豬心想：「這些蘋果真漂亮！」這裡用了感嘆號，代表牠覺得怎樣？', options: ['很討厭蘋果', '很驚訝蘋果很醜', '很讚嘆蘋果的漂亮', '想問蘋果多少錢'], ans: 2, hint: '感嘆號表示強烈的讚美。', exp: '感嘆號加強了小豬對蘋果「真漂亮」的讚嘆之情。' },
+                    { type: '句式結構', q: '為什麼豬媽媽要嘆氣？', options: ['因為小豬沒有帶錢', '因為市場關門了', '因為小豬太粗心，買錯了東西', '因為蘋果不好吃'], ans: 2, hint: '看看豬媽媽說的話：「你怎麼買了蘋果呢？」', exp: '因為小豬忘了買蘿蔔卻買了蘋果，媽媽覺得牠太粗心了。' },
+                    { type: '初步推論', q: '小豬「紅著臉」代表牠心裡覺得怎樣？', options: ['很生氣', '很驕傲', '覺得慚愧和不好意思', '覺得很熱'], ans: 2, hint: '做錯事被媽媽指出後，低著頭紅著臉，這是一種知錯的表現。', exp: '「紅著臉」並低頭說對不起，是表現出羞愧、知錯的心理。' }
+                ]
+            },
+            {
+                id: 'p7', category: '記敘文', tut: 't-para-punc', title: '參觀動物園',
+                text: '<p>學校假期，老師帶我們去參觀動物園。一走進大門，我們就聽到猴子吱吱喳喳的叫聲。</p><p>接著，我們去看大象。因為天氣很熱，大象正用長長的鼻子吸水，噴在自己背上洗澡。最吸引我的是長頸鹿，牠們的脖子長長的，可以輕鬆吃到高樹上的葉子。</p><p>這次參觀讓我認識了許多動物，真是大開眼界！</p>',
+                questions: [
+                    { type: '直接提取', q: '一走進大門，聽到了什麼聲音？', options: ['獅子的吼聲', '猴子吱吱喳喳的叫聲', '大象的腳步聲', '小鳥的唱歌聲'], ans: 1, hint: '找找看「一走進大門」後面的句子。', exp: '文章寫道：「我們就聽到猴子吱吱喳喳的叫聲。」' },
+                    { type: '句式結構', q: '為什麼大象要噴水在自己背上？', options: ['因為牠想跟遊客玩', '因為天氣很熱，牠要洗澡降溫', '因為鼻子太長了', '因為牠口渴'], ans: 1, hint: '第二段有一句「因為...」，找找看原因。', exp: '文章提到：「因為天氣很熱，大象正用長長的鼻子吸水...洗澡。」' },
+                    { type: '字詞積累', q: '第二段中，「高」的反義詞是什麼？', options: ['大', '長', '矮', '肥'], ans: 2, hint: '長頸鹿吃到「高」樹上的葉子。與高相反的是什麼？', exp: '「高」的相反詞是「矮」。' },
+                    { type: '自然段落', q: '這篇文章的第三段主要寫什麼？', options: ['介紹猴子的叫聲', '介紹大象洗澡', '總結這次參觀的感受', '投訴天氣太熱'], ans: 2, hint: '最後一段通常用來總結。', exp: '第三段寫「這次參觀讓我認識了許多動物，真是大開眼界」，是整篇文章的總結感受。' },
+                    { type: '字詞積累', q: '「大開眼界」的近義詞是什麼？', options: ['閉上眼睛', '感到害怕', '增廣見聞', '覺得疲倦'], ans: 2, hint: '看到了以前沒看過的動物，學到了新知識，眼界大開。', exp: '「大開眼界」指看到新奇事物，增加了知識，近義詞是「增廣見聞」。' }
+                ]
+            },
+            {
+                id: 'p8', category: '寓言故事', tut: 't-vocab', title: '勤勞的小螞蟻',
+                text: '<p>秋天快過去了，天氣越來越冷。小螞蟻們每天都在草叢裡忙碌地搬運食物，準備過冬。</p><p>旁邊的蟋蟀卻在樹枝上拉小提琴，牠笑著對螞蟻說：「天氣這麼好，為什麼不來玩呢？」螞蟻回答：「因為我們現在不準備食物，冬天就會捱餓了。」</p><p>冬天到了，下起了大雪。螞蟻在溫暖的洞裡吃著豐富的食物，而蟋蟀卻在外面冷得發抖。</p>',
+                questions: [
+                    { type: '字詞積累', q: '第一段中，「忙碌」的近義詞是什麼？', options: ['空閒', '繁忙', '懶惰', '快樂'], ans: 1, hint: '螞蟻每天都在工作，沒有停下來。', exp: '「忙碌」指事情多，不得空，近義詞是「繁忙」。' },
+                    { type: '直接提取', q: '蟋蟀在秋天時做什麼？', options: ['幫忙搬食物', '在樹枝上拉小提琴', '在洞裡睡覺', '建房子'], ans: 1, hint: '找找看第二段「蟋蟀」在做什麼。', exp: '文章寫道：「旁邊的蟋蟀卻在樹枝上拉小提琴」。' },
+                    { type: '句式結構', q: '為什麼螞蟻不和蟋蟀一起玩？', options: ['因為螞蟻不喜歡音樂', '因為牠們如果不趁現在準備食物，冬天就會捱餓', '因為天氣不好', '因為螞蟻怕蟋蟀'], ans: 1, hint: '看看螞蟻回答蟋蟀的「因為...」句子。', exp: '螞蟻說：「因為我們現在不準備食物，冬天就會捱餓了。」' },
+                    { type: '自然段落', q: '這篇文章的第三段描述了什麼結果？', options: ['螞蟻和蟋蟀成為了好朋友', '螞蟻過得很溫暖，蟋蟀卻冷得發抖', '大家都找不到食物', '春天來了'], ans: 1, hint: '看看冬天到了之後，兩隻動物的情況。', exp: '第三段對比了螞蟻在洞裡吃食物，而蟋蟀在外面受凍的結果。' },
+                    { type: '標點符號', q: '蟋蟀問：「天氣這麼好，為什麼不來玩呢？」這句用了問號，表示蟋蟀心裡覺得怎樣？', options: ['很生氣', '很害怕', '覺得奇怪和疑惑', '很傷心'], ans: 2, hint: '問號用來表示發問。蟋蟀不明白螞蟻為什麼要那麼辛苦。', exp: '問號表達了蟋蟀對螞蟻不趁好天氣玩耍的疑惑不解。' }
+                ]
+            },
+            {
+                id: 'p9', category: '記敘文', tut: 't-narrative', title: '第一次煎蛋',
+                text: '<p>星期六早上，我決定學煎雞蛋。我先從冰箱拿出兩個雞蛋，然後在平底鍋裡倒了一點油。</p><p>等油熱了，我小心翼翼地把雞蛋打進鍋裡。雞蛋在鍋裡發出「滋滋」的聲音，很快就變成了金黃色。</p><p>媽媽誇我做得很好。我吃著自己煎的蛋，心裡非常滿足。</p>',
+                questions: [
+                    { type: '直接提取', q: '「我」從冰箱拿了幾個雞蛋？', options: ['一個', '兩個', '三個', '四個'], ans: 1, hint: '第一段寫拿了「多少個」雞蛋？', exp: '文章提到：「我先從冰箱拿出兩個雞蛋」。' },
+                    { type: '字詞積累', q: '第二段中，「小心翼翼」的近義詞是什麼？', options: ['非常害怕', '十分隨便', '十分謹慎小心', '動作很快'], ans: 2, hint: '煎蛋時怕油彈到，動作會是很小心的。', exp: '「小心翼翼」形容舉動十分謹慎，絲毫不敢疏忽。' },
+                    { type: '標點符號', q: '文章中「滋滋」加了引號「」，這是因為？', options: ['這是一個人的名字', '用來標示聲音的詞語', '這是一本書的名字', '表示這句話很重要'], ans: 1, hint: '「滋滋」是煎蛋發出的聲音。', exp: '引號在這裡用來標示擬聲詞（聲音）。' },
+                    { type: '字詞積累', q: '第三段中，「滿足」的反義詞是什麼？', options: ['開心', '失望', '飽肚', '疲倦'], ans: 1, hint: '覺得足夠、滿意了，相反就是覺得不夠、不滿意。', exp: '「滿足」的相反詞是「失望」或「不滿」。' },
+                    { type: '自然段落', q: '這篇文章按什麼順序來分段的？', options: ['按天氣變化', '按煎蛋的步驟（準備、煎蛋、吃蛋）', '按不同的人物', '按不同的地點'], ans: 1, hint: '第一段準備，第二段開火煎，第三段吃。', exp: '文章清晰地按照事情發生的先後步驟來分段。' }
+                ]
+            },
+            {
+                id: 'p10', category: '描寫文', tut: 't-para-punc', title: '美麗的校園',
+                text: '<p>我們的校園非常美麗。一進校門，就可以看到一個大花圃，裡面開滿了紅色的玫瑰和黃色的菊花。</p><p>操場旁邊有一排高大的榕樹，像衛兵一樣保護著我們。因為樹蔭很大，所以每到下課，同學們都喜歡在榕樹下乘涼、玩耍。</p><p>我非常喜歡我的學校，這裡每天都充滿了歡笑聲！</p>',
+                questions: [
+                    { type: '直接提取', q: '一進校門，會看到什麼？', options: ['操場', '一個大花圃', '課室', '圖書館'], ans: 1, hint: '第一段說「一進...」就可以看到什麼？', exp: '文章寫道：「一進校門，就可以看到一個大花圃」。' },
+                    { type: '字詞積累', q: '花圃裡有紅色的玫瑰和什麼顏色的菊花？', options: ['白色', '黃色', '紫色', '綠色'], ans: 1, hint: '找找看「菊花」前面的顏色詞。', exp: '文章提到：「黃色的菊花」。' },
+                    { type: '句式結構', q: '為什麼同學們喜歡在榕樹下乘涼？', options: ['因為榕樹會長出果實', '因為樹蔭很大，可以遮太陽', '因為那裡有玩具', '因為課室很熱'], ans: 1, hint: '看看第二段「因為...所以...」的句子。', exp: '文章寫道：「因為樹蔭很大，所以每到下課，同學們都喜歡在榕樹下乘涼」。' },
+                    { type: '初步推論', q: '文章說榕樹「像衛兵一樣保護著我們」，這表示榕樹長得怎樣？', options: ['很矮小', '高大又筆挺', '顏色很奇怪', '會走動'], ans: 1, hint: '衛兵通常是高大威武的，這代表榕樹也很高大。', exp: '把榕樹比作衛兵，突出了它高大筆挺的特徵。' },
+                    { type: '標點符號', q: '最後一句「這裡每天都充滿了歡笑聲！」用了感嘆號，表達了作者怎樣的感情？', options: ['對學校的抱怨', '對學校的喜愛與讚美', '覺得學校很吵', '對學校的疑問'], ans: 1, hint: '作者前面說「我非常喜歡我的學校」。', exp: '感嘆號加強了語氣，表達了作者對學校充滿歡樂氣氛的喜愛之情。' }
+                ]
+            },
+            {
+                id: 'p11', category: '說明文', tut: 't-vocab', title: '勤勞的蜜蜂',
+                text: '<p>蜜蜂是一種勤勞的昆蟲。牠們住在蜂巢裡，每天都會飛到花叢中採集花蜜。蜜蜂的身體上有黃黑相間的條紋，還有一對透明的翅膀。</p><p>蜜蜂非常團結。因為一隻蜜蜂的力量很小，所以牠們會互相幫助，一起建房子和找食物。採回來的花蜜，最後會變成我們愛吃的甜甜蜂蜜。</p>',
+                questions: [
+                    { type: '直接提取', q: '蜜蜂身體上的條紋是什麼顏色的？', options: ['紅黑相間', '黃黑相間', '黑白相間', '全是黃色'], ans: 1, hint: '第一段找找形容條紋顏色的字眼。', exp: '文章說：「蜜蜂的身體上有黃黑相間的條紋」。' },
+                    { type: '字詞積累', q: '第一段中，用來量度「翅膀」的量詞是什麼？', options: ['一隻', '一張', '一對', '一塊'], ans: 2, hint: '翅膀有左右兩邊，看看文章用了什麼量詞。', exp: '文章寫道：「還有一對透明的翅膀。」' },
+                    { type: '句式結構', q: '為什麼蜜蜂要互相幫助、非常團結？', options: ['因為牠們怕黑', '因為一隻蜜蜂的力量很小', '因為花蜜太重了', '因為蜂后強迫牠們'], ans: 1, hint: '在第二段找「因為...所以...」的原因。', exp: '文章寫道：「因為一隻蜜蜂的力量很小，所以牠們會互相幫助」。' },
+                    { type: '字詞積累', q: '「勤勞」的反義詞是什麼？', options: ['努力', '懶惰', '生氣', '聰明'], ans: 1, hint: '每天工作不休息是勤勞，相反就是什麼都不做。', exp: '「勤勞」的相反詞是「懶惰」。' },
+                    { type: '自然段落', q: '這篇文章的第二段主要說明蜜蜂的什麼優點？', options: ['飛得很快', '顏色很漂亮', '非常團結和互相幫助', '會針人'], ans: 2, hint: '第二段第一句話是中心句。', exp: '第二段開頭寫「蜜蜂非常團結」，接下來都是解釋牠們如何合作。' }
+                ]
+            },
+            {
+                id: 'p12', category: '寓言故事', tut: 't-narrative', title: '狐狸與葡萄',
+                text: '<p>一隻飢餓的狐狸走到葡萄架下，看見架上掛著一串串紫色的葡萄。牠饞得直流口水，便用力跳起來想摘葡萄。</p><p>因為葡萄實在太高了，所以狐狸怎麼也摘不到。狐狸試了很多次都失敗了。</p><p>最後，牠只好放棄。牠一邊走一邊安慰自己說：「那些葡萄一定是酸的，一點也不好吃！」</p>',
+                questions: [
+                    { type: '字詞積累', q: '第一段中，葡萄的量詞用了什麼？', options: ['一顆顆', '一串串', '一條條', '一隻隻'], ans: 1, hint: '葡萄是連在一起生長的，看看文章寫了「一___紫色...」。', exp: '文章提到：「看見架上掛著一串串紫色的葡萄。」' },
+                    { type: '句式結構', q: '為什麼狐狸摘不到葡萄？', options: ['因為葡萄被別人摘走了', '因為葡萄實在太高了', '因為葡萄還沒熟', '因為牠不想摘了'], ans: 1, hint: '第二段開頭有「因為...所以...」。', exp: '文章清楚寫著：「因為葡萄實在太高了，所以狐狸怎麼也摘不到。」' },
+                    { type: '字詞積累', q: '第二段中，「失敗」的反義詞是什麼？', options: ['成功', '輸掉', '放棄', '高興'], ans: 0, hint: '做不到是失敗，做到了是什麼？', exp: '「失敗」的相反詞是「成功」。' },
+                    { type: '標點符號', q: '狐狸說：「那些葡萄一定是酸的，一點也不好吃！」這裡的引號「」用來做什麼？', options: ['表示書本的名字', '表示狐狸說出來的話', '表示特別重要的詞', '沒有意思'], ans: 1, hint: '引號裡面包著的是狐狸開口說的內容。', exp: '引號在這裡用來標示人物（狐狸）的對話內容。' },
+                    { type: '初步推論', q: '狐狸根本沒吃到葡萄，為什麼說葡萄是酸的？', options: ['因為牠真的聞到酸味', '因為牠摘不到，只好找藉口自我安慰', '因為別人告訴牠是酸的', '因為牠討厭吃葡萄'], ans: 1, hint: '吃不到就說不好吃，這是一種找藉口的心理。', exp: '狐狸因為能力不足摘不到，為了面子只好自我安慰說葡萄不好吃。' }
+                ]
+            },
+            {
+                id: 'p13', category: '日記', tut: 't-para-punc', title: '參觀科學館',
+                text: '<p class="diary-date">十月五日 星期五 晴</p><p>今天學校帶我們去科學館參觀。我們先看了恐龍化石展覽，那些化石非常巨大，令我十分驚訝。</p><p>接著，我們去了「鏡子世界」。因為那裡的鏡子形狀彎彎曲曲，所以會把人照得又高又瘦，非常有趣。</p><p>這次參觀讓我學到了很多科學知識，真是收穫豐富的一天。</p>',
+                questions: [
+                    { type: '直接提取', q: '這篇日記是在哪一天寫的？', options: ['十月五日', '星期六', '十一月五日', '星期一'], ans: 0, hint: '日記的第一段通常寫著日期。', exp: '日記開頭第一行寫著：「十月五日 星期五 晴」' },
+                    { type: '字詞積累', q: '正文第一段中，「巨大」的近義詞是什麼？', options: ['微小', '龐大', '矮小', '普通'], ans: 1, hint: '形容非常大的詞語。', exp: '「巨大」的近義詞是「龐大」或「碩大」。' },
+                    { type: '句式結構', q: '為什麼「鏡子世界」裡的鏡子會把人照得又高又瘦？', options: ['因為那是一面壞掉的鏡子', '因為那裡的鏡子形狀彎彎曲曲', '因為作者本來就很瘦', '因為沒有開燈'], ans: 1, hint: '在正文第二段找「因為...所以...」的原因。', exp: '文章寫道：「因為那裡的鏡子形狀彎彎曲曲，所以會把人照得又高又瘦」。' },
+                    { type: '自然段落', q: '這篇日記正文共有幾個自然段？', options: ['一個', '兩個', '三個', '四個'], ans: 2, hint: '日記的日期不算作自然段喔，只數正文開頭空兩格的地方。', exp: '日記的日期和天氣屬於格式，不計入自然段。正文共有三個自然段。' },
+                    { type: '標點符號', q: '正文第二段中的「鏡子世界」加了引號「」，代表什麼？', options: ['這是一個人', '這是一個展覽館的特別名稱', '這是一本書', '這是一句說話'], ans: 1, hint: '這裡沒有人說話，它包住的是一個地方的名字。', exp: '引號在這裡用來標示具有特定名稱的專有名詞（展覽區的名字）。' }
+                ]
+            },
+            {
+                id: 'p14', category: '記敘文', tut: 't-vocab', title: '週末圖書館',
+                text: '<p>週末下午，我和哥哥一起去公共圖書館。圖書館裡很安靜，大家都專心地看書。</p><p>我走到兒童圖書區，借了三本關於太空的繪本。哥哥則借了一本歷史小說。因為我們都找到了想看的書，所以我們坐在窗邊的沙發上，靜靜地看了一個小時。</p><p>最後，我們才心滿意足地借書回家。</p>',
+                questions: [
+                    { type: '字詞積累', q: '第一段中，「安靜」的反義詞是什麼？', options: ['寧靜', '吵鬧', '明亮', '黑暗'], ans: 1, hint: '沒有聲音是安靜，很多聲音是什麼？', exp: '「安靜」的相反詞是「吵鬧」或「喧嘩」。' },
+                    { type: '直接提取', q: '作者借了什麼主題的書？', options: ['動物', '太空', '歷史', '科學'], ans: 1, hint: '看看第二段作者借了什麼繪本。', exp: '文章中說作者「借了三本關於太空的繪本」。' },
+                    { type: '字詞積累', q: '第二段中，書本的量詞用了什麼？', options: ['一本', '一張', '一隻', '一塊'], ans: 0, hint: '看看「歷史小說」前面用了什麼量詞。', exp: '文章提到：「哥哥則借了一本歷史小說。」書本用「本」。' },
+                    { type: '句式結構', q: '為什麼他們會坐在沙發上看了一個小時？', options: ['因為外面下雨了', '因為我們都找到了想看的書', '因為他們走累了', '因為圖書館要關門了'], ans: 1, hint: '第二段有「因為...所以...」的句子。', exp: '文章寫道：「因為我們都找到了想看的書，所以我們坐在窗邊...」' },
+                    { type: '初步推論', q: '最後他們「心滿意足」地回家，代表他們覺得這次去圖書館怎樣？', options: ['覺得很生氣', '覺得很害怕', '覺得願望達成了，很滿意', '覺得很浪費時間'], ans: 2, hint: '借到了喜歡的書又看了很久，心情自然很滿意。', exp: '「心滿意足」形容心願滿足，非常快樂。' }
+                ]
+            },
+            {
+                id: 'p15', category: '描寫文', tut: 't-narrative', title: '我的好朋友',
+                text: '<p>我最好朋友的名字叫小麗。她有一頭烏黑的短髮，笑起來有兩個可愛的小酒窩。</p><p>小麗很喜歡畫畫，她的水彩畫常常被老師貼在壁報板上。她性格很溫柔，因為每次我遇到困難，她都會主動幫助我，所以我非常感激她。</p><p>有這樣的好朋友，我感到非常幸運！</p>',
+                questions: [
+                    { type: '直接提取', q: '小麗笑起來臉上有什麼特徵？', options: ['戴著眼鏡', '有兩個小酒窩', '有雀斑', '有大眼睛'], ans: 1, hint: '第一段找找「笑起來」後面的句子。', exp: '文章描述：「笑起來有兩個可愛的小酒窩。」' },
+                    { type: '字詞積累', q: '第二段中，「溫柔」的反義詞是什麼？', options: ['親切', '暴躁', '聰明', '安靜'], ans: 1, hint: '脾氣很好是溫柔，脾氣很差動不動發火是什麼？', exp: '「溫柔」的相反詞是粗暴或「暴躁」。' },
+                    { type: '句式結構', q: '為什麼作者非常感激小麗？', options: ['因為小麗常常給她零食', '因為每次作者遇到困難，小麗都會主動幫助她', '因為小麗畫畫很漂亮', '因為小麗有酒窩'], ans: 1, hint: '看看第二段「因為...所以...」的因果關係。', exp: '文章寫道：「因為每次我遇到困難，她都會主動幫助我，所以我非常感激她。」' },
+                    { type: '自然段落', q: '這篇文章的第二段主要描寫了小麗的什麼？', options: ['外貌和頭髮', '名字由來', '興趣愛好和溫柔的性格', '她的家人'], ans: 2, hint: '第二段提到了畫畫和幫助別人。', exp: '第二段介紹了她喜歡畫畫（愛好），以及主動幫人（性格）。' },
+                    { type: '標點符號', q: '最後一句「我感到非常幸運！」用了感嘆號，這是為了加強什麼語氣？', options: ['加強憤怒的語氣', '加強疑問的語氣', '加強慶幸和開心的語氣', '加強傷心的語氣'], ans: 2, hint: '有這樣的好朋友，心裡一定很開心。', exp: '感嘆號在此用來強調作者內心強烈的幸運感和喜悅。' }
+                ]
+            },
+            {
+                id: 'p16', category: '說明文', tut: 't-para-punc', title: '靈敏的狗鼻子',
+                text: '<p>狗是人類的好朋友，牠們有一個非常厲害的武器，那就是鼻子。狗的嗅覺比人類靈敏很多倍。</p><p>因為狗的嗅覺很強，所以警察經常訓練警犬來幫忙尋找失物或抓捕壞人。狗的鼻子通常是濕濕的，這有助於牠們更好地捕捉空氣中的氣味。</p><p>如果你看到狗一直到處聞，那是牠在「觀察」世界呢。</p>',
+                questions: [
+                    { type: '直接提取', q: '文章說狗非常厲害的「武器」是什麼？', options: ['耳朵', '眼睛', '鼻子', '牙齒'], ans: 2, hint: '第一段第一句就點出了主題。', exp: '文章開頭說：「牠們有一個非常厲害的武器，那就是鼻子。」' },
+                    { type: '字詞積累', q: '第一段中，「靈敏」的近義詞是什麼？', options: ['遲鈍', '敏銳', '笨拙', '緩慢'], ans: 1, hint: '感覺非常快、非常準。', exp: '「靈敏」指反應快，近義詞是「敏銳」。' },
+                    { type: '句式結構', q: '為什麼警察要訓練警犬來幫忙尋找失物？', options: ['因為狗跑得很快', '因為狗的嗅覺很強', '因為狗很可愛', '因為狗會咬人'], ans: 1, hint: '第二段開頭有「因為...所以...」。', exp: '文章寫道：「因為狗的嗅覺很強，所以警察經常訓練警犬來幫忙...」' },
+                    { type: '自然段落', q: '第二段主要解釋了什麼？', options: ['狗的歷史', '狗鼻子的實際功用和濕濕的原因', '狗愛吃什麼', '狗的耳朵有多靈敏'], ans: 1, hint: '第二段講了警犬抓壞人，還講了鼻子濕濕的作用。', exp: '這段詳細說明了狗鼻子嗅覺強的應用（警犬）及生理特徵（濕潤捕捉氣味）。' },
+                    { type: '標點符號', q: '最後一段「觀察」加上了引號「」，是因為狗真的是用眼睛在看嗎？', options: ['是的，狗視力很好', '不是，引號表示這裡的觀察其實是指用鼻子「聞」', '引號表示這句話是錯的', '引號表示別人的對話'], ans: 1, hint: '狗到處聞，是用鼻子去了解世界，不是真的一直用眼睛看。', exp: '這裡的引號表示「特殊含義」，用「觀察」來比喻狗用嗅覺去感知世界。' }
+                ]
+            },
+            {
+                id: 'p17', category: '寓言故事', tut: 't-vocab', title: '龜兔賽跑',
+                text: '<p>森林裡舉辦賽跑，兔子驕傲地覺得自己一定會贏。比賽開始了，兔子跑得像風一樣快，把烏龜遠遠拋在後面。</p><p>因為兔子看見烏龜還在很遠的地方，覺得不用急，所以就躺在大樹下睡著了。</p><p>烏龜雖然爬得很慢，但牠一步一步不停地往前爬。最後，烏龜先到了終點，贏得了比賽。</p>',
+                questions: [
+                    { type: '字詞積累', q: '第一段中，「驕傲」的反義詞是什麼？', options: ['生氣', '自大', '謙虛', '聰明'], ans: 2, hint: '覺得自己很厲害看不起別人是驕傲，不自滿是什麼？', exp: '「驕傲」的相反詞是虛心、「謙虛」。' },
+                    { type: '句式結構', q: '為什麼兔子會在比賽中途睡著？', options: ['因為牠昨天沒睡好', '因為看見烏龜還在很遠的地方，覺得不用急', '因為牠生病了', '因為樹下很涼爽'], ans: 1, hint: '第二段有「因為...所以...」。', exp: '文章提到：「因為兔子看見烏龜還在很遠的地方，覺得不用急，所以就躺在大樹下睡著了。」' },
+                    { type: '直接提取', q: '烏龜在比賽中是怎麼做的？', options: ['也睡著了', '一步一步不停地往前爬', '放棄了比賽', '跑得像風一樣'], ans: 1, hint: '第三段描寫了烏龜的動作。', exp: '文章寫道：「烏龜雖然爬得很慢，但牠一步一步不停地往前爬。」' },
+                    { type: '自然段落', q: '這篇文章的第三段說出了什麼結果？', options: ['兔子贏了', '烏龜先到了終點，贏得了比賽', '比賽取消了', '兩人平手'], ans: 1, hint: '看看最後一句話。', exp: '文章最後：「最後，烏龜先到了終點，贏得了比賽。」' },
+                    { type: '初步推論', q: '烏龜靠著不放棄贏了驕傲的兔子，這個故事告訴我們什麼道理？', options: ['跑得快就一定會贏', '睡覺對身體好', '不可驕傲，堅持到底才會成功', '烏龜比兔子跑得快'], ans: 2, hint: '兔子的驕傲和烏龜的堅持，誰是最後的贏家？', exp: '故事寓意是：驕傲使人落後，堅持不懈（像烏龜一樣）才能獲得最終勝利。' }
+                ]
+            },
+            {
+                id: 'p18', category: '童話故事', tut: 't-narrative', title: '醜小鴨的蛻變',
+                text: '<p>鴨媽媽孵出了一群小鴨，其中有一隻特別大、特別醜，大家都叫牠「醜小鴨」。因為其他的動物都嘲笑牠、欺負牠，所以醜小鴨只好傷心地離開了家。</p><p>冬天過去了，春天來臨。醜小鴨在湖水裡看到自己的倒影。</p><p>牠驚訝地發現自己不再是醜小鴨，而變成了一隻美麗的白天鵝！</p>',
+                questions: [
+                    { type: '直接提取', q: '這隻小鴨剛出生時外表怎樣？', options: ['很小很可愛', '特別大、特別醜', '全身是黑色的', '很漂亮'], ans: 1, hint: '第一段寫了牠出生的樣子。', exp: '文章說其中有一隻「特別大、特別醜」。' },
+                    { type: '句式結構', q: '為什麼醜小鴨要離開家？', options: ['因為牠想去旅行', '因為其他的動物都嘲笑牠、欺負牠', '因為牠找不到食物', '因為媽媽趕牠走'], ans: 1, hint: '第一段有「因為...所以...」的因果關係。', exp: '文章寫道：「因為其他的動物都嘲笑牠、欺負牠，所以醜小鴨只好傷心地離開了家。」' },
+                    { type: '字詞積累', q: '第三段中，「美麗」的反義詞是什麼？', options: ['漂亮', '醜陋', '乾淨', '巨大'], ans: 1, hint: '好看是美麗，不好看是什麼？', exp: '「美麗」的相反詞是「醜陋」，剛好對應牠小時候的樣子。' },
+                    { type: '標點符號', q: '最後一句話用了感嘆號「！」，表示醜小鴨發現自己變成天鵝時，心情怎樣？', options: ['非常傷心', '非常生氣', '極度驚訝和開心', '覺得很無聊'], ans: 2, hint: '本以為自己很醜，突然發現變美了，一定會被嚇一跳又很高興。', exp: '感嘆號加強了語氣，表達了醜小鴨發現真相時的巨大驚喜。' },
+                    { type: '自然段落', q: '第二段主要寫了時間到了哪個季節？', options: ['春天', '夏天', '秋天', '冬天'], ans: 0, hint: '冬天過去了，什麼季節來臨？', exp: '文章說：「冬天過去了，春天來臨。」這時候牠發現了改變。' }
+                ]
+            },
+            {
+                id: 'p19', category: '日記', tut: 't-para-punc', title: '精彩的運動會',
+                text: '<p class="diary-date">十一月十二日 星期四 晴</p><p>今天是一年一度的校運會。操場上人山人海，非常熱鬧。我參加了六十米短跑比賽。聽到槍聲，我立刻向前衝，同學們都在大聲為我加油。</p><p>因為我跑得不夠快，所以只得了第三名。雖然拿到的是銅牌，但我已經盡了最大的努力，心裡依然很高興。</p>',
+                questions: [
+                    { type: '直接提取', q: '這篇日記記錄的是哪一天的活動？', options: ['十月十二日', '十一月十二日', '星期五', '星期三'], ans: 1, hint: '看日記第一行的日期。', exp: '日記開頭寫著：「十一月十二日 星期四 晴」' },
+                    { type: '字詞積累', q: '第一段正文中，「熱鬧」的近義詞是什麼？', options: ['冷清', '喧鬧/沸騰', '安靜', '恐怖'], ans: 1, hint: '人很多聲音很多，氣氛很熱烈。', exp: '「熱鬧」的近義詞是「喧鬧」或「繁華」。' },
+                    { type: '直接提取', q: '作者參加了什麼比賽項目？', options: ['跳高', '跳遠', '六十米短跑', '接力賽'], ans: 2, hint: '作者說「我參加了...」什麼比賽？', exp: '文章明確寫出：「我參加了六十米短跑比賽。」' },
+                    { type: '句式結構', q: '為什麼作者只得了第三名？', options: ['因為他跌倒了', '因為他跑得不夠快', '因為別人犯規', '因為他不想贏'], ans: 1, hint: '第二段正文開頭的「因為...所以...」。', exp: '文章寫道：「因為我跑得不夠快，所以只得了第三名。」' },
+                    { type: '初步推論', q: '雖然只得第三名，但作者心裡很高興，這是為什麼？', options: ['因為有獎品', '因為不用上課', '因為他覺得自己已經盡了最大的努力', '因為同學幫他跑'], ans: 2, hint: '看看最後一句話的轉折。', exp: '文章最後說：「但我已經盡了最大的努力，心裡依然很高興。」' }
+                ]
+            },
+            {
+                id: 'p20', category: '記敘文', tut: 't-vocab', title: '中秋節賞月',
+                text: '<p>昨晚是中秋節，我們一家人到公園賞月。天上的月亮又圓又大，像一個發光的銀盤。</p><p>我們在草地上點起了五顏六色的燈籠，還吃了美味的雙黃蓮蓉月餅和楊桃。因為秋天的微風吹過非常涼爽，所以我們坐在草地上聊天，不捨得離開。</p><p>一家人有說有笑，度過了一個溫馨又難忘的夜晚。</p>',
+                questions: [
+                    { type: '直接提取', q: '這篇文章描寫的是哪個節日的活動？', options: ['春節', '端午節', '中秋節', '國慶日'], ans: 2, hint: '第一句寫了是什麼節日。', exp: '文章開頭寫道：「昨晚是中秋節」。' },
+                    { type: '字詞積累', q: '第一段中，月亮的量詞用了什麼？', options: ['一隻', '一條', '一個', '一把'], ans: 2, hint: '看看「像___發光的銀盤」。', exp: '文章寫道：「像一個發光的銀盤。」' },
+                    { type: '直接提取', q: '他們在草地上點起了什麼？', options: ['蠟燭', '螢火蟲', '五顏六色的燈籠', '煙花'], ans: 2, hint: '找找看「點起了」後面的東西。', exp: '文章提到：「我們在草地上點起了五顏六色的燈籠」。' },
+                    { type: '句式結構', q: '為什麼他們不捨得離開草地？', options: ['因為想繼續吃月餅', '因為秋天的微風吹過非常涼爽', '因為怕黑', '因為燈籠還沒燒完'], ans: 1, hint: '第二段的「因為...所以...」。', exp: '文章說：「因為秋天的微風吹過非常涼爽，所以我們坐在草地上聊天，不捨得離開。」' },
+                    { type: '自然段落', q: '第三段總結這是一個怎樣的夜晚？', options: ['吵鬧的夜晚', '恐怖的夜晚', '溫馨又難忘的夜晚', '寒冷的夜晚'], ans: 2, hint: '文章最後一句總結了這個夜晚的氣氛。', exp: '文章最後說：「度過了一個溫馨又難忘的夜晚。」' }
+                ]
+            },
+            {
+                id: 'p21', category: '描寫文', tut: 't-narrative', title: '春天的花園',
+                text: '<p>春天的花園就像一幅色彩繽紛的圖畫。嫩綠的小草從泥土裡探出頭來，好奇地看著這個世界。</p><p>紅色的鬱金香和粉色的桃花開得正燦爛，散發出淡淡的清香。因為花蜜非常香甜，所以引來了幾隻蜜蜂和蝴蝶在花叢中飛來飛去，忙著採蜜。</p><p>這真是一個充滿生機的季節啊！</p>',
+                questions: [
+                    { type: '字詞積累', q: '第一段中，「色彩繽紛」的近義詞是什麼？', options: ['一片漆黑', '五顏六色', '單調乏味', '透明無色'], ans: 1, hint: '形容顏色很多很豐富。', exp: '「色彩繽紛」指顏色繁多美麗，近義詞是「五顏六色」。' },
+                    { type: '初步推論', q: '小草「探出頭來」，這句話是把小草當作什麼來寫？', options: ['石頭', '泥土', '有生命的人或小動物', '天氣'], ans: 2, hint: '只有人和動物會好奇地「探出頭」。', exp: '文章使用了擬人手法，把小草發芽寫成探出頭來，顯得生動活潑。' },
+                    { type: '直接提取', q: '花園裡開了什麼顏色的鬱金香？', options: ['黃色', '白色', '紅色', '紫色'], ans: 2, hint: '找找看「鬱金香」前面的顏色詞。', exp: '文章提到：「紅色的鬱金香和粉色的桃花開得正燦爛」。' },
+                    { type: '句式結構', q: '為什麼蜜蜂和蝴蝶會在花叢中飛來飛去？', options: ['因為花蜜非常香甜', '因為牠們迷路了', '因為花園很大', '因為天氣很熱'], ans: 0, hint: '第二段有「因為...所以...」。', exp: '文章寫道：「因為花蜜非常香甜，所以引來了幾隻蜜蜂和蝴蝶...忙著採蜜。」' },
+                    { type: '標點符號', q: '最後一句「這真是一個充滿生機的季節啊！」用了感嘆號，表達了作者怎樣的心情？', options: ['覺得很寒冷', '對春天充滿讚美與感嘆', '覺得很悲傷', '對春天有疑問'], ans: 1, hint: '看到美麗的春天，心裡會發出讚歎。', exp: '感嘆號加強了語氣，表達了作者對春天生機勃勃景象的讚美之情。' }
+                ]
+            },
+            {
+                id: 'p22', category: '說明文', tut: 't-para-punc', title: '變色龍的魔法',
+                text: '<p>變色龍是一種非常奇妙的爬行動物。牠們最厲害的本領就是改變身體的顏色。</p><p>當變色龍走到綠葉中，牠的身體就會變成綠色；當牠走到樹幹上，就會變成褐色。因為這樣可以隱藏自己，所以牠們能避開敵人的追捕，也方便捕捉昆蟲。</p><p>變色龍真像是自然界的隱身大師。</p>',
+                questions: [
+                    { type: '直接提取', q: '變色龍最厲害的本領是什麼？', options: ['跑得很快', '改變身體的顏色', '跳得很高', '會飛'], ans: 1, hint: '找找看第一段「最厲害的本領」後面的字眼。', exp: '文章明確指出：「最厲害的本領就是改變身體的顏色。」' },
+                    { type: '直接提取', q: '當變色龍走到樹幹上，身體會變成什麼顏色？', options: ['綠色', '紅色', '褐色', '藍色'], ans: 2, hint: '看看走到樹幹上會變什麼顏色。', exp: '文章說：「當牠走到樹幹上，就會變成褐色。」' },
+                    { type: '句式結構', q: '變色龍為什麼要改變身體的顏色來隱藏自己？', options: ['為了好看', '為了避開敵人追捕及方便捕捉昆蟲', '為了睡覺不被吵醒', '為了保暖'], ans: 1, hint: '第二段的「因為...所以...」。', exp: '文章解釋：「因為這樣可以隱藏自己，所以牠們能避開敵人的追捕，也方便捕捉昆蟲。」' },
+                    { type: '字詞積累', q: '第三段中，「大師」前面的量詞應該用什麼最合適？', options: ['一個 / 一位', '一隻', '一條', '一塊'], ans: 0, hint: '大師是形容很厲害的專家，通常當作人來稱呼。', exp: '尊稱專家或大師，通常用量詞「位」或「個」。' },
+                    { type: '自然段落', q: '文章最後一段給了變色龍一個什麼特別的稱號？', options: ['跑步大師', '隱身大師', '捕蟲大師', '魔術師'], ans: 1, hint: '看看文章最後一句話。', exp: '文章總結：「變色龍真像是自然界的隱身大師。」' }
+                ]
+            },
+            {
+                id: 'p23', category: '寓言故事', tut: 't-vocab', title: '拔苗助長',
+                text: '<p>從前有個農夫，種了一片禾苗。他每天都去田裡看，覺得禾苗長得太慢了。有一天，他想到了一個「好辦法」。</p><p>他下田把每一棵禾苗都往上拔高了一點。農夫累得滿頭大汗，回家對兒子說：「今天真累，但我幫禾苗長高了！」</p><p>因為禾苗的根離開了泥土，所以兒子跑到田裡一看，禾苗全都枯死了。</p>',
+                questions: [
+                    { type: '直接提取', q: '農夫每天去田裡看，心裡覺得怎樣？', options: ['覺得禾苗長得太快了', '覺得禾苗長得太慢了', '覺得天氣太熱', '覺得沒有水'], ans: 1, hint: '第一段寫了農夫的感覺。', exp: '文章提到農夫「覺得禾苗長得太慢了」。' },
+                    { type: '直接提取', q: '農夫想到的「好辦法」是什麼？', options: ['多澆點水', '多施點肥', '把每一棵禾苗都往上拔高一點', '找人幫忙'], ans: 2, hint: '看看第二段他下田做了什麼事。', exp: '農夫的辦法是「把每一棵禾苗都往上拔高了一點」。' },
+                    { type: '標點符號', q: '農夫對兒子說：「今天真累，但我幫禾苗長高了！」引號「」在這裡的作用是什麼？', options: ['表示書名', '表示農夫說出來的對話內容', '沒有意思', '表示強調錯字'], ans: 1, hint: '這句話是農夫開口對兒子說的。', exp: '引號在這裡用來標示人物對話的內容。' },
+                    { type: '句式結構', q: '為什麼最後禾苗全都枯死了？', options: ['因為沒有下雨', '因為禾苗的根離開了泥土', '因為被蟲子吃了', '因為天氣太冷'], ans: 1, hint: '第三段的「因為...所以...」。', exp: '文章寫道：「因為禾苗的根離開了泥土，所以...禾苗全都枯死了。」' },
+                    { type: '初步推論', q: '農夫太著急想讓禾苗長高，結果反而害死了它們。這告訴我們做事應該怎樣？', options: ['做事要越快越好', '做事不能急於求成，要順其自然', '要多聽兒子的話', '種田要用力拔'], ans: 1, hint: '植物生長需要時間，不能用外力強求。', exp: '這個故事比喻違反事物發展的自然規律，急於求成，反而把事情弄糟。' }
+                ]
+            },
+            {
+                id: 'p24', category: '童話故事', tut: 't-narrative', title: '小紅帽探病',
+                text: '<p>小紅帽的奶奶生病了，媽媽讓她帶一籃蛋糕去探望奶奶。在森林裡，小紅帽遇到了一隻大灰狼。</p><p>大野狼騙小紅帽去採花。因為牠想吃掉奶奶，所以自己先跑到奶奶家，把奶奶吞進了肚子裡，然後裝成奶奶躺在床上。</p><p>幸好，一位勇敢的獵人經過，剖開大野狼的肚子，救出了小紅帽和奶奶。</p>',
+                questions: [
+                    { type: '直接提取', q: '媽媽讓小紅帽帶什麼去探望奶奶？', options: ['水果', '一籃蛋糕', '鮮花', '藥物'], ans: 1, hint: '文章第一句有寫她帶了什麼。', exp: '文章開頭寫道：「媽媽讓她帶一籃蛋糕去探望奶奶。」' },
+                    { type: '字詞積累', q: '第三段中，「勇敢」的反義詞是什麼？', options: ['堅強', '膽小', '聰明', '高大'], ans: 1, hint: '不怕危險是勇敢，很怕事是什麼？', exp: '「勇敢」的相反詞是懦弱或「膽小」。' },
+                    { type: '句式結構', q: '大野狼為什麼要先跑到奶奶家？', options: ['因為牠想幫奶奶打掃', '因為牠想吃掉奶奶', '因為牠想睡覺', '因為牠認識路'], ans: 1, hint: '第二段的「因為...所以...」。', exp: '文章寫道：「因為牠想吃掉奶奶，所以自己先跑到奶奶家...」' },
+                    { type: '直接提取', q: '最後是誰救出了小紅帽和奶奶？', options: ['媽媽', '警察', '勇敢的獵人', '小鳥'], ans: 2, hint: '故事最後誰出現了？', exp: '文章結尾：「一位勇敢的獵人經過...救出了小紅帽和奶奶。」' },
+                    { type: '自然段落', q: '這篇文章共有幾個自然段？', options: ['一個', '兩個', '三個', '四個'], ans: 2, hint: '數數有幾個段落開頭空了兩格。', exp: '文章分為去探病、野狼的詭計、獵人相救，共三個段落。' }
+                ]
+            }
+        ];
+
+        // 載入進度
+        let userProgress = JSON.parse(localStorage.getItem('readBasicProgress')) || new Array(rawQuestDataObj.length).fill(0);
+
+        function renderDirectory() {
+            const dirContainer = document.getElementById('directory-content');
+            let html = '';
+            rawQuestDataObj.forEach((passage, idx) => {
+                let status = userProgress[idx];
+                let bgClass = 'bg-white';
+                let borderClass = 'border-slate-200';
+                let icon = ' <span class="text-slate-400 font-bold ml-2"># 未挑戰</span>';
+                
+                if (status === 1) {
+                    bgClass = 'bg-yellow-50'; borderClass = 'border-yellow-400';
+                    icon = ' <span class="text-yellow-600 font-bold ml-2">🌟 完美</span>';
+                } else if (status === 2) {
+                    bgClass = 'bg-emerald-50'; borderClass = 'border-emerald-400';
+                    icon = ' <span class="text-emerald-600 font-bold ml-2">✅ 過關</span>';
+                }
+
+                html += `
+                    <button onclick="startPassage(${idx})" class="w-full text-left p-4 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition group active:scale-95">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="bg-sky-100 text-sky-800 text-xs font-bold px-2 py-1 rounded">${passage.category}</span>
+                            ${icon}
+                        </div>
+                        <h3 class="text-lg font-black text-slate-800 group-hover:text-sky-600 transition">${passage.title}</h3>
+                        <p class="text-sm text-slate-500 mt-1">共 ${passage.questions.length} 題小挑戰</p>
+                    </button>
+                `;
+            });
+            dirContainer.innerHTML = html;
+            updateTotalProgress();
+        }
+
+        function updateTotalProgress() {
+            let solved = userProgress.filter(p => p === 1 || p === 2).length;
+            let percent = (solved / rawQuestDataObj.length) * 100;
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+
+        function shuffleOptions(optionsArray, correctIndex) {
+            let opts = optionsArray.map((opt, i) => ({ text: opt, isCorrect: i === correctIndex }));
+            return opts.sort(() => Math.random() - 0.5);
+        }
+
+        function startPassage(idx, forceStart = false) {
+            const passage = rawQuestDataObj[idx];
+            
+            // 🌟 教學攔截
+            if (!forceStart && !localStorage.getItem('tut_seen_' + passage.tut)) {
+                currentPassageIdx = idx; // 記住要進哪一篇
+                showTutorial(passage.tut);
+                return;
+            }
+
+            currentPassageIdx = idx;
+            currentQuestionIdx = 0; // 從第一題開始
+            currentPassageMistakes = 0;
+            
+            document.getElementById('quest-directory').style.display = 'none';
+            const questPlay = document.getElementById('quest-play');
+            questPlay.style.display = 'flex';
+            
+            // 渲染左側文章
+            document.getElementById('passage-title').innerText = passage.title;
+            document.getElementById('passage-content').innerHTML = parseAndWrapSentences(passage.text);
+
+            // 重置閱讀按鈕
+            stopAllSpeechAndHighlights();
+
+            // 渲染右側題目
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            currentQuestionMistakes = 0;
+            const passage = rawQuestDataObj[currentPassageIdx];
+            const qData = passage.questions[currentQuestionIdx];
+
+            document.getElementById('question-progress').innerText = `第 ${currentQuestionIdx + 1} / ${passage.questions.length} 題`;
+            document.getElementById('question-type').innerText = qData.type;
+            document.getElementById('question-text').innerText = qData.q;
+            
+            // 隱藏之前的提示
+            document.getElementById('dynamic-hint-box').classList.add('hidden');
+
+            const shuffledOptions = shuffleOptions(qData.options, qData.ans);
+            
+            let html = '';
+            shuffledOptions.forEach((opt, oIdx) => {
+                const letter = ['A','B','C','D'][oIdx];
+                const safeText = opt.text.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                html += `
+                <div class="flex items-stretch gap-2 w-full">
+                    <button onclick="checkAnswer(this, ${opt.isCorrect})" class="option-btn flex-1 bg-white border-2 border-slate-200 text-slate-700 text-lg md:text-xl font-bold py-4 px-6 rounded-2xl hover:bg-sky-50 hover:border-sky-300 transition text-left flex items-center gap-4">
+                        <span class="bg-slate-100 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0">${letter}</span> 
+                        <span>${opt.text}</span>
+                    </button>
+                    <button onclick="speakText('${safeText}', 0.85)" class="tts-btn flex-shrink-0 bg-sky-50 text-sky-500 w-14 rounded-2xl text-2xl flex items-center justify-center shadow-sm border border-sky-200 hover:bg-sky-100 transition" title="朗讀此選項">
+                        🔊
+                    </button>
+                </div>`;
+            });
+            document.getElementById('options-container').innerHTML = html;
+        }
+
+        function speakQuestion() {
+            const passage = rawQuestDataObj[currentPassageIdx];
+            const qData = passage.questions[currentQuestionIdx];
+            speakText(qData.q);
+        }
+
+        function checkAnswer(btnElement, isCorrect) {
+            // DO NOT DISABLE ALL BUTTONS INITIALLY, ONLY DISABLE ON SUCCESS
+            const passage = rawQuestDataObj[currentPassageIdx];
+            const qData = passage.questions[currentQuestionIdx];
+
+            if (isCorrect) {
+                // If correct, disable all buttons to prevent double click
+                const allBtns = document.querySelectorAll('.option-btn');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                
+                btnElement.classList.add('correct');
+                speakText("答對了！");
+                
+                // 單題經驗值計算 (不顯示動畫，靜默增加，最後篇章結束才總結)
+                if (currentQuestionMistakes === 0) readExp += 5;
+                else readExp += 2;
+
+                document.getElementById('exp-display').innerText = readExp;
+                localStorage.setItem('readBasicExp', readExp);
+
+                // 顯示單題回饋
+                document.getElementById('feedback-desc').innerHTML = `<span class="bg-sky-50 p-4 rounded-xl block border border-sky-100 text-sky-900">${qData.exp}</span>`;
+                
+                const nextBtn = document.getElementById('next-btn');
+                const modal = document.getElementById('feedback-modal');
+                const content = document.getElementById('feedback-content');
+
+                if (currentQuestionIdx < passage.questions.length - 1) {
+                    nextBtn.innerText = "下一題 ➡️";
+                    nextBtn.onclick = () => {
+                        modal.classList.add('opacity-0');
+                        content.classList.add('scale-90');
+                        setTimeout(() => {
+                            modal.classList.add('hidden');
+                            currentQuestionIdx++;
+                            renderQuestion();
+                        }, 300);
+                    };
+                } else {
+                    nextBtn.innerText = "完成篇章 🏆";
+                    nextBtn.onclick = () => {
+                        modal.classList.add('opacity-0');
+                        content.classList.add('scale-90');
+                        setTimeout(() => {
+                            modal.classList.add('hidden');
+                            finishPassage();
+                        }, 300);
+                    };
+                }
+
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    content.classList.remove('scale-90');
+                }, 10);
+
+            } else {
+                // WRONG ANSWER
+                btnElement.classList.add('wrong', 'shake');
+                btnElement.style.pointerEvents = 'none'; 
+                
+                currentQuestionMistakes++;
+                currentPassageMistakes++;
+                
+                // 顯示動態提示
+                const hintBox = document.getElementById('dynamic-hint-box');
+                document.getElementById('hint-text').innerHTML = `💡 提示：${qData.hint}`;
+                hintBox.classList.remove('hidden');
+                
+                speakText("不對喔，請看提示再找找看！");
+                
+                setTimeout(() => {
+                    btnElement.classList.remove('shake');
+                }, 800);
+            }
+        }
+
+        function speakHint() {
+            const passage = rawQuestDataObj[currentPassageIdx];
+            const qData = passage.questions[currentQuestionIdx];
+            speakText(qData.hint);
+        }
+
+        function finishPassage() {
+            stopAllSpeechAndHighlights();
+            let finalStatus = currentPassageMistakes === 0 ? 1 : 2;
+            let previousStatus = userProgress[currentPassageIdx];
+            let expGained = 0;
+
+            // 篇章完成大獎勵
+            if (previousStatus !== 1 && previousStatus !== 2) {
+                expGained = finalStatus === 1 ? 50 : 30;
+            } else if (previousStatus === 2 && finalStatus === 1) {
+                expGained = 20; 
+            }
+
+            if (expGained > 0) {
+                readExp += expGained;
+                localStorage.setItem('readBasicExp', readExp);
+                document.getElementById('exp-display').innerText = readExp;
+                document.getElementById('exp-display').classList.add('pop');
+                setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+            }
+
+            if (finalStatus === 1 || previousStatus !== 1) {
+                userProgress[currentPassageIdx] = finalStatus;
+                localStorage.setItem('readBasicProgress', JSON.stringify(userProgress));
+            }
+
+            let expMsg = expGained > 0 
+                ? `<span class="text-sky-600 block text-2xl mt-4">獲得 ${expGained} 點篇章通關經驗值 ✨</span>` 
+                : `<span class="text-slate-500 block text-lg mt-4">你已經完美掌握這篇文章囉！</span>`;
+
+            const finishModal = document.getElementById('finish-modal');
+            const finishContent = document.getElementById('finish-content');
+
+            document.getElementById('finish-desc').innerHTML = `你成功讀完並回答了所有問題！${expMsg}`;
+            
+            finishModal.classList.remove('hidden');
+            setTimeout(() => {
+                finishModal.classList.remove('opacity-0');
+                finishContent.classList.remove('scale-90');
+            }, 10);
+            
+            // 首頁連動
+            if(userProgress.filter(p => p > 0).length === rawQuestDataObj.length) {
+                localStorage.setItem('t_read_1', 'true');
+            }
+        }
+
+        function backToDirectory() {
+            stopAllSpeechAndHighlights();
+            document.getElementById('quest-play').style.display = 'none';
+            document.getElementById('quest-directory').style.display = 'block';
+            renderDirectory();
+        }
+
+        function backToDirectoryFromFinish() {
+            const finishModal = document.getElementById('finish-modal');
+            const finishContent = document.getElementById('finish-content');
+            finishModal.classList.add('opacity-0');
+            finishContent.classList.add('scale-90');
+            setTimeout(() => {
+                finishModal.classList.add('hidden');
+                backToDirectory();
+            }, 300);
+        }
+
+        window.onload = function() {
+            document.getElementById('exp-display').innerText = readExp;
+            renderDirectory();
+        }
+    </script>
+</body>
+</html>
