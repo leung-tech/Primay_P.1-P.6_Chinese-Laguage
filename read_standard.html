@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>閱讀理解 - 標準推論特訓</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif;
+            background-color: #eef2ff; /* Indigo淺藍背景 */
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .bg-grid-pattern {
+            background-image: linear-gradient(to right, #e0e7ff 1px, transparent 1px), linear-gradient(to bottom, #e0e7ff 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .pop { animation: pop 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        
+        /* 隱藏滾動條但保留功能 */
+        .no-scrollbar::-webkit-scrollbar { width: 6px; }
+        .no-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .no-scrollbar::-webkit-scrollbar-thumb { background-color: #a5b4fc; border-radius: 10px; }
+        
+        .option-btn { transition: all 0.2s; box-shadow: 0 4px 0 #818cf8; }
+        .option-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .option-btn.correct { background-color: #e0e7ff; border-color: #4f46e5; color: #312e81; box-shadow: 0 0 0 transparent; transform: translateY(4px); pointer-events: none; }
+        .option-btn.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.6; pointer-events: none; }
+
+        .tts-btn { transition: transform 0.2s; }
+        .tts-btn:active { transform: scale(0.9); }
+        .lvl-btn { transition: transform 0.2s; }
+        .lvl-btn:hover { transform: scale(1.05); }
+
+        .tab-btn { transition: all 0.3s; }
+        .tab-active { background-color: #4f46e5; color: white; border-color: #3730a3; }
+        .tab-inactive { background-color: white; color: #64748b; border-color: #cbd5e1; }
+
+        /* 閱讀文本專用樣式 - 加入自然段落縮進 */
+        .reading-text { line-height: 2.2; font-size: 1.125rem; color: #334155; }
+        .reading-text p { margin-bottom: 1rem; text-indent: 2em; } 
+        @media (min-width: 768px) { .reading-text { font-size: 1.25rem; } }
+
+        /* 🌟 句段點擊與高亮樣式 (卡拉OK) */
+        .read-sentence { cursor: pointer; border-radius: 6px; padding: 2px 4px; margin: 0 -4px; transition: all 0.2s; display: inline; }
+        .read-sentence:hover { background-color: #c7d2fe; color: #3730a3; }
+        .active-sentence { background-color: #fef08a; color: #0f172a; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+        .toast-msg {
+            visibility: hidden; min-width: 250px; background-color: #ef4444; color: #fff; text-align: center;
+            border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px;
+            transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
+        @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
+
+    <!-- 頂部導覽列 (Indigo 配色) -->
+    <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
+        <div class="p-3 lg:p-4 bg-indigo-600 text-white flex justify-between items-center w-full">
+            <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
+                <a href="index.html" class="hover:bg-indigo-700 p-1 rounded transition bg-indigo-800">⬅️ 返回</a>
+                <span>📖 閱讀理解 (標準版)</span>
+            </h1>
+            <div class="flex gap-2 lg:gap-4 items-center bg-indigo-800 px-3 py-1.5 rounded-full border border-indigo-500 shadow-inner">
+                <span class="text-lg lg:text-xl">🏆</span>
+                <span class="font-bold text-sm lg:text-lg">EXP: <span id="exp-display" class="text-yellow-300">0</span></span>
+            </div>
+        </div>
+        
+        <!-- 全新 Tab 選單 -->
+        <div class="flex w-full bg-slate-100 border-b border-slate-300">
+            <button onclick="switchMode('quest')" id="tab-quest" class="tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-indigo-600">
+                🚀 閱讀理解特訓 (160題)
+            </button>
+            <button onclick="switchMode('tips')" id="tab-tips" class="tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200">
+                💡 閱讀錦囊寶庫
+            </button>
+        </div>
+
+        <div id="progress-container" class="w-full bg-slate-200 h-2">
+            <div id="progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
+        </div>
+    </div>
+
+    <!-- 主畫面區 -->
+    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
+        
+        <!-- 模式 1：篇章目錄 -->
+        <div id="quest-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
+            <div class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">📚 中年級文體與寫作手法特訓</h2>
+                <p class="text-slate-600 font-bold mb-4">掌握「步移法」、「借物抒情」、「說明方法」及「修辭作用」，應對呈分試常規題型！</p>
+                
+                <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
+                    <div class="text-indigo-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
+                    <div class="flex flex-wrap gap-4 flex-1">
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-lg shadow-sm">🌟</span> 完美過關 (+80)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 順利過關 (+40)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-white border-2 border-slate-300 flex items-center justify-center text-lg shadow-sm text-slate-400">#</span> 尚未挑戰</div>
+                    </div>
+                </div>
+
+                <div id="directory-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- 目錄動態生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 模式 2：錦囊寶庫 -->
+        <div id="tips-hub-mode" class="w-full max-w-6xl mx-auto hidden flex-col gap-6 h-full">
+            <div class="w-full bg-white rounded-3xl p-6 md:p-8 shadow-xl border border-slate-200">
+                <h2 class="text-2xl md:text-3xl font-black text-indigo-800 mb-6 text-center">💡 閱讀理解終極錦囊寶庫</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="tips-grid">
+                    <!-- 錦囊動態生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 雙屏閱讀與答題區 -->
+        <div id="quest-play" class="w-full max-w-7xl mx-auto hidden flex-col lg:flex-row gap-4 lg:gap-6 h-full min-h-[600px]">
+            
+            <!-- 左側：文章顯示區 -->
+            <div class="lg:w-1/2 bg-white rounded-3xl shadow-xl border-t-8 border-indigo-500 flex flex-col overflow-hidden max-h-[40vh] lg:max-h-[70vh]">
+                <div class="p-3 md:p-4 bg-indigo-50 border-b border-indigo-100 flex flex-col gap-2 z-10 shadow-sm">
+                    <div class="flex justify-between items-center w-full">
+                        <h2 class="text-xl md:text-2xl font-black text-indigo-900" id="passage-title">文章標題</h2>
+                        <button id="btn-read-all" onclick="speakPassage()" class="bg-white text-indigo-600 px-4 py-2 rounded-xl font-bold shadow-sm border border-indigo-200 hover:bg-indigo-100 transition flex items-center gap-2 flex-shrink-0">
+                            <span class="text-xl">▶️</span> <span class="hidden md:inline">全文朗讀</span>
+                        </button>
+                    </div>
+                    <p class="text-xs md:text-sm text-indigo-600 font-bold">💡 點擊文章中的任何一句話，系統會為你發聲朗讀喔！</p>
+                </div>
+                <div class="p-5 md:p-8 overflow-y-auto no-scrollbar flex-1 bg-white">
+                    <div id="passage-content" class="reading-text text-justify">
+                        <!-- 文章內容 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側：答題區 -->
+            <div class="lg:w-1/2 bg-white rounded-3xl shadow-xl border-2 border-slate-200 flex flex-col relative p-5 md:p-8 overflow-y-auto no-scrollbar">
+                <div class="flex justify-between items-center mb-4 pb-4 border-b-2 border-slate-100">
+                    <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition text-sm md:text-base">⬅️ 暫停並返回</button>
+                    <span class="bg-indigo-100 text-indigo-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm md:text-base" id="question-progress">第 1 / 8 題</span>
+                </div>
+                
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="bg-amber-100 text-amber-800 px-3 py-1 rounded text-sm font-bold whitespace-nowrap" id="question-type">任務類型</span>
+                </div>
+
+                <div class="w-full flex items-start gap-4 mb-6 bg-slate-50 p-4 md:p-6 rounded-2xl border border-slate-200 shadow-inner">
+                    <button onclick="speakQuestion()" class="tts-btn flex-shrink-0 bg-white text-indigo-500 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-indigo-200">🔊</button>
+                    <h3 class="text-xl md:text-2xl font-bold text-slate-800 leading-relaxed" id="question-text">題目內容</h3>
+                </div>
+
+                <div class="flex flex-col gap-3 w-full mt-2" id="options-container">
+                    <!-- 選項動態生成 -->
+                </div>
+
+                <!-- 動態提示框 -->
+                <div id="dynamic-hint-box" class="hidden w-full mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-base md:text-lg flex items-start gap-3 slide-up">
+                    <div class="flex-1 space-y-2" id="hint-text"></div>
+                    <button onclick="speakHint()" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 學習小教學 Modal (保留用於進入篇章前的彈出) -->
+    <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 pointer-events-none">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform duration-300 flex flex-col max-h-[90vh] pointer-events-auto" id="tutorial-content">
+            <div class="flex justify-between items-center mb-4 border-b-2 border-indigo-100 pb-3">
+                <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-indigo-600 flex items-center gap-2">📘 閱讀神探錦囊</h2>
+                <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
+            </div>
+            <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4">
+                <!-- 教學內容動態載入 -->
+            </div>
+            <div class="mt-6 pt-4 border-t-2 border-slate-100">
+                <button onclick="closeTutorial()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 答對全解析 Modal -->
+    <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 pointer-events-none">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-xl text-center transform scale-90 transition-transform duration-300 flex flex-col max-h-[90vh] pointer-events-auto" id="feedback-content">
+            <div id="feedback-icon" class="text-6xl mb-2">🎉</div>
+            <h2 id="feedback-title" class="text-2xl md:text-3xl font-black text-slate-800 mb-2">答對了！</h2>
+            <div id="feedback-desc" class="text-slate-600 font-bold mb-4 text-base md:text-lg leading-relaxed text-left overflow-y-auto pr-2 flex-1 w-full"></div>
+            <div class="flex gap-3 w-full mt-2 pt-4 border-t border-slate-100">
+                <button id="next-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 篇章完成 Modal -->
+    <div id="finish-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 pointer-events-none">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform duration-300 pointer-events-auto" id="finish-content">
+            <div class="text-7xl mb-4">🏆</div>
+            <h2 class="text-3xl font-black text-slate-800 mb-2">篇章過關！</h2>
+            <p id="finish-desc" class="text-slate-600 font-bold mb-6 text-xl leading-relaxed">恭喜你讀完了一篇文章！</p>
+            <button onclick="backToDirectoryFromFinish()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">領取獎勵並返回目錄 ✨</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-msg">提示訊息</div>
+
+    <script>
+        // ================= 1. 核心狀態與語音引擎 =================
+        let readExp = parseInt(localStorage.getItem('readStandardExp')) || 0;
+        document.getElementById('exp-display').innerText = readExp;
+        
+        let currentPassageIdx = -1;
+        let currentQuestionIdx = -1;
+        let currentPassageMistakes = 0; 
+        let currentQuestionMistakes = 0; 
+
+        window.currentUtterance = null;
+        let isReadingAll = false;
+        let readingIndex = 0;
+        let sentenceSpans = [];
+
+        function cleanTextForSpeech(text) {
+            return text.replace(/<br\s*\/?>/gi, '。')
+                       .replace(/<[^>]*>?/gm, '')
+                       .replace(/[✅❌💡【】]/g, '')
+                       .replace(/&nbsp;/g, ' ')
+                       .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDC00-\uDFFF]/g, ''); 
+        }
+
+        function speakText(text, rate = 0.9) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let cleanText = cleanTextForSpeech(text);
+                let msg = new SpeechSynthesisUtterance(cleanText);
+                msg.lang = 'zh-HK';
+                msg.rate = rate; 
+                window.currentUtterance = msg; 
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        function stopAllSpeechAndHighlights() {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            isReadingAll = false;
+            document.querySelectorAll('.read-sentence').forEach(span => {
+                span.classList.remove('active-sentence');
+            });
+            let readBtn = document.getElementById('btn-read-all');
+            if(readBtn) readBtn.innerHTML = '<span class="text-xl">▶️</span> <span class="hidden md:inline">全文朗讀</span>';
+        }
+
+        function speakPassage() {
+            if (isReadingAll) {
+                stopAllSpeechAndHighlights();
+                return;
+            }
+            stopAllSpeechAndHighlights();
+            isReadingAll = true;
+            sentenceSpans = document.querySelectorAll('.read-sentence');
+            readingIndex = 0;
+            
+            let readBtn = document.getElementById('btn-read-all');
+            if(readBtn) readBtn.innerHTML = '<span class="text-xl">⏸️</span> <span class="hidden md:inline">停止朗讀</span>';
+            
+            if(sentenceSpans.length > 0) readNextSentence();
+        }
+
+        function readNextSentence() {
+            if (readingIndex >= sentenceSpans.length || !isReadingAll) {
+                stopAllSpeechAndHighlights();
+                return;
+            }
+            
+            document.querySelectorAll('.read-sentence').forEach(s => s.classList.remove('active-sentence'));
+            let span = sentenceSpans[readingIndex];
+            span.classList.add('active-sentence');
+            
+            span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            let text = span.innerText;
+            let msg = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
+            msg.lang = 'zh-HK';
+            msg.rate = 0.9; 
+            window.currentUtterance = msg;
+            
+            msg.onend = function() {
+                if (isReadingAll) {
+                    readingIndex++;
+                    readNextSentence();
+                } else {
+                    stopAllSpeechAndHighlights();
+                }
+            };
+            
+            msg.onerror = function() { stopAllSpeechAndHighlights(); };
+            window.speechSynthesis.speak(msg);
+        }
+
+        function speakSpecificSentence(spanElement) {
+            stopAllSpeechAndHighlights();
+            spanElement.classList.add('active-sentence');
+            
+            let text = spanElement.innerText;
+            let msg = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
+            msg.lang = 'zh-HK';
+            msg.rate = 0.9;
+            window.currentUtterance = msg;
+            
+            msg.onend = function() {
+                spanElement.classList.remove('active-sentence');
+            };
+            
+            window.speechSynthesis.speak(msg);
+        }
+
+        function parseAndWrapSentences(htmlString) {
+            let tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlString;
+            let pTags = tempDiv.querySelectorAll('p');
+            pTags.forEach(p => {
+                let html = p.innerHTML;
+                let parts = html.split(/([。！？][」』]?)/);
+                let finalHtml = "";
+                let current = "";
+                
+                for(let i=0; i<parts.length; i++) {
+                    current += parts[i];
+                    if (/[。！？]/.test(parts[i]) || i === parts.length - 1) {
+                        if (current.trim() !== "") {
+                            finalHtml += `<span class="read-sentence" onclick="speakSpecificSentence(this)">${current}</span>`;
+                        }
+                        current = "";
+                    }
+                }
+                p.innerHTML = finalHtml;
+            });
+            return tempDiv.innerHTML;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "toast-msg show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // ================= 2. 學習錦囊寶庫 =================
+        const allTips = [
+            { id: 't-narrative', title: "🕵️‍♂️ 5W1H 尋寶法", content: "讀記敘文（故事）時，要在文章裡找出這幾個重要線索：<br>👤 <span class='font-bold'>何人(Who)</span>：故事裡有誰？<br>⏰ <span class='font-bold'>何時(When)</span>：發生在早上還是晚上？<br>📍 <span class='font-bold'>何地(Where)</span>：他們在哪裡？<br>🎬 <span class='font-bold'>何事(What)</span>：發生了什麼事？", color: "sky" },
+            { id: 't-vocab', title: "🧩 猜詞魔法", content: "遇到不懂的詞語，可以從「上下文」猜出來！<br>✔️ 看看它前後發生了什麼事。<br>✔️ 利用「近義詞」或「反義詞」來幫助理解意思。", color: "amber" },
+            { id: 't-para-punc', title: "❗ 標點會說話", content: "標點符號能透露作者的心情：<br><span class='text-xl font-bold'>。</span> 👉 說完了一句話<br><span class='text-xl font-bold'>，</span> 👉 短暫停頓<br><span class='text-xl font-bold'>？</span> 👉 心裡有疑問<br><span class='text-xl font-bold'>！</span> 👉 強烈的感情 (如驚訝、開心)", color: "emerald" },
+            { id: 't-paragraph', title: "🧱 找「段落大意」", content: "要快速知道一段文字在說什麼，需要尋找該段的「中心句」！通常藏在：<br>✔️ <span class='font-bold text-teal-700'>段首 (總起句)</span><br>✔️ <span class='font-bold text-teal-700'>段尾 (總結句)</span>", color: "teal" },
+            { id: 't-main-idea', title: "🎯 抓「文章主旨」", content: "主旨是作者最想告訴我們的道理。秘訣：<br>1️⃣ 看「標題」。<br>2️⃣ 看「開頭」或「結尾」。<br>3️⃣ 把每一段的大意加起來。", color: "indigo" },
+            { id: 't-inference', title: "🎭 猜「心理變化」", content: "透過角色的動作和語氣來猜測！<br>例：「低著頭搓衣角」👉 <span class='text-rose-600 font-bold'>緊張/心虛</span>。<br>例：「跳著喊贏了」👉 <span class='text-rose-600 font-bold'>極度興奮</span>。", color: "rose" },
+            { id: 't-rhetoric-effect', title: "🪄 修辭的「好處」", content: "比喻 👉 把事物寫得生動、具體。<br>擬人 👉 親切活潑，充滿感情。<br>設問 👉 自問自答，引起讀者思考。<br>反問 👉 只問不答，加強語氣。", color: "amber" },
+            { id: 't-expository', title: "🔬 四大說明方法", content: "1️⃣ <span class='font-bold'>舉例子</span> (例如、比如)<br>2️⃣ <span class='font-bold'>列數字</span> (包含精確的數據)<br>3️⃣ <span class='font-bold'>打比方</span> (說明文裡的比喻)<br>4️⃣ <span class='font-bold'>作比較</span> (把A和B放在一起比)", color: "cyan" },
+            { id: 't-argument', title: "⚖️ 議論文三要素", content: "1. <span class='font-bold text-purple-700'>中心論點</span> 👉 作者最想表達的主張。<br>2. <span class='font-bold text-purple-700'>論據</span> 👉 用來證明論點的證據 (故事/名言)。<br>3. <span class='font-bold text-purple-700'>論證</span> 👉 用證據證明道理的過程。", color: "purple" },
+            { id: 't-lyrical', title: "❤️ 借物抒情", content: "表面上是在寫一件普通的物品，實際上是透過這件物品，回憶起一段往事，用來<span class='text-rose-600 font-bold'>表達對某人的思念、感恩或愛</span>。", color: "rose" },
+            { id: 't-describe', title: "🚶 步移法", content: "描寫地方時，作者像導遊一樣，帶你一步步走。找找空間轉移的詞語：<br><span class='bg-emerald-100 px-2 rounded'>走進大門</span> 👉 <span class='bg-emerald-100 px-2 rounded'>沿著小路</span> 👉 <span class='bg-emerald-100 px-2 rounded'>來到湖邊</span>。", color: "emerald" }
+        ];
+
+        function renderTipsHub() {
+            const grid = document.getElementById('tips-grid');
+            let html = '';
+            allTips.forEach(tip => {
+                html += `
+                    <div class="bg-${tip.color}-50 border-2 border-${tip.color}-200 p-5 rounded-2xl shadow-sm hover:shadow-md transition">
+                        <h3 class="text-xl font-black text-${tip.color}-800 mb-3 border-b border-${tip.color}-200 pb-2">${tip.title}</h3>
+                        <p class="text-slate-700 text-sm md:text-base leading-relaxed">${tip.content}</p>
+                    </div>
+                `;
+            });
+            grid.innerHTML = html;
+        }
+
+        // Modal 教學用
+        const tutorialContents = {};
+        allTips.forEach(tip => {
+            tutorialContents[tip.id] = `
+                <div class="bg-${tip.color}-50 p-6 rounded-2xl border-2 border-${tip.color}-200 mb-3">
+                    <div class="text-center mb-4"><span class="text-6xl">${tip.title.split(' ')[0]}</span></div>
+                    <p class="font-black text-${tip.color}-800 text-2xl mb-4 text-center">${tip.title.substring(2)}</p>
+                    <p class="text-lg text-slate-700 leading-loose">${tip.content}</p>
+                </div>
+            `;
+        });
+
+        function showTutorial(tutKey) {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            document.getElementById('tutorial-body').innerHTML = tutorialContents[tutKey];
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+            localStorage.setItem('tut_seen_' + tutKey, 'true');
+        }
+
+        function closeTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (currentPassageIdx !== -1) {
+                    startPassage(currentPassageIdx, true); 
+                }
+            }, 300);
+        }
+
+        // 模式切換
+        function switchMode(mode) {
+            const tabQuest = document.getElementById('tab-quest');
+            const tabTips = document.getElementById('tab-tips');
+            const questMode = document.getElementById('quest-mode');
+            const tipsMode = document.getElementById('tips-hub-mode');
+            const questPlay = document.getElementById('quest-play');
+
+            if (mode === 'quest') {
+                tabQuest.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-indigo-600";
+                tabTips.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                questMode.style.display = 'flex';
+                tipsMode.style.display = 'none';
+                questPlay.style.display = 'none';
+                renderDirectory(); 
+            } else {
+                tabTips.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-indigo-600";
+                tabQuest.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                questMode.style.display = 'none';
+                questPlay.style.display = 'none';
+                tipsMode.style.display = 'flex'; 
+                renderTipsHub();
+            }
+        }
+
+        // ================= 3. 標準閱讀篇章題庫 (20 篇 x 8 題 = 160 題) =================
+        const rawQuestDataObj = [
+            {
+                id: 'p1', category: '記敘文', tut: 't-inference', title: '一次難忘的教訓',
+                text: '<p>這天是數學測驗派發成績的日子。我的心像十五個吊桶打水——七上八下。當老師把試卷派到我手上時，我看到上面寫著一個鮮紅的「45分」。我的眼淚頓時在眼眶裡打轉，手心也直冒冷汗。</p><p>回到家後，媽媽問我測驗成績如何。我支支吾吾地說：「還……還沒派。」媽媽見我神色慌張，便從我的書包裡翻出了試卷。她沒有破口大罵，只是平靜地說：「分數不代表一切，但不誠實卻會讓你失去別人的信任。」</p><p>聽了媽媽的話，我感到非常羞愧，低著頭向媽媽道歉。從那以後，我再也沒有撒過謊了。</p>',
+                questions: [
+                    { type: '修辭句意', q: '第一段中「我的心像十五個吊桶打水——七上八下」這句話說明了作者當時的心情是怎樣的？', options: ['非常興奮和期待', '非常緊張和不安', '感到十分生氣', '覺得很無聊'], ans: 1, hint: '這句歇後語用來形容人心裡慌亂，不安靜。', exp: '作者即將知道測驗成績，心裡非常「緊張和不安」。' },
+                    { type: '推論訊息', q: '作者回答媽媽時「支支吾吾」，這反映了他當時有什麼心理？', options: ['他忘記了成績', '他感到心虛，害怕被責罵', '他覺得很驕傲', '他嗓子不舒服'], ans: 1, hint: '作者考得很差卻說還沒派，說話不流利是因為他在說謊。', exp: '「支支吾吾」加上「神色慌張」，反映了他說謊時的「心虛和害怕」。' },
+                    { type: '前後關聯', q: '媽媽說「不誠實會讓你失去別人的信任」，文中的「不誠實」具體是指作者做了什麼事？', options: ['考試作弊', '偷了別人的東西', '考了45分', '向媽媽撒謊說試卷還沒派'], ans: 3, hint: '作者前面對媽媽說了什麼不真實的話？', exp: '作者考了45分卻對媽媽說「還沒派」，這就是文中所指的「不誠實」行為。' },
+                    { type: '段落歸納', q: '這篇文章的第二段主要講述了什麼？', options: ['作者考試不及格的經過', '作者向媽媽撒謊被揭穿，媽媽藉此教育他', '媽媽因為成績差而大罵作者', '作者決定以後要努力讀書'], ans: 1, hint: '第二段主要寫了作者回家後與媽媽的對話及媽媽的反應。', exp: '第二段記述了作者說謊被揭穿，而媽媽平靜地教育他誠實的重要性。' },
+                    { type: '詮釋整合', q: '這篇文章的主旨是什麼？', options: ['記述一次數學測驗不及格的經歷，說明數學很難。', '記述作者撒謊被揭穿的經過，帶出誠實比分數更重要的道理。', '讚美媽媽是一個脾氣很好的人。', '說明考試不應該給分數。'], ans: 1, hint: '文章最後作者因為媽媽的教導而感到羞愧並決定不再撒謊，這說明了什麼道理？', exp: '文章透過作者說謊被教育的經歷，表達了「誠實比分數更重要」的中心思想。' },
+                    { type: '標點符號', q: '第二段中「還……還沒派。」這句的省略號代表什麼？', options: ['話沒說完', '聲音延長', '說話結巴、吞吞吐吐', '列舉省略'], ans: 2, hint: '作者因為說謊而感到心虛。', exp: '省略號在這裡表示說話時結巴、斷斷續續。' },
+                    { type: '提取地點', q: '這個故事的第二段發生在哪裡？', options: ['學校', '公園', '家裡', '圖書館'], ans: 2, hint: '看看第二段第一句話。', exp: '文章寫道：「回到家後，媽媽問我測驗成績如何。」' },
+                    { type: '字詞積累', q: '第三段中「羞愧」的近義詞是什麼？', options: ['高興', '慚愧', '生氣', '驕傲'], ans: 1, hint: '做錯事覺得不好意思。', exp: '「羞愧」指感到羞恥和慚愧。' }
+                ]
+            },
+            {
+                id: 'p2', category: '說明文', tut: 't-expository', title: '奇妙的食蟲植物',
+                text: '<p>在大自然中，植物通常是吸收陽光和土壤裡的養分來生長的。但是，有一類植物非常奇妙，它們竟然會「吃」昆蟲！這類植物被稱為食蟲植物。</p><p>捕蠅草是食蟲植物中最著名的一種。它的葉子邊緣長滿了刺，就像一個長著牙齒的蚌殼。當有粗心的昆蟲（例如蒼蠅）飛進葉子裡，觸碰到裡面的感應毛時，捕蠅草的兩片葉子就會在零點幾秒內迅速合攏，把昆蟲緊緊關在裡面。接著，葉子會分泌出消化液，慢慢把昆蟲分解吸收。</p><p>為什麼這些植物要吃昆蟲呢？原來，它們大多生長在土壤貧瘠、缺乏養分的地方。為了生存，它們只好演化出捕捉昆蟲的本領，以補充生長所需的營養。</p>',
+                questions: [
+                    { type: '說明方法', q: '第二段提到「例如蒼蠅」，這運用了哪一種說明方法？', options: ['列數字', '舉例子', '打比方', '作比較'], ans: 1, hint: '用具體的事物(蒼蠅)來讓讀者明白什麼是「粗心的昆蟲」。', exp: '「例如蒼蠅」是舉出具體事物的「舉例子」說明方法。' },
+                    { type: '說明方法', q: '第二段中「就像一個長著牙齒的蚌殼」運用了什麼說明方法？', options: ['列數字', '舉例子', '打比方', '作比較'], ans: 2, hint: '用我們熟悉的東西(蚌殼)來比喻我們不熟悉的東西(葉子邊緣)。', exp: '在說明文中，使用比喻手法來說明事物特徵的方法稱為「打比方」。' },
+                    { type: '提取與推論', q: '根據第二段，捕蠅草是如何困住昆蟲的？', options: ['用香味把昆蟲毒暈', '昆蟲觸碰到感應毛後，葉子會迅速合攏', '用黏液把昆蟲黏住', '用長長的刺把昆蟲刺死'], ans: 1, hint: '在第二段找出捕蠅草關住昆蟲的具體動作過程。', exp: '文中明確寫出：「觸碰到裡面的感應毛時，捕蠅草的兩片葉子就會在零點幾秒內迅速合攏，把昆蟲緊緊關在裡面。」' },
+                    { type: '段落歸納', q: '第三段主要說明了什麼內容？', options: ['捕蠅草的捕捉過程', '大自然有很多奇妙的植物', '食蟲植物吃昆蟲的原因', '食蟲植物喜歡貧瘠的土壤'], ans: 2, hint: '第三段的第一句話是一個問句，這一段就是在回答這個問題。', exp: '第三段首句問「為什麼這些植物要吃昆蟲呢？」，隨後解釋是為了補充營養，因此主要說明吃昆蟲的原因。' },
+                    { type: '詞意推斷', q: '根據文章內容，第三段中的「貧瘠」最可能的意思是什麼？', options: ['非常富有的', '缺乏養分、不肥沃的', '有很多昆蟲的', '充滿水分的'], ans: 1, hint: '後面接著說「缺乏養分的地方」，這兩個詞是並列解釋的。', exp: '為了解決「缺乏養分」的問題才要吃昆蟲，由此推斷「貧瘠」是指土地不肥沃、缺乏養分。' },
+                    { type: '自然段落', q: '這篇文章共有幾個自然段？', options: ['一個', '兩個', '三個', '四個'], ans: 2, hint: '數數看文章開頭空兩格的地方。', exp: '文章分為引出食蟲植物、介紹捕蠅草、解釋原因三個段落。' },
+                    { type: '字詞積累', q: '第三段中「貧瘠」的反義詞是什麼？', options: ['肥沃', '乾燥', '濕潤', '溫暖'], ans: 0, hint: '貧瘠是沒有養分，相反就是有很多養分。', exp: '「貧瘠」的相反詞是土壤富含養分的「肥沃」。' },
+                    { type: '標點符號', q: '「它們竟然會『吃』昆蟲！」句末的感嘆號表達了什麼語氣？', options: ['生氣', '極度驚訝', '傷心', '命令'], ans: 1, hint: '植物竟然會吃蟲，這是一件很神奇的事。', exp: '感嘆號表達了對植物吃蟲這種奇妙現象的極度驚訝。' }
+                ]
+            },
+            {
+                id: 'p3', category: '描寫文', tut: 't-describe', title: '秋天的公園',
+                text: '<p>秋天的公園，就像一位換上了新裝的魔術師。走進大門，首先映入眼簾的是一個巨大的噴水池。水花在秋日的陽光下折射出彩虹的光芒，令人心曠神怡。</p><p>沿著小路往前走，兩旁的楓樹最為引人注目。那滿樹的楓葉紅得像燃燒的火焰，熱情而奔放。一陣風吹過，幾片落葉宛如金黃色的蝴蝶，在空中翩翩起舞，最後安靜地躺在草地上。此時的草地已經不再是初夏那般翠綠，而是鋪上了一層金黃色的地毯。</p><p>再往深處走，就來到了一個人工湖。湖面平靜得像一面大鏡子，倒映著藍天白雲。幾隻野鴨在湖面上悠閒地游著，偶爾發出「嘎嘎」的叫聲。我愛這迷人的秋天，愛這充滿詩意的公園。</p>',
+                questions: [
+                    { type: '寫作手法', q: '作者在描寫公園時，使用了「走進大門...沿著小路往前走...再往深處走」的順序。這屬於哪種描寫手法？', options: ['插敘法', '倒敘法', '步移法 (空間順序)', '借物抒情'], ans: 2, hint: '跟隨作者移動的腳步來變換觀察的地點。', exp: '作者隨著腳步移動，依序描寫不同地點看到的景物，這種手法稱為「步移法」。' },
+                    { type: '修辭手法', q: '「落葉宛如金黃色的蝴蝶，在空中翩翩起舞」這句話運用了哪些修辭手法？', options: ['明喻 和 誇張', '明喻 和 擬人', '借喻 和 排比', '暗喻 和 擬人'], ans: 1, hint: '有「宛如」(像) 這種喻詞，並且賦予落葉「起舞」的動作。', exp: '「宛如...蝴蝶」是明喻，「翩翩起舞」賦予落葉人的動作，是擬人。' },
+                    { type: '推論訊息', q: '為什麼草地「鋪上了一層金黃色的地毯」？', options: ['因為有人買了地毯鋪在上面', '因為秋天到了，枯黃的落葉掉滿了草地', '因為太陽光照在草地上', '因為草地被漆成了金黃色'], ans: 1, hint: '結合前文「幾片落葉...最後安靜地躺在草地上」來推斷。', exp: '秋天落葉歸根，大量的黃葉覆蓋在草地上，就像鋪了一層金黃色的地毯。' },
+                    { type: '修辭作用', q: '第三段中「湖面平靜得像一面大鏡子」，這種寫法有什麼好處（作用）？', options: ['誇大湖面的面積', '生動具體地表現出湖面非常平靜、能反光的特點', '賦予湖面人類的感情', '讓句子讀起來更有節奏感'], ans: 1, hint: '這是比喻手法，比喻的作用通常是把事物寫得生動具體。', exp: '比喻的作用是將抽象或平淡的事物變得具體形象，這裡突顯了湖面無波無浪的平靜狀態。' },
+                    { type: '詮釋整合', q: '這篇文章表達了作者怎樣的思想感情？', options: ['對秋天落葉枯萎的悲傷之情', '對秋天公園美麗景色的喜愛與讚美之情', '對野鴨吵鬧聲的厭惡之情', '對夏天過去的無奈之情'], ans: 1, hint: '看文章最後一段的總結句「我愛這迷人的秋天...」。', exp: '文章結尾直接抒情：「我愛這迷人的秋天，愛這充滿詩意的公園」，表達了喜愛與讚美。' },
+                    { type: '字詞積累', q: '第一段中「心曠神怡」的意思是什麼？', options: ['非常害怕', '心情開朗，精神愉悅', '非常生氣', '身體不舒服'], ans: 1, hint: '看到美麗的噴水池和彩虹，心情會怎樣？', exp: '「心曠神怡」形容心情舒暢，精神愉悅。' },
+                    { type: '提取地點', q: '這篇文章的第二段主要是描寫公園的哪個地方？', options: ['噴水池', '人工湖', '小路兩旁的楓樹', '大門口'], ans: 2, hint: '看看第二段的第一句話。', exp: '「沿著小路往前走，兩旁的楓樹最為引人注目。」' },
+                    { type: '標點符號', q: '「嘎嘎」的引號用來做什麼？', options: ['表示特別強調', '標示鴨子的叫聲（擬聲詞）', '表示書名', '表示反話'], ans: 1, hint: '嘎嘎是聲音。', exp: '引號在這裡用來標示動物發出的聲音。' }
+                ]
+            },
+            {
+                id: 'p4', category: '抒情文', tut: 't-lyrical', title: '爺爺的舊懷錶',
+                text: '<p>我的書桌抽屜裡，珍藏著一隻泛黃的舊懷錶。它的錶面已經有些模糊，金屬外殼也失去了光澤，看起來一點都不名貴。但是，對我來說，它卻是無價之寶。</p><p>這隻懷錶是爺爺留給我的。小時候，爺爺每天都會把它帶在身邊。每當我調皮搗蛋時，爺爺總會把他拉到大腿上，掏出這隻懷錶。聽著那「滴答、滴答」的清脆聲音，我狂躁的心就會慢慢平靜下來。爺爺常說：「時間就像這滴答聲，溜走了就永遠追不回來。你一定要做個珍惜時間的好孩子。」</p><p>現在，爺爺已經離開了我們。每當我溫習感到疲倦，想要偷懶時，我就會拿出這隻舊懷錶。看著它，我彷彿又看到了爺爺慈祥的笑容，聽到了他那語重心長的教誨。這隻懷錶，將永遠陪伴著我成長。</p>',
+                questions: [
+                    { type: '寫作手法', q: '這篇文章主要運用了哪種寫作手法來表達情感？', options: ['直接抒情', '借景抒情', '借物抒情', '步移法'], ans: 2, hint: '作者不是直接說很想念爺爺，而是透過一件「物品」來帶出感情。', exp: '文章透過描寫一隻「舊懷錶」，引出對爺爺的回憶與思念，這種手法稱為「借物抒情」。' },
+                    { type: '前後對比', q: '第一段中，為什麼外表破舊的懷錶對作者來說卻是「無價之寶」？', options: ['因為它是純金做的', '因為它代表著作者對爺爺的深深思念和爺爺的教誨', '因為它可以賣很多錢', '因為它是作者自己買的'], ans: 1, hint: '這隻錶雖然不名貴，但它裡面藏著誰的回憶？', exp: '懷錶的價值不在於金錢，而在於它承載了爺爺的愛與教導，所以是無價之寶。' },
+                    { type: '因果推斷', q: '根據第二段，小時候爺爺拿出懷錶給作者聽「滴答」聲，有什麼作用？', options: ['為了叫作者起床', '為了告訴作者現在幾點', '能讓作者調皮狂躁的心慢慢平靜下來', '為了催促作者吃飯'], ans: 2, hint: '在第二段找「滴答聲」帶來的結果。', exp: '文中明確指出：「聽著那『滴答、滴答』的清脆聲音，我狂躁的心就會慢慢平靜下來。」' },
+                    { type: '人物描寫', q: '爺爺說：「時間就像這滴答聲，溜走了就永遠追不回來。」這句話運用了什麼修辭手法？', options: ['誇張', '明喻', '排比', '反問'], ans: 1, hint: '把時間比作什麼？中間用了哪個字？', exp: '把時間(本體)比喻成滴答聲(喻體)，中間用「像」連接，屬於明喻。' },
+                    { type: '推論訊息', q: '第三段中，當作者想要偷懶時，看著懷錶會產生什麼效果？', options: ['會立刻睡著', '會覺得很煩躁', '會想起爺爺的教誨，從而激勵自己繼續努力', '會想把懷錶扔掉'], ans: 2, hint: '作者看到懷錶就想起爺爺要他珍惜時間的話。', exp: '懷錶象徵著爺爺的教誨，每當想偷懶時，這份回憶就會警醒並激勵他。' },
+                    { type: '提取時間', q: '故事的第二段發生在什麼時候？', options: ['小時候', '中學時期', '現在', '大學'], ans: 0, hint: '看看第二段的時間線索。', exp: '「小時候，爺爺每天都會把它帶在身邊。」' },
+                    { type: '字詞積累', q: '第三段中「疲倦」的近義詞是什麼？', options: ['興奮', '勞累', '精神', '生氣'], ans: 1, hint: '溫習做功課很久會覺得怎樣？', exp: '「疲倦」指身體勞累。' },
+                    { type: '人物理解', q: '爺爺為什麼要對作者說那些話？', options: ['因為爺爺覺得無聊', '因為爺爺關心作者，想教他珍惜時間', '因為爺爺想賣掉懷錶', '因為作者想睡覺'], ans: 1, hint: '長輩的教誨通常是為了什麼？', exp: '這是爺爺對孫子的關愛和語重心長的教誨。' }
+                ]
+            },
+            {
+                id: 'p5', category: '寓言故事', tut: 't-main-idea', title: '兩隻青蛙',
+                text: '<p>有兩隻青蛙，一隻住在深深的水井裡，另一隻住在廣闊的大海邊。</p><p>有一天，海青蛙來到了水井邊，對井青蛙說：「朋友，你出來看看吧！外面的世界很大，有看不見盡頭的海洋，有高高的山峰，可漂亮了！」井青蛙聽了，搖搖頭說：「你別騙我了！天空就只有井口那麼大，世界怎麼可能很大呢？我住在這裡非常安全，有水喝，有蟲子吃，這就是全世界最完美的地方了。」</p><p>海青蛙見井青蛙固執己見，嘆了口氣便離開了。後來，這一年發生了嚴重的乾旱，水井裡的水全乾了。井青蛙因為從來沒有離開過水井，不知道哪裡還有水，最後渴死在井底。而海青蛙則在浩瀚的大海裡，依然快樂地生活著。</p>',
+                questions: [
+                    { type: '人物對比', q: '這兩隻青蛙的居住環境有什麼不同？', options: ['兩隻都住在井裡', '一隻住在井裡，一隻住在海邊', '兩隻都住在海邊', '一隻在樹上，一隻在地下'], ans: 1, hint: '文章第一段介紹了牠們的住處。', exp: '第一段明確寫道：「一隻住在深深的水井裡，另一隻住在廣闊的大海邊。」' },
+                    { type: '人物心理', q: '為什麼井青蛙不相信海青蛙的話？', options: ['因為海青蛙以前騙過牠', '因為牠的視線被水井擋住，以為天空只有井口大', '因為牠覺得海青蛙在炫耀', '因為牠聽不懂海青蛙的話'], ans: 1, hint: '看看井青蛙拒絕時說了什麼理由。', exp: '井青蛙說：「天空就只有井口那麼大，世界怎麼可能很大呢？」這顯示牠的見識受限於環境。' },
+                    { type: '詞意推斷', q: '第二段中說井青蛙「固執己見」，這個成語是什麼意思？', options: ['非常虛心聽別人的話', '堅持自己的看法，不肯改變', '喜歡發脾氣', '眼光放得很遠'], ans: 1, hint: '海青蛙勸牠出來，但牠死都不信，堅持自己是對的。', exp: '「固執己見」形容一個人頑固地堅持自己的主見，不聽別人的勸告。' },
+                    { type: '因果推斷', q: '導致井青蛙最後死亡的直接原因是什麼？', options: ['牠被海青蛙打死了', '因為發生乾旱井水枯竭，而牠沒有離開過井尋找水源的能力', '牠吃錯了有毒的蟲子', '因為牠跳不出水井'], ans: 1, hint: '第三段提到了天氣的變化和井青蛙的下場。', exp: '文章指出：「發生了嚴重的乾旱...井青蛙因為從來沒有離開過水井，不知道哪裡還有水，最後渴死」。' },
+                    { type: '詮釋整合', q: '這則寓言故事告訴我們什麼道理？', options: ['青蛙應該住在海邊才安全。', '人不能像井底之蛙一樣目光短淺、固步自封，應該多見識廣大的世界。', '不要輕易相信別人的話。', '發生乾旱時要多喝水。'], ans: 1, hint: '這個故事就是著名的「井底之蛙」，想想這個成語的意思。', exp: '故事透過井底之蛙的悲劇，教導我們眼光要放長遠，不能局限在自己的小世界裡不思進取。' },
+                    { type: '字詞積累', q: '第三段中「浩瀚」的意思是什麼？', options: ['非常微小', '廣大無邊', '非常危險', '非常安靜'], ans: 1, hint: '形容大海的詞語。', exp: '「浩瀚」用來形容水勢廣大或空間廣闊無邊。' },
+                    { type: '因果推斷', q: '海青蛙為什麼嘆了口氣離開？', options: ['因為牠肚子餓', '因為牠覺得井青蛙太固執，不聽勸告', '因為水井太深', '因為牠想回家'], ans: 1, hint: '看看第三段第一句話。', exp: '「海青蛙見井青蛙固執己見，嘆了口氣便離開了。」' },
+                    { type: '標點符號', q: '井青蛙說：「你別騙我了！...」這句話用了什麼標點來包圍說話內容？', options: ['書名號', '破折號', '引號', '省略號'], ans: 2, hint: '用來包住說話內容的符號。', exp: '引號「」用來標示人物的直接對話。' }
+                ]
+            },
+            {
+                id: 'p6', category: '說明文', tut: 't-expository', title: '睡眠的秘密',
+                text: '<p>睡眠對人類來說是不可或缺的。許多人以為睡覺只是讓身體休息，但其實，大腦在我們睡著時依然非常忙碌。</p><p>首先，睡眠能幫助我們鞏固記憶。白天我們在學校學到的新知識，大腦會在夜晚進行整理和儲存。如果睡眠不足，大腦就像一個沒有整理的凌亂抽屜，我們就很難記住學過的東西。其次，睡眠對身體的生長發育至關重要。在進入深度睡眠時，我們的身體會分泌大量的生長激素，這對兒童和青少年的長高非常重要。此外，充足的睡眠還能增強免疫力，讓我們不容易生病。</p><p>總而言之，良好的睡眠是保證我們健康成長和高效學習的基礎。小學生每天應該保持九到十個小時的睡眠時間，千萬不要為了玩電子遊戲而熬夜喔！</p>',
+                questions: [
+                    { type: '前後關聯', q: '第一段中提到，人們對睡眠有什麼常見的誤解？', options: ['以為睡覺浪費時間', '以為睡覺只是讓身體休息，大腦也停止運作', '以為睡覺會讓人變笨', '以為睡覺可以治百病'], ans: 1, hint: '文章說「許多人以為...但其實大腦...」。', exp: '「許多人以為睡覺只是讓身體休息，但其實，大腦在我們睡著時依然非常忙碌。」' },
+                    { type: '說明方法', q: '「如果睡眠不足，大腦就像一個沒有整理的凌亂抽屜」這句話運用了什麼說明方法？', options: ['列數字', '打比方', '作比較', '舉例子'], ans: 1, hint: '有「像」這個字，把大腦比作抽屜，讓讀者更容易明白。', exp: '用人們熟悉的「凌亂抽屜」來比喻大腦睡眠不足的狀態，是「打比方」。' },
+                    { type: '說明方法', q: '最後一段提到「小學生每天應該保持九到十個小時的睡眠時間」，這運用了哪種說明方法？', options: ['打比方', '列數字', '作比較', '舉例子'], ans: 1, hint: '找找這句話裡面有沒有精確的數值。', exp: '使用了「九到十個小時」這個具體的數據，是「列數字」的說明方法。' },
+                    { type: '段落歸納', q: '這篇文章的結構特點是什麼？', options: ['按時間順序記事', '總起 👉 分述 👉 總結 (總分總結構)', '按地點變換描寫', '提出問題但不解答'], ans: 1, hint: '第一段總說睡眠重要，第二段分點說明好處，第三段用「總而言之」作結。', exp: '這是標準的說明文「總-分-總」結構。' },
+                    { type: '詮釋整合', q: '作者在最後一段對小學生提出了什麼具體的建議？', options: ['每天要玩電子遊戲', '每天要睡超過十二個小時', '每天要保持九到十個小時的睡眠，不要熬夜', '睡覺前要整理抽屜'], ans: 2, hint: '看看文章最後一句的呼籲。', exp: '文章最後呼籲：「小學生每天應該保持九到十個小時的睡眠時間，千萬不要為了玩電子遊戲而熬夜喔！」' },
+                    { type: '字詞積累', q: '第一段中「不可或缺」的意思是？', options: ['不重要', '非常重要，不能缺少', '非常危險', '很昂貴'], ans: 1, hint: '睡眠對我們來說是必須的。', exp: '「不可或缺」指非常重要，絕對不能缺少。' },
+                    { type: '因果推斷', q: '為什麼充足的睡眠能讓人不容易生病？', options: ['因為睡覺時不會遇到細菌', '因為充足的睡眠能增強免疫力', '因為睡覺不用出門', '因為做夢會趕走病毒'], ans: 1, hint: '第二段最後一句話。', exp: '「充足的睡眠還能增強免疫力，讓我們不容易生病。」' },
+                    { type: '標點符號', q: '為什麼最後一句要用感嘆號「！」？', options: ['表示驚訝', '加強勸告小學生不要熬夜的語氣', '表示生氣', '沒有特別原因'], ans: 1, hint: '作者在提醒大家不要為了打機熬夜。', exp: '感嘆號在此加強了叮嚀和勸告的語氣。' }
+                ]
+            },
+            {
+                id: 'p7', category: '記敘文', tut: 't-rhetoric-effect', title: '克服恐懼',
+                text: '<p>今天是我第一次參加全校朗誦比賽。站在後台，我的雙腿不聽使喚地發抖。難道我真的做不到嗎？我深吸了一口氣，想起老師對我說過的話：「恐懼就像一個紙老虎，你退縮它就強大，你勇敢它就破滅。」</p><p>輪到我上場了。我走到舞台中央，聚光燈打在我的身上。台下幾百雙眼睛注視著我。那一刻，我真想轉身逃跑。可是，難道我準備了這麼久的努力就要白費嗎？不，我絕不放棄！</p><p>我挺直腰板，大聲地朗誦起來。漸漸地，我忘記了緊張，完全融入了詩歌的情境中。當我朗誦完畢，台下爆發出雷鳴般的掌聲。這次比賽讓我明白，最大的敵人其實是自己內心的恐懼。</p>',
+                questions: [
+                    { type: '修辭作用', q: '第一段中「難道我真的做不到嗎？」這句話運用了什麼修辭手法？', options: ['反問', '設問', '排比', '誇張'], ans: 1, hint: '作者自己提出了問題，並在後面自己給出了回答和行動。', exp: '自問自答，為了引起注意和思考，屬於「設問」。' },
+                    { type: '修辭手法', q: '「恐懼就像一個紙老虎」這句話運用了什麼修辭手法？', options: ['擬人', '明喻', '暗喻', '借喻'], ans: 1, hint: '有本體(恐懼)和喻體(紙老虎)，中間用了「像」。', exp: '這是一個標準的明喻，說明恐懼外表可怕，其實不堪一擊。' },
+                    { type: '修辭作用', q: '第二段中「難道我準備了這麼久的努力就要白費嗎？」這句話有什麼作用？', options: ['用反問語氣，強調作者絕不願意讓努力白費的決心。', '提出一個沒有答案的問題讓讀者猜。', '表示作者真的覺得努力白費了。', '用來拖延上場的時間。'], ans: 0, hint: '這是一個反問句，答案是「當然不能白費」。', exp: '反問的作用是加強肯定的語氣，這裡強調了作者不甘心放棄的強烈決心。' },
+                    { type: '推論訊息', q: '第二段中「我真想轉身逃跑」，這反映了作者當時怎樣的心理狀態？', options: ['覺得很熱', '面對眾人目光感到極度緊張和怯場', '想要去洗手間', '覺得比賽很無聊'], ans: 1, hint: '被幾百雙眼睛看著，想逃跑是因為害怕。', exp: '這句心理描寫真實反映了作者上台瞬間的極度恐懼與怯場。' },
+                    { type: '詮釋整合', q: '文章最後一句「最大的敵人其實是自己內心的恐懼」，這帶出了什麼道理？', options: ['比賽一定會遇到壞人。', '我們不應該參加朗誦比賽。', '只要戰勝內心的害怕，勇敢面對，就能取得成功。', '紙老虎是很危險的。'], ans: 2, hint: '作者最終戰勝了發抖和想逃跑的念頭，獲得了掌聲。', exp: '文章主旨是教導我們：克服自身內心的恐懼，才是邁向成功的最關鍵一步。' },
+                    { type: '提取地點', q: '作者當時站在哪裡雙腿發抖？', options: ['課室', '操場', '舞台中央', '後台'], ans: 3, hint: '第一段第二句話。', exp: '「站在後台，我的雙腿不聽使喚地發抖。」' },
+                    { type: '字詞積累', q: '第三段中「雷鳴」般掌聲的近義詞是什麼？', options: ['鴉雀無聲', '震耳欲聾', '細聲細氣', '安安靜靜'], ans: 1, hint: '像打雷一樣大聲。', exp: '「震耳欲聾」形容聲音極大，像雷聲一樣。' },
+                    { type: '標點符號', q: '「『恐懼就像一個紙老虎...』」這裡的引號包住的是？', options: ['書本的名字', '老師對作者說過的話', '作者心裡想的話', '一首歌的名字'], ans: 1, hint: '前面寫著「想起老師對我說過的話：」。', exp: '引號標示了老師的直接話語。' }
+                ]
+            },
+            {
+                id: 'p8', category: '說明文', tut: 't-expository', title: '沙漠之舟',
+                text: '<p>駱駝被稱為「沙漠之舟」，是因為牠們非常適應沙漠惡劣的環境，是沙漠裡重要的交通工具。</p><p>駱駝的身體構造十分特別。首先，牠們的背上有一個或兩個高高隆起的駝峰。許多人以為駝峰裡裝的是水，其實那裡面儲存的是厚厚的脂肪。當駱駝在沙漠中找不到食物時，這些脂肪就會轉化為能量，維持牠們的生命。其次，駱駝的腳掌寬大且有肉墊，這讓牠們在鬆軟的沙地上行走時，不會陷進沙裡。此外，駱駝的睫毛很長，鼻孔也能自由開合，這能有效防止風沙吹進眼睛和呼吸道。</p><p>正因為擁有這些獨特的「裝備」，駱駝才能在酷熱乾旱的沙漠中生存，幫助人類運輸貨物。</p>',
+                questions: [
+                    { type: '修辭作用', q: '文章的標題「沙漠之舟」把駱駝比喻為船(舟)，這種寫法有什麼好處？', options: ['為了湊字數', '生動形象地突顯駱駝在沙漠中作為重要交通工具的特點', '表示駱駝可以在水裡游泳', '表示駱駝長得像一隻船'], ans: 1, hint: '沙漠裡沒有水，但駱駝能像船一樣運送人和貨物。', exp: '比喻能將事物寫得更生動，這裡突顯了駱駝的運輸功能。' },
+                    { type: '前後關聯', q: '許多人對駱駝的「駝峰」有什麼誤解？', options: ['以為駝峰是用來防風沙的', '以為駝峰裡裝的是水', '以為駝峰是腫瘤', '以為駝峰裡裝的是食物'], ans: 1, hint: '第二段第二句話指出了人們的誤解。', exp: '文章說：「許多人以為駝峰裡裝的是水，其實那裡面儲存的是厚厚的脂肪。」' },
+                    { type: '提取資訊', q: '駝峰裡的脂肪對駱駝有什麼作用？', options: ['讓駱駝看起來更高大', '在找不到食物時轉化為能量，維持生命', '用來保暖', '用來防禦敵人'], ans: 1, hint: '找找看「脂肪」後面的句子。', exp: '文中指出：「當駱駝在沙漠中找不到食物時，這些脂肪就會轉化為能量，維持牠們的生命。」' },
+                    { type: '因果推斷', q: '為什麼駱駝在鬆軟的沙地上行走時，腳不會陷進沙裡？', options: ['因為牠們走得很快', '因為沙漠的沙子很硬', '因為牠們的腳掌寬大且有肉墊', '因為牠們沒有重量'], ans: 2, hint: '在第二段尋找關於「腳掌」的描述。', exp: '文章解釋：「駱駝的腳掌寬大且有肉墊，這讓牠們在鬆軟的沙地上行走時，不會陷進沙裡。」' },
+                    { type: '段落歸納', q: '這篇文章的第二段主要是運用了什麼結構來介紹駱駝？', options: ['對話結構', '時間順序結構', '總分結構（先總述身體構造特別，再分點說明）', '空間順序結構'], ans: 2, hint: '看看第二段用了什麼詞語來有條理地列出駱駝的特徵。', exp: '第二段先總說「身體構造十分特別」，接著使用「首先...其次...此外...」來分點說明。' },
+                    { type: '自然段落', q: '這篇文章共有幾個自然段？', options: ['一個', '兩個', '三個', '四個'], ans: 2, hint: '數一數開頭空兩格的地方。', exp: '文章分為引出稱號、介紹身體構造、總結作用三個段落。' },
+                    { type: '字詞積累', q: '第三段中「酷熱」的反義詞是什麼？', options: ['炎熱', '溫暖', '嚴寒', '涼爽'], ans: 2, hint: '非常熱的相反是非常冷。', exp: '「酷熱」的相反詞是極度寒冷的「嚴寒」。' },
+                    { type: '因果推斷', q: '為什麼駱駝的睫毛很長？', options: ['為了好看', '能有效防止風沙吹進眼睛', '為了擋住陽光', '為了吸引同伴'], ans: 1, hint: '第二段最後一句話。', exp: '「駱駝的睫毛很長...這能有效防止風沙吹進眼睛和呼吸道。」' }
+                ]
+            },
+            {
+                id: 'p9', category: '議論文', tut: 't-argument', title: '誠實最可貴',
+                text: '<p>古語有云：「人無信不立。」誠實是做人的基本美德，也是我們在社會上立足的根本。我們無論在任何情況下，都應該保持誠實。</p><p>有些人為了逃避責罰或獲取短暫的利益而選擇撒謊。然而，謊言總有被拆穿的一天。就如童話故事《狼來了》中的那個放羊的孩子，他因為覺得好玩而三番四次地對村民撒謊，說狼來了。到了最後，當狼真的來了時，再也沒有人相信他的呼救，結果他的羊全被狼吃掉了。這說明了不誠實會讓人失去最寶貴的信任。</p><p>相反，誠實的人雖然有時會因為說出真相而面臨短暫的困難，但長遠來看，他們會贏得別人的尊重。因此，我們必須堅守誠實的底線，做一個光明磊落的人。</p>',
+                questions: [
+                    { type: '尋找論點', q: '這篇文章的中心論點是什麼？', options: ['我們應該多看童話故事。', '誠實是做人的基本美德，我們應該保持誠實。', '放羊的孩子不應該養羊。', '有時候撒謊是可以接受的。'], ans: 1, hint: '論點就是作者最想告訴我們的主張，通常在第一段。', exp: '第一段明確指出作者的主張：「誠實是做人的基本美德...都應該保持誠實。」' },
+                    { type: '尋找論據', q: '第二段中，作者舉了哪一個例子來證明不誠實的後果？', options: ['白雪公主', '狼來了的放羊孩子', '龜兔賽跑', '小紅帽'], ans: 1, hint: '看看第二段作者提到了哪個童話故事。', exp: '作者舉了《狼來了》的故事作為反面論據。' },
+                    { type: '說明方法', q: '作者引用《狼來了》這個故事，運用了哪一種論證方法？', options: ['列數字', '舉例子 (例證法)', '作比較', '打比方'], ans: 1, hint: '作者用了一個大家都知道的故事來證明自己的觀點。', exp: '引用具體的故事或事例來證明論點，就是「舉例子 / 例證法」。' },
+                    { type: '詞意推斷', q: '最後一段中「光明磊落」是什麼意思？', options: ['身上發出光芒', '形容人胸懷坦白，行為正派', '形容石頭很多', '形容很聰明'], ans: 1, hint: '誠實的人不說謊，心裡沒有秘密，做人就會怎樣？', exp: '「光明磊落」形容人品行端正，坦坦蕩蕩，不藏私。' },
+                    { type: '詮釋整合', q: '綜合全文，作者認為誠實的人和撒謊的人最終會有什麼不同的結果？', options: ['兩者沒有分別', '撒謊的人會發財，誠實的人會吃虧', '撒謊的人會失去別人的信任，誠實的人會贏得尊重', '撒謊的人會變聰明，誠實的人會變笨'], ans: 2, hint: '對比第二段的結尾和第三段的開頭。', exp: '第二段說不誠實會「失去最寶貴的信任」，第三段說誠實的人會「贏得別人的尊重」。' },
+                    { type: '字詞積累', q: '第一段中「立足」的意思是什麼？', options: ['站著不動', '在社會上生存和站得住腳', '走路', '買房子'], ans: 1, hint: '誠實是我們在社會上的根本。', exp: '「立足」比喻在社會上站得住腳、生存下去。' },
+                    { type: '提取結果', q: '放羊的孩子最後落得什麼下場？', options: ['變成有錢人', '村民來救了他', '他的羊全被狼吃掉了', '狼成了他的寵物'], ans: 2, hint: '看看第二段故事的結局。', exp: '「結果他的羊全被狼吃掉了。」' },
+                    { type: '標點符號', q: '第二段中《狼來了》的符號用來標示什麼？', options: ['人名', '地名', '童話故事的名稱 (書名號)', '一句話'], ans: 2, hint: '《》是書名號。', exp: '書名號用來標示書籍、文章或故事的名稱。' }
+                ]
+            },
+            {
+                id: 'p10', category: '議論文', tut: 't-argument', title: '閱讀的好處',
+                text: '<p>莎士比亞曾說：「書籍是全世界的營養品。」閱讀不僅能增長我們的知識，還能豐富我們的精神世界。因此，我們應該從小養成愛閱讀的好習慣。</p><p>首先，閱讀是獲取知識最直接的途徑。透過閱讀百科全書或歷史書籍，我們可以不出家門便了解宇宙的奧秘和古代的歷史。其次，閱讀能提升我們的語文能力。在閱讀優美文學作品的過程中，我們會不知不覺地學習到豐富的詞彙和多樣的寫作手法，讓我們的作文寫得更好。此外，閱讀還能幫助我們減輕壓力。當我們沉浸在精彩的小說情節中時，便會暫時忘記生活中的煩惱。</p><p>總而言之，閱讀百利而無一害。讓我們每天抽出三十分鐘，放下手機，打開書本，享受閱讀帶來的樂趣吧！</p>',
+                questions: [
+                    { type: '尋找論點', q: '這篇文章的中心論點是什麼？', options: ['莎士比亞是一位偉大的作家。', '我們應該從小養成愛閱讀的好習慣。', '百科全書是最有用的書。', '我們每天只能讀三十分鐘的書。'], ans: 1, hint: '第一段最後一句通常會提出作者的強烈主張。', exp: '第一段總結：「因此，我們應該從小養成愛閱讀的好習慣。」這就是文章的中心論點。' },
+                    { type: '段落歸納', q: '根據第二段，作者列出了閱讀的哪三大好處？', options: ['獲取知識、提升語文能力、減輕壓力', '保護眼睛、變聰明、賺錢', '認識朋友、學習寫作、幫助睡眠', '了解宇宙、買書、玩手機'], ans: 0, hint: '尋找「首先...其次...此外...」帶出的重點。', exp: '第二段明確列出：1.獲取知識；2.提升語文能力；3.減輕壓力。' },
+                    { type: '說明方法', q: '第一段引用了莎士比亞的話：「書籍是全世界的營養品。」這屬於什麼論證方法？', options: ['列數字', '舉例子', '引用名言 (引證法)', '作比較'], ans: 2, hint: '借用名人的話來加強自己的觀點。', exp: '引用名人名言來證明論點，屬於引證法或引用。' },
+                    { type: '修辭句意', q: '「書籍是全世界的營養品」這句話運用了什麼修辭手法？', options: ['明喻', '暗喻', '誇張', '排比'], ans: 1, hint: '把書籍比作營養品，中間用「是」連接。', exp: '本體(書籍)與喻體(營養品)用「是」連接，沒有用「像」，這屬於暗喻。' },
+                    { type: '詮釋整合', q: '作者在最後一段提出了什麼具體行動建議？', options: ['每天去圖書館', '把手機扔掉', '每天抽出三十分鐘放下手機去閱讀', '每天買一本新書'], ans: 2, hint: '看看文章最後一句呼籲大家做什麼。', exp: '文章結尾呼籲：「讓我們每天抽出三十分鐘，放下手機，打開書本...」' },
+                    { type: '字詞積累', q: '第二段中「煩惱」的近義詞是什麼？', options: ['快樂', '憂愁', '興奮', '驚訝'], ans: 1, hint: '讓人不開心的事情。', exp: '「煩惱」的近義詞是「憂愁」或「煩心」。' },
+                    { type: '因果推斷', q: '為什麼閱讀能讓我們的作文寫得更好？', options: ['因為可以抄別人的文章', '因為會不知不覺學習到豐富的詞彙和寫作手法', '因為看書不用寫字', '因為老師會加分'], ans: 1, hint: '第二段關於語文能力的部分。', exp: '「我們會不知不覺地學習到豐富的詞彙和多樣的寫作手法，讓我們的作文寫得更好。」' },
+                    { type: '提取人物', q: '「書籍是全世界的營養品。」這句話是誰說的？', options: ['愛迪生', '魯迅', '莎士比亞', '牛頓'], ans: 2, hint: '文章第一句話。', exp: '「莎士比亞曾說...」' }
+                ]
+            },
+            {
+                id: 'p11', category: '描寫文', tut: 't-describe', title: '夏日的海灘',
+                text: '<p>炎熱的夏日，我們一家來到了淺水灣海灘。踏上沙灘，那金黃色的沙子軟綿綿的，就像踩在地毯上一樣。無數個五顏六色的貝殼點綴在沙灘上，閃閃發光。</p><p>走向海邊，一望無際的大海呈現出迷人的蔚藍色。海浪一波接著一波地湧上岸，發出「嘩啦嘩啦」的聲音。遠處，有幾隻海鷗在海面上低飛盤旋，尋找著獵物。海面上還有點點白帆，那是漁民們正在辛勤地捕魚。</p><p>抬頭望向天空，一輪火紅的驕陽高高掛著。幾朵白雲像棉花糖般悠閒地飄浮著。這片美麗的海灘，真是一個消暑的好地方。</p>',
+                questions: [
+                    { type: '寫作手法', q: '這篇文章描寫海灘時，採用了什麼空間觀察順序？', options: ['由遠及近', '由上到下', '踏上沙灘 👉 走向海邊 👉 抬頭望向天空 (步移法/空間轉移)', '先寫海面，再寫沙灘'], ans: 2, hint: '看看每一段開頭的第一句話，作者的視線是怎麼移動的。', exp: '第一段「踏上沙灘」、第二段「走向海邊」、第三段「抬頭望向天空」，這是標準的步移法與空間順序。' },
+                    { type: '修辭手法', q: '第一段中「那金黃色的沙子軟綿綿的，就像踩在地毯上一樣」運用了什麼修辭手法？', options: ['擬人', '明喻', '誇張', '排比'], ans: 1, hint: '有「像...一樣」的字眼，把沙子比作地毯。', exp: '將軟軟的沙子比喻為地毯，使用了喻詞「像」，是明喻。' },
+                    { type: '提取視覺', q: '第二段描寫海面上的景物，包含了哪些顏色？', options: ['只有藍色', '蔚藍色的海水、白色的帆', '紅色的浪花', '金黃色的魚'], ans: 1, hint: '在第二段尋找顏色的詞語。', exp: '文中提到「蔚藍色」的大海以及點點「白帆」。' },
+                    { type: '修辭作用', q: '「幾朵白雲像棉花糖般悠閒地飄浮著」這句比喻有什麼作用？', options: ['生動地表現出白雲潔白柔軟的樣子和輕鬆的氣氛', '說明白雲可以吃', '表示天氣即將下雨', '誇大白雲的數量'], ans: 0, hint: '棉花糖給人什麼感覺？', exp: '將白雲比作棉花糖，生動具體地寫出了雲的潔白鬆軟，配合「悠閒」烘托出輕鬆的氛圍。' },
+                    { type: '段落歸納', q: '這篇文章的第三段主要描寫了什麼？', options: ['海浪的聲音', '漁民捕魚的辛苦', '天空的景象（太陽與白雲）', '貝殼的顏色'], ans: 2, hint: '第三段開頭是「抬頭望向天空」。', exp: '第三段主要描寫天空中的驕陽和白雲。' },
+                    { type: '字詞積累', q: '第二段中「一望無際」的意思是？', options: ['看不清楚', '一眼望不到邊，非常廣闊', '很快就看完了', '只有一種顏色'], ans: 1, hint: '形容大海很大。', exp: '「一望無際」形容視野廣闊，一眼看不到邊際。' },
+                    { type: '提取時間', q: '這個故事發生在什麼季節？', options: ['春天', '夏天', '秋天', '冬天'], ans: 1, hint: '第一段第一句。', exp: '「炎熱的夏日...」' },
+                    { type: '提取聽覺', q: '海浪湧上岸時發出什麼聲音？', options: ['轟隆轟隆', '嘰嘰喳喳', '嘩啦嘩啦', '滴滴答答'], ans: 2, hint: '第二段關於海浪的描寫。', exp: '「海浪一波接著一波地湧上岸，發出『嘩啦嘩啦』的聲音。」' }
+                ]
+            },
+            {
+                id: 'p12', category: '說明文', tut: 't-expository', title: '神奇的螢火蟲',
+                text: '<p>夏天的夜晚，我們經常能在草叢中看到一點一點綠色的螢光，那是螢火蟲在提著「小燈籠」飛舞。螢火蟲為什麼會發光呢？這一直是許多人好奇的問題。</p><p>其實，螢火蟲發光的秘密在於牠們肚子末端的發光器。這個發光器裡含有一種叫做「螢光素」的特殊物質。當螢光素與空氣中的氧氣結合時，就會發生化學反應，從而產生光芒。與我們家裡用的電燈不同，螢火蟲發出的光幾乎不會產生熱量，因此被科學家稱為「冷光」。</p><p>螢火蟲發光主要有兩個目的：一是為了在黑夜中尋找伴侶；二是為了警告敵人「我有毒，別吃我」。大自然的設計真是太奇妙了！</p>',
+                questions: [
+                    { type: '修辭句意', q: '第一段中說螢火蟲「提著『小燈籠』」，這裡的「小燈籠」是指什麼？', options: ['螢火蟲真的拿著燈籠', '螢火蟲會發光的尾部', '螢火蟲的眼睛', '螢火蟲吃下去的食物'], ans: 1, hint: '這是一個比喻，用燈籠來形容螢火蟲會發光的部位。', exp: '引號表示特殊含義，用「小燈籠」來生動比喻螢火蟲發光的肚子。' },
+                    { type: '因果推斷', q: '根據第二段，螢火蟲為什麼能發光？', options: ['因為牠們吃了發光的草', '因為體內的「螢光素」與氧氣結合發生化學反應', '因為牠們白天吸收了太陽光', '因為牠們身體裡有電池'], ans: 1, hint: '在第二段尋找科學原理。', exp: '文中解釋：「當螢光素與空氣中的氧氣結合時，就會發生化學反應，從而產生光芒。」' },
+                    { type: '說明方法', q: '第二段中，作者將螢火蟲的光與「我們家裡用的電燈」作比較，是為了說明螢火蟲的光有什麼特點？', options: ['螢火蟲的光比較亮', '螢火蟲的光是綠色的', '螢火蟲的光幾乎不產生熱量（是冷光）', '螢火蟲的光要用電'], ans: 2, hint: '看看作比較之後的那句話。', exp: '透過與電燈會發熱的常識作對比，突出螢火蟲發出的是「冷光」的科學特徵。' },
+                    { type: '提取與整合', q: '根據第三段，螢火蟲發光有哪兩個主要目的？', options: ['照明和取暖', '尋找伴侶和警告敵人', '嚇跑人類和吸引小蟲', '玩耍和溝通'], ans: 1, hint: '第三段明確列出了「一...二...」。', exp: '文章指出兩個目的：一是尋找伴侶，二是警告敵人。' },
+                    { type: '段落歸納', q: '這篇文章的結構可以歸納為？', options: ['提出疑問 👉 解釋科學原理 👉 說明發光目的', '按時間順序描寫螢火蟲的一生', '全是舉例子', '只寫了科學原理'], ans: 0, hint: '第一段問「為什麼」，第二段講「化學反應」，第三段講「兩個目的」。', exp: '文章邏輯清晰，先引起興趣提出問題，然後解釋成因，最後說明作用。' },
+                    { type: '字詞積累', q: '第一段中「奇妙」的反義詞是什麼？', options: ['神奇', '普通/平凡', '漂亮', '恐怖'], ans: 1, hint: '很特別的反義詞是很一般。', exp: '「奇妙」的相反詞是「普通」或「平凡」。' },
+                    { type: '提取地點', q: '螢火蟲發光的部位具體在哪裡？', options: ['頭部', '翅膀', '肚子末端的發光器', '觸角'], ans: 2, hint: '第二段第一句話。', exp: '「螢火蟲發光的秘密在於牠們肚子末端的發光器。」' },
+                    { type: '標點符號', q: '「冷光」加上引號的作用是什麼？', options: ['表示反話', '標示特定的科學專有名詞', '表示引用別人的話', '表示懷疑'], ans: 1, hint: '這是科學家給它取的名字。', exp: '引號在此用來標出特定的專有名詞。' }
+                ]
+            },
+            {
+                id: 'p13', category: '記敘文', tut: 't-inference', title: '雨中的溫暖',
+                text: '<p>放學時，天空突然烏雲密佈，接著下起了傾盆大雨。我站在學校門口，望著像斷了線的珍珠般落下的雨點，心裡十分焦急。我忘記帶雨傘了，這下該怎麼回家呢？</p><p>看著同學們一個個被家長接走，我的心漸漸沉到了谷底。難道我要一直被困在這裡嗎？就在這時，一把藍色的大雨傘遮在了我的頭上。我轉頭一看，原來是同班同學小明。「你沒帶傘吧？我送你回家！」小明熱情地說。我感激地看著他，連連點頭。</p><p>一路上，風很大，雨水不時打在我們的身上。我發現小明總是把傘悄悄地往我這邊傾斜，而他自己的半邊肩膀卻被雨水淋濕了。那一刻，一股暖流湧上我的心頭。這場雨雖然冰冷，但我卻感受到了無比的溫暖。</p>',
+                questions: [
+                    { type: '修辭手法', q: '第一段中「像斷了線的珍珠般落下的雨點」運用了什麼修辭手法？', options: ['擬人', '明喻', '暗喻', '誇張'], ans: 1, hint: '有喻詞「像」，把雨點比作珍珠。', exp: '將雨點比作斷線的珍珠，運用了明喻手法，生動寫出雨下得很大的樣子。' },
+                    { type: '推論訊息', q: '第二段中「我的心漸漸沉到了谷底」，這反映了作者當時怎樣的心情？', options: ['覺得非常生氣', '覺得非常失望和無助', '覺得很開心', '覺得心臟痛'], ans: 1, hint: '看著別人都走了，自己卻沒有傘，心裡一定很難受。', exp: '「心沉到谷底」是心理描寫，表達了作者因為無法回家而感到極度的失望與無助。' },
+                    { type: '修辭作用', q: '第二段中「難道我要一直被困在這裡嗎？」這句反問有什麼作用？', options: ['加強作者當時焦急、無奈的語氣', '真的在問讀者問題', '表示作者想被困在學校', '為了湊字數'], ans: 0, hint: '反問句是不需要回答的，用來強調情緒。', exp: '反問句加強了語氣，突顯了作者在暴雨中無法回家的焦慮和無奈。' },
+                    { type: '觀察行為', q: '在回家的路上，小明為什麼半邊肩膀被淋濕了？', options: ['因為他的傘太小了', '因為雨傘壞了', '因為他故意把傘傾斜保護作者，寧願自己淋濕', '因為他喜歡淋雨'], ans: 2, hint: '作者發現小明總是把傘悄悄地往哪邊傾斜？', exp: '小明把傘傾向作者，這是一個體貼、為人著想的舉動。' },
+                    { type: '詮釋整合', q: '文章最後一句「這場雨雖然冰冷，但我卻感受到了無比的溫暖」，這裡的「溫暖」是指什麼？', options: ['雨水是熱的', '天氣突然變熱了', '小明無私的幫助和友誼帶給作者心靈上的感動與溫暖', '作者穿了很厚的衣服'], ans: 2, hint: '身體是冷的，但心裡是暖的，因為感受到了什麼？', exp: '這種「溫暖」並非指溫度，而是指朋友之間互相幫助所帶來的心靈上的感動。' },
+                    { type: '提取天氣', q: '放學時天氣怎樣？', options: ['晴空萬里', '下著毛毛雨', '烏雲密佈，下著傾盆大雨', '下著大雪'], ans: 2, hint: '第一段第一句話。', exp: '「天空突然烏雲密佈，接著下起了傾盆大雨。」' },
+                    { type: '字詞積累', q: '「傾盆大雨」的意思是什麼？', options: ['雨下得很小', '雨水像從盆裡倒出來一樣大', '天上掉下一個盆子', '下雨後出現彩虹'], ans: 1, hint: '形容雨勢。', exp: '比喻雨大得像盆裡的水往下倒。' },
+                    { type: '提取人物', q: '「你沒帶傘吧？我送你回家！」這句話是誰說的？', options: ['老師', '媽媽', '同班同學小明', '警察'], ans: 2, hint: '第二段的對話。', exp: '「『你沒帶傘吧？我送你回家！』小明熱情地說。」' }
+                ]
+            },
+            {
+                id: 'p14', category: '議論文', tut: 't-argument', title: '挫折是一把雙面刃',
+                text: '<p>在人生的道路上，每個人都會遇到各種各樣的挫折。有人認為挫折是可怕的魔鬼，會讓人一蹶不振；但我認為，挫折是一把雙面刃，它既能給我們帶來痛苦，也能成為我們成長的催化劑。</p><p>一方面，挫折確實會打擊我們的自信心。當我們努力準備考試卻依然成績不佳時，心裡難免會感到失落，甚至產生放棄的念頭。如果我們一直沉浸在這種悲傷的情緒中，就會被挫折打敗，無法前進。這就是挫折消極的一面。</p><p>另一方面，如果我們能勇敢面對，挫折就會變成寶貴的財富。著名的科學家愛迪生在發明電燈的過程中，經歷了上千次的失敗。但他並沒有被挫折擊倒，反而從每一次失敗中吸取教訓，最終點亮了世界。可見，挫折能磨練我們的意志，讓我們變得更加堅強。因此，面對挫折，我們不應逃避，而應勇敢跨越它。</p>',
+                questions: [
+                    { type: '尋找論點', q: '這篇文章的中心論點是什麼？', options: ['挫折是可怕的魔鬼，會讓人一蹶不振。', '愛迪生發明了電燈。', '挫折是一把雙面刃，既帶來痛苦，也能促進成長，我們應勇敢跨越它。', '考試成績不好會讓人放棄。'], ans: 2, hint: '看第一段作者說「但我認為...」以及最後一段的總結。', exp: '作者的主張是挫折有兩面性，而我們應該積極面對它，將其化為成長的動力。' },
+                    { type: '修辭句意', q: '第一段中把挫折比喻為「雙面刃」，意思是？', options: ['挫折是一把很鋒利的刀。', '挫折同時具有好（促進成長）與壞（打擊自信）兩方面的作用。', '挫折可以切斷東西。', '挫折有兩層皮。'], ans: 1, hint: '雙面刃代表事物同時具有利與弊。', exp: '比喻挫折既有消極打擊的一面，也有積極磨練意志的一面。' },
+                    { type: '段落歸納', q: '第二段主要論述了挫折的哪一面？', options: ['積極的一面', '消極的一面（打擊自信心，讓人想放棄）', '科學家的一面', '考試的一面'], ans: 1, hint: '第二段開頭寫了「一方面，挫折確實會打擊...」。', exp: '第二段解釋了如果沉浸在悲傷中，挫折就會帶來消極的影響。' },
+                    { type: '說明方法', q: '第三段中，作者舉了愛迪生的例子，是為了證明什麼道理？', options: ['發明電燈很困難', '愛迪生很聰明', '只要勇敢面對，從失敗中吸取教訓，挫折就能成為成長的財富', '愛迪生失敗了上千次'], ans: 2, hint: '作者舉例是為了支持他「另一方面」的論點。', exp: '愛迪生的例子是正面論據，證明了挫折能磨練意志並導向成功。' },
+                    { type: '詞意推斷', q: '第二段中「一蹶不振」是什麼意思？', options: ['摔倒了就爬不起來，比喻遭受挫折後就再也振作不起來', '形容人很有精神', '形容人跑得很快', '形容人喜歡睡覺'], ans: 0, hint: '遇到魔鬼般的挫折，無法前進，就是一蹶不振。', exp: '「一蹶」指跌倒；「不振」指振作不起來。形容受到打擊後無法恢復。' },
+                    { type: '字詞積累', q: '第二段中「失落」的近義詞是什麼？', options: ['開心', '沮喪/灰心', '憤怒', '驚訝'], ans: 1, hint: '考試不好心情會怎樣？', exp: '「失落」指感到空虛、灰心，近義詞為沮喪。' },
+                    { type: '因果推斷', q: '作者認為一直沉浸在悲傷中會有什麼後果？', options: ['會變聰明', '會被人同情', '會被挫折打敗，無法前進', '會得到獎勵'], ans: 2, hint: '第二段最後的推論。', exp: '「如果我們一直沉浸在這種悲傷的情緒中，就會被挫折打敗，無法前進。」' },
+                    { type: '自然段落', q: '第一段的作用是什麼？', options: ['點出文章的中心論點', '舉例子', '總結全文', '提出疑問'], ans: 0, hint: '議論文的第一段通常用來做什麼？', exp: '第一段直接提出了「挫折是一把雙面刃」的中心論點。' }
+                ]
+            },
+            {
+                id: 'p15', category: '抒情文', tut: 't-lyrical', title: '窗台上的仙人掌',
+                text: '<p>我的窗台上放著一盆不起眼的仙人掌。它沒有玫瑰那般嬌艷的花朵，也沒有百合那般迷人的香氣。它全身長滿了尖銳的刺，顏色也是單調的深綠色。但是，這盆仙人掌卻是我最喜歡的植物。</p><p>這盆仙人掌是爺爺生前送給我的最後一份生日禮物。爺爺說：「仙人掌雖然不好看，但它的生命力非常頑強。即使在乾旱的沙漠裡，它也能堅強地活下去。我希望你能像它一樣，遇到困難也不輕易低頭。」</p><p>每當我在學習上遇到挫折，想要放棄時，我就會看看窗台上的仙人掌。看著它在烈日下依然挺拔的身姿，我彷彿聽到了爺爺鼓勵我的聲音。這盆仙人掌，不僅是一盆植物，更是爺爺對我深深的期盼與愛。</p>',
+                questions: [
+                    { type: '寫作手法', q: '這篇文章主要運用了哪種寫作手法？', options: ['步移法', '借景抒情', '借物抒情（透過仙人掌表達對爺爺的思念）', '舉例論證'], ans: 2, hint: '作者藉由描寫一盆死物（仙人掌）來帶出他對爺爺的感情。', exp: '文章以仙人掌為線索，寄託了作者對爺爺的思念與教誨的銘記，是典型的借物抒情。' },
+                    { type: '對比分析', q: '第一段中，作者將仙人掌與玫瑰、百合作對比，是為了突出仙人掌的什麼特點？', options: ['仙人掌非常昂貴', '仙人掌外表平凡、不起眼', '仙人掌很香', '仙人掌會開很美的花'], ans: 1, hint: '玫瑰嬌艷、百合香，而仙人掌卻單調、長滿刺。', exp: '透過對比，突顯仙人掌沒有華麗的外表，為後文讚美其內在的堅強作鋪墊。' },
+                    { type: '修辭句意', q: '爺爺說：「我希望你能像它一樣，遇到困難也不輕易低頭。」這句話中「像它一樣」是指像仙人掌的哪一種品質？', options: ['長滿刺會扎人', '不需要喝水', '生命力頑強，堅強不屈', '顏色是綠色的'], ans: 2, hint: '爺爺前面剛說了仙人掌在沙漠裡也能活下去。', exp: '爺爺借仙人掌耐旱的特性，教導作者要有堅韌不拔、克服困難的意志。' },
+                    { type: '推論訊息', q: '每當作者遇到挫折想放棄時，仙人掌起了什麼作用？', options: ['讓作者生氣', '讓作者想起爺爺的鼓勵，重新振作起來', '讓作者的手被刺傷', '讓作者感到口渴'], ans: 1, hint: '看看第三段，看著仙人掌，作者彷彿聽到了什麼？', exp: '仙人掌成為了精神支柱，激勵作者勇敢面對困難。' },
+                    { type: '詮釋整合', q: '文章最後一句「這盆仙人掌，不僅是一盆植物，更是爺爺對我深深的期盼與愛」，這句總結了什麼？', options: ['仙人掌很難種。', '爺爺很喜歡植物。', '點明了文章主旨，昇華了物品背後的情感價值。', '說明仙人掌會說話。'], ans: 2, hint: '結尾點出了這件物品真正的意義。', exp: '這句話點明了借物抒情的中心，把對仙人掌的描寫昇華到親情的層面。' },
+                    { type: '提取視覺', q: '這盆仙人掌是什麼顏色的？', options: ['粉紅色', '大紅色', '深綠色', '純白色'], ans: 2, hint: '第一段的描述。', exp: '「顏色也是單調的深綠色。」' },
+                    { type: '字詞積累', q: '第一段中「嬌艷」的反義詞是什麼？', options: ['美麗', '素雅/平淡', '可愛', '鮮艷'], ans: 1, hint: '非常艷麗的相反。', exp: '「嬌艷」指嬌嫩艷麗，反義詞是素雅或平淡。' },
+                    { type: '提取人物', q: '這盆仙人掌是誰送給作者的？', options: ['爸爸', '老師', '同學', '爺爺'], ans: 3, hint: '第二段第一句話。', exp: '「這盆仙人掌是爺爺生前送給我的最後一份生日禮物。」' }
+                ]
+            },
+            {
+                id: 'p16', category: '說明文', tut: 't-expository', title: '神奇的海洋清道夫',
+                text: '<p>在廣闊的海洋裡，生活著一種長相奇特的生物——海參。牠們的身體圓滾滾的，長滿了肉刺，看起來像一條巨大的青瓜，所以又被稱為「海黃瓜」。雖然海參外表不怎麼好看，但牠們卻是海洋生態系統中不可或缺的「清道夫」。</p><p>海參的進食方式非常特別。牠們每天在海底爬行，用觸手不斷地抓取海底的泥沙送入嘴裡。許多人可能會覺得奇怪，為什麼牠們要吃泥沙呢？原來，海底的泥沙中混雜著許多海洋生物的排泄物和動植物的屍體碎屑。海參的腸胃就像一個高效的過濾器，牠們把泥沙吞進去，吸收了其中的有機物質後，再把乾淨的沙子排出體外。據科學家統計，一條海參每年可以吞吐大約數十公斤的泥沙！</p><p>正是因為有了海參這些辛勤的「清道夫」，海洋的底部才不會被垃圾堆滿，海水才能保持清澈。牠們對保護海洋環境有著巨大的貢獻。</p>',
+                questions: [
+                    { type: '修辭作用', q: '文章標題和第一段稱海參為「清道夫」，這種寫法有什麼好處？', options: ['說明海參會拿掃把掃地', '運用打比方，生動形象地說明海參能清理海洋垃圾的作用', '說明海參喜歡乾淨', '為了湊字數'], ans: 1, hint: '清道夫是清潔街道的人，用在這裡比喻海參的什麼行為？', exp: '把海參比作清道夫，讓讀者立刻明白牠們在海洋中負責清理廢物的重要角色。' },
+                    { type: '說明方法', q: '第一段中「看起來像一條巨大的青瓜」，運用了哪種說明方法？', options: ['舉例子', '列數字', '作比較', '打比方'], ans: 3, hint: '有「像」字，用熟悉的東西來說明不熟悉的東西。', exp: '用青瓜來比喻海參的形狀，屬於「打比方」。' },
+                    { type: '提取與推論', q: '為什麼海參要吞食海底的泥沙？', options: ['因為泥沙很好吃', '因為牠們沒有牙齒', '因為泥沙中含有排泄物和動植物碎屑，那是牠們的營養來源', '因為牠們想把海底挖空'], ans: 2, hint: '在第二段找出牠們吃泥沙的原因。', exp: '文章解釋：「海底的泥沙中混雜著許多...有機物質」，海參吸收這些物質來維生。' },
+                    { type: '說明方法', q: '第二段提到「一條海參每年可以吞吐大約數十公斤的泥沙」，這運用了哪種說明方法？', options: ['列數字', '舉例子', '打比方', '作比較'], ans: 0, hint: '句子裡出現了精確的重量單位和數量。', exp: '使用「數十公斤」這個具體的數據，準確地說明了海參的工作量，是列數字。' },
+                    { type: '詮釋整合', q: '這篇文章的中心思想是什麼？', options: ['教導大家如何捕捉海參。', '介紹海參的外貌，說明牠們長得很醜。', '介紹海參獨特的進食方式，讚美牠們對淨化海洋環境的巨大貢獻。', '說明海底有很多泥沙。'], ans: 2, hint: '文章從外貌寫到進食，最後總結牠們的貢獻。', exp: '文章透過說明海參吞食泥沙的習性，點出了牠們作為海洋清道夫的重要環保價值。' },
+                    { type: '字詞積累', q: '第一段中「奇特」的意思是什麼？', options: ['很普通', '奇怪特別', '很恐怖', '很漂亮'], ans: 1, hint: '長得跟別人不一樣。', exp: '「奇特」指跟尋常的不一樣，奇怪而特別。' },
+                    { type: '外觀描寫', q: '海參長得像什麼？', options: ['巨大的青瓜', '長長的麵條', '圓圓的蘋果', '尖尖的刀'], ans: 0, hint: '第一段有打比方。', exp: '「看起來像一條巨大的青瓜」。' },
+                    { type: '標點符號', q: '「海黃瓜」的引號作用是什麼？', options: ['表示說話', '標示特定的別稱/外號', '表示反問', '表示書名'], ans: 1, hint: '因為長得像青瓜，所以有了這個外號。', exp: '引號在這裡用來標示具有特定含義的別稱。' }
+                ]
+            },
+            {
+                id: 'p17', category: '記敘文', tut: 't-inference', title: '一張舊車票',
+                text: '<p>在我的書包深處，夾著一張已經褪色的舊巴士車票。這張車票對我來說，有著非凡的意義。</p><p>那是我上三年級時發生的一件事。那天放學，天空下著大雨，我翻遍了整個書包，卻發現我的八達通和錢包都不見了。我看著停在校門口的巴士，急得像熱鍋上的螞蟻，眼淚在眼眶裡打轉。難道我要走路回這麼遠的家嗎？就在這時，一位素不相識的高年級大哥哥走到我身邊，他看出了我的窘境，什麼也沒說，默默地幫我投入了車費，並遞給我一張車票。我驚訝地看著他，連一句「謝謝」都還沒來得及說，他就已經轉身下車了。</p><p>那張車票，我一直保存到現在。每當我看到它，就會想起那位善良的大哥哥。他讓我明白，在這個世界上，總有一些不期而遇的溫暖。我暗暗下定決心，長大後也要像他一樣，做一個樂於助人的人。</p>',
+                questions: [
+                    { type: '寫作手法', q: '這篇文章主要運用了哪種寫作手法？', options: ['步移法', '借景抒情', '借物抒情（透過舊車票表達對大哥哥的感恩）', '說明法'], ans: 2, hint: '作者藉由描寫一張「舊車票」，引出一段回憶和感情。', exp: '透過一件物品(車票)引出感人的回憶，並抒發感恩之情，是借物抒情。' },
+                    { type: '修辭句意', q: '第二段中「急得像熱鍋上的螞蟻」，這說明作者當時的心情是怎樣的？', options: ['覺得很熱', '非常焦急、慌亂無措', '非常生氣', '感到很興奮'], ans: 1, hint: '沒有錢坐車回家，外面又下大雨，心裡一定很亂。', exp: '這句歇後語生動地描寫出作者發現沒錢搭車時極度焦急和無助的心理。' },
+                    { type: '推論訊息', q: '大哥哥幫作者付了車費後，「什麼也沒說就轉身下車了」，這反映了大哥哥是個怎樣的人？', options: ['他趕時間回家', '他不喜歡說話', '他施恩不望報，真心誠意幫助別人', '他覺得作者很麻煩'], ans: 2, hint: '幫了人不求別人說謝謝就走，代表他不求回報。', exp: '大哥哥的行動展現了他樂於助人且不求回報的高尚品格。' },
+                    { type: '修辭作用', q: '第二段中「難道我要走路回這麼遠的家嗎？」這句反問有什麼作用？', options: ['真的在問路人問題', '加強作者當時絕望、無助的語氣', '表示作者很喜歡走路', '為了湊字數'], ans: 1, hint: '反問是不需要回答的，用來強調情緒。', exp: '反問句加強了語氣，突顯了作者在暴雨中沒錢搭車的絕望感。' },
+                    { type: '詮釋整合', q: '這張舊車票對作者產生了什麼深遠的影響？', options: ['讓作者學會了收藏垃圾', '讓作者以後搭車都不付錢', '讓作者感受到人間溫暖，並決心將這份樂於助人的精神傳承下去', '讓作者認識了一位好朋友'], ans: 2, hint: '看看文章最後一句話作者下定了什麼決心。', exp: '大哥哥的善舉不僅溫暖了作者，更在作者心中種下了樂於助人的種子。' },
+                    { type: '字詞積累', q: '第一段中「褪色」的意思是什麼？', options: ['顏色變深', '顏色變淡或消失', '變成黑色', '發出閃光'], ans: 1, hint: '舊的東西顏色會怎樣？', exp: '「褪色」指顏色失去鮮艷，變淡。' },
+                    { type: '提取人物', q: '大哥哥幫作者做了什麼事？', options: ['借給作者一把傘', '幫作者投入車費並遞給他車票', '幫作者打電話給媽媽', '幫作者找錢包'], ans: 1, hint: '第二段後半部。', exp: '「默默地幫我投入了車費，並遞給我一張車票。」' },
+                    { type: '因果推斷', q: '作者為什麼暗暗下定決心長大要做個樂於助人的人？', options: ['因為老師規定', '因為他想出名', '因為大哥哥的善舉讓他感受到溫暖，想把精神傳承下去', '因為他有很多錢'], ans: 2, hint: '最後一段的感受。', exp: '因為大哥哥的幫助讓他明白世間的溫暖，從而深受啟發。' }
+                ]
+            },
+            {
+                id: 'p18', category: '描寫文', tut: 't-describe', title: '漫步植物園',
+                text: '<p>週末，我來到植物園散步，彷彿走進了一個生機勃勃的綠色王國。走進植物園的大門，首先映入眼簾的是一個巨大的音樂噴泉，水柱隨著音樂的高低起伏在空中跳舞，吸引了許多遊客駐足觀賞。</p><p>順著林蔭小道往前走，我們來到了玫瑰園。這裡簡直是花的世界！紅的像火，粉的像霞，白的像雪。微風吹過，一朵朵玫瑰在風中搖曳，彷彿在向我們點頭微笑，空氣中彌漫著濃郁的芳香，令人陶醉。</p><p>離開玫瑰園，再往前走，便是一片清澈的人工湖。湖畔種滿了一排排依依的垂柳。長長的柳條垂在水面上，就像小姑娘在洗滌自己長長的秀髮。幾條錦鯉在湖水中自由自在地穿梭。這次植物園之旅，真是一次讓身心放鬆的美好體驗。</p>',
+                questions: [
+                    { type: '寫作手法', q: '作者在描寫植物園時，使用了「走進大門...順著林蔭小道往前走...再往前走」的順序。這屬於哪種描寫手法？', options: ['插敘法', '倒敘法', '步移法 (空間順序)', '借物抒情'], ans: 2, hint: '跟隨作者移動的腳步來變換觀察的地點。', exp: '作者隨著腳步移動，依序描寫大門噴泉 👉 玫瑰園 👉 人工湖，這種手法稱為「步移法」。' },
+                    { type: '修辭手法', q: '第一段中「水柱隨著音樂的高低起伏在空中跳舞」運用了什麼修辭手法？', options: ['誇張', '明喻', '排比', '擬人'], ans: 3, hint: '水柱是沒有生命的，但作者說它在「跳舞」。', exp: '賦予水柱人類「跳舞」的動作，是擬人手法。' },
+                    { type: '修辭手法', q: '第二段中「紅的像火，粉的像霞，白的像雪」這句話運用了哪些修辭手法？', options: ['排比 和 暗喻', '排比 和 明喻', '誇張 和 擬人', '設問 和 借喻'], ans: 1, hint: '連續三個結構相同的「X的像Y」，有「像」字。', exp: '連續三個結構相似的短句構成排比，句子中使用了「像」進行比喻，是明喻。' },
+                    { type: '修辭句意', q: '第三段中「長長的柳條垂在水面上，就像小姑娘在洗滌自己長長的秀髮」，這個比喻的作用是什麼？', options: ['說明柳樹需要洗頭', '生動形象地寫出了柳條柔軟、細長且隨風輕觸水面的優美姿態', '誇大柳樹的長度', '說明湖水很乾淨'], ans: 1, hint: '把柳條比喻成頭髮，給人什麼樣的畫面感？', exp: '比喻的作用是將事物具象化，這裡完美展現了垂柳婀娜多姿的美感。' },
+                    { type: '段落歸納', q: '這篇文章的結構特點是什麼？', options: ['總起(綠色王國) 👉 分述(噴泉、玫瑰園、人工湖) 👉 總結(美好體驗)', '按時間順序(早中晚)描寫', '全部都是舉例子', '先寫缺點再寫優點'], ans: 0, hint: '看看第一段開頭和最後一段結尾。', exp: '文章首段總括植物園是綠色王國，中間分點描寫不同景點，結尾總結是一次美好體驗，為標準的「總-分-總」結構。' },
+                    { type: '字詞積累', q: '第二段中「陶醉」的意思是什麼？', options: ['喝醉了酒', '沉浸在某種美好的境界中', '感到非常生氣', '覺得很疲倦'], ans: 1, hint: '聞到花香覺得很享受。', exp: '「陶醉」比喻沉浸在某種境界或思想中。' },
+                    { type: '提取聽覺', q: '在人工湖面，可以聽到什麼聲音？', options: ['青蛙呱呱叫', '野鴨嘎嘎的叫聲', '小鳥唱歌', '瀑布水聲'], ans: 1, hint: '第三段的描寫。', exp: '「偶爾發出『嘎嘎』的叫聲。」' },
+                    { type: '標點符號', q: '「這裡簡直是花的世界！」句末的感嘆號代表了什麼？', options: ['極度的讚嘆', '極度的憤怒', '提出疑問', '傷心'], ans: 0, hint: '看到這麼多花，心裡會怎樣？', exp: '表達對玫瑰園花朵繁多、美麗的極大讚美。' }
+                ]
+            },
+            {
+                id: 'p19', category: '議論文', tut: 't-argument', title: '禮貌的重要性',
+                text: '<p>古人說：「不學禮，無以立。」禮貌是人與人之間溝通的橋樑，也是個人修養的體現。在現代社會中，禮貌依然是我們不可或缺的品質。</p><p>首先，禮貌能讓人際關係更加和諧。當你不小心撞到別人時，一句真誠的「對不起」，往往能化解對方的怒氣；當別人幫助你時，一句溫暖的「謝謝」，能讓助人者感到欣慰。試想一下，如果每個人都粗言穢語，社會將會變得多麼冷漠和可怕？難道我們希望生活在一個沒有禮貌的世界裡嗎？</p><p>其次，禮貌能贏得別人的尊重。一個懂得尊重別人的人，自然也會得到別人的尊重。在學校裡，一個見到老師會主動問好的學生，一定會給老師留下好印象。因此，我們應該從日常生活中的小事做起，把「請」、「謝謝」、「對不起」掛在嘴邊，做一個彬彬有禮的好孩子。</p>',
+                questions: [
+                    { type: '尋找論點', q: '這篇文章的中心論點是什麼？', options: ['我們應該多說對不起。', '禮貌是人與人溝通的橋樑和修養的體現，我們必須具備禮貌。', '現代社會已經不需要禮貌了。', '老師喜歡會問好的學生。'], ans: 1, hint: '看第一段作者提出的核心主張。', exp: '文章第一段明確指出：「禮貌是人與人之間溝通的橋樑...是我們不可或缺的品質。」' },
+                    { type: '段落歸納', q: '根據文章，作者認為禮貌有哪些好處？', options: ['能賺很多錢', '能化解怒氣、讓人際關係和諧，以及能贏得別人的尊重', '能讓考試得滿分', '能買到好東西'], ans: 1, hint: '尋找第二段和第三段的「首先...其次...」。', exp: '第二段首句提出「讓人際關係更加和諧」；第三段首句提出「能贏得別人的尊重」。' },
+                    { type: '修辭作用', q: '第二段中「難道我們希望生活在一個沒有禮貌的世界裡嗎？」這句反問有什麼作用？', options: ['真的在問讀者的意見', '為了湊字數', '加強語氣，強調我們絕對不希望生活在沒有禮貌的世界，從而突出禮貌的重要性', '表示作者不知道答案'], ans: 2, hint: '反問是不需要回答的，用來強烈表達一個肯定的意思。', exp: '反問句加強了肯定的語氣，引發讀者共鳴，突顯了沒有禮貌的嚴重後果。' },
+                    { type: '說明方法', q: '第一段引用了「不學禮，無以立」，這運用了什麼論證方法？', options: ['舉例子', '列數字', '引用名言 (引證法)', '作比較'], ans: 2, hint: '借用古人流傳下來的話來加強說服力。', exp: '引用古人的話來證明禮貌的重要性，屬於引證法。' },
+                    { type: '詮釋整合', q: '作者在最後一段提出了什麼具體行動建議？', options: ['每天都要買禮物送人', '從生活小事做起，常說「請」、「謝謝」、「對不起」', '見到老師要立刻跑走', '不要和沒有禮貌的人說話'], ans: 1, hint: '看看文章最後一句呼籲大家做什麼。', exp: '文章結尾呼籲：「我們應該從日常生活中的小事做起，把『請』、『謝謝』、『對不起』掛在嘴邊...」' },
+                    { type: '字詞積累', q: '第二段中「粗言穢語」的意思是什麼？', options: ['說話很大聲', '粗野下流的髒話', '外語', '唱歌'], ans: 1, hint: '沒有禮貌的人會說的話。', exp: '「粗言穢語」指粗俗下流、不文明的話。' },
+                    { type: '因果推斷', q: '根據第二段，為什麼要對被撞的人說對不起？', options: ['因為可以拿獎品', '因為能化解對方的怒氣', '因為法律規定', '因為可以跑得快'], ans: 1, hint: '看看說對不起的結果。', exp: '「一句真誠的『對不起』，往往能化解對方的怒氣。」' },
+                    { type: '自然段落', q: '這篇文章共有幾個自然段？', options: ['一個', '兩個', '三個', '四個'], ans: 2, hint: '數一數開頭空兩格。', exp: '總起、第一好處、第二好處與總結，共三個段落。' }
+                ]
+            },
+            {
+                id: 'p20', category: '說明文', tut: 't-expository', title: '牙齒的守護神',
+                text: '<p>每個人都希望擁有一口潔白健康的牙齒，但你知道嗎？我們的口腔裡其實住著許多看不見的「小細菌」。當我們吃完甜食後，如果不刷牙，這些細菌就會把糖分轉化為酸性物質，慢慢腐蝕我們的牙齒，造成蛀牙。</p><p>為了保護牙齒，氟化物（Fluoride）成為了牙齒的「守護神」。氟化物是一種天然礦物質，它就像給牙齒穿上了一層堅固的防彈衣。當酸性物質想要攻擊牙齒時，氟化物能有效抵抗它們的侵蝕，並幫助牙齒表面流失的礦物質重新沉積，修復初期的蛀牙。根據研究顯示，使用含氟牙膏刷牙，可以降低大約百分之三十的蛀牙率！</p><p>因此，牙醫建議我們每天早晚都要使用含氟牙膏刷牙，並定期到牙科診所檢查。只要做足預防措施，我們就能擁有一口健康的牙齒，吃盡天下美食了。</p>',
+                questions: [
+                    { type: '因果推斷', q: '根據第一段，造成蛀牙的主要原因是什麼？', options: ['吃了太多鹹的食物', '細菌把糖分轉化為酸性物質腐蝕牙齒', '牙齒自己會變黑', '喝了太多水'], ans: 1, hint: '在第一段找細菌做了什麼壞事。', exp: '文中解釋：「這些細菌就會把糖分轉化為酸性物質，慢慢腐蝕我們的牙齒，造成蛀牙。」' },
+                    { type: '修辭作用', q: '文章把氟化物比喻為「牙齒的守護神」和「防彈衣」，這有什麼作用？', options: ['說明氟化物是一種衣服', '生動形象地突顯了氟化物保護牙齒、抵抗細菌攻擊的強大功能', '說明氟化物很貴', '表示氟化物會發光'], ans: 1, hint: '防彈衣可以用來擋子彈，這裡用來擋什麼？', exp: '運用打比方的方法，將抽象的化學物質具象化，讓讀者輕易明白它的保護作用。' },
+                    { type: '提取與整合', q: '根據第二段，氟化物對牙齒有哪兩個好處？', options: ['讓牙齒變長、變大', '抵抗酸性物質的侵蝕、修復初期的蛀牙', '殺死所有細菌、讓牙齒發光', '讓糖分變甜、讓水變好喝'], ans: 1, hint: '在第二段找「氟化物能...並幫助...」。', exp: '文章指出：1. 能有效抵抗侵蝕；2. 幫助修復初期的蛀牙。' },
+                    { type: '說明方法', q: '第二段提到「可以降低大約百分之三十的蛀牙率」，這運用了哪種說明方法？', options: ['舉例子', '打比方', '列數字', '作比較'], ans: 2, hint: '句子裡出現了明確的百分比數據。', exp: '使用具體數據「百分之三十」來說明氟化物的實際效用，是列數字。' },
+                    { type: '段落歸納', q: '最後一段的主要內容是什麼？', options: ['介紹氟化物的歷史', '警告大家不要吃甜食', '總結並提出護齒的具體建議（早晚刷牙、定期檢查）', '說明看牙醫很痛'], ans: 2, hint: '看看第三段「因此，牙醫建議我們...」。', exp: '第三段總結全文，並給出了保護牙齒的實際行動建議。' },
+                    { type: '字詞積累', q: '第二段中「堅固」的反義詞是什麼？', options: ['結實', '硬朗', '脆弱', '巨大'], ans: 2, hint: '防彈衣很結實，相反就是很容易破。', exp: '「堅固」的相反詞是「脆弱」。' },
+                    { type: '提取時間', q: '牙醫建議我們什麼時候要使用含氟牙膏刷牙？', options: ['每天中午', '每天早晚', '每星期一次', '只有吃糖後'], ans: 1, hint: '第三段第一句話。', exp: '「牙醫建議我們每天早晚都要使用含氟牙膏刷牙...」' },
+                    { type: '標點符號', q: '第一段「但你知道嗎？」的問號有什麼作用？', options: ['作者真的不知道', '提出問題，引起讀者的注意和思考', '表示生氣', '為了結尾'], ans: 1, hint: '這是在文章開頭引導大家往下看。', exp: '透過發問引起讀者興趣，引導閱讀下文。' }
+                ]
+            }
+        ];
+
+        let userProgress = JSON.parse(localStorage.getItem('readStandardProgress')) || new Array(rawQuestDataObj.length).fill(0);
+
+        function renderDirectory() {
+            const dirContainer = document.getElementById('directory-content');
+            let html = '';
+            rawQuestDataObj.forEach((passage, idx) => {
+                let status = userProgress[idx];
+                let bgClass = 'bg-white';
+                let borderClass = 'border-slate-200';
+                let icon = ' <span class="text-slate-400 font-bold ml-2"># 未挑戰</span>';
+                
+                if (status === 1) {
+                    bgClass = 'bg-yellow-50'; borderClass = 'border-yellow-400';
+                    icon = ' <span class="text-yellow-600 font-bold ml-2">🌟 完美</span>';
+                } else if (status === 2) {
+                    bgClass = 'bg-emerald-50'; borderClass = 'border-emerald-400';
+                    icon = ' <span class="text-emerald-600 font-bold ml-2">✅ 過關</span>';
+                }
+
+                html += `
+                    <button onclick="startPassage(${idx})" class="w-full text-left p-4 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition group active:scale-95">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2 py-1 rounded">${passage.category}</span>
+                            ${icon}
+                        </div>
+                        <h3 class="text-lg font-black text-slate-800 group-hover:text-indigo-600 transition">${passage.title}</h3>
+                        <p class="text-sm text-slate-500 mt-1">共 ${passage.questions.length} 題挑戰</p>
+                    </button>
+                `;
+            });
+            dirContainer.innerHTML = html;
+            updateTotalProgress();
+        }
+
+        function updateTotalProgress() {
+            let solved = userProgress.filter(p => p === 1 || p === 2).length;
+            let percent = (solved / rawQuestDataObj.length) * 100;
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+
+        function shuffleOptions(optionsArray, correctIndex) {
+            let opts = optionsArray.map((opt, i) => ({ text: opt, isCorrect: i === correctIndex }));
+            return opts.sort(() => Math.random() - 0.5);
+        }
+
+        function startPassage(idx, forceStart = false) {
+            const passage = rawQuestDataObj[idx];
+            
+            if (!forceStart && !localStorage.getItem('tut_seen_' + passage.tut)) {
+                currentPassageIdx = idx; 
+                showTutorial(passage.tut);
+                return;
+            }
+
+            currentPassageIdx = idx;
+            currentQuestionIdx = 0; 
+            currentPassageMistakes = 0;
+            
+            document.getElementById('quest-mode').style.display = 'none';
+            document.getElementById('tips-hub-mode').style.display = 'none';
+            const questPlay = document.getElementById('quest-play');
+            questPlay.style.display = 'flex';
+            
+            document.getElementById('passage-title').innerText = passage.title;
+            document.getElementById('passage-content').innerHTML = parseAndWrapSentences(passage.text);
+
+            stopAllSpeechAndHighlights();
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            currentQuestionMistakes = 0;
+            const passage = rawQuestDataObj[currentPassageIdx];
+            const qData = passage.questions[currentQuestionIdx];
+
+            document.getElementById('question-progress').innerText = `第 ${currentQuestionIdx + 1} / ${passage.questions.length} 題`;
+            document.getElementById('question-type').innerText = qData.type;
+            document.getElementById('question-text').innerText = qData.q;
+            
+            document.getElementById('dynamic-hint-box').classList.add('hidden');
+
+            const shuffledOptions = shuffleOptions(qData.options, qData.ans);
+            
+            let html = '';
+            shuffledOptions.forEach((opt, oIdx) => {
+                const letter = ['A','B','C','D'][oIdx];
+                const safeText = opt.text.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                html += `
+                <div class="flex items-stretch gap-2 w-full">
+                    <button onclick="checkAnswer(this, ${opt.isCorrect})" class="option-btn flex-1 bg-white border-2 border-slate-200 text-slate-700 text-lg md:text-xl font-bold py-4 px-6 rounded-2xl hover:bg-indigo-50 hover:border-indigo-300 transition text-left flex items-center gap-4">
+                        <span class="bg-slate-100 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0">${letter}</span> 
+                        <span>${opt.text}</span>
+                    </button>
+                    <button onclick="speakText('${safeText}', 0.9)" class="tts-btn flex-shrink-0 bg-indigo-50 text-indigo-500 w-14 rounded-2xl text-2xl flex items-center justify-center shadow-sm border border-indigo-200 hover:bg-indigo-100 transition" title="朗讀此選項">
+                        🔊
+                    </button>
+                </div>`;
+            });
+            document.getElementById('options-container').innerHTML = html;
+        }
+
+        function speakQuestion() {
+            const passage = rawQuestDataObj[currentPassageIdx];
+            const qData = passage.questions[currentQuestionIdx];
+            speakText(qData.q);
+        }
+
+        function checkAnswer(btnElement, isCorrect) {
+            const passage = rawQuestDataObj[currentPassageIdx];
+            const qData = passage.questions[currentQuestionIdx];
+
+            if (isCorrect) {
+                const allBtns = document.querySelectorAll('.option-btn');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                
+                btnElement.classList.add('correct');
+                speakText("答對了！");
+                
+                if (currentQuestionMistakes === 0) readExp += 10;
+                else readExp += 5;
+
+                document.getElementById('exp-display').innerText = readExp;
+                localStorage.setItem('readStandardExp', readExp);
+
+                document.getElementById('feedback-desc').innerHTML = `<span class="bg-indigo-50 p-4 rounded-xl block border border-indigo-100 text-indigo-900">${qData.exp}</span>`;
+                
+                const nextBtn = document.getElementById('next-btn');
+                const modal = document.getElementById('feedback-modal');
+                const content = document.getElementById('feedback-content');
+
+                if (currentQuestionIdx < passage.questions.length - 1) {
+                    nextBtn.innerText = "下一題 ➡️";
+                    nextBtn.onclick = () => {
+                        modal.classList.add('opacity-0');
+                        content.classList.add('scale-90');
+                        setTimeout(() => {
+                            modal.classList.add('hidden');
+                            currentQuestionIdx++;
+                            renderQuestion();
+                        }, 300);
+                    };
+                } else {
+                    nextBtn.innerText = "完成篇章 🏆";
+                    nextBtn.onclick = () => {
+                        modal.classList.add('opacity-0');
+                        content.classList.add('scale-90');
+                        setTimeout(() => {
+                            modal.classList.add('hidden');
+                            finishPassage();
+                        }, 300);
+                    };
+                }
+
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    content.classList.remove('scale-90');
+                }, 10);
+
+            } else {
+                btnElement.classList.add('wrong', 'shake');
+                btnElement.style.pointerEvents = 'none'; 
+                
+                currentQuestionMistakes++;
+                currentPassageMistakes++;
+                
+                const hintBox = document.getElementById('dynamic-hint-box');
+                document.getElementById('hint-text').innerHTML = `💡 提示：${qData.hint}`;
+                hintBox.classList.remove('hidden');
+                
+                speakText("不對喔，請看提示再找找看！");
+                
+                setTimeout(() => {
+                    btnElement.classList.remove('shake');
+                }, 800);
+            }
+        }
+
+        function speakHint() {
+            const passage = rawQuestDataObj[currentPassageIdx];
+            const qData = passage.questions[currentQuestionIdx];
+            speakText(qData.hint);
+        }
+
+        function finishPassage() {
+            stopAllSpeechAndHighlights();
+            let finalStatus = currentPassageMistakes === 0 ? 1 : 2;
+            let previousStatus = userProgress[currentPassageIdx];
+            let expGained = 0;
+
+            if (previousStatus !== 1 && previousStatus !== 2) {
+                expGained = finalStatus === 1 ? 80 : 40;
+            } else if (previousStatus === 2 && finalStatus === 1) {
+                expGained = 40; 
+            }
+
+            if (expGained > 0) {
+                readExp += expGained;
+                localStorage.setItem('readStandardExp', readExp);
+                document.getElementById('exp-display').innerText = readExp;
+                document.getElementById('exp-display').classList.add('pop');
+                setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+            }
+
+            if (finalStatus === 1 || previousStatus !== 1) {
+                userProgress[currentPassageIdx] = finalStatus;
+                localStorage.setItem('readStandardProgress', JSON.stringify(userProgress));
+            }
+
+            let expMsg = expGained > 0 
+                ? `<span class="text-indigo-600 block text-2xl mt-4">獲得 ${expGained} 點篇章通關經驗值 ✨</span>` 
+                : `<span class="text-slate-500 block text-lg mt-4">你已經完美掌握這篇文章囉！</span>`;
+
+            const finishModal = document.getElementById('finish-modal');
+            const finishContent = document.getElementById('finish-content');
+
+            document.getElementById('finish-desc').innerHTML = `你成功運用推論與文體分析技巧回答了所有問題！${expMsg}`;
+            
+            finishModal.classList.remove('hidden');
+            setTimeout(() => {
+                finishModal.classList.remove('opacity-0');
+                finishContent.classList.remove('scale-90');
+            }, 10);
+            
+            if(userProgress.filter(p => p > 0).length === rawQuestDataObj.length) {
+                localStorage.setItem('t_read_2', 'true');
+            }
+        }
+
+        function backToDirectory() {
+            stopAllSpeechAndHighlights();
+            document.getElementById('quest-play').style.display = 'none';
+            document.getElementById('tips-hub-mode').style.display = 'none';
+            document.getElementById('quest-mode').style.display = 'flex';
+            renderDirectory();
+        }
+
+        function backToDirectoryFromFinish() {
+            const finishModal = document.getElementById('finish-modal');
+            const finishContent = document.getElementById('finish-content');
+            finishModal.classList.add('opacity-0');
+            finishContent.classList.add('scale-90');
+            setTimeout(() => {
+                finishModal.classList.add('hidden');
+                backToDirectory();
+            }, 300);
+        }
+
+        window.onload = function() {
+            document.getElementById('exp-display').innerText = readExp;
+            renderTipsHub();
+            renderDirectory();
+        }
+    </script>
+</body>
+</html>
