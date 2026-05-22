@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>聆聽與說話 - 拔尖進階特訓</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif; background-color: #fdf4ff; -webkit-tap-highlight-color: transparent; }
+        .bg-grid-pattern { background-image: linear-gradient(to right, #f3e8ff 1px, transparent 1px), linear-gradient(to bottom, #f3e8ff 1px, transparent 1px); background-size: 40px 40px; }
+        
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .pop { animation: pop 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .option-btn { transition: all 0.2s; box-shadow: 0 4px 0 #d8b4fe; }
+        .option-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .option-btn.correct { background-color: #faf5ff; border-color: #a855f7; color: #6b21a8; box-shadow: 0 0 0 transparent; transform: translateY(4px); pointer-events: none; }
+        .option-btn.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.6; pointer-events: none; }
+        
+        .tab-btn { transition: all 0.3s; }
+        .tab-active { background-color: #9333ea; color: white; border-color: #7e22ce; }
+        .tab-inactive { background-color: white; color: #64748b; border-color: #cbd5e1; }
+        
+        .lvl-btn { transition: transform 0.2s; }
+        .lvl-btn:hover { transform: scale(1.05); }
+
+        .toast-msg { visibility: hidden; min-width: 250px; background-color: #ef4444; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px; transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
+        @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
+
+        .tag-badge { background-color: #f3e8ff; color: #7e22ce; border-color: #d8b4fe; }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
+
+    <!-- 頂部導覽列 (Purple 配色) -->
+    <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
+        <div class="p-3 lg:p-4 bg-purple-700 text-white flex justify-between items-center w-full">
+            <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
+                <a href="index.html" class="hover:bg-purple-800 p-1 rounded transition bg-purple-900">⬅️ 返回</a>
+                <span>🗣️ 聆聽與說話 (拔尖版)</span>
+            </h1>
+            <div class="flex gap-2 lg:gap-4 items-center bg-purple-900 px-3 py-1.5 rounded-full border border-purple-500 shadow-inner">
+                <span class="text-lg lg:text-xl">🏆</span>
+                <span class="font-bold text-sm lg:text-lg">EXP: <span id="exp-display" class="text-yellow-400">0</span></span>
+            </div>
+        </div>
+        
+        <div class="flex w-full bg-slate-100 border-b border-slate-300">
+            <button onclick="switchMode('listen')" id="tab-listen" class="tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700">🎧 深度聆聽 (長篇推論)</button>
+            <button onclick="switchMode('speak')" id="tab-speak" class="tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200">🗣️ 故事改編與延展</button>
+        </div>
+        <div id="progress-container" class="w-full bg-slate-200 h-2">
+            <div id="progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
+        </div>
+    </div>
+
+    <!-- 主畫面區 -->
+    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
+        
+        <!-- 聆聽推論目錄 -->
+        <div id="listen-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
+            <div id="listen-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">🎧 拔尖長篇聆聽挑戰</h2>
+                    <button onclick="showTutorial('t-adv-listen')" class="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-purple-300 hover:bg-purple-200 transition">📘 學習錦囊</button>
+                </div>
+                <p class="text-slate-600 font-bold mb-4">超長篇章，資訊密集！每篇包含 8 道高難度推論題，考驗你的記憶與邏輯分析。</p>
+                <div id="listen-content" class="flex flex-wrap gap-4"></div>
+            </div>
+            
+            <div id="listen-play" class="w-full hidden flex-col items-center"></div>
+        </div>
+
+        <!-- 故事改編目錄 -->
+        <div id="speak-mode" class="w-full max-w-5xl mx-auto hidden flex-col gap-4 lg:gap-6">
+            <div id="speak-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">🗣️ 故事改編與延展演講</h2>
+                    <button onclick="showTutorial('t-adv-speak')" class="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-purple-300 hover:bg-purple-200 transition">📘 學習錦囊</button>
+                </div>
+                <p class="text-slate-600 font-bold mb-4">升中面試必備：打破常規，給經典故事一個全新的反轉結局或獨特觀點！</p>
+                <div id="speak-content" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+
+            <div id="speak-play" class="w-full hidden flex-col items-center"></div>
+        </div>
+
+    </div>
+
+    <!-- 學習錦囊 Modal -->
+    <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform duration-300 flex flex-col max-h-[90vh]" id="tutorial-content">
+            <div class="flex justify-between items-center mb-4 border-b-2 border-purple-100 pb-3">
+                <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-purple-600 flex items-center gap-2">📘 拔尖神探錦囊</h2>
+                <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
+            </div>
+            <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4"></div>
+            <div class="mt-6 pt-4 border-t-2 border-slate-100">
+                <button onclick="closeTutorial()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-purple-800 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 答對全解析 Modal -->
+    <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 pointer-events-none">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform duration-300 pointer-events-auto" id="feedback-content">
+            <div class="text-7xl mb-4">🎉</div>
+            <h2 class="text-3xl font-black text-slate-800 mb-2">精準推斷！</h2>
+            <p id="feedback-desc" class="text-purple-600 font-bold mb-6 text-xl leading-relaxed">成功捕捉深層含義！</p>
+            <div class="flex gap-3 w-full mt-4">
+                <button id="next-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-black py-3 rounded-xl shadow-lg transition text-xl border-b-4 border-purple-800 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-msg">提示訊息</div>
+
+    <script>
+        // ================= 1. 核心狀態與語音 =================
+        let advExp = parseInt(localStorage.getItem('listenAdvExp')) || 0;
+        document.getElementById('exp-display').innerText = advExp;
+        
+        let currentMode = 'listen'; 
+        let currentStoryIdx = -1;
+        let currentQuestionIdx = -1;
+        let storyUtterance = null; 
+        
+        // 用於處理教學 Modal 關閉後的自動跳轉
+        let pendingTaskIdx = -1;
+        let pendingTaskType = '';
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message; toast.className = "toast-msg show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // 強制廣東話 (zh-HK)
+        function speakText(text, rate = 0.85) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let msg = new SpeechSynthesisUtterance(text);
+                msg.lang = 'zh-HK'; 
+                msg.rate = rate; 
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        // 播放與停止廣播
+        function playStoryTTS() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const story = listenData[currentStoryIdx];
+                let cleanText = story.text.replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】]/g, '').replace(/&nbsp;/g, ' ');
+                
+                storyUtterance = new SpeechSynthesisUtterance(cleanText);
+                storyUtterance.lang = 'zh-HK'; 
+                storyUtterance.rate = 0.85; 
+
+                storyUtterance.onstart = function() {
+                    document.getElementById('btn-play-story').classList.add('hidden');
+                    document.getElementById('btn-stop-story').classList.remove('hidden');
+                };
+                storyUtterance.onend = function() {
+                    document.getElementById('btn-play-story').classList.remove('hidden');
+                    document.getElementById('btn-stop-story').classList.add('hidden');
+                };
+                storyUtterance.onerror = function() {
+                    document.getElementById('btn-play-story').classList.remove('hidden');
+                    document.getElementById('btn-stop-story').classList.add('hidden');
+                };
+
+                window.speechSynthesis.speak(storyUtterance);
+            } else {
+                showToast("您的瀏覽器不支援語音功能。");
+            }
+        }
+
+        function stopStoryTTS() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const btnPlay = document.getElementById('btn-play-story');
+                const btnStop = document.getElementById('btn-stop-story');
+                if (btnPlay && btnStop) {
+                    btnPlay.classList.remove('hidden');
+                    btnStop.classList.add('hidden');
+                }
+            }
+        }
+
+        // ================= 2. 教學內容 =================
+        const tutorialData = {
+            't-adv-listen': `
+                <div class="text-center mb-4"><span class="text-6xl">🧠 🕵️‍♂️</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">拔尖聆聽：聽出言外之意</p>
+                <p class="mb-4 text-slate-600">這關的故事非常長，且資訊密集。你必須運用高階邏輯：</p>
+                <div class="bg-purple-50 p-4 rounded-xl border-2 border-purple-200 mb-3 space-y-3 font-bold text-purple-900">
+                    <p>💡 <span class="bg-white px-2 py-1 rounded shadow-sm text-purple-600">抓矛盾點</span> 👉 人物說的話和他的動作不一致時，通常代表他在說謊或隱瞞。</p>
+                    <p>💡 <span class="bg-white px-2 py-1 rounded shadow-sm text-purple-600">聽潛台詞</span> 👉 表面上的讚美，可能是暗諷；看似平淡的結尾，往往藏著文章的主旨。</p>
+                    <p>💡 <span class="bg-white px-2 py-1 rounded shadow-sm text-purple-600">記憶細節</span> 👉 遇到長篇故事，可以邊聽邊在腦海中畫出時間線。</p>
+                </div>
+            `,
+            't-adv-speak': `
+                <div class="text-center mb-4"><span class="text-6xl">🔄 🎙️</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">升中面試絕招：反轉思維</p>
+                <p class="mb-4 text-slate-600">如果你講的故事和別人都一樣，考官是不會記住你的！嘗試運用「反轉思維」：</p>
+                <div class="bg-amber-50 p-4 rounded-xl border-2 border-amber-200 mb-3 space-y-2 text-base font-bold text-slate-700">
+                    <p>🐢 如果烏龜沒有贏？<span class="text-amber-600 font-normal">也許牠明白了自己的極限，選擇了游泳比賽。</span></p>
+                    <p>🐺 如果大野狼是好人？<span class="text-amber-600 font-normal">也許牠只是想幫小紅帽趕走真正的壞人。</span></p>
+                    <hr class="border-amber-200 my-2">
+                    <p class="text-rose-600">👉 加入創意的結局，並說出一個全新的人生道理！</p>
+                </div>
+            `
+        };
+
+        function showTutorial(tutKey) {
+            document.getElementById('tutorial-body').innerHTML = tutorialData[tutKey];
+            const modal = document.getElementById('tutorial-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); document.getElementById('tutorial-content').classList.remove('scale-90'); }, 10);
+            localStorage.setItem('tut_seen_' + tutKey, 'true');
+        }
+
+        function closeTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (pendingTaskIdx !== -1) {
+                    let targetIdx = pendingTaskIdx;
+                    let targetType = pendingTaskType;
+                    pendingTaskIdx = -1;
+                    pendingTaskType = '';
+                    if (targetType === 'listen') startListen(targetIdx, true);
+                    else if (targetType === 'speak') startSpeak(targetIdx, true);
+                }
+            }, 300);
+        }
+
+        function updateTotalProgress() {
+            let lDone = listenProgress.filter(p => p === 1).length;
+            let sDone = speakProgress.filter(p => p === 1).length;
+            let total = listenData.length + speakData.length;
+            let percent = ((lDone + sDone) / total) * 100;
+            const pb = document.getElementById('progress-bar');
+            if (pb) pb.style.width = percent + '%';
+        }
+
+        function switchMode(mode) {
+            stopStoryTTS();
+            currentMode = mode;
+            const tL = document.getElementById('tab-listen'), tS = document.getElementById('tab-speak');
+            const mL = document.getElementById('listen-mode'), mS = document.getElementById('speak-mode');
+            
+            if(mode === 'listen') {
+                tL.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700";
+                tS.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                mL.style.display = 'flex'; mS.style.display = 'none';
+                document.getElementById('listen-play').style.display = 'none';
+                document.getElementById('listen-directory').style.display = 'block';
+                renderListenDirectory();
+            } else {
+                tS.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700";
+                tL.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                mL.style.display = 'none'; mS.style.display = 'flex';
+                document.getElementById('speak-play').style.display = 'none';
+                document.getElementById('speak-directory').style.display = 'block';
+                renderSpeakDirectory();
+            }
+            updateTotalProgress();
+        }
+
+        // ================= 3. 聆聽推論題庫 (10篇, 每篇8題 = 80題) =================
+        const listenData = [
+            {
+                title: '錢包的考驗', 
+                text: '明仔在公園的長椅上撿到一個名牌錢包，打開一看，裡面有一大疊現金和許多證件。他滿心歡喜地跑到附近的警署，把錢包交給了當值的警察，心想失主一定會非常感激自己。沒想到半小時後，失主趕到警署，匆匆點算了一下現金，卻突然眉頭一皺，一口咬定少了一千元，並大聲指責是明仔偷拿了。明仔百口莫辯，委屈得掉下了眼淚。這時，老經驗的警長要求調取公園的監控錄像。畫面清晰顯示，失主在買雪糕時，自己不小心掉了一張千元大鈔在地上，被風吹走了。真相大白，失主羞愧地低下頭向明仔道歉。明仔擦乾眼淚，平靜地說：「沒關係，但我希望你以後不要隨便懷疑別人的善良。」',
+                qs: [
+                    ['提取資訊', '明仔在公園撿到的錢包裡有什麼？', '只有證件', '只有少量零錢', '一大筆現金和證件', '買雪糕的收據', 2],
+                    ['人物心理', '失主一口咬定少了一千元時，明仔有什麼感覺？', '感到憤怒並大聲反駁', '百口莫辯，感到極度委屈而落淚', '覺得無所謂，反正沒拿', '心虛害怕被揭穿', 1],
+                    ['弦外之音', '失主為什麼一開始要大聲指責明仔？', '他親眼看到明仔偷錢', '他主觀臆斷，不信任陌生人的善意，先入為主地懷疑', '警察教他這麼做的', '他想測試明仔是否誠實', 1],
+                    ['邏輯推理', '警察最後是如何查明真相、還明仔清白的？', '搜查了明仔的口袋', '質問了賣雪糕的店員', '調取了公園的監控錄像尋找線索', '失主自己突然想起來了', 2],
+                    ['語境理解', '文中「百口莫辯」是什麼意思？', '嘴巴太多不知道怎麼說', '就算有一百張嘴也辯解不清，形容受了極大委屈無法澄清', '不想和別人說話', '非常能言善道', 1],
+                    ['人物評價', '明仔最後對失主說的話，展現了他怎樣的品格？', '膽小怕事，不敢追究', '得理不饒人，態度傲慢', '寬容大度，且堅守並捍衛善良的尊嚴', '貪圖失主的獎賞', 2],
+                    ['人物心理', '失主道歉時為什麼會「羞愧地低下頭」？', '因為警察罵了他', '因為發現是自己弄丟的，且自己無端誣衊了好人，感到無地自容', '因為他的錢找不回來了', '因為他不想道歉', 1],
+                    ['主旨歸納', '這個故事最想告訴我們什麼深刻的道理？', '撿到錢包不應該交給警察', '不要隨便吃雪糕', '在未查明真相前，不能憑偏見隨意懷疑別人的善意，應讓善良得到尊重', '公園裡的風很大', 2]
+                ]
+            },
+            {
+                title: '草船借箭的智慧', 
+                text: '三國時期，周瑜十分嫉妒諸葛亮的才幹，便故意刁難他，要求他在十天內造出十萬支箭。諸葛亮卻笑著答應，並立下軍令狀，保證三天內完成。周瑜暗自高興，以為諸葛亮這次死定了。諸葛亮私下向魯肅借了二十隻小船，每隻船上紮滿了草把子。到了第三天夜裡，江面上起了大霧，面對面都看不清人。諸葛亮下令將船開到曹操的水寨前，並讓士兵擂鼓吶喊。曹操生性多疑，看不清虛實，不敢輕易出戰，只下令弓弩手朝江中放箭。一時間，萬箭齊發，紛紛射在草把子上。天亮前，諸葛亮滿載而歸。周瑜得知後，長嘆一聲：「諸葛亮神機妙算，我不如他。」',
+                qs: [
+                    ['提取資訊', '周瑜為什麼要讓諸葛亮在十天內造出十萬支箭？', '因為軍隊真的很缺箭', '因為他嫉妒諸葛亮的才幹，想藉機除掉他', '因為諸葛亮自己要求的', '因為曹操即將進攻', 1],
+                    ['人物心理', '諸葛亮立下「三天完成」的軍令狀時，周瑜為什麼暗自高興？', '他覺得三天能拿到箭很好', '他認為這絕對不可能完成，諸葛亮必死無疑', '他佩服諸葛亮的勇氣', '他想和諸葛亮一起造箭', 1],
+                    ['弦外之音', '諸葛亮為什麼要選擇在「大霧」的夜裡行動？', '因為大霧天氣比較涼爽', '利用大霧掩護，讓生性多疑的曹操看不清虛實而不敢出戰', '因為白天士兵要休息', '因為草把子怕曬太陽', 1],
+                    ['邏輯推理', '曹操為什麼只下令放箭，而不派船出戰？', '曹操的船壞了', '因為霧太大看不清，曹操多疑怕中埋伏，選擇遠程攻擊', '因為曹操的士兵不會游泳', '因為曹操想送箭給諸葛亮', 1],
+                    ['語意理解', '周瑜最後說的「神機妙算」是什麼意思？', '形容算數學非常快', '形容計謀十分高明，預料準確', '形容機器非常神奇', '形容運氣非常好', 1],
+                    ['人物評價', '諸葛亮成功「借箭」，展現了他具備哪些過人的能力？', '力氣很大，能搬動十萬支箭', '精通天文氣象(知大霧)，且洞悉人性(知曹操多疑)', '善於造船和編草', '跑步速度極快', 1],
+                    ['人物心理', '周瑜最後「長嘆一聲」，這聲長嘆包含了什麼複雜的感情？', '對曹操的不滿', '對諸葛亮才智的徹底折服，以及對自己技不如人的無奈與挫敗感', '對天氣大霧的抱怨', '因為生病了嘆氣', 1],
+                    ['主旨歸納', '《草船借箭》這個故事主要想表達什麼？', '遇到困難時要向朋友借船', '真正的智慧不僅是擁有知識，更是善於利用環境(天時)和了解對手(人和)來解決難題', '不要嫉妒別人', '大霧天不要出門', 1]
+                ]
+            },
+            {
+                title: '消失的青黴素', 
+                text: '1928年的夏天，英國細菌學家弗萊明去度假了。因為走得匆忙，他忘記把實驗室裡培養細菌的培養皿清理乾淨。幾個星期後，當他回到實驗室時，發現一個培養皿發霉了，長出了一團青綠色的黴菌。換作一般人，可能早就把這個發臭的培養皿扔進垃圾桶了。但弗萊明卻敏銳地觀察到一個奇特的現象：在青綠色黴菌的周圍，原本生長茂盛的葡萄球菌竟然全部消失了，形成了一個清晰的無菌圈。他大膽推測，這種黴菌分泌出了一種能殺死細菌的物質。經過反覆提煉和研究，他終於發現了拯救無數生命的抗生素——青黴素。',
+                qs: [
+                    ['提取資訊', '弗萊明度假回來後，在實驗室發現了什麼異常？', '實驗室被小偷洗劫了', '一個未清理的培養皿長出了青綠色的黴菌', '所有的細菌都死光了', '顯微鏡壞了', 1],
+                    ['細節推斷', '「換作一般人，可能早就把培養皿扔進垃圾桶了」，這句話有什麼作用？', '說明實驗室很髒', '反襯出弗萊明作為科學家異於常人的敏銳觀察力與好奇心', '批評弗萊明不講衛生', '說明垃圾桶不夠大', 1],
+                    ['邏輯推理', '弗萊明是如何推測出青黴素存在的？', '因為黴菌的顏色很好看', '他觀察到黴菌周圍的細菌全部消失，形成無菌圈，推斷出黴菌能殺菌', '別的科學家告訴他的', '他在書上看到的', 1],
+                    ['語意理解', '文中的「敏銳」是什麼意思？', '動作非常快', '感覺極其靈敏，能迅速發現微小的細節和變化', '非常聰明', '非常勇敢', 1],
+                    ['因果關係', '青黴素被發現的「偶然」起因是什麼？', '弗萊明進行了精密的計算', '弗萊明度假前忘記清理培養皿', '政府的強烈要求', '醫院病人的需要', 1],
+                    ['人物評價', '從弗萊明發現青黴素的過程來看，科學研究最需要什麼精神？', '只靠運氣就夠了', '不僅需要運氣，更需要細緻入微的觀察力和敢於探究未知的大膽假設精神', '需要有很多錢', '需要經常去度假', 1],
+                    ['語境分析', '文章結尾稱青黴素是「拯救無數生命的抗生素」，這說明了這項發現的什麼意義？', '說明青黴素很貴', '強調了這項科學發現對全人類醫療史的偉大貢獻與巨大價值', '說明青黴素只能救動物', '說明發現過程很漫長', 1],
+                    ['主旨歸納', '這個科學故事告訴了我們什麼深刻的道理？', '做實驗後不用搞衛生', '偉大的發現往往隱藏在生活看似錯誤或偶然的細節中，唯有有準備的頭腦才能抓住它', '黴菌都是有益的', '度假能讓人變聰明', 1]
+                ]
+            },
+            {
+                title: '狐假虎威的真相', 
+                text: '老虎抓到了一隻狐狸，正準備吃掉牠。狐狸眼珠一轉，大聲喝道：「你敢吃我？我是天帝派來管理百獸的王！不信，你跟在我後面走一趟，看看百獸見到我是不是都嚇得逃跑。」老虎半信半疑，便跟在狐狸後面走進了森林。果然，森林裡的野豬、小鹿看到牠們，全都嚇得落荒而逃。狐狸得意洋洋地說：「看吧，我沒騙你！」老虎以為百獸真的害怕狐狸，便放走了牠。其實，百獸哪裡是怕狐狸，牠們怕的是走在狐狸後面的那隻大老虎！',
+                qs: [
+                    ['人物心理', '狐狸被抓時「眼珠一轉」，這個動作暗示了牠正在做什麼？', '牠的眼睛進了沙子', '牠正在快速轉動腦筋，想出狡猾的脫身計策', '牠在尋找逃跑的路線', '牠在向老虎拋媚眼', 1],
+                    ['語氣判斷', '狐狸「大聲喝道」的語氣，是為了達到什麼目的？', '為了讓遠處的動物聽到', '用虛張聲勢的氣勢來掩飾內心的恐懼，並震懾住老虎', '因為牠耳朵不好', '因為牠真的很生氣', 1],
+                    ['提取資訊', '狐狸用什麼理由來阻止老虎吃牠？', '說自己的肉不好吃', '自稱是天帝派來管理百獸的王', '答應幫老虎抓別的動物', '說自己有傳染病', 1],
+                    ['邏輯推理', '老虎為什麼會「半信半疑」？', '因為老虎本來就很笨', '狐狸的氣勢讓牠產生了動搖，但牠仍想透過實際驗證來確認', '因為老虎沒吃過狐狸', '因為森林太黑看不清', 1],
+                    ['弦外之音', '百獸落荒而逃的「真相」是什麼？', '因為狐狸長得很可怕', '因為狐狸後面跟著一隻兇猛的大老虎', '因為天要下雨了', '因為天帝下了命令', 1],
+                    ['語意理解', '狐狸最後「得意洋洋」的表現說明了什麼？', '牠真的成了百獸之王', '牠為自己成功用計騙過老虎、死裡逃生而感到沾沾自喜', '牠覺得老虎很可愛', '牠準備吃掉老虎', 1],
+                    ['人物評價', '在這個寓言中，老虎犯了什麼致命的認知錯誤？', '牠跑得不夠快', '牠只看到了表象（百獸逃跑），卻沒有看清本質（百獸其實是怕自己），缺乏獨立思考能力', '牠太善良了', '牠沒有帶武器', 1],
+                    ['主旨歸納', '《狐假虎威》這個成語現在用來諷刺什麼樣的人？', '非常聰明機智的人', '倚仗別人（或上級）的權勢來欺壓、恐嚇他人的人', '喜歡養狐狸的人', '容易被別人欺騙的人', 1]
+                ]
+            },
+            {
+                title: '火星的第一個夜晚', 
+                text: '經過漫長的星際航行，人類首批移民終於抵達了火星基地。宇航員林恩站在密封的玻璃穹頂前，望著外面一片荒蕪、赤紅色的沙漠，心中百感交集。這裡沒有蔚藍的天空，沒有鳥語花香，只有呼嘯的沙塵暴拍打著防護罩。到了夜晚，林恩抬頭看向星空，在無數璀璨的星星中，他尋找著那顆散發著微弱藍光的小點——那是地球，他永遠無法回到的故鄉。林恩的眼角滑落一滴眼淚，但他隨即握緊了拳頭。他知道，從今天起，這片紅色的荒漠就是人類新的希望。',
+                qs: [
+                    ['語境理解', '林恩望著火星外面的景象，為什麼會「百感交集」？', '因為他覺得火星很漂亮', '因為抵達目標的激動與面對極端荒蕪環境的失落、思鄉交織在一起', '因為他想睡覺了', '因為玻璃穹頂破了', 1],
+                    ['對比分析', '作者寫「這裡沒有蔚藍的天空，沒有鳥語花香」，其寫作目的是什麼？', '說明火星的天空是黑色的', '用地球的生機勃勃強烈反襯火星環境的死寂與惡劣', '說明作者不喜歡鳥', '說明火星適合種花', 1],
+                    ['細節推斷', '林恩在星空中尋找的「散發著微弱藍光的小點」是什麼？', '火星的月亮', '地球', '一顆流星', '一艘太空船', 1],
+                    ['人物心理', '林恩的眼角「滑落一滴眼淚」，這滴眼淚代表了什麼？', '因為沙塵暴吹進了眼睛', '代表對遙遠故鄉的深切思念與永別的哀傷', '因為他生病了', '因為看到藍光刺眼', 1],
+                    ['動作推論', '林恩流淚後「隨即握緊了拳頭」，這個動作的轉變象徵了什麼？', '他準備和外星人打架', '從感性的悲傷迅速轉化為理性的堅強，展現了作為拓荒者的決心和使命感', '因為天氣太冷了', '因為手麻痺了', 1],
+                    ['弦外之音', '「他永遠無法回到的故鄉」這句話暗示了這次太空任務的什麼性質？', '這是一次短期的旅行', '這是一張單程票，代表著破釜沉舟的犧牲與奉獻', '地球已經毀滅了', '太空船沒有燃料了', 1],
+                    ['語意理解', '文末提到「這片紅色的荒漠就是人類新的希望」，「希望」指的是什麼？', '可以在火星上種蘋果', '人類在宇宙中開闢新家園、延續文明的未來', '可以找到很多黃金', '可以不用做功課', 1],
+                    ['主旨歸納', '這篇科幻短文主要讚頌了人類的什麼精神？', '逃避困難的精神', '探索未知領域的勇氣，以及為了人類未來甘願犧牲個人情感的偉大拓荒精神', '熱愛看星星的習慣', '破壞環境的行為', 1]
+                ]
+            },
+            {
+                title: '父親的舊大衣',
+                text: '李工程師是一位非常富有的人，但他出門總是穿著一件袖口磨破了的灰色舊大衣。同事們都暗自嘲笑他吝嗇。有一天，公司舉辦慈善拍賣會，要求大家捐出有價值的物品。李工程師竟然把那件舊大衣拿了出來，起拍價定為一萬元。全場哄堂大笑，覺得他瘋了。李工程師平靜地走上台說：「這件大衣是我父親留下的。當年我們家很窮，父親為了供我上大學，冬天連生病了也不肯買新衣服，一直穿著它。它提醒我，無論我現在多麼富有，都不能忘記勤儉節約的根本。」聽完這番話，全場鴉雀無聲，最後這件大衣被一位企業家以十萬元買下。',
+                qs: [
+                    ['人物對比', '同事們一開始對李工程師穿舊大衣有什麼看法？', '覺得他很環保', '暗自嘲笑他十分吝嗇、小氣', '覺得衣服很時尚', '覺得他很貧窮', 1],
+                    ['提取資訊', '李工程師在慈善拍賣會上捐出了什麼？起拍價是多少？', '一件新西裝，一千元', '那件舊大衣，一萬元', '一件古董，十萬元', '一本書，一百元', 1],
+                    ['語境推斷', '為什麼全場會「哄堂大笑，覺得他瘋了」？', '因為李工程師講了個笑話', '因為大家認為一件破爛的舊衣服根本不值一萬元，覺得他不可理喻', '因為大衣的顏色很滑稽', '因為拍賣會本來就很歡樂', 1],
+                    ['邏輯推理', '這件舊大衣真正的「價值」來源於哪裡？', '它裡面藏著金幣', '它承載著父親偉大的愛與犧牲，是無價的精神財富', '它是名牌限量版', '它是用特殊材料做的', 1],
+                    ['弦外之音', '李工程師穿著舊大衣的真正目的是什麼？', '為了省錢買大房子', '作為一種精神警惕，提醒自己不忘本、保持勤儉節約的美德', '因為他覺得灰色好看', '為了博取別人的同情', 1],
+                    ['語意理解', '聽完李工程師的話，全場「鴉雀無聲」，這代表大家的心情發生了什麼轉變？', '大家睡著了', '從嘲笑轉變為被這份深沉的父愛和高尚的品格深深震撼、感動與敬佩', '大家覺得很無聊', '大家在等別人出價', 1],
+                    ['人物評價', '那位花十萬元買下大衣的企業家，他買的到底是什麼？', '一件可以用來保暖的衣服', '買的是對這份孝心、不忘本精神的最高致敬與認同', '買的是一件古董', '買的是李工程師的面子', 1],
+                    ['主旨歸納', '這個故事最想告訴我們什麼深刻的道理？', '舊衣服可以賣很多錢', '物品的真正價值不在於外表的華麗或物質價格，而在於其背後承載的精神意義與品格', '有錢人一定要穿破衣服', '不要隨便嘲笑別人', 1]
+                ]
+            },
+            {
+                title: '消失的鑽石',
+                text: '展覽館裡發生了一宗離奇的盜竊案。一顆價值連城的「海洋之心」鑽石在停電的短短五秒鐘內不見了。當時房間裡只有三個人：清潔工、保安員和館長。警察到達現場後，發現展櫃的玻璃被砸碎了，地上有水跡。清潔工緊張地說：「我當時正在拖地，甚麼也沒看見。」保安員指著門口說：「停電時我一直守在門口，沒有人離開過。」館長則擦著額頭的汗說：「太可怕了，我當時正在用放大鏡仔細欣賞鑽石，突然就黑了。」警長聽完，冷笑了一聲，直接走到館長面前說：「說謊！鑽石是你偷的。」',
+                qs: [
+                    ['提取資訊', '案件發生在什麼特殊的情況下？', '下大雨的時候', '停電的短短五秒鐘內', '大家都在睡覺時', '展覽館關門後', 1],
+                    ['細節推斷', '警察在案發現場發現了什麼關鍵線索？', '一把鑰匙', '展櫃玻璃被砸碎，且地上有水跡', '一把手電筒', '一個黑色的袋子', 1],
+                    ['人物分析', '清潔工和保安員的證詞，說明了什麼情況？', '他們兩人合謀偷了鑽石', '說明作案時間極短，且犯人還留在房間內沒有逃走', '說明他們在睡覺', '說明停電是他們造成的', 1],
+                    ['邏輯推理', '警長憑什麼立刻斷定是館長在說謊？', '因為館長流汗了', '因為停電只有五秒，在完全黑暗中是不可能繼續「用放大鏡仔細欣賞鑽石」的，他的供詞存在致命的邏輯矛盾', '因為館長是最高負責人', '因為警察不喜歡館長', 1],
+                    ['弦外之音', '地上的「水跡」最可能暗示了什麼作案手法？', '清潔工拖地留下的水', '犯人可能利用了冰塊（砸碎玻璃後融化成水）來延遲觸發警報或隱藏凶器', '外面下雨漏水', '保安員喝水灑了', 1],
+                    ['語氣判斷', '警長「冷笑了一聲」，這聲冷笑代表了他什麼心理？', '他覺得館長的笑話很好笑', '他已經看穿了館長拙劣的謊言，表現出胸有成竹與嘲諷', '他覺得很冷', '他不想查案了', 1],
+                    ['人物評價', '這個故事展現了警長具備怎樣的能力？', '跑步速度很快', '極強的細節捕捉能力與縝密的邏輯推理能力', '審問犯人的暴力', '瞎猜的運氣', 1],
+                    ['主旨歸納', '這篇推理短文帶給我們什麼啟示？', '停電時要小心', '謊言即使編造得再好，也一定會因為違背客觀邏輯或留下細節破綻而被拆穿', '不要在展覽館拖地', '鑽石是很危險的物品', 1]
+                ]
+            },
+            {
+                title: '孤獨的鯨魚「52赫茲」',
+                text: '在浩瀚的太平洋裡，有一頭被科學家追蹤了二十多年的鯨魚。普通的鯨魚發出的聲音頻率大約是15到25赫茲，但這頭鯨魚發出的頻率卻高達52赫茲。這意味著什麼呢？這意味著牠的聲音在其他同類的耳朵裡，就像是無法解碼的外星廣播。二十多年來，牠一直在無垠的深海中獨自歌唱，卻從未得到過任何同伴的回應。牠被稱為「世界上最孤獨的鯨魚」。然而，科學家發現，這頭鯨魚並沒有因為孤獨而停止游動。牠的游動軌跡遍佈了各大洋，牠依然每天在海裡發出52赫茲的聲音，彷彿在堅定地向世界宣告自己的存在。',
+                qs: [
+                    ['提取資訊', '為什麼這頭鯨魚被稱為「52赫茲」？', '因為牠活了52年', '因為牠發出的聲音頻率高達52赫茲', '因為牠長52米', '因為牠重52噸', 1],
+                    ['對比分析', '作者將「15到25赫茲」與「52赫茲」作對比，說明了什麼問題？', '說明52赫茲的鯨魚比較聰明', '說明這頭鯨魚的頻率與同類完全錯開，導致牠無法與同類進行正常溝通', '說明牠唱歌比較好聽', '說明牠是另一種動物', 1],
+                    ['修辭句意', '「就像是無法解碼的外星廣播」這個比喻，生動地表現了什麼？', '鯨魚是外星人帶來的', '突顯了這頭鯨魚在同類中徹底的「無法被理解」與極度的溝通障礙', '說明海裡的收音機壞了', '說明科學家的儀器很先進', 1],
+                    ['推論訊息', '為什麼牠被稱為「世界上最孤獨的鯨魚」？', '因為牠沒有家人', '因為二十多年來牠不斷歌唱，卻從未得到過任何同伴的共鳴與回應', '因為牠喜歡自己一個', '因為牠長得很醜', 1],
+                    ['動作推論', '這頭鯨魚「並沒有因為孤獨而停止游動」，這反映了牠怎樣的生命狀態？', '牠在尋找食物', '雖然不被理解，但牠依然堅韌、積極地活著，不放棄對生命的探索', '牠在逃避敵人', '牠停不下來', 1],
+                    ['弦外之音', '文章結尾說牠「彷彿在堅定地向世界宣告自己的存在」，這句話賦予了這頭鯨魚什麼象徵意義？', '象徵動物很吵鬧', '象徵著即使身處絕對的孤獨和不被理解中，依然要勇敢發聲、活出自我價值的倔強靈魂', '象徵牠想統治海洋', '象徵牠在生氣', 1],
+                    ['語意理解', '文中的「無垠」是什麼意思？', '沒有銀子', '沒有邊際，形容海洋非常廣闊', '沒有聲音', '沒有光線', 1],
+                    ['主旨歸納', '這個真實的自然故事，最能引發人類哪方面的深層共鳴？', '對海洋污染的擔憂', '對那些在社會中「與眾不同、不被理解」卻依然堅強做自己的人的致敬與反思', '對鯨魚體型的驚訝', '對科學儀器的讚美', 1]
+                ]
+            },
+            {
+                title: '攀岩的啟示',
+                text: '週末，我和爸爸去挑戰室內攀岩。剛開始，我憑著一股衝勁，迅速爬上了一半的高度。但到了中段，岩石的分布變得稀疏，我的體力也消耗殆盡。我雙手發抖，看著腳下深不見底的海綿墊，心裡萌生了放棄的念頭：「爸爸，我上不去了，我要下來！」爸爸在下面大喊：「別往下看！往上看，尋找下一個落腳點！只要不鬆手，你就還沒輸！」我深吸一口氣，強迫自己把視線集中在上方最近的一塊紅色岩石上。我咬緊牙關，用力一蹬，竟然成功抓住了它。就這樣，我專注於每一次的「下一步」，最終成功登頂。',
+                qs: [
+                    ['提取資訊', '剛開始攀岩時，作者的表現如何？', '不敢上去', '憑著衝勁迅速爬上了一半', '馬上就掉下來了', '爬得很慢', 1],
+                    ['細節推斷', '作者在攀岩中段為什麼會萌生放棄的念頭？', '因為覺得不好玩', '因為岩石變稀疏、體力耗盡，加上往下看產生了恐懼心理', '因為爸爸叫他下來', '因為時間到了', 1],
+                    ['人物對比', '當作者想放棄時，爸爸給了他什麼核心建議？', '叫他馬上跳下來', '告訴他「別往下看，往上看，尋找下一個落腳點」', '叫他閉上眼睛', '罵他太膽小', 1],
+                    ['弦外之音', '爸爸說「別往下看」，在心理學上是為了什麼？', '怕他脖子痛', '為了切斷讓他產生恐懼的來源，讓他免受「失敗後果」的干擾', '因為下面很刺眼', '因為爸爸不想被看', 1],
+                    ['邏輯推理', '作者最後是如何成功登頂的？', '靠爸爸拉上去的', '透過專注於眼前的「下一步」，將大困難分解為小目標，咬牙堅持', '換了一條簡單的路', '吃了補充體力的藥', 1],
+                    ['語意理解', '文中「消耗殆盡」是什麼意思？', '吃得很飽', '全部用完、一點都不剩，形容體力透支', '非常危險', '時間結束', 1],
+                    ['修辭與表達', '「只要不鬆手，你就還沒輸！」這句話在全文中起到了什麼作用？', '是一句普通的陳述', '是一句振奮人心的格言，點醒了作者，也是文章的核心精神', '是爸爸生氣的表現', '是攀岩的規則', 1],
+                    ['主旨歸納', '這篇短文透過攀岩的經歷，向我們闡述了什麼深刻的人生道理？', '攀岩是一項很危險的運動', '面對巨大的困難時，不要被恐懼嚇倒，只需專注於眼前的每一個「下一步」，堅持不懈就能成功', '要多聽爸爸的話', '體力好就能贏', 1]
+                ]
+            },
+            {
+                title: '被撕破的畫',
+                text: '美術課上，小光的畫作《星空》被老師大力讚賞。小光開心地把畫放在桌面上便去洗手間了。回來時，他震驚地發現，畫作竟然被撕成了兩半！旁邊站著平時總愛嫉妒他的小明。小光頓時火冒三丈，衝過去一把推開小明，大吼：「一定是你嫉妒我，故意撕破我的畫！」小明滿臉通紅，手裡緊緊攥著一卷透明膠布，眼眶泛淚地說：「我沒有...剛才一陣大風把你的畫吹到地上，我不小心踩到了。我想幫你黏好...」看著小明手裡的膠布和他委屈的眼神，小光的怒火瞬間熄滅了。他意識到自己犯了一個大錯。',
+                qs: [
+                    ['提取資訊', '小光的畫作為什麼會被撕破？', '小明故意撕破的', '一陣大風把畫吹到地上，小明不小心踩破了', '小光自己撕的', '老師不小心撕的', 1],
+                    ['人物心理', '小光看到畫作被撕破時，為什麼會立刻認定是小明做的？', '因為他親眼看到的', '因為小明平時總愛嫉妒他，小光受「先入為主」的偏見影響而做出了主觀判斷', '因為小明拿著剪刀', '因為同學告訴他的', 1],
+                    ['語氣與動作', '小光「火冒三丈，衝過去一把推開小明」，這表現出他當時怎樣的狀態？', '非常冷靜', '被憤怒衝昏了頭腦，失去了理智與查明真相的耐心', '在和小明開玩笑', '只是想拿回畫作', 1],
+                    ['細節推斷', '文中的哪一個關鍵細節，證明了小明沒有撒謊？', '小明滿臉通紅', '小明手裡緊緊攥著一卷透明膠布', '小明眼眶泛淚', '小明站著不動', 1],
+                    ['弦外之音', '小明「手裡緊緊攥著一卷透明膠布」，這個動作透露出他原本的意圖是什麼？', '他想用膠布把畫徹底毀掉', '他因為弄破了畫感到抱歉，正急切地想彌補自己的過失', '他想把膠布藏起來', '他想用膠布打人', 1],
+                    ['人物心理', '為什麼小光的怒火會「瞬間熄滅」？', '因為上課鐘聲響了', '因為他看到了膠布和委屈的眼神，明白了真相，知道自己冤枉了好人', '因為老師進來了', '因為他覺得畫不重要了', 1],
+                    ['語意理解', '小光意識到自己「犯了一個大錯」，這個「大錯」具體是指什麼？', '把畫放在桌上', '不分青紅皂白地被情緒控制，用偏見惡意揣測並傷害了同學', '去洗手間太久', '推得不夠大力', 1],
+                    ['主旨歸納', '這個校園故事給了我們什麼深刻的人際交往教訓？', '畫畫完要馬上收起來', '在事情未查明真相前，切勿被憤怒和偏見蒙蔽雙眼去隨意指責他人，要學會冷靜與信任', '不要和小明做朋友', '風大的時候要關窗', 1]
+                ]
+            }
+        ];
+
+        let listenProgress = JSON.parse(localStorage.getItem('listenAdvProgress')) || new Array(listenData.length).fill(0);
+
+        function renderListenDirectory() {
+            const dirContainer = document.getElementById('listen-content');
+            let html = '';
+            listenData.forEach((item, idx) => {
+                let status = listenProgress[idx];
+                let bgClass = 'bg-white';
+                let borderClass = 'border-slate-200';
+                let icon = ' <span class="text-slate-400 font-bold ml-2"># 未挑戰</span>';
+                
+                if (status === 1) {
+                    bgClass = 'bg-purple-50'; borderClass = 'border-purple-400';
+                    icon = ' <span class="text-purple-600 font-bold ml-2">🌟 完成</span>';
+                }
+                html += `
+                    <button onclick="startListen(${idx})" class="w-full md:w-[calc(50%-0.5rem)] text-left p-4 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition active:scale-95">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="bg-slate-100 text-slate-700 text-xs font-bold px-2 py-1 rounded">長篇任務 ${idx+1}</span>
+                            ${icon}
+                        </div>
+                        <h3 class="text-lg font-black text-slate-800">${item.title}</h3>
+                        <p class="text-xs text-purple-600 font-bold mt-1">共 8 道推論題</p>
+                    </button>
+                `;
+            });
+            dirContainer.innerHTML = html;
+        }
+
+        function startListen(idx, forceStart = false) {
+            if (!forceStart && !localStorage.getItem('tut_seen_t-adv-listen')) {
+                pendingTaskIdx = idx;
+                pendingTaskType = 'listen';
+                showTutorial('t-adv-listen');
+                return;
+            }
+            currentStoryIdx = idx;
+            currentQuestionIdx = 0;
+            document.getElementById('listen-directory').style.display = 'none';
+            const playArea = document.getElementById('listen-play');
+            playArea.style.display = 'flex';
+            
+            const btnPlay = document.getElementById('btn-play-story');
+            const btnStop = document.getElementById('btn-stop-story');
+            if(btnPlay) btnPlay.classList.remove('hidden');
+            if(btnStop) btnStop.classList.add('hidden');
+
+            renderListenQuestion();
+        }
+
+        function renderListenQuestion() {
+            const story = listenData[currentStoryIdx];
+            const qData = story.qs[currentQuestionIdx];
+            const qTitle = qData[0];
+            const qText = qData[1];
+            const qOpts = [qData[2], qData[3], qData[4], qData[5]];
+            const qAnsIdx = qData[6];
+            
+            let html = `
+                <div class="w-full max-w-4xl flex justify-between items-center mb-4">
+                    <button onclick="switchMode('listen')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 暫停返回</button>
+                    <span class="bg-purple-100 text-purple-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${currentQuestionIdx + 1} / 8 題</span>
+                </div>
+                
+                <div class="w-full max-w-4xl bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center">
+                    
+                    <!-- 🌟 0秒加載 原生廣東話播放器 -->
+                    <div class="w-full bg-slate-800 text-white rounded-2xl p-6 text-center mb-6 shadow-inner relative overflow-hidden flex flex-col items-center justify-center min-h-[160px]">
+                        <div class="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xMiAyYTMgMyAwIDAgMCAzIDN2N2EzIDMgMCAwIDEtNiAweiIvPjxwYXRoIGQ9Ik0xOSAxbS0yIDJhMiAyIDAgMCAxIDQgMHYyYTIgMiAwIDAgMS00IDB6Ii8+PHBhdGggZD0iTTIyIDEydjFhMTAgMTAgMCAwIDEtMjAgMHYtMSIvPjxwb2x5Z29uIHBvaW50cz0iMTQgMTcgMTIgMjAgMTAgMTciLz48L3N2Zz4=')] bg-center bg-no-repeat bg-[length:100px_100px]"></div>
+                        <h3 class="text-xl font-bold mb-4 relative z-10 text-slate-300">請聆聽長篇故事後進行深層推論</h3>
+                        
+                        <div class="relative z-10 flex gap-4 justify-center w-full">
+                            <button id="btn-play-story" onclick="playStoryTTS()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-full text-xl font-bold flex items-center justify-center shadow-lg pop border-4 border-purple-400 transition">▶️ 播放長篇故事</button>
+                            <button id="btn-stop-story" onclick="stopStoryTTS()" class="bg-slate-600 hover:bg-slate-500 text-white px-6 py-3 rounded-full text-xl font-bold flex items-center justify-center shadow-lg transition hidden">⏹️ 停止廣播</button>
+                        </div>
+                    </div>
+
+                    <div class="w-full flex items-center gap-3 mb-4">
+                        <span class="tag-badge px-3 py-1 rounded-lg text-sm font-bold border-2">${qTitle}</span>
+                    </div>
+
+                    <h3 class="text-xl md:text-2xl font-bold text-slate-800 mb-6 w-full flex items-start gap-2">
+                        <button onclick="speakText('${qText}')" class="tts-btn flex-shrink-0 bg-purple-50 text-purple-600 w-10 h-10 rounded-full text-xl flex items-center justify-center shadow-sm border border-purple-200 mt-1">🔊</button>
+                        <span class="leading-relaxed">${qText}</span>
+                    </h3>
+
+                    <div class="flex flex-col gap-4 w-full" id="options-container">
+            `;
+
+            // 選項打亂
+            let optsWithIdx = qOpts.map((opt, i) => ({ text: opt, isCorrect: i === qAnsIdx }));
+            optsWithIdx.sort(() => Math.random() - 0.5);
+
+            optsWithIdx.forEach((opt) => {
+                const safeOpt = opt.text.replace(/'/g, "\\'");
+                html += `
+                    <div class="flex gap-2 w-full h-full">
+                        <button onclick="checkListenAnswer(this, ${opt.isCorrect})" class="option-btn bg-white border-2 border-slate-200 text-slate-700 text-lg md:text-xl font-bold p-4 md:p-5 rounded-2xl hover:bg-slate-50 transition w-full text-left h-full flex items-center">${opt.text}</button>
+                        <button onclick="speakText('${safeOpt}')" class="tts-btn flex-shrink-0 bg-purple-50 text-purple-600 w-14 rounded-2xl text-2xl flex items-center justify-center shadow-sm border border-purple-200 hover:bg-purple-100 transition">🔊</button>
+                    </div>`;
+            });
+
+            html += `</div></div>`;
+            document.getElementById('listen-play').innerHTML = html;
+        }
+
+        function checkListenAnswer(btn, isCorr) {
+            stopStoryTTS(); 
+            const allBtns = document.querySelectorAll('#options-container .option-btn');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            
+            if (isCorr) {
+                btn.classList.add('correct');
+                speakText("推論極為精準！");
+                
+                setTimeout(() => {
+                    if (currentQuestionIdx < 7) {
+                        currentQuestionIdx++;
+                        renderListenQuestion();
+                    } else {
+                        if (listenProgress[currentStoryIdx] !== 1) {
+                            advExp += 50; // 拔尖版長篇給 50 經驗
+                            localStorage.setItem('listenAdvExp', advExp);
+                            document.getElementById('exp-display').innerText = advExp;
+                            listenProgress[currentStoryIdx] = 1;
+                            localStorage.setItem('listenAdvProgress', JSON.stringify(listenProgress));
+                        }
+                        
+                        document.getElementById('feedback-desc').innerText = "你成功完成了 8 道最高難度的深層推論題！獲得 50 EXP！";
+                        const modal = document.getElementById('feedback-modal');
+                        const content = document.getElementById('feedback-content');
+                        
+                        modal.classList.remove('hidden');
+                        setTimeout(() => {
+                            modal.classList.remove('opacity-0');
+                            content.classList.remove('scale-90');
+                        }, 10);
+                        
+                        document.getElementById('next-btn').onclick = () => {
+                            modal.classList.add('opacity-0');
+                            content.classList.add('scale-90');
+                            setTimeout(() => {
+                                modal.classList.add('hidden');
+                                switchMode('listen');
+                            }, 300);
+                        };
+                    }
+                }, 1000);
+            } else {
+                btn.classList.add('wrong', 'shake');
+                speakText("推斷有誤喔，請回想故事中的細節！");
+                setTimeout(() => {
+                    btn.classList.remove('wrong', 'shake');
+                    allBtns.forEach(b => { if (!b.classList.contains('correct')) b.style.pointerEvents = 'auto'; });
+                }, 1500);
+            }
+        }
+
+        // ================= 4. 故事改編與延展演講 (10個情境) =================
+        const speakData = [
+            { e: '🐢🌊🐇', t: '龜兔賽跑續集：水上對決', base: '自從兔子輸了之後，牠很不服氣，要求再比一次。這次，烏龜提議把賽道改在一條大河裡。', task: '請發揮創意，講述這場「水上對決」的經過。最後是誰贏了？這個新結局告訴我們什麼道理？', sample: '各位好。比賽開始了，兔子在岸上跑得飛快，但一到河邊就傻眼了，因為牠根本不會游泳！這時，烏龜慢慢地爬進水裡，像魚兒一樣輕鬆地游過了河，再次贏得比賽。這個新故事告訴我們：「每個人都有自己的優勢，善用自己的長處，比單純的盲目自信更重要。」' },
+            { e: '🐺👦🤝', t: '狼來了反轉：善良的狼', base: '放羊的孩子大喊「狼來了」，村民跑上山卻沒看到狼。其實，狼真的來了，但牠不是來吃羊的。', task: '如果這隻狼是善良的，牠來做什麼？請改編一個全新的結局，並給出一個不同的教訓。', sample: '大家好。其實，那隻狼是來報信的！牠告訴小男孩山後發生了山泥傾瀉，要大家快逃。但因為小男孩平時愛說謊，村民不信他。最後，幸好善良的狼親自跑下山把村民推走，才救了大家。這個反轉故事告訴我們：「有時候，我們眼中的『壞人』可能是來幫你的，不要被刻板印象蒙蔽了雙眼。」' },
+            { e: '👸🛡️🐉', t: '灰姑娘覺醒：不需要王子', base: '午夜十二點，灰姑娘丟了玻璃鞋。王子拿著鞋子全國尋找她。但這次，灰姑娘做了一個不同的決定。', task: '請想像一個現代版獨立自主的灰姑娘。她沒有嫁給王子，而是去做了什麼？', sample: '各位。當王子拿著鞋子來到灰姑娘家時，她拒絕了試穿。她說：「我不需要用一雙鞋來證明自己的價值，更不需要依靠王子來改變命運。」後來，灰姑娘憑著自己設計衣服的才華，開了一家全國最大的服裝店。這故事告訴我們：「命運掌握在自己手中，真正的公主是靠自己的雙手努力出來的。」' },
+            { e: '🦆💪🦢', t: '醜小鴨的驕傲', base: '醜小鴨在湖邊看到了美麗的天鵝，但牠發現自己並沒有變成天鵝，依然是一隻鴨子。', task: '如果牠沒有變成天鵝，牠該如何找回自信？請為醜小鴨編一個「接受不完美」的勵志結局。', sample: '大家好。醜小鴨發現自己沒變天鵝，一開始很失落。但後來，農場失火了，天鵝們只顧著飛走，而醜小鴨卻憑著牠巨大而強壯的翅膀，一次次撲滅火苗，救了大家。農場的動物都稱讚牠是英雄。這告訴我們：「不要盲目羨慕別人的美麗，接納真實的自己，平凡的外表下也可以有偉大的靈魂。」' },
+            { e: '🦊🧀🐦', t: '狐狸與烏鴉續集：智取', base: '烏鴉嘴裡的肉被狐狸騙走後，非常生氣。幾天後，烏鴉又找到了一塊美味的乳酪，狐狸又來了。', task: '這次烏鴉變聰明了。請講述烏鴉是如何「反套路」狐狸，保住食物甚至教訓狐狸的？', sample: '各位好。狐狸故技重施，又誇烏鴉唱歌好聽。這次，烏鴉先把乳酪放在高高的樹杈上，然後大聲唱起歌來。歌聲引來了獵狗，狐狸嚇得落荒而逃。烏鴉這才慢慢享受乳酪。這個故事告訴我們：「吃一塹，長一智。只要我們保持冷靜，不被花言巧語迷惑，就能反敗為勝。」' },
+            { e: '🐜🎸🦗', t: '螞蟻與蟋蟀：冬日救援', base: '冬天到了，蟋蟀冷得發抖，快餓死了。牠敲開了螞蟻的門乞求食物。', task: '原版故事中螞蟻拒絕了牠。請改編一個「互助雙贏」的溫馨結局。', sample: '大家好。螞蟻打開門，並沒有趕走蟋蟀，而是請牠進來喝熱湯。螞蟻說：「我們可以給你食物，但漫長的冬天很無聊，你可以為我們演奏音樂嗎？」蟋蟀感動極了，每天拉小提琴為螞蟻們解悶。這告訴我們：「每個人都有獨特的價值，包容與合作能讓冷酷的冬天變得溫暖無比。」' },
+            { e: '👨‍🌾🌳🐰', t: '守株待兔的覺醒', base: '農夫天天守在樹樁旁等兔子，田裡的莊稼都荒廢了。有一天，他突然做了一個夢。', task: '農夫夢見了什麼讓他徹底清醒？他之後的行動是什麼？', sample: '各位。農夫夢見自己餓死在樹旁，而別人家的田地卻大豐收。他嚇出一身冷汗，醒來後看著荒蕪的土地，恍然大悟：「運氣是靠不住的！」他立刻拿起鋤頭，重新開始辛勤耕耘。秋天到了，他收穫了滿滿的糧食。這說明：「與其把希望寄託在虛無縹緲的運氣上，不如腳踏實地，用雙手創造未來。」' },
+            { e: '🌱📏👨‍🌾', t: '拔苗助長之科學種田', base: '農夫覺得禾苗長得太慢，但他沒有把它們拔高，而是去請教了一位老學者。', task: '請講述農夫學到了什麼科學的種植方法？最後的結果如何？', sample: '大家好。老學者告訴農夫：「萬物生長都有規律，不能急躁，你需要做的是施肥和除蟲。」農夫聽取了建議，每天科學地澆水、施肥。幾個月後，他的禾苗長得比別人的都高大粗壯。這告訴我們：「做事必須遵循客觀規律，欲速則不達，只有用正確的方法默默耕耘，才能迎來真正的豐收。」' },
+            { e: '🐦🏺🚫', t: '烏鴉喝水：現代難題', base: '烏鴉口渴了，找到一個半瓶水的瓶子，可是周圍一顆石子都沒有！', task: '在沒有石子的情況下，這隻聰明的現代烏鴉是如何喝到水的？', sample: '各位好。烏鴉找不著石子，但牠冷靜地觀察四周。牠發現旁邊有一根別人喝飲料丟棄的塑膠吸管。烏鴉靈機一動，用嘴叼起吸管，插進瓶子裡，輕輕鬆鬆地吸到了甘甜的水。這個現代故事告訴我們：「解決問題的方法不止一種。當舊經驗不管用時，我們要善於利用身邊的新工具，靈活變通。」' },
+            { e: '🐸🦅🌍', t: '井底之蛙的廣闊世界', base: '一隻老鷹飛過井口，看見井底之蛙。老鷹決定用爪子把青蛙抓出水井，帶牠看看世界。', task: '青蛙第一次離開水井，牠看到了什麼令人震撼的景象？牠有什麼感悟？', sample: '大家好。老鷹帶著青蛙飛上高空。青蛙嚇得睜開眼睛，看見了連綿的群山、浩瀚的海洋和無邊無際的藍天。牠驚嘆道：「原來天空不是圓的，世界大得超乎想像！」牠為自己以前的自大感到羞愧。這告訴我們：「人的認知是受環境局限的。我們必須保持謙虛，勇於跳出舒適圈，才能看到真正的世界。」' }
+        ];
+
+        let speakProgress = JSON.parse(localStorage.getItem('speakAdvProgress')) || new Array(speakData.length).fill(0);
+
+        function renderSpeakDirectory() {
+            const dirContainer = document.getElementById('speak-content');
+            let html = '';
+            speakData.forEach((item, idx) => {
+                let status = speakProgress[idx];
+                let bgClass = 'bg-white';
+                let borderClass = 'border-slate-200';
+                if (status === 1) { bgClass = 'bg-purple-50'; borderClass = 'border-purple-400'; }
+                
+                html += `
+                    <button onclick="startSpeak(${idx})" class="w-full text-left p-5 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition active:scale-95 flex flex-col items-center gap-3">
+                        <div class="text-4xl tracking-widest">${item.e}</div>
+                        <h3 class="text-lg font-black text-slate-800">${item.t}</h3>
+                        ${status === 1 ? '<span class="text-purple-600 font-bold text-sm">✅ 已掌握延展</span>' : '<span class="text-slate-400 font-bold text-sm"># 未挑戰</span>'}
+                    </button>
+                `;
+            });
+            dirContainer.innerHTML = html;
+        }
+
+        function startSpeak(idx, forceStart = false) {
+            if (!forceStart && !localStorage.getItem('tut_seen_t-adv-speak')) {
+                pendingTaskIdx = idx;
+                pendingTaskType = 'speak';
+                showTutorial('t-adv-speak');
+                return;
+            }
+            currentStoryIdx = idx;
+            document.getElementById('speak-directory').style.display = 'none';
+            const playArea = document.getElementById('speak-play');
+            playArea.style.display = 'flex';
+            
+            const data = speakData[idx];
+            
+            let html = `
+                <div class="w-full max-w-4xl flex justify-between items-center mb-4">
+                    <button onclick="switchMode('speak')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
+                    <span class="bg-purple-100 text-purple-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">挑戰 ${idx + 1} / 10</span>
+                </div>
+                
+                <div class="w-full max-w-4xl bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center">
+                    <div class="text-6xl md:text-8xl mb-6 bg-slate-50 p-6 rounded-3xl border-4 border-slate-100 w-full text-center shadow-inner cursor-default">${data.e}</div>
+                    <h2 class="text-2xl font-black text-slate-800 mb-6">${data.t}</h2>
+                    
+                    <div class="w-full bg-slate-50 p-6 rounded-xl border border-slate-200 mb-6">
+                        <p class="font-bold text-slate-500 mb-2">📜 原版故事開頭：</p>
+                        <p class="text-lg text-slate-700 leading-relaxed">${data.base}</p>
+                    </div>
+
+                    <div class="w-full bg-rose-50 p-6 rounded-xl border border-rose-200 mb-8">
+                        <p class="font-black text-rose-700 mb-2 flex items-center gap-2"><span class="text-2xl">🔥</span> 你的改編任務：</p>
+                        <p class="text-xl text-rose-900 leading-relaxed font-bold">${data.task}</p>
+                    </div>
+                    
+                    <div class="w-full bg-slate-800 text-white rounded-2xl p-6 text-center shadow-inner">
+                        <h3 class="text-lg font-bold mb-4 text-slate-300">自己試著開口發表一次後，點擊查看完美範本！</h3>
+                        <button onclick="showSampleAnswer()" id="btn-show-sample" class="bg-purple-500 hover:bg-purple-600 text-white font-black px-8 py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-purple-700 active:border-b-0 active:translate-y-1">💡 查看高分參考演講</button>
+                        
+                        <div id="sample-answer-box" class="hidden mt-6 bg-slate-700 p-5 rounded-xl border border-slate-600 text-left">
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="text-purple-300 font-bold">✨ 拔尖參考範本：</span>
+                                <button onclick="speakText('${data.sample}', 0.9)" class="bg-slate-600 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-slate-500 transition">🔊</button>
+                            </div>
+                            <p class="text-lg leading-relaxed text-slate-200 tracking-wide">${data.sample}</p>
+                            <button onclick="finishSpeakTask()" class="mt-6 w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black px-8 py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">✅ 我學會了！(獲得 20 EXP)</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            playArea.innerHTML = html;
+        }
+
+        function showSampleAnswer() {
+            document.getElementById('btn-show-sample').classList.add('hidden');
+            document.getElementById('sample-answer-box').classList.remove('hidden');
+            const sampleText = speakData[currentStoryIdx].sample;
+            speakText(sampleText);
+        }
+
+        function finishSpeakTask() {
+            stopStoryTTS();
+            if (speakProgress[currentStoryIdx] !== 1) {
+                advExp += 20;
+                localStorage.setItem('listenAdvExp', advExp);
+                document.getElementById('exp-display').innerText = advExp;
+                document.getElementById('exp-display').classList.add('pop');
+                setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+                
+                speakProgress[currentStoryIdx] = 1;
+                localStorage.setItem('speakAdvProgress', JSON.stringify(speakProgress));
+                showToast("高階口語延展完成！+20 EXP");
+                
+                if (listenProgress.filter(p=>p===1).length === listenData.length && speakProgress.filter(p=>p===1).length === speakData.length) {
+                    localStorage.setItem('t_listen_3', 'true');
+                }
+            }
+            switchMode('speak');
+        }
+
+        window.onload = function() {
+            document.getElementById('exp-display').innerText = advExp;
+            switchMode('listen');
+        }
+    </script>
+</body>
+</html>
