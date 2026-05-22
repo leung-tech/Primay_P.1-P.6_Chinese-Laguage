@@ -136,7 +136,9 @@
         let currentMode = 'listen'; 
         let currentStoryIdx = -1;
         let currentQuestionIdx = -1;
-        let storyUtterance = null; // 用於控制廣播故事的語音
+        let storyUtterance = null;
+        let pendingTaskIdx = -1;
+        let pendingTaskType = '';
 
         function showToast(message) {
             const toast = document.getElementById("toast");
@@ -238,8 +240,20 @@
 
         function closeTutorial() {
             const modal = document.getElementById('tutorial-modal');
-            modal.classList.add('opacity-0'); document.getElementById('tutorial-content').classList.add('scale-90');
-            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            const content = document.getElementById('tutorial-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (pendingTaskIdx !== -1) {
+                    let targetIdx = pendingTaskIdx;
+                    let targetType = pendingTaskType;
+                    pendingTaskIdx = -1;
+                    pendingTaskType = '';
+                    if (targetType === 'listen') startListen(targetIdx, true);
+                    else if (targetType === 'speak') startSpeak(targetIdx, true);
+                }
+            }, 300);
         }
 
         function updateTotalProgress() {
@@ -417,8 +431,13 @@
             dirContainer.innerHTML = html;
         }
 
-        function startListen(idx) {
-            if (!localStorage.getItem('tut_seen_t-six')) { showTutorial('t-six'); return; }
+        function startListen(idx, forceStart = false) {
+            if (!forceStart && !localStorage.getItem('tut_seen_t-six')) {
+                pendingTaskIdx = idx;
+                pendingTaskType = 'listen';
+                showTutorial('t-six');
+                return;
+            }
             currentStoryIdx = idx;
             currentQuestionIdx = 0;
             document.getElementById('listen-directory').style.display = 'none';
@@ -566,8 +585,13 @@
             dirContainer.innerHTML = html;
         }
 
-        function startSpeak(idx) {
-            if (!localStorage.getItem('tut_seen_t-speak')) { showTutorial('t-speak'); return; }
+        function startSpeak(idx, forceStart = false) {
+            if (!forceStart && !localStorage.getItem('tut_seen_t-speak')) {
+                pendingTaskIdx = idx;
+                pendingTaskType = 'speak';
+                showTutorial('t-speak');
+                return;
+            }
             currentStoryIdx = idx;
             document.getElementById('speak-directory').style.display = 'none';
             const playArea = document.getElementById('speak-play');
