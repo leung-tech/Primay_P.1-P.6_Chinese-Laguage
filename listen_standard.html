@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>聆聽與說話 - 標準常規特訓</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif; background-color: #eff6ff; -webkit-tap-highlight-color: transparent; }
+        .bg-grid-pattern { background-image: linear-gradient(to right, #e0e7ff 1px, transparent 1px), linear-gradient(to bottom, #e0e7ff 1px, transparent 1px); background-size: 40px 40px; }
+        
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .pop { animation: pop 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .option-btn { transition: all 0.2s; box-shadow: 0 4px 0 #93c5fd; }
+        .option-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .option-btn.correct { background-color: #eff6ff; border-color: #3b82f6; color: #1e3a8a; box-shadow: 0 0 0 transparent; transform: translateY(4px); pointer-events: none; }
+        .option-btn.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.6; pointer-events: none; }
+        
+        .tab-btn { transition: all 0.3s; }
+        .tab-active { background-color: #2563eb; color: white; border-color: #1d4ed8; }
+        .tab-inactive { background-color: white; color: #64748b; border-color: #cbd5e1; }
+        
+        .lvl-btn { transition: transform 0.2s; }
+        .lvl-btn:hover { transform: scale(1.05); }
+
+        .toast-msg { visibility: hidden; min-width: 250px; background-color: #ef4444; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px; transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
+        @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
+
+        /* 標籤顏色區分 */
+        .tag-infer { background-color: #e0e7ff; color: #3730a3; border-color: #a5b4fc; }
+        .tag-tone { background-color: #fce7f3; color: #9d174d; border-color: #fbcfe8; }
+        .tag-main { background-color: #fef3c7; color: #b45309; border-color: #fde68a; }
+        .tag-detail { background-color: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+        
+        /* 過渡詞序列卡片 */
+        .seq-card { background: white; border: 2px solid #cbd5e1; border-radius: 1rem; padding: 1rem; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; }
+        .seq-arrow { position: absolute; right: -1.25rem; top: 50%; transform: translateY(-50%); font-size: 1.5rem; color: #94a3b8; z-index: 10; }
+        @media (max-width: 768px) {
+            .seq-arrow { right: 50%; top: auto; bottom: -1.5rem; transform: translateX(50%) rotate(90deg); }
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
+
+    <!-- 頂部導覽列 (Blue 配色) -->
+    <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
+        <div class="p-3 lg:p-4 bg-blue-600 text-white flex justify-between items-center w-full">
+            <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
+                <a href="index.html" class="hover:bg-blue-700 p-1 rounded transition bg-blue-800">⬅️ 返回</a>
+                <span>🗣️ 聆聽與說話 (標準版)</span>
+            </h1>
+            <div class="flex gap-2 lg:gap-4 items-center bg-blue-800 px-3 py-1.5 rounded-full border border-blue-500 shadow-inner">
+                <span class="text-lg lg:text-xl">🏆</span>
+                <span class="font-bold text-sm lg:text-lg">EXP: <span id="exp-display" class="text-yellow-400">0</span></span>
+            </div>
+        </div>
+        
+        <div class="flex w-full bg-slate-100 border-b border-slate-300">
+            <button onclick="switchMode('listen')" id="tab-listen" class="tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-blue-600">🎧 聆聽推論 (弦外之音)</button>
+            <button onclick="switchMode('speak')" id="tab-speak" class="tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200">🗣️ 看圖說話 (邏輯連貫)</button>
+        </div>
+        <div id="progress-container" class="w-full bg-slate-200 h-2">
+            <div id="progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
+        </div>
+    </div>
+
+    <!-- 主畫面區 -->
+    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
+        
+        <!-- 聆聽推論目錄 -->
+        <div id="listen-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
+            <div id="listen-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">🎧 弦外之音盲聽挑戰</h2>
+                    <button onclick="showTutorial('t-infer')" class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-blue-300 hover:bg-blue-200 transition">📘 學習錦囊</button>
+                </div>
+                <p class="text-slate-600 font-bold mb-4">不再只是找答案！請仔細聆聽，推斷角色的「心情、語氣」與故事的「深刻道理」。</p>
+                <div id="listen-content" class="flex flex-wrap gap-4"></div>
+            </div>
+            
+            <div id="listen-play" class="w-full hidden flex-col items-center"></div>
+        </div>
+
+        <!-- 看圖順序說話目錄 -->
+        <div id="speak-mode" class="w-full max-w-5xl mx-auto hidden flex-col gap-4 lg:gap-6">
+            <div id="speak-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">🗣️ 順序連貫說話特訓</h2>
+                    <button onclick="showTutorial('t-connect')" class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-blue-300 hover:bg-blue-200 transition">📘 學習錦囊</button>
+                </div>
+                <p class="text-slate-600 font-bold mb-4">根據 4 張圖片的順序，運用「首先、接著、然後、最後」連貫地說出一個好故事！</p>
+                <div id="speak-content" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+
+            <div id="speak-play" class="w-full hidden flex-col items-center"></div>
+        </div>
+
+    </div>
+
+    <!-- 學習錦囊 Modal -->
+    <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform duration-300 flex flex-col max-h-[90vh]" id="tutorial-content">
+            <div class="flex justify-between items-center mb-4 border-b-2 border-blue-100 pb-3">
+                <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-blue-600 flex items-center gap-2">📘 聆聽與說話錦囊</h2>
+                <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
+            </div>
+            <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4"></div>
+            <div class="mt-6 pt-4 border-t-2 border-slate-100">
+                <button onclick="closeTutorial()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 答對全解析 Modal -->
+    <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 pointer-events-none">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform duration-300 pointer-events-auto" id="feedback-content">
+            <div class="text-7xl mb-4">🎉</div>
+            <h2 class="text-3xl font-black text-slate-800 mb-2">精準推斷！</h2>
+            <p id="feedback-desc" class="text-blue-600 font-bold mb-6 text-xl leading-relaxed">成功捕捉弦外之音！</p>
+            <div class="flex gap-3 w-full mt-4">
+                <button id="next-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl shadow-lg transition text-xl border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-msg">提示訊息</div>
+
+    <script>
+        // ================= 1. 核心狀態與語音 =================
+        let stdExp = parseInt(localStorage.getItem('listenStandardExp')) || 0;
+        document.getElementById('exp-display').innerText = stdExp;
+        
+        let currentMode = 'listen'; 
+        let currentStoryIdx = -1;
+        let currentQuestionIdx = -1;
+        let storyUtterance = null; 
+        let pendingTaskIdx = -1;
+        let pendingTaskType = '';
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message; toast.className = "toast-msg show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // 強制廣東話 (zh-HK)
+        function speakText(text, rate = 0.85) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let msg = new SpeechSynthesisUtterance(text);
+                msg.lang = 'zh-HK'; 
+                msg.rate = rate; 
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        // 播放與停止廣播
+        function playStoryTTS() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const story = listenData[currentStoryIdx];
+                let cleanText = story.text.replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】]/g, '').replace(/&nbsp;/g, ' ');
+                
+                storyUtterance = new SpeechSynthesisUtterance(cleanText);
+                storyUtterance.lang = 'zh-HK'; 
+                storyUtterance.rate = 0.85; 
+
+                storyUtterance.onstart = function() {
+                    document.getElementById('btn-play-story').classList.add('hidden');
+                    document.getElementById('btn-stop-story').classList.remove('hidden');
+                };
+                storyUtterance.onend = function() {
+                    document.getElementById('btn-play-story').classList.remove('hidden');
+                    document.getElementById('btn-stop-story').classList.add('hidden');
+                };
+                storyUtterance.onerror = function() {
+                    document.getElementById('btn-play-story').classList.remove('hidden');
+                    document.getElementById('btn-stop-story').classList.add('hidden');
+                };
+
+                window.speechSynthesis.speak(storyUtterance);
+            } else {
+                showToast("您的瀏覽器不支援語音功能。");
+            }
+        }
+
+        function stopStoryTTS() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const btnPlay = document.getElementById('btn-play-story');
+                const btnStop = document.getElementById('btn-stop-story');
+                if (btnPlay && btnStop) {
+                    btnPlay.classList.remove('hidden');
+                    btnStop.classList.add('hidden');
+                }
+            }
+        }
+
+        // ================= 2. 教學內容 =================
+        const tutorialData = {
+            't-infer': `
+                <div class="text-center mb-4"><span class="text-6xl">🎭 🕵️‍♂️</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">聽出「弦外之音」</p>
+                <p class="mb-4 text-slate-600">到了呈分試，答案不會直接告訴你！你要像偵探一樣推斷：</p>
+                <div class="bg-blue-50 p-4 rounded-xl border-2 border-blue-200 mb-3 space-y-3 font-bold text-blue-900">
+                    <p>💡 <span class="bg-white px-2 py-1 rounded shadow-sm text-blue-600">聽語氣</span> 👉 如果他說話結結巴巴，可能代表<span class="text-rose-500">心虛或害怕</span>。</p>
+                    <p>💡 <span class="bg-white px-2 py-1 rounded shadow-sm text-blue-600">聽動作</span> 👉 狠狠地摔門，代表他<span class="text-rose-500">非常生氣</span>。</p>
+                    <p>💡 <span class="bg-white px-2 py-1 rounded shadow-sm text-blue-600">聽結果</span> 👉 故事最後發生的事，通常隱藏著<span class="text-emerald-600">文章的主旨和道理</span>。</p>
+                </div>
+            `,
+            't-connect': `
+                <div class="text-center mb-4"><span class="text-6xl">🔗 🗣️</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">讓故事變通順的「過渡詞」</p>
+                <p class="mb-4 text-slate-600">看圖說話時，如果只是一張張分開說，會顯得支離破碎。我們要用「過渡詞」把它們串起來！</p>
+                <div class="bg-amber-50 p-4 rounded-xl border-2 border-amber-200 mb-3 space-y-2 text-base font-bold text-slate-700">
+                    <p>圖一 👉 加上 <span class="bg-white text-amber-600 px-2 rounded">首先 / 剛開始</span></p>
+                    <p>圖二 👉 加上 <span class="bg-white text-orange-600 px-2 rounded">接著 / 後來</span></p>
+                    <p>圖三 👉 加上 <span class="bg-white text-rose-500 px-2 rounded">然後 / 突然</span></p>
+                    <p>圖四 👉 加上 <span class="bg-white text-blue-600 px-2 rounded">最後 / 終於</span></p>
+                </div>
+            `
+        };
+
+        function showTutorial(tutKey) {
+            document.getElementById('tutorial-body').innerHTML = tutorialData[tutKey];
+            const modal = document.getElementById('tutorial-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); document.getElementById('tutorial-content').classList.remove('scale-90'); }, 10);
+            localStorage.setItem('tut_seen_' + tutKey, 'true');
+        }
+
+        function closeTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (pendingTaskIdx !== -1) {
+                    let targetIdx = pendingTaskIdx;
+                    let targetType = pendingTaskType;
+                    pendingTaskIdx = -1;
+                    pendingTaskType = '';
+                    if (targetType === 'listen') startListen(targetIdx, true);
+                    else if (targetType === 'speak') startSpeak(targetIdx, true);
+                }
+            }, 300);
+        }
+
+        function updateTotalProgress() {
+            let lDone = listenProgress.filter(p => p === 1).length;
+            let sDone = speakProgress.filter(p => p === 1).length;
+            let total = listenData.length + speakData.length;
+            let percent = ((lDone + sDone) / total) * 100;
+            const pb = document.getElementById('progress-bar');
+            if (pb) pb.style.width = percent + '%';
+        }
+
+        function switchMode(mode) {
+            stopStoryTTS();
+            currentMode = mode;
+            const tL = document.getElementById('tab-listen'), tS = document.getElementById('tab-speak');
+            const mL = document.getElementById('listen-mode'), mS = document.getElementById('speak-mode');
+            
+            if(mode === 'listen') {
+                tL.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-blue-600";
+                tS.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                mL.style.display = 'flex'; mS.style.display = 'none';
+                document.getElementById('listen-play').style.display = 'none';
+                document.getElementById('listen-directory').style.display = 'block';
+                renderListenDirectory();
+            } else {
+                tS.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-blue-600";
+                tL.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                mL.style.display = 'none'; mS.style.display = 'flex';
+                document.getElementById('speak-play').style.display = 'none';
+                document.getElementById('speak-directory').style.display = 'block';
+                renderSpeakDirectory();
+            }
+            updateTotalProgress();
+        }
+
+        // ================= 3. 聆聽推論題庫 (10篇, 每篇5題) =================
+        const listenData = [
+            {
+                title: '打破花瓶', text: '媽媽出門前叮囑小明別在客廳踢球。小明沒有聽話，一腳把球踢到了櫃子上，「哐啷」一聲，媽媽最心愛的花瓶碎了一地。小明嚇得臉都白了。媽媽回來後，小明低著頭，小聲地說：「媽媽，對不起，是我打破了花瓶。」媽媽看著一地的碎片，深吸了一口氣，摸著小明的頭說：「花瓶碎了雖然可惜，但你願意誠實認錯，這比花瓶更珍貴。」',
+                qs: [
+                    { t: '推論細節', cls: 'tag-infer', q: '「哐啷」一聲代表什麼事情發生了？', opts: ['外面打雷了', '小明踢破了花瓶', '媽媽生氣了', '門被關上了'], ans: 1 },
+                    { t: '人物心理', cls: 'tag-infer', q: '小明「嚇得臉都白了」，這反映他當時什麼心理？', opts: ['覺得很冷', '非常害怕被責罵', '覺得很好玩', '生病了'], ans: 1 },
+                    { t: '語氣判斷', cls: 'tag-tone', q: '小明「低著頭，小聲地說」，這表現出他怎樣的態度？', opts: ['理直氣壯', '感到羞愧和內疚', '非常驕傲', '不以為然'], ans: 1 },
+                    { t: '動作推論', cls: 'tag-infer', q: '媽媽「深吸了一口氣」再說話，這動作暗示了什麼？', opts: ['媽媽覺得客廳很香', '媽媽在努力平復自己生氣的情緒', '媽媽準備大聲罵人', '媽媽覺得很累'], ans: 1 },
+                    { t: '主旨歸納', cls: 'tag-main', q: '這篇故事主要想告訴我們什麼道理？', opts: ['客廳不能踢球', '花瓶很昂貴', '誠實認錯的品格比打破的物品更珍貴', '媽媽脾氣很好'], ans: 2 }
+                ]
+            },
+            {
+                title: '忘記帶功課', text: '小美來到學校，打開書包準備交功課，卻發現數學作業不見了。她急得像熱鍋上的螞蟻，眼淚在眼眶裡打轉：「糟糕！昨天明明放在桌子上的，一定是忘記放進書包了，老師一定會罵我的！」同桌小強見狀，立刻拿出借來的手機說：「別急，趕快打電話請你媽媽送過來吧。」',
+                qs: [
+                    { t: '修辭理解', cls: 'tag-infer', q: '「急得像熱鍋上的螞蟻」是形容小美怎樣？', opts: ['覺得天氣很熱', '非常焦急、慌亂無措', '覺得被螞蟻咬', '跑得很快'], ans: 1 },
+                    { t: '人物心理', cls: 'tag-infer', q: '小美眼淚在眼眶裡打轉，主要是因為什麼？', opts: ['眼睛進了沙子', '害怕因為忘帶功課而被老師責罵', '和同學吵架了', '不想上學'], ans: 1 },
+                    { t: '細節推斷', cls: 'tag-detail', q: '小美的功課最可能在哪裡？', opts: ['被小狗吃了', '留在家裡的桌子上', '掉在路上', '被同學拿走了'], ans: 1 },
+                    { t: '人物評價', cls: 'tag-infer', q: '小強的行為說明他是一個怎樣的人？', opts: ['喜歡玩手機', '多管閒事', '熱心助人、能冷靜解決問題', '喜歡看熱鬧'], ans: 2 },
+                    { t: '結果推論', cls: 'tag-infer', q: '如果媽媽把功課送來了，小美接下來最可能做什麼？', opts: ['繼續哭泣', '向小強和媽媽道謝，並交上功課', '把功課扔掉', '逃學回家'], ans: 1 }
+                ]
+            },
+            {
+                title: '奇怪的包裹', text: '週末早上，速遞員送來一個巨大的紙箱。弟弟興奮地跳了起來：「哇！這一定是爸爸買給我的超大型遙控車！」爸爸笑著搖搖頭，拿出一把剪刀拆開紙箱。只見裡面整整齊齊地疊放著幾十本厚厚的百科全書。弟弟臉上的笑容瞬間消失了，嘟起小嘴走到一旁。全家人看著他的樣子，忍不住哈哈大笑。',
+                qs: [
+                    { t: '細節推斷', cls: 'tag-detail', q: '弟弟一開始為什麼那麼興奮？', opts: ['因為他喜歡速遞員', '因為他以為大紙箱裡裝的是遙控車', '因為他想看書', '因為他不用上學'], ans: 1 },
+                    { t: '人物心理', cls: 'tag-infer', q: '弟弟「臉上的笑容瞬間消失，嘟起小嘴」，這表示他覺得怎樣？', opts: ['覺得百科全書很重', '期望落空，感到非常失望和不滿', '覺得肚子餓了', '覺得很好笑'], ans: 1 },
+                    { t: '語氣判斷', cls: 'tag-tone', q: '爸爸「笑著搖搖頭」這個動作，帶有什麼意味？', opts: ['生氣', '覺得弟弟猜錯了，感到有趣', '表示不知道裡面是什麼', '覺得很悲傷'], ans: 1 },
+                    { t: '結果推斷', cls: 'tag-infer', q: '全家人為什麼哈哈大笑？', opts: ['因為百科全書很好笑', '因為弟弟失望的表情太滑稽了', '因為電視節目很好看', '因為爸爸講了笑話'], ans: 1 },
+                    { t: '主旨歸納', cls: 'tag-main', q: '這個故事描寫了一個怎樣的家庭情境？', opts: ['充滿矛盾的家庭', '充滿溫馨與生活趣味的家庭', '喜歡買東西的家庭', '討厭讀書的家庭'], ans: 1 }
+                ]
+            },
+            {
+                title: '遲到的巴士', text: '天下著滂沱大雨，巴士遲遲沒有來。小麗站在沒有上蓋的車站旁，冷得瑟瑟發抖，她不時焦急地看著手錶：「再不來就要遲到了！」這時，旁邊一位撐著大傘的婆婆悄悄走過來，把傘向小麗那邊傾斜了大半，為她擋住了風雨。小麗感激地對婆婆說：「謝謝您！」雨雖然很大，但小麗的心裡卻覺得暖烘烘的。',
+                qs: [
+                    { t: '語境理解', cls: 'tag-infer', q: '「滂沱大雨」形容雨下得怎樣？', opts: ['雨下得很小', '雨下得極大', '雨剛停', '下雪'], ans: 1 },
+                    { t: '人物心理', cls: 'tag-infer', q: '小麗「不時焦急地看著手錶」，說明她當時最擔心什麼？', opts: ['手錶壞了', '因為巴士沒來而上學遲到', '被雨淋濕', '肚子餓'], ans: 1 },
+                    { t: '動作推論', cls: 'tag-infer', q: '婆婆「把傘向小麗那邊傾斜了大半」，這表現出婆婆怎樣的品格？', opts: ['傘拿不穩', '為人著想、無私地幫助陌生人', '想認識小麗', '婆婆自己不怕雨'], ans: 1 },
+                    { t: '修辭理解', cls: 'tag-infer', q: '小麗心裡覺得「暖烘烘的」，這是因為什麼？', opts: ['天氣變熱了', '因為婆婆的善舉讓她感受到了人情溫暖', '她穿了厚衣服', '她喝了熱水'], ans: 1 },
+                    { t: '主旨歸納', cls: 'tag-main', q: '這個故事想告訴我們什麼道理？', opts: ['下雨天不要出門', '人間處處有不期而遇的溫情與善意', '搭巴士一定要帶傘', '遲到會被罰'], ans: 1 }
+                ]
+            },
+            {
+                title: '圖書館的風波', text: '在安靜的圖書館裡，有兩位同學為了一道數學題，竟然大聲地爭論起來，引來旁人側目。這時，圖書管理員走了過來。她沒有責罵他們，只是微笑著把食指輕輕放在嘴唇上，發出了一聲長長的「噓——」。兩位同學頓時羞愧地漲紅了臉，連忙低下頭，安靜地做起功課來。',
+                qs: [
+                    { t: '語境推斷', cls: 'tag-infer', q: '「引來旁人側目」代表周圍的人對這兩位同學有什麼感覺？', opts: ['覺得他們很聰明', '對他們在圖書館大聲喧嘩感到不滿', '想加入討論', '覺得很開心'], ans: 1 },
+                    { t: '動作推論', cls: 'tag-infer', q: '管理員把食指放在嘴唇上「噓」了一聲，這動作的意思是？', opts: ['叫他們趕快回家', '提醒他們保持安靜', '告訴他們答案', '叫他們繼續講'], ans: 1 },
+                    { t: '人物心理', cls: 'tag-infer', q: '兩位同學為什麼「羞愧地漲紅了臉」？', opts: ['因為天氣太熱', '因為意識到自己違反了規則，打擾了別人', '因為數學題太難', '因為管理員稱讚他們'], ans: 1 },
+                    { t: '細節推斷', cls: 'tag-detail', q: '管理員處理這件事的態度是怎樣的？', opts: ['非常暴躁', '溫和而有禮貌地提醒', '置之不理', '大聲喝斥'], ans: 1 },
+                    { t: '主旨歸納', cls: 'tag-main', q: '這個故事提醒我們在公共場所應該怎樣？', opts: ['盡量表現自己', '要自律，遵守規則，不打擾他人', '遇到難題要大聲討論', '不要理會管理員'], ans: 1 }
+                ]
+            },
+            {
+                title: '挑食的弟弟', text: '晚餐時，弟弟把碗裡的青菜全挑了出來，只夾肉吃。媽媽見狀，對弟弟說：「你喜歡那輛玩具跑車嗎？如果汽車只有汽油，卻沒有機油潤滑，它還能跑得快嗎？人也一樣，肉是汽油，青菜就是機油，沒有維生素，身體這部車就會生病停下來。」弟弟聽了，似懂非懂地把青菜塞進了嘴裡。',
+                qs: [
+                    { t: '修辭理解', cls: 'tag-infer', q: '媽媽把「人吃肉」比喻成什麼？', opts: ['汽車加機油', '汽車加汽油', '汽車換輪胎', '汽車洗車'], ans: 1 },
+                    { t: '修辭理解', cls: 'tag-infer', q: '媽媽口中的「機油」在這裡代表什麼？', opts: ['肉類', '玩具跑車', '青菜提供的維生素', '白飯'], ans: 2 },
+                    { t: '語氣判斷', cls: 'tag-tone', q: '媽媽用玩具跑車作比喻，說明她的態度是怎樣的？', opts: ['嚴厲責罵', '循循善誘、耐心地講道理', '漠不關心', '非常生氣'], ans: 1 },
+                    { t: '人物心理', cls: 'tag-infer', q: '弟弟把青菜塞進嘴裡，這反映了他什麼心態？', opts: ['他本來就喜歡吃青菜', '雖然不太懂，但被媽媽的道理說服了，願意嘗試', '他想快點去玩', '他覺得青菜變甜了'], ans: 1 },
+                    { t: '主旨歸納', cls: 'tag-main', q: '這篇故事的主旨是什麼？', opts: ['介紹汽車的構造', '說明挑食是不對的，飲食要均衡', '讚美媽媽的廚藝', '說明肉類沒有營養'], ans: 1 }
+                ]
+            },
+            {
+                title: '迷路的錢包', text: '小志在公園的長椅上撿到了一個厚厚的錢包，裡面裝滿了一千元鈔票。他沒有猶豫，立刻跑去交給了在附近巡邏的警察。一個月後，學校的早會上，校長親自讀出了一封感謝信。原來失主把這筆用來給家人治病的救命錢找回來了，特意寫信來表揚小志。小志聽了，心裡覺得比買了新玩具還要開心。',
+                qs: [
+                    { t: '人物行為', cls: 'tag-infer', q: '小志「沒有猶豫」立刻交給警察，這表現出他什麼品格？', opts: ['誠實、拾金不昧', '膽小怕事', '不喜歡錢', '喜歡和警察說話'], ans: 0 },
+                    { t: '細節推斷', cls: 'tag-detail', q: '這筆錢對失主來說為什麼特別重要？', opts: ['用來買玩具的', '是用來給家人治病的救命錢', '是用來去旅行的', '是用來交學費的'], ans: 1 },
+                    { t: '人物心理', cls: 'tag-infer', q: '失主找回錢包後的心情應該是怎樣的？', opts: ['非常生氣', '極度失落', '感激涕零、失而復得的喜悅', '覺得理所當然'], ans: 2 },
+                    { t: '人物心理', cls: 'tag-infer', q: '小志覺得「比買了新玩具還要開心」，這是因為什麼？', opts: ['因為校長獎勵了他新玩具', '因為他體會到幫助別人所帶來的巨大精神滿足感', '因為他把錢藏起來了', '因為不用上課'], ans: 1 },
+                    { t: '主旨歸納', cls: 'tag-main', q: '這個故事想告訴我們什麼道理？', opts: ['去公園很容易撿到錢', '誠實的善舉能拯救他人，也能為自己帶來心靈的快樂', '有錢就能治好病', '警察每天都在公園巡邏'], ans: 1 }
+                ]
+            },
+            {
+                title: '停電的晚上', text: '颱風吹襲，家裡突然停電了，四周一片漆黑。怕黑的妹妹嚇得大哭了起來。爸爸不慌不忙地找來幾根蠟燭點燃，然後用雙手在白牆上比劃出小狗、老鷹和兔子的影子。妹妹看著牆上活靈活現的手影，忘記了害怕，破涕為笑，還跟著爸爸一起玩了起來。',
+                qs: [
+                    { t: '語境理解', cls: 'tag-infer', q: '家裡為什麼會停電？', opts: ['忘記交電費', '颱風吹襲導致', '爸爸關了燈', '燈泡壞了'], ans: 1 },
+                    { t: '人物對比', cls: 'tag-infer', q: '停電時，爸爸的態度與妹妹有什麼不同？', opts: ['爸爸也很害怕', '爸爸不慌不忙很冷靜，妹妹則嚇得大哭', '兩人都很開心', '爸爸生氣，妹妹大哭'], ans: 1 },
+                    { t: '細節推斷', cls: 'tag-detail', q: '爸爸用什麼方法讓妹妹忘記害怕？', opts: ['給她吃糖果', '點蠟燭並在牆上玩手影遊戲', '打開電視機', '講鬼故事'], ans: 1 },
+                    { t: '語境理解', cls: 'tag-infer', q: '「破涕為笑」是什麼意思？', opts: ['打破了玻璃', '停止哭泣，露出了笑容', '哭得更大聲', '流出了鼻涕'], ans: 1 },
+                    { t: '主旨歸納', cls: 'tag-main', q: '這個故事體現了怎樣的家庭氛圍？', opts: ['吵鬧和不安', '爸爸用智慧帶來了溫馨與快樂，化解了恐懼', '互相責怪', '冷漠無情'], ans: 1 }
+                ]
+            },
+            {
+                title: '驕傲的兔子', text: '自從賽跑輸給烏龜後，兔子很不服氣，要求再比一次。這次，烏龜把終點設在了河對岸。比賽開始，兔子飛奔而出，很快就到了河邊。可是，兔子不會游泳，只能望著湍急的河水乾著急。這時，烏龜慢慢地爬了過來，輕輕鬆鬆地游過了河，再次贏得了比賽。',
+                qs: [
+                    { t: '人物心理', cls: 'tag-infer', q: '兔子要求再比一次，反映了牠怎樣的心態？', opts: ['想和烏龜做朋友', '輸不起，依然自滿地認為自己一定能贏', '想練習跑步', '想教烏龜跑步'], ans: 1 },
+                    { t: '細節推斷', cls: 'tag-detail', q: '這次烏龜為什麼能贏？', opts: ['因為烏龜跑得比兔子快了', '因為烏龜聰明地選擇了兔子無法跨越的路線（過河）', '因為兔子在睡覺', '因為別人幫了烏龜'], ans: 1 },
+                    { t: '人物心理', cls: 'tag-infer', q: '兔子望著河水「乾著急」，代表牠當時覺得怎樣？', opts: ['很想喝水', '無計可施，感到懊惱和無奈', '覺得風景很美', '覺得很涼爽'], ans: 1 },
+                    { t: '人物評價', cls: 'tag-infer', q: '烏龜這次獲勝，主要靠的是什麼？', opts: ['運氣', '速度', '善用自身優勢（會游泳）的智慧', '作弊'], ans: 2 },
+                    { t: '主旨歸納', cls: 'tag-main', q: '這個改編故事告訴了我們什麼道理？', opts: ['兔子永遠跑不贏烏龜', '每個人都有自己的長處，善用優勢和智慧比單純的盲目自信更重要', '比賽一定要過河', '不要和別人比賽'], ans: 1 }
+                ]
+            },
+            {
+                title: '溫暖的熱湯', text: '冬天的深夜，寒風刺骨。媽媽加班到很晚才疲憊地推開家門。她以為我們都睡了，卻看見客廳的燈還亮著。我從廚房端出一碗冒著熱氣的薑湯，對她說：「媽媽，辛苦了，快喝口熱湯暖暖身子吧。」媽媽接過湯，眼眶紅了，笑著說：「這是我喝過最甜的湯。」',
+                qs: [
+                    { t: '語境推斷', cls: 'tag-infer', q: '故事發生在什麼環境下？', opts: ['炎熱的夏天', '冬天的深夜，非常寒冷', '秋天的早上', '春天的黃昏'], ans: 1 },
+                    { t: '人物心理', cls: 'tag-infer', q: '媽媽回家時「疲憊地推開家門」，這說明了什麼？', opts: ['她剛做完運動', '她加班工作非常辛苦勞累', '她不想回家', '她迷路了'], ans: 1 },
+                    { t: '動作推論', cls: 'tag-infer', q: '作者端出熱湯的行為，體現了什麼？', opts: ['作者肚子餓了', '作者對母親辛勞的體貼、感恩與孝心', '作者想練習煮飯', '作者想邀功'], ans: 1 },
+                    { t: '人物心理', cls: 'tag-infer', q: '媽媽「眼眶紅了」，這是因為什麼？', opts: ['湯太燙了', '被作者的孝心深深感動而想落淚', '眼睛進了沙子', '太累了想睡覺'], ans: 1 },
+                    { t: '修辭理解', cls: 'tag-infer', q: '媽媽說這是「最甜的湯」，但薑湯其實是辣的。這句話的弦外之音是什麼？', opts: ['作者放了太多糖', '湯裡充滿了孩子貼心的愛，這份心意讓她感到無比甜蜜和幸福', '媽媽味覺出錯了', '這碗湯是買來的'], ans: 1 }
+                ]
+            }
+        ];
+
+        let listenProgress = JSON.parse(localStorage.getItem('listenStandardProgress')) || new Array(listenData.length).fill(0);
+
+        function renderListenDirectory() {
+            const dirContainer = document.getElementById('listen-content');
+            let html = '';
+            listenData.forEach((item, idx) => {
+                let status = listenProgress[idx];
+                let bgClass = 'bg-white';
+                let borderClass = 'border-slate-200';
+                let icon = ' <span class="text-slate-400 font-bold ml-2"># 未挑戰</span>';
+                
+                if (status === 1) {
+                    bgClass = 'bg-blue-50'; borderClass = 'border-blue-400';
+                    icon = ' <span class="text-blue-600 font-bold ml-2">🌟 完成</span>';
+                }
+                html += `
+                    <button onclick="startListen(${idx})" class="w-full md:w-[calc(50%-0.5rem)] text-left p-4 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition active:scale-95">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="bg-slate-100 text-slate-700 text-xs font-bold px-2 py-1 rounded">任務 ${idx+1}</span>
+                            ${icon}
+                        </div>
+                        <h3 class="text-lg font-black text-slate-800">${item.title}</h3>
+                    </button>
+                `;
+            });
+            dirContainer.innerHTML = html;
+        }
+
+        function startListen(idx, forceStart = false) {
+            if (!forceStart && !localStorage.getItem('tut_seen_t-infer')) {
+                pendingTaskIdx = idx;
+                pendingTaskType = 'listen';
+                showTutorial('t-infer');
+                return;
+            }
+            currentStoryIdx = idx;
+            currentQuestionIdx = 0;
+            document.getElementById('listen-directory').style.display = 'none';
+            const playArea = document.getElementById('listen-play');
+            playArea.style.display = 'flex';
+            
+            // 進入後重置按鈕狀態
+            const btnPlay = document.getElementById('btn-play-story');
+            const btnStop = document.getElementById('btn-stop-story');
+            if(btnPlay) btnPlay.classList.remove('hidden');
+            if(btnStop) btnStop.classList.add('hidden');
+
+            renderListenQuestion();
+        }
+
+        function renderListenQuestion() {
+            const story = listenData[currentStoryIdx];
+            const qData = story.qs[currentQuestionIdx];
+            const qTitle = qData.t || qData.type || '推論題';
+            const qOpts = qData.opts || qData.options || [];
+            
+            let html = `
+                <div class="w-full max-w-3xl flex justify-between items-center mb-4">
+                    <button onclick="switchMode('listen')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 暫停返回</button>
+                    <span class="bg-blue-100 text-blue-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${currentQuestionIdx + 1} / 5 題</span>
+                </div>
+                
+                <div class="w-full max-w-3xl bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center">
+                    
+                    <!-- 🌟 原生廣東話播放器 -->
+                    <div class="w-full bg-slate-800 text-white rounded-2xl p-6 text-center mb-6 shadow-inner relative overflow-hidden flex flex-col items-center justify-center min-h-[160px]">
+                        <div class="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xMiAyYTMgMyAwIDAgMCAzIDN2N2EzIDMgMCAwIDEtNiAweiIvPjxwYXRoIGQ9Ik0xOSAxbS0yIDJhMiAyIDAgMCAxIDQgMHYyYTIgMiAwIDAgMS00IDB6Ii8+PHBhdGggZD0iTTIyIDEydjFhMTAgMTAgMCAwIDEtMjAgMHYtMSIvPjxwb2x5Z29uIHBvaW50cz0iMTQgMTcgMTIgMjAgMTAgMTciLz48L3N2Zz4=')] bg-center bg-no-repeat bg-[length:100px_100px]"></div>
+                        <h3 class="text-xl font-bold mb-4 relative z-10 text-slate-300">請聆聽廣播後推斷答案</h3>
+                        
+                        <div class="relative z-10 flex gap-4 justify-center w-full">
+                            <button id="btn-play-story" onclick="playStoryTTS()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full text-xl font-bold flex items-center justify-center shadow-lg pop border-4 border-blue-400 transition">▶️ 播放故事</button>
+                            <button id="btn-stop-story" onclick="stopStoryTTS()" class="bg-slate-600 hover:bg-slate-500 text-white px-6 py-3 rounded-full text-xl font-bold flex items-center justify-center shadow-lg transition hidden">⏹️ 停止廣播</button>
+                        </div>
+                    </div>
+
+                    <div class="w-full flex items-center gap-3 mb-4">
+                        <span class="${qData.cls} px-3 py-1 rounded-lg text-sm font-bold border-2">${qTitle}</span>
+                    </div>
+
+                    <h3 class="text-xl md:text-2xl font-bold text-slate-800 mb-6 w-full flex items-start gap-2">
+                        <button onclick="speakText('${qData.q}')" class="tts-btn flex-shrink-0 bg-blue-50 text-blue-500 w-10 h-10 rounded-full text-xl flex items-center justify-center shadow-sm border border-blue-200 mt-1">🔊</button>
+                        <span>${qData.q}</span>
+                    </h3>
+
+                    <div class="flex flex-col gap-3 w-full" id="options-container">
+            `;
+
+            qOpts.forEach((opt, oIdx) => {
+                const isCorr = (oIdx === qData.ans);
+                html += `<div class="flex gap-2 w-full"><button onclick="checkListenAnswer(this, ${isCorr})" class="option-btn bg-white border-2 border-slate-200 text-slate-700 text-lg font-bold py-4 px-6 rounded-2xl hover:bg-slate-50 transition w-full text-left flex-1">${opt}</button><button onclick="speakText('${opt}')" class="tts-btn flex-shrink-0 bg-blue-50 text-blue-500 w-14 rounded-2xl text-2xl flex items-center justify-center shadow-sm border border-blue-200 hover:bg-blue-100 transition">🔊</button></div>`;
+            });
+
+            html += `</div></div>`;
+            document.getElementById('listen-play').innerHTML = html;
+        }
+
+        function checkListenAnswer(btn, isCorr) {
+            stopStoryTTS(); 
+            const allBtns = document.querySelectorAll('#options-container .option-btn');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            
+            if (isCorr) {
+                btn.classList.add('correct');
+                speakText("推斷正確！");
+                
+                setTimeout(() => {
+                    if (currentQuestionIdx < 4) {
+                        currentQuestionIdx++;
+                        renderListenQuestion();
+                    } else {
+                        if (listenProgress[currentStoryIdx] !== 1) {
+                            stdExp += 30;
+                            localStorage.setItem('listenStandardExp', stdExp);
+                            document.getElementById('exp-display').innerText = stdExp;
+                            listenProgress[currentStoryIdx] = 1;
+                            localStorage.setItem('listenStandardProgress', JSON.stringify(listenProgress));
+                        }
+                        
+                        document.getElementById('feedback-desc').innerText = "你成功聽出了所有的弦外之音！獲得 30 EXP！";
+                        const modal = document.getElementById('feedback-modal');
+                        const content = document.getElementById('feedback-content');
+                        
+                        modal.classList.remove('hidden');
+                        setTimeout(() => {
+                            modal.classList.remove('opacity-0');
+                            content.classList.remove('scale-90');
+                        }, 10);
+                        
+                        document.getElementById('next-btn').onclick = () => {
+                            modal.classList.add('opacity-0');
+                            content.classList.add('scale-90');
+                            setTimeout(() => {
+                                modal.classList.add('hidden');
+                                switchMode('listen');
+                            }, 300);
+                        };
+                    }
+                }, 1000);
+            } else {
+                btn.classList.add('wrong', 'shake');
+                speakText("推斷有誤喔，請再仔細聽一次！");
+                setTimeout(() => {
+                    btn.classList.remove('wrong', 'shake');
+                    allBtns.forEach(b => { if (!b.classList.contains('correct')) b.style.pointerEvents = 'auto'; });
+                }, 1500);
+            }
+        }
+
+        // ================= 4. 看圖說話 (邏輯連貫) =================
+        const speakData = [
+            { e: ['👦🏃‍♂️', '🍌👟', '💥🤕', '😭🏥'], t: '不小心的後果', sample: '首先，小明在路上開心地奔跑。接著，他沒有注意到地上有一塊香蕉皮，一腳踩了上去。然後，他重重地摔在地上，痛得大哭起來。最後，他被送去了醫院包紮傷口。' },
+            { e: ['👧🧹', '🛋️💰', '👩💬', '💖👍'], t: '拾金不昧', sample: '首先，週末早上小麗在客廳打掃。接著，她在沙發底下發現了一枚硬幣。然後，她立刻跑去把錢交給媽媽。最後，媽媽稱讚她是一個誠實的好孩子。' },
+            { e: ['👨‍🍳🥚', '🔥🔥', '💨🔥', '🍲❌'], t: '煎蛋失敗', sample: '首先，爸爸在廚房裡準備煎蛋。接著，他不小心把爐火開得太大了。然後，平底鍋裡的蛋燒焦了，冒出陣陣黑煙。最後，我們晚上的餐桌上少了一道菜。' },
+            { e: ['👦📖', '🪟🕊️', '👀🏃‍♂️', '📝❌'], t: '分心的代價', sample: '首先，小強正坐在書桌前認真溫習。接著，窗外飛來了一隻可愛的小鳥。然後，他忍不住跑去窗邊看鳥，把功課拋諸腦後。最後，他的功課沒有做完，被老師批評了。' },
+            { e: ['☁️⛈️', '👧🌂', '🐕🌧️', '🏠❤️'], t: '雨中救狗', sample: '首先，天空突然烏雲密佈，下起了大雨。接著，小美趕緊撐開雨傘。然後，她看到一隻流浪狗在雨中發抖，便好心地幫牠遮雨。最後，小美把這隻小狗帶回家照顧。' },
+            { e: ['🛒👩👦', '🧸😭', '👨❌', '🚶‍♂️😔'], t: '買玩具風波', sample: '首先，小明和媽媽去超級市場買菜。接著，小明看到一個喜歡的玩具，便吵著要買。然後，媽媽堅決地搖頭拒絕了他。最後，小明只好失望地跟著媽媽回家。' },
+            { e: ['🌱💧', '☀️🌳', '🍎🍎', '😋👍'], t: '種樹的收穫', sample: '首先，農夫在春天種下一棵小樹苗，並勤力澆水。接著，在陽光的照耀下，小樹慢慢長成了大樹。然後，到了秋天，樹上結滿了紅紅的蘋果。最後，大家吃著美味的蘋果，都覺得非常滿足。' },
+            { e: ['🏫🏃‍♂️', '🔔🏃‍♂️', '👨‍🏫😠', '🙇‍♂️😔'], t: '遲到的早晨', sample: '首先，哥哥早上起晚了，匆匆忙忙地跑向學校。接著，他跑到校門時，上課的鐘聲已經響起了。然後，老師看到他遲到，嚴厲地批評了他。最後，哥哥羞愧地低下頭，保證下次不敢了。' },
+            { e: ['🎂🎉', '🎁🤔', '📖😕', '👩‍👦❤️'], t: '意外的禮物', sample: '首先，今天是小華的生日，家裡舉辦了派對。接著，媽媽拿出一份禮物，小華以為是玩具。然後，拆開一看原來是一本書，小華感到有些失望。最後，媽媽溫柔地解釋讀書的好處，小華終於開心地接受了。' },
+            { e: ['🚴‍♂️🏞️', '🪨💥', '🤕🩹', '🤝😊'], t: '互助的友誼', sample: '首先，大雄和胖虎一起去公園騎單車。接著，大雄不小心撞到石頭跌倒了。然後，胖虎立刻停下來，幫大雄貼上膠布包紮傷口。最後，他們握手言和，友誼變得更加深厚了。' }
+        ];
+
+        let speakProgress = JSON.parse(localStorage.getItem('speakStandardProgress')) || new Array(speakData.length).fill(0);
+
+        function renderSpeakDirectory() {
+            const dirContainer = document.getElementById('speak-content');
+            let html = '';
+            speakData.forEach((item, idx) => {
+                let status = speakProgress[idx];
+                let bgClass = 'bg-white';
+                let borderClass = 'border-slate-200';
+                if (status === 1) { bgClass = 'bg-blue-50'; borderClass = 'border-blue-400'; }
+                
+                html += `
+                    <button onclick="startSpeak(${idx})" class="w-full text-left p-5 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition active:scale-95 flex flex-col items-center gap-3">
+                        <div class="text-3xl tracking-widest flex gap-2">${item.e.join('➡️')}</div>
+                        <h3 class="text-lg font-black text-slate-800 mt-2">${item.t}</h3>
+                        ${status === 1 ? '<span class="text-blue-600 font-bold text-sm">✅ 已掌握</span>' : '<span class="text-slate-400 font-bold text-sm"># 未挑戰</span>'}
+                    </button>
+                `;
+            });
+            dirContainer.innerHTML = html;
+        }
+
+        function startSpeak(idx, forceStart = false) {
+            if (!forceStart && !localStorage.getItem('tut_seen_t-connect')) {
+                pendingTaskIdx = idx;
+                pendingTaskType = 'speak';
+                showTutorial('t-connect');
+                return;
+            }
+            currentStoryIdx = idx;
+            document.getElementById('speak-directory').style.display = 'none';
+            const playArea = document.getElementById('speak-play');
+            playArea.style.display = 'flex';
+            
+            const data = speakData[idx];
+            
+            let html = `
+                <div class="w-full max-w-4xl flex justify-between items-center mb-4">
+                    <button onclick="switchMode('speak')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
+                    <span class="bg-blue-100 text-blue-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">挑戰 ${idx + 1} / 10</span>
+                </div>
+                
+                <div class="w-full max-w-4xl bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center">
+                    <h2 class="text-2xl md:text-3xl font-black text-slate-800 mb-6">${data.t}</h2>
+                    
+                    <p class="text-slate-600 font-bold mb-4 w-full text-left">📝 請利用過渡詞，將以下 4 張圖片串聯成一個語意通順的故事：</p>
+                    
+                    <div class="flex flex-col md:flex-row gap-4 w-full mb-8">
+            `;
+
+            const transitions = ['首先', '接著', '然後', '最後'];
+            data.e.forEach((emoji, i) => {
+                html += `
+                    <div class="seq-card flex-1">
+                        <div class="text-slate-500 font-bold mb-2 text-sm">${transitions[i]}...</div>
+                        <div class="text-6xl">${emoji}</div>
+                        ${i < 3 ? '<div class="seq-arrow">➡️</div>' : ''}
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                    
+                    <div class="w-full bg-slate-800 text-white rounded-2xl p-6 text-center shadow-inner mt-4">
+                        <h3 class="text-lg font-bold mb-4 text-slate-300">自己試著說一次後，點擊查看完美範本！</h3>
+                        <button onclick="showSampleAnswer()" id="btn-show-sample" class="bg-blue-500 hover:bg-blue-600 text-white font-black px-8 py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-blue-700 active:border-b-0 active:translate-y-1">💡 查看參考故事</button>
+                        
+                        <div id="sample-answer-box" class="hidden mt-6 bg-slate-700 p-5 rounded-xl border border-slate-600 text-left">
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="text-blue-400 font-bold">✨ 參考範本：</span>
+                                <button onclick="speakText('${data.sample}')" class="bg-slate-600 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-slate-500 transition">🔊</button>
+                            </div>
+                            <p class="text-lg leading-relaxed text-slate-200 tracking-wide">${data.sample.replace(/(首先|接著|然後|最後)/g, '<span class="text-yellow-300 font-bold">$1</span>')}</p>
+                            <button onclick="finishSpeakTask()" class="mt-6 w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black px-8 py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">✅ 我學會了！(獲得 20 EXP)</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            playArea.innerHTML = html;
+        }
+
+        function showSampleAnswer() {
+            document.getElementById('btn-show-sample').classList.add('hidden');
+            document.getElementById('sample-answer-box').classList.remove('hidden');
+            const sampleText = speakData[currentStoryIdx].sample;
+            speakText(sampleText);
+        }
+
+        function finishSpeakTask() {
+            stopStoryTTS();
+            if (speakProgress[currentStoryIdx] !== 1) {
+                stdExp += 20;
+                localStorage.setItem('listenStandardExp', stdExp);
+                document.getElementById('exp-display').innerText = stdExp;
+                document.getElementById('exp-display').classList.add('pop');
+                setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+                
+                speakProgress[currentStoryIdx] = 1;
+                localStorage.setItem('speakStandardProgress', JSON.stringify(speakProgress));
+                showToast("口語練習完成！+20 EXP");
+                
+                if (listenProgress.filter(p=>p===1).length === listenData.length && speakProgress.filter(p=>p===1).length === speakData.length) {
+                    localStorage.setItem('t_listen_2', 'true');
+                }
+            }
+            switchMode('speak');
+        }
+
+        window.onload = function() {
+            document.getElementById('exp-display').innerText = stdExp;
+            switchMode('listen');
+        }
+    </script>
+</body>
+</html>
