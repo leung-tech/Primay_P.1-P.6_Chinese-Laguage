@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>中華文化與古詩 - 拔尖進階訓練</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif; background-color: #faf5ff; -webkit-tap-highlight-color: transparent; }
+        .bg-grid-pattern { background-image: linear-gradient(to right, #f3e8ff 1px, transparent 1px), linear-gradient(to bottom, #f3e8ff 1px, transparent 1px); background-size: 40px 40px; }
+        
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .pop { animation: pop 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .option-btn { transition: all 0.2s; box-shadow: 0 4px 0 #d8b4fe; }
+        .option-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .option-btn.correct { background-color: #faf5ff; border-color: #a855f7; color: #6b21a8; box-shadow: 0 0 0 transparent; transform: translateY(4px); pointer-events: none; }
+        .option-btn.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.6; pointer-events: none; }
+        
+        .tab-btn { transition: all 0.3s; }
+        .tab-active { background-color: #9333ea; color: white; border-color: #7e22ce; }
+        .tab-inactive { background-color: white; color: #64748b; border-color: #cbd5e1; }
+
+        .tts-btn { transition: transform 0.2s; }
+        .tts-btn:active { transform: scale(0.9); }
+
+        .toast-msg { visibility: hidden; min-width: 250px; background-color: #ef4444; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px; transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
+        @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
+
+        /* 古詩專屬字體與排版 */
+        .poem-text { font-family: 'Kaiti', 'STKaiti', serif; letter-spacing: 0.15em; line-height: 2.2; font-weight: bold; }
+        
+        /* 🌟 卡拉OK 跟讀高亮樣式 */
+        .read-sentence { cursor: pointer; border-radius: 6px; padding: 2px 4px; margin: 0 -4px; transition: all 0.2s; display: inline; }
+        .read-sentence:hover { background-color: #f3e8ff; color: #7e22ce; }
+        .active-sentence { background-color: #fef08a; color: #7e22ce; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        
+        /* SEN 重點高亮 */
+        .sen-highlight { background-color: #fef08a; padding: 0 4px; border-radius: 4px; border-bottom: 2px solid #eab308; }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
+
+    <!-- 頂部導覽列 (Purple 配色) -->
+    <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
+        <div class="p-3 lg:p-4 bg-purple-700 text-white flex justify-between items-center w-full">
+            <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
+                <a href="index.html" class="hover:bg-purple-800 p-1 rounded transition bg-purple-900">⬅️ 返回</a>
+                <span>🏮 中華文化與古詩 (拔尖版)</span>
+            </h1>
+            <div class="flex gap-2 lg:gap-4 items-center bg-purple-900 px-3 py-1.5 rounded-full border border-purple-500 shadow-inner">
+                <span class="text-lg lg:text-xl">🏆</span>
+                <span class="font-bold text-sm lg:text-lg">EXP: <span id="exp-display" class="text-yellow-400">0</span></span>
+            </div>
+        </div>
+        
+        <div class="flex w-full bg-slate-100 border-b border-slate-300">
+            <button onclick="switchMode('poem')" id="tab-poem" class="tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700">📜 高階意境鑒賞</button>
+            <button onclick="switchMode('culture')" id="tab-culture" class="tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200">🏮 歷史大局與謀略</button>
+        </div>
+        <div id="progress-container" class="w-full bg-slate-200 h-2">
+            <div id="progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
+        </div>
+    </div>
+
+    <!-- 主畫面區 -->
+    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
+        
+        <!-- 古詩目錄 -->
+        <div id="poem-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
+            <div id="poem-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">📜 拔尖古詩鑒賞特訓</h2>
+                    <button onclick="showTutorial('t-poem-adv')" class="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-purple-300 hover:bg-purple-200 transition">📘 學習錦囊</button>
+                </div>
+                <div class="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
+                    <div class="text-purple-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
+                    <div class="flex flex-wrap gap-4 flex-1">
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-lg shadow-sm">🌟</span> 完美過關</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 經提示過關</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-slate-100 border-2 border-slate-300 flex items-center justify-center text-lg shadow-sm text-slate-400">#</span> 尚未挑戰</div>
+                    </div>
+                </div>
+                <div id="poem-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+            <div id="poem-play" class="w-full hidden flex-col items-center"></div>
+        </div>
+
+        <!-- 文化故事目錄 -->
+        <div id="culture-mode" class="w-full max-w-5xl mx-auto hidden flex-col gap-4 lg:gap-6">
+            <div id="culture-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">🏮 歷史大局觀與謀略深究</h2>
+                    <button onclick="showTutorial('t-culture-adv')" class="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-purple-300 hover:bg-purple-200 transition">📘 學習錦囊</button>
+                </div>
+                <p class="text-slate-600 font-bold mb-4">絕無幼兒選項！學習古人如何分析局勢、運用心理戰術。每篇包含 <span class="text-purple-600 font-black">8 道地獄級推論題</span>。</p>
+                <div id="culture-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+            <div id="culture-play" class="w-full hidden flex-col items-center"></div>
+        </div>
+
+    </div>
+
+    <!-- 學習錦囊 Modal -->
+    <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform duration-300 flex flex-col max-h-[90vh]" id="tutorial-content">
+            <div class="flex justify-between items-center mb-4 border-b-4 border-purple-200 pb-3">
+                <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-purple-600 flex items-center gap-2">📘 拔尖神探錦囊</h2>
+                <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-5xl font-black transition leading-none">&times;</button>
+            </div>
+            <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4"></div>
+            <div class="mt-6 pt-4 border-t-2 border-slate-100">
+                <button onclick="closeTutorial()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-purple-800 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 答錯/答對 溫馨解析 Modal -->
+    <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 pointer-events-none">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[90%] max-w-md text-center transform scale-90 transition-transform duration-300 pointer-events-auto" id="feedback-content">
+            <div id="feedback-icon" class="text-7xl mb-4">🎉</div>
+            <h2 id="feedback-title" class="text-2xl md:text-3xl font-black text-slate-800 mb-4">精準推斷！</h2>
+            <div class="bg-purple-50 border-2 border-purple-200 p-4 rounded-xl mb-6">
+                <p id="feedback-desc" class="text-purple-800 font-bold text-lg leading-relaxed text-left"></p>
+            </div>
+            <div class="flex gap-3 w-full">
+                <button onclick="speakText(document.getElementById('feedback-desc').innerText)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-3 px-4 rounded-xl shadow transition text-xl">🔊 聽解釋</button>
+                <button id="next-btn" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-black py-3 rounded-xl shadow-lg transition text-xl border-b-4 border-purple-800 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 完成 Modal -->
+    <div id="finish-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 pointer-events-none">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform duration-300 pointer-events-auto" id="finish-content">
+            <div class="text-7xl mb-4 animate-bounce">🏆</div>
+            <h2 class="text-3xl font-black text-slate-800 mb-4">任務完成！</h2>
+            <p id="finish-desc" class="text-slate-600 font-bold mb-8 text-xl leading-relaxed">恭喜你掌握了這篇深層內容！</p>
+            <button onclick="backToDirectoryFromFinish()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">領取獎勵並返回 ✨</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-msg">提示訊息</div>
+
+    <script>
+        // ================= 1. 核心狀態與語音 =================
+        let advExp = parseInt(localStorage.getItem('cultureAdvancedExp')) || 0;
+        document.getElementById('exp-display').innerText = advExp;
+        
+        let currentMode = 'poem'; 
+        let currentIdx = -1;
+        let currentQIdx = -1;
+        let mistakes = 0;
+        let pendingTaskIdx = -1;
+        let pendingTaskType = '';
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message; toast.className = "toast-msg show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // 過濾文本，防止讀出 HTML 標籤
+        function cleanTextForSpeech(text) {
+            return text.replace(/<br\s*\/?>/gi, '。')
+                       .replace(/<[^>]*>?/gm, '')
+                       .replace(/[✅❌💡【】_]/g, '')
+                       .replace(/&nbsp;/g, ' ');
+        }
+
+        function speakText(text, rate = 0.85) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let cleanText = cleanTextForSpeech(text);
+                let msg = new SpeechSynthesisUtterance(cleanText);
+                msg.lang = 'zh-HK'; 
+                msg.rate = rate; 
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        // ================= 🌟 卡拉OK 跟讀引擎 =================
+        let isKaraokePlaying = false;
+        let karaokeIndex = 0;
+        let sentenceElements = [];
+
+        function startKaraoke() {
+            if (isKaraokePlaying) { stopKaraoke(); return; }
+            stopKaraoke();
+            isKaraokePlaying = true;
+            
+            let containerId = currentMode === 'poem' ? 'poem-content-area' : 'culture-content-area';
+            sentenceElements = document.getElementById(containerId).querySelectorAll('.read-sentence');
+            karaokeIndex = 0;
+            
+            document.getElementById('btn-play-story').classList.add('hidden');
+            document.getElementById('btn-stop-story').classList.remove('hidden');
+            
+            if (sentenceElements.length > 0) playNextKaraokeSentence();
+        }
+
+        function playNextKaraokeSentence() {
+            if (karaokeIndex >= sentenceElements.length || !isKaraokePlaying) {
+                stopKaraoke(); return;
+            }
+            
+            document.querySelectorAll('.read-sentence').forEach(s => s.classList.remove('active-sentence'));
+            let span = sentenceElements[karaokeIndex];
+            span.classList.add('active-sentence');
+            span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            let text = span.innerText;
+            let cleanText = cleanTextForSpeech(text);
+            let msg = new SpeechSynthesisUtterance(cleanText);
+            msg.lang = 'zh-HK';
+            msg.rate = 0.85; 
+            
+            msg.onend = function() {
+                if (isKaraokePlaying) {
+                    karaokeIndex++;
+                    playNextKaraokeSentence();
+                } else {
+                    stopKaraoke();
+                }
+            };
+            msg.onerror = function() { stopKaraoke(); };
+            window.speechSynthesis.speak(msg);
+        }
+
+        function stopKaraoke() {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            isKaraokePlaying = false;
+            document.querySelectorAll('.read-sentence').forEach(s => s.classList.remove('active-sentence'));
+            const bp = document.getElementById('btn-play-story'), bs = document.getElementById('btn-stop-story');
+            if (bp && bs) { bp.classList.remove('hidden'); bs.classList.add('hidden'); }
+        }
+
+        function speakSpecificSentence(spanElement) {
+            stopKaraoke(); 
+            document.querySelectorAll('.read-sentence').forEach(s => s.classList.remove('active-sentence'));
+            spanElement.classList.add('active-sentence');
+            
+            let text = spanElement.innerText;
+            let cleanText = cleanTextForSpeech(text);
+            let msg = new SpeechSynthesisUtterance(cleanText);
+            msg.lang = 'zh-HK';
+            msg.rate = 0.85;
+            
+            msg.onend = function() {
+                spanElement.classList.remove('active-sentence');
+            };
+            window.speechSynthesis.speak(msg);
+        }
+
+        function parseAndWrapSentences(textString) {
+            let parts = textString.split(/([。！？][」』]?)/);
+            let finalHtml = "";
+            let current = "";
+            for(let i=0; i<parts.length; i++) {
+                current += parts[i];
+                if (/[。！？]/.test(parts[i]) || i === parts.length - 1) {
+                    if (current.trim() !== "") {
+                        finalHtml += `<span class="read-sentence" onclick="speakSpecificSentence(this)">${current}</span>`;
+                    }
+                    current = "";
+                }
+            }
+            return finalHtml;
+        }
+
+        // ================= 2. 學習錦囊 =================
+        const tutorialData = {
+            't-poem-adv': `
+                <div class="text-center mb-6"><span class="text-6xl">📜 🎭</span></div>
+                <p class="font-black text-slate-800 mb-4 text-center text-2xl">高階古詩鑒賞：看懂詩人的弦外之音</p>
+                <div class="bg-purple-50 p-5 rounded-2xl border-4 border-purple-200 mb-3 space-y-4 text-slate-700">
+                    <p class="font-bold text-lg"><span class="bg-white px-2 py-1 rounded text-purple-600 shadow-sm">1. 託物言志</span><br>古人寫死物（如竹子、梅花、石灰），通常不是真的在寫物，而是借物來<span class="text-rose-600 font-bold">讚美某種高尚的品格或表達自己的志向</span>。</p>
+                    <p class="font-bold text-lg"><span class="bg-white px-2 py-1 rounded text-purple-600 shadow-sm">2. 借古諷今</span><br>表面上寫古代的歷史事件或人物，實際上是為了<span class="text-blue-600 font-bold">批評當時朝廷的腐敗或社會問題</span>。</p>
+                    <p class="font-bold text-lg"><span class="bg-white px-2 py-1 rounded text-purple-600 shadow-sm">3. 虛實結合</span><br>「實」是眼前真實看到的景物，「虛」是<span class="text-emerald-600 font-bold">腦海中想像或回憶的畫面</span>。兩者結合能讓情感更深沉。</p>
+                </div>
+            `,
+            't-culture-adv': `
+                <div class="text-center mb-6"><span class="text-6xl">♟️ 🧠</span></div>
+                <p class="font-black text-slate-800 mb-4 text-center text-2xl">歷史大局觀與謀略分析</p>
+                <div class="bg-indigo-50 p-5 rounded-2xl border-4 border-indigo-200 mb-3 space-y-4 text-slate-700">
+                    <p class="font-bold text-lg">在拔尖挑戰中，干擾選項非常有迷惑性。我們必須學會像軍師一樣深度思考：</p>
+                    <p><span class="bg-white px-2 py-1 rounded text-indigo-600 font-bold">洞悉心理：</span><br>古人談判時，往往會利用對方的<span class="text-rose-500 font-bold">貪婪、多疑或恐懼</span>來制定計策（如空城計、完璧歸趙）。</p>
+                    <p><span class="bg-white px-2 py-1 rounded text-indigo-600 font-bold">大局為重：</span><br>真正的英雄懂得在個人恩怨與國家利益之間做出選擇，展現出<span class="text-blue-600 font-bold">忍辱負重、相忍為國</span>的高超智慧（如負荊請罪）。</p>
+                </div>
+            `
+        };
+
+        function showTutorial(tutKey) {
+            document.getElementById('tutorial-body').innerHTML = tutorialData[tutKey];
+            const modal = document.getElementById('tutorial-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); document.getElementById('tutorial-content').classList.remove('scale-90'); }, 10);
+            localStorage.setItem('tut_seen_' + tutKey, 'true');
+        }
+
+        function closeTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            modal.classList.add('opacity-0'); content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (pendingTaskIdx !== -1) {
+                    let targetIdx = pendingTaskIdx;
+                    let targetType = pendingTaskType;
+                    pendingTaskIdx = -1;
+                    if (targetType === 'poem') startPoem(targetIdx, true);
+                    else if (targetType === 'culture') startCulture(targetIdx, true);
+                }
+            }, 300);
+        }
+
+        function switchMode(mode) {
+            stopKaraoke();
+            currentMode = mode;
+            const tP = document.getElementById('tab-poem'), tC = document.getElementById('tab-culture');
+            const mP = document.getElementById('poem-mode'), mC = document.getElementById('culture-mode');
+            
+            if(mode === 'poem') {
+                tP.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700";
+                tC.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                mP.style.display = 'flex'; mC.style.display = 'none';
+                document.getElementById('poem-play').style.display = 'none';
+                document.getElementById('poem-directory').style.display = 'block';
+                renderPoemDirectory();
+            } else {
+                tC.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700";
+                tP.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                mP.style.display = 'none'; mC.style.display = 'flex';
+                document.getElementById('culture-play').style.display = 'none';
+                document.getElementById('culture-directory').style.display = 'block';
+                renderCultureDirectory();
+            }
+            updateTotalProgress();
+        }
+
+        // ================= 3. 拔尖題庫 (160題 高難度干擾項) =================
+        function cP(title, author, lines, qs) {
+            return { title: title, author: author, lines: lines, qs: qs.map(q => ({ q: q[0], opts: q[1], ans: q[2], exp: q[3] })) };
+        }
+
+        function cC(title, text, qs) {
+            return { title: title, text: text, qs: qs.map(q => ({ q: q[0], opts: q[1], ans: q[2], exp: q[3] })) };
+        }
+
+        // 📜 10首拔尖古詩 (每篇 8 題)
+        const poemData = [
+            // 🏮 10篇拔尖歷史謀略典故 (每篇 8 題 高難度推論)
+const cultureData = [
+    cC('完璧歸趙', '戰國時代，趙王得到了一塊無價之寶「和氏璧」。強大的秦國國君秦昭王得知後，派人送信說願意用十五座城池來換取。趙王知道秦國不講信用，但又不敢得罪，進退兩難。這時，大臣藺相如挺身而出，帶著和氏璧前往秦國。到了秦國，秦王拿到和氏璧後愛不釋手，卻隻字不提割讓城池的事。藺相如看穿了秦王的心思，便假稱和氏璧上有瑕疵要指給秦王看，順利把玉璧拿回手中。隨後，他退後幾步，靠著柱子，怒目圓睜地說：「大王如果不守信用，我今天就讓這塊玉璧和我的腦袋一起撞碎在柱子上！」秦王怕玉璧被毀，只好假裝答應。藺相如趁機派人連夜將和氏璧偷偷送回了趙國。這就是「完璧歸趙」的故事。', [
+        ['趙王面對秦王的要求時，為什麼會感到「進退兩難」？', ['他不想賣和氏璧', '深知秦國不守信，不給怕得罪，給又怕被騙', '他想換二十座城', '和氏璧已經不見了'], 1, '這反映了弱國面對強國時，陷入了「給也不是，不給也不是」的政治與外交絕境。'],
+        ['藺相如謊稱和氏璧上有「瑕疵」，其真正的戰略意圖是什麼？', ['測試秦王鑒賞能力', '找藉口騙回玉璧，重新掌握談判主動權', '拖延時間等待軍隊救援', '暗示秦國承諾有缺陷'], 1, '這展現了藺相如極高的臨場應變能力和對人性的精準把握，用計奪回籌碼。'],
+        ['藺相如揚言要「與璧俱碎」，在談判謀略上屬於什麼高階戰術？', ['破釜沉舟的死戰', '極限施壓的心理博弈，抓準秦王貪婪的軟肋', '欲擒故縱的試探', '苦肉計博取同情'], 1, '他用自己的命和無價之寶作為威脅，逼迫強大的秦王讓步，是看穿對手底線的高明心理戰。'],
+        ['為什麼藺相如要「派人連夜偷偷送回」和氏璧，而不是自己帶回？', ['他想留在秦國當官', '親自留在秦國承擔怒火，以保全國家安全', '他迷路了', '覺得玉璧太重'], 1, '這體現了藺相如「苟利國家生死以」的偉大犧牲精神與政治擔當。'],
+        ['藺相如的整個外交行動，向秦國傳遞了什麼政治信號？', ['趙國非常富有', '弱國絕不屈服，寧為玉碎不為瓦全', '趙國有很多騙子', '願意成為秦國附庸'], 1, '這是一次成功的外交威懾，保全了國格。'],
+        ['秦王最後「假裝答應」的根本原因是什麼？', ['被藺相如的勇敢感動', '害怕背上不義罵名', '擔心稀世珍寶被毀，出於貪婪而做的妥協', '準備發動大軍進攻'], 2, '秦王的讓步完全是建立在對寶物的貪婪之上，而非道義。'],
+        ['如果藺相如一開始就直接拒絕交出玉璧，會導致什麼最嚴重的後果？', ['秦王會放棄要玉', '給秦國「趙國不敬」的開戰藉口', '趙王會懲罰藺相如', '玉璧失去原本價值'], 1, '在國際博弈中，不能輕易給敵國留下開戰的口實。'],
+        ['「完璧歸趙」這個成語現在通常用來比喻什麼？', ['借東西不還', '把物品完好無損地歸還原主', '完成艱鉅軍事任務', '形容玉器雕刻完美'], 1, '這是一個日常生活中非常實用且常見的褒義成語。']
+    ]),
+    cC('負荊請罪', '藺相如因為「完璧歸趙」和在澠池之會上保全了趙國的尊嚴，被趙王封為上卿，官位在老將廉頗之上。廉頗非常不服氣，心想：「我為趙國出生入死，立下赫赫戰功，他藺相如只憑一張嘴，憑什麼爬到我頭上？我見到他，一定要當面羞辱他！」藺相如得知後，便盡量迴避，甚至稱病不參與朝會，在路上遠遠看到廉頗的車馬也立刻繞道躲開。手下的人覺得藺相如太懦弱了，藺相如卻解釋說：「強大的秦國之所以不敢攻打趙國，是因為我們文有藺相如，武有廉頗。如果我們兩虎相爭，必有一傷，這正是秦國希望看到的。我之所以避讓他，是以國家大局為重，把私人恩怨放在後面啊！」這番話傳到廉頗耳中，廉頗感到無比羞愧。他脫下上衣，背著請罪用的荊條，親自到藺相如家門前認錯。兩人從此成為了生死與共的好朋友。', [
+        ['廉頗一開始對藺相如極度不滿的深層心理原因是什麼？', ['藺相如欠他錢沒還', '傳統武將對文臣「僅憑口舌立功」的輕視與傲慢', ['藺相如在朝廷上罵了他', '他們喜歡同一個東西'], 1, '廉頗只看重戰場殺敵的實體軍功，忽略了外交謀略同樣能保家衛國。'],
+        ['面對廉頗的挑釁，藺相如「稱病迴避、繞道躲開」的真正考量是什麼？', ['害怕被武力傷害', '洞察到將相不和會給敵國可乘之機，以國家安全為優先', '打算辭官回家', '用冷暴力讓廉頗驕傲'], 1, '表面上看是懦弱，實際上是極度理性的冷靜處理與高尚的愛國情操。'],
+        ['藺相如的手下認為他「太懦弱」，這說明手下人缺乏什麼？', ['打仗的勇氣', '縱觀天下局勢的政治大局觀', '對藺相如的忠誠', '對抗廉頗的武器'], 1, '常人爭一時之氣，智者爭國家之安。'],
+        ['廉頗得知真相後，做出了「赤膊背著荊條去認錯」的舉動，這反映了廉頗什麼品格？', ['很怕趙王懲罰', '性格粗暴但光明磊落，知錯能改', '想演苦肉計給百姓看', '當時神智不清'], 1, '廉頗能放下極度看重的面子，赤膊背荊請罪，同樣展現了豪傑的坦蕩胸襟。'],
+        ['藺相如說「兩虎相爭，必有一傷」，這句話揭示了什麼政治規律？', ['老虎不能一起養', '內部權力鬥爭與內耗，必然導致國家衰弱', '武將之間一定會決鬥', '文臣武將薪水不能一樣'], 1, '團結則存，分裂則亡，這是國家存亡的鐵律。'],
+        ['秦國當時不敢攻打趙國的關鍵威懾力來源於什麼？', ['趙國擁有最強武器', '文有相如，武有廉頗的完美配合', '秦國發生嚴重旱災', '趙國城牆最高'], 1, '文武雙全是國家強盛的基石。'],
+        ['「負荊請罪」和「將相和」的故事，給現代團隊管理帶來什麼最重要的啟示？', ['團隊裡不需要武力強大的人', '個人恩怨必須讓位於團隊利益，內耗是致命傷', '誰職位高就聽誰的', '遇到問題就躲起來'], 1, '這是一道高階的管理與人際關係思辨題，強調大局觀與團隊和諧。'],
+        ['「負荊請罪」這個成語現在通常用來形容什麼樣的行為？', ['背著木柴去賣', '主動真誠地請求對方嚴厲責罰', '用鞭子打自己', '去別人家裡討債'], 1, '形容極度真誠的道歉與認錯態度。']
+    ]),
+    cC('破釜沉舟', '秦朝末年，秦軍大將章邯率領幾十萬大軍包圍了趙國。各路諸侯的軍隊雖然趕來救援，但因為害怕秦軍的強大，都躲在營地裡不敢出戰。這時，楚國將領項羽挺身而出。他率領楚軍渡過漳河去救援趙國。渡河之後，項羽下令將所有的船隻鑿沉（沉舟），把煮飯的鍋子全部砸碎（破釜），並且每人只發三天的乾糧。他用這種極端的方式向將士們表明：我們已經沒有退路了，只能前進死戰，不打敗秦軍絕不生還！楚軍將士看到退路已斷，個個士氣大振，以一當十，怒吼著衝向秦軍。經過九次激烈的戰鬥，楚軍大破秦軍，震驚了所有作壁上觀的諸侯。項羽由此確立了他在反秦聯軍中的霸主地位。', [
+        ['各路諸侯的軍隊為什麼「躲在營地裡不敢出戰」？', ['在等待項羽指揮', '畏懼秦軍實力，只想保存自身實力', '沒有足夠的武器', '天氣太冷無法打仗'], 1, '這反映了諸侯們自私怯懦、一盤散沙的政治局勢。'],
+        ['項羽渡河後，下令「砸碎鍋子，鑿沉船隻」的真正戰略目的是什麼？', ['鍋和船都壞了', '徹底切斷退路，激發必死的戰鬥決心', '減輕軍隊負重加快行軍', '迷惑敵人以為撤退'], 1, '這是極其殘酷但極其有效的極限心理戰術，徹底激發人的求生本能。'],
+        ['這種「沒有退路」的戰術，對楚軍的士氣產生了什麼化學反應？', ['士兵們嚇得紛紛投降', '士兵們感到絕望互相埋怨', '激發驚人爆發力，士兵們捨生忘死', '士兵們開始偷偷逃跑'], 2, '在絕境中，恐懼轉化為了無比強大的戰鬥力和求生意志。'],
+        ['項羽「只發三天乾糧」的決定，向士兵傳遞了什麼隱含的軍事指令？', ['糧食被老鼠吃光', '必須在三天內速戰速決擊敗敵人', '三天後就會有援軍送飯', '大家順便減肥'], 1, '這是進一步的極限施壓，逼迫軍隊發揮最強的進攻效率。'],
+        ['這場戰役對項羽個人的歷史政治地位有何影響？', ['他被秦軍打敗', '一戰威震天下，確立反秦聯軍霸主地位', '他成了趙國國王', '失去所有軍隊'], 1, '一戰封神，展現了項羽卓越的軍事魄力和無可匹敵的統帥魅力。'],
+        ['文中提到諸侯們「作壁上觀」，這個詞語是什麼意思？', ['在牆上畫畫', '置身事外，在旁觀看而不予幫助', '在城牆上防守敵人', '蓋房子'], 1, '形容諸侯們自私自利、袖手旁觀的態度。'],
+        ['如果項羽當時沒有破釜沉舟，最可能的結果會是怎樣？', ['楚軍士氣低落，像其他諸侯一樣畏縮不前', '楚軍會和平與秦軍談判', '秦軍會主動撤退', '楚軍會立刻推翻秦朝'], 0, '面對強敵，常規的打法只會導致軍心渙散，唯有置之死地才能求生。'],
+        ['在現代社會中，「破釜沉舟」這個成語通常用來比喻什麼情況？', ['把廚具全部打破', '下定破除阻礙的決心，不留退路', '做事不考慮後果', '喜歡破壞公共財物'], 1, '這是一個充滿魄力與決斷力的褒義成語，常用於形容創業或面臨重大人生挑戰時的絕決態度。']
+    ]),
+    cC('指鹿為馬', '秦始皇死後，宦官趙高掌握了朝廷大權。他野心勃勃，想要篡奪皇位，但又怕朝中的大臣不服。為了測試到底有多少人是害怕並聽從自己的，趙高想出了一條毒計。有一天上朝時，趙高牽來一隻鹿獻給秦二世，卻故意大聲說：「陛下，這是一匹好馬。」秦二世笑了起來：「丞相弄錯了吧？這明明是一隻鹿，怎麼說是馬呢？」趙高不慌不忙地轉過頭，用威脅的目光環視群臣，問道：「你們說，這是鹿還是馬？」大臣們有的害怕趙高報復，跟著撒謊說是馬；有的保持沉默不敢出聲；只有少數正直的大臣堅持說是鹿。事後，趙高便找藉口，把那些說是鹿的正直大臣全部秘密殺害了。從此，朝廷上下再也沒有人敢反對趙高。', [
+        ['趙高把鹿說成是馬的「真正政治目的」是什麼？', ['他眼睛有問題', '一場權力測試，甄別群臣的忠誠與恐懼', '和皇帝開玩笑', '證明鹿可以當馬騎'], 1, '這是一場極其陰險的政治站隊測試，用荒謬的謊言來考驗絕對的服從。'],
+        ['秦二世一開始的反應是怎樣的？這反映了他作為君王的什麼致命弱點？', ['非常生氣抓了趙高', '笑著指出是鹿，但毫無政治敏感度，極度昏庸', ['立刻同意是馬', '把鹿殺了吃掉'], 1, '皇帝的昏庸無能與權臣的專橫跋扈形成了強烈的對比。'],
+        ['面對趙高的指問，那些說「是馬」的大臣，其深層的心理狀態是怎樣的？', ['缺乏常識，以為是新品種', '極度畏懼權勢，為了保命不惜顛倒黑白', '覺得好玩，想配合', '想討好皇帝'], 1, '在絕對的權力恐怖與暴政下，許多人選擇了屈服、撒謊和道德淪喪。'],
+        ['趙高事後殺害了說實話的大臣，這造成了什麼極其嚴重的歷史後果？', ['鹿真的變成了馬', '朝廷中說真話的忠臣被清洗，加速秦朝滅亡', ['趙高隔天成了皇帝', '大家都不敢再養動物'], 1, '這清除了朝廷最後的健康力量，讓整個國家機制陷入了荒謬與無可救藥的黑暗中。'],
+        ['「保持沉默不敢出聲」的那批大臣，代表了社會上的哪一種態度？', ['勇敢抗爭', '明哲保身、明知不公卻不敢發聲的妥協', '積極支持', '完全不知情'], 1, '沉默雖然沒有直接作惡，但在暴政面前，沉默也是一種消極的屈服。'],
+        ['趙高「用威脅的目光環視群臣」，這個動作細節突顯了他什麼樣的形象？', ['非常膽小害怕', '權傾朝野、陰險毒辣且囂張跋扈', '非常講道理的長輩', '視力不好的人'], 1, '透過眼神的描寫，將他一手遮天的恐怖威壓刻畫得淋漓盡致。'],
+        ['這個歷史故事揭示了專制暴政下的一個什麼荒謬現象？', ['動物名稱可隨便改', '強權可以扭曲真理，逼迫人們接受謊言', '皇帝都很愛開玩笑', '大臣們都缺乏動物學知識'], 1, '當權力大於一切時，事實和真理就會被輕易踐踏。'],
+        ['「指鹿為馬」這個成語現在用來諷刺什麼樣的行為？', ['動物分類學的錯誤', '仗著權勢，公然顛倒黑白、混淆是非', '喜歡說謊騙大人的小孩', '非常有想像力的人'], 1, '這是一個帶有強烈批判色彩的貶義成語，常用來形容強權對真理的公然踐踏。']
+    ]),
+    cC('紙上談兵', '戰國時期，趙國的名將趙奢有一個兒子叫趙括。趙括從小熟讀兵法，談論起打仗的理論來頭頭是道，連他父親都辯論不過他。但趙奢臨終前卻警告妻子：「打仗是關乎生死存亡的大事，趙括卻把它當作兒戲般談論。將來趙國千萬不能讓他當大將，否則必敗無疑。」後來，秦國攻打趙國。趙王中了秦國的反間計，免去了老成持重的廉頗的職務，任命沒有實戰經驗的趙括為大將。趙括一到前線，就全盤否定了廉頗堅守防禦的正確策略，盲目按照兵書上的死板陣法主動出擊。結果，秦軍將領白起設下埋伏，將趙軍切斷並包圍。四十萬趙軍全軍覆沒，趙括自己也被亂箭射死。趙國從此一蹶不振。', [
+        ['趙括在兵法理論上的表現如何？', ['完全不懂兵法', '理論知識極其豐富，辯才無礙', '只喜歡練武', '只會寫字不會說話'], 1, '這說明他在「理論層面」和「口頭表達上」是看似無懈可擊的。'],
+        ['身為一代名將的父親趙奢，為什麼反而斷言兒子絕對不能當大將？', ['嫉妒兒子比自己聰明', '看透兒子只會死背教條，缺乏實戰經驗與敬畏之心', '兒子身體不好', '想把將軍位置讓給別人'], 1, '父親具備豐富的實戰經驗，深刻洞察到理論脫離實際的致命危險。'],
+        ['趙括上任後，犯了什麼導致亡國的致命戰術錯誤？', ['立刻向秦國投降', '生搬硬套兵書，盲目主動出擊落入陷阱', '忘記帶武器上戰場', '在軍營裡睡覺'], 1, '這就是「盡信書不如無書」的悲慘代價，教條主義害死了四十萬人。'],
+        ['秦國為什麼要使用「反間計」促使趙王換掉廉頗？', ['非常欣賞趙括的才華', '忌憚經驗豐富的廉頗，希望換上空談的趙括以便擊潰', '廉頗年紀太大', '想和趙國和平談判'], 1, '這展現了秦國高超的戰略謀略，利用敵方君主的疑心病進行人事替換。'],
+        ['趙王在這場亡國悲劇中，犯了什麼嚴重的決策失誤？', ['不該派軍隊打仗', '缺乏識人之明，輕信反間計，忽略實戰經驗', '不該給趙括發薪水', '不該讓趙括看兵書'], 1, '君主的昏庸和輕敵，是導致國家滅亡的根本原因之一。'],
+        ['「四十萬趙軍全軍覆沒」，這在歷史上帶來了什麼深遠影響？', ['讓趙國人口變多', '讓趙國軍事實力毀滅性打擊，加速秦國統一', ['讓趙括成為了英雄', '沒有任何影響'], 1, '長平之戰是戰國歷史的轉折點，紙上談兵的代價是極其慘痛的。'],
+        ['從認知論的角度來看，趙括的悲劇源於什麼？', ['他不認識字', '將靜態的書本知識等同於動態的現實世界', '沒有看足夠的兵書', '他太過謙虛'], 1, '高階思辨題。書本理論必須結合實際情況靈活變通，否則就是死教條。'],
+        ['「紙上談兵」這個成語給了我們現代人什麼深刻的學習與工作啟示？', ['不要在紙上寫字', '理論必須與實踐結合，空談理論無法解決真實問題', '多看書就一定會成功', '打仗不需要看書'], 1, '這是一句警惕教條主義的千古名言，強調「實踐出真知」的重要性。']
+    ]),
+    cC('退避三舍', '春秋時期，晉國公子重耳為了躲避內亂，被迫流亡國外十九年。當他逃到強大的楚國時，楚成王以諸侯之禮熱情地款待了他。楚成王問重耳：「公子將來如果回到晉國當了國君，打算怎麼報答我呢？」重耳恭敬地回答：「金銀財寶楚國都有。如果托大王的福，我將來能返回晉國為君。萬一有一天晉國和楚國發生戰爭，兩軍相遇，我一定會下令晉軍主動向後撤退三舍（一舍約三十里，共九十里），以報答大王今日的收留之恩。」後來，重耳真的回國當了晉文公。幾年後，晉楚兩國因為爭霸發生了「城濮之戰」。晉文公信守當年的諾言，下令軍隊主動後退九十里。楚軍以為晉軍害怕了，驕傲輕敵地追擊。結果晉軍佔據了有利地形，誘敵深入，大敗楚軍。晉文公也因此成為了春秋霸主。', [
+        ['重耳在楚國流亡時，為什麼沒有許諾將來給楚成王金銀珠寶？', ['他非常小氣', '楚國不缺財寶；他極具智慧地承諾了戰場退讓', '他當時身上沒錢', '楚成王討厭金銀'], 1, '重耳的回答不亢不卑，展現了他作為未來國君的高深政治格局與對話技巧。'],
+        ['「退避三舍」在重耳最初的諾言中，表面上代表了什麼意思？', ['晉國永遠打不過楚國', '對落難時收留之恩的真誠報答與信守承諾', '晉軍體力不好需要休息', '把大片土地送給楚國'], 1, '表面上，這是一種知恩圖報、信守政治承諾的君子磊落行為。'],
+        ['在「城濮之戰」中，晉文公的「退避三舍」在軍事戰略上起到了什麼作用？', ['導致晉軍士氣低落', '履行諾言贏得道義高地，同時誘敵深入', '讓楚軍感動得投降', '單純拖延時間逃跑'], 1, '這是軍事上極其高明的「欲擒故縱」、「驕兵必敗」與「搶佔道德制高點」的完美結合戰術。'],
+        ['楚軍在追擊退讓的晉軍時，犯了什麼致命的兵家大忌？', ['忘記帶足夠糧食', '被表面退讓蒙蔽，產生驕傲輕敵心理', '軍隊數量太少', '不熟悉當地天氣'], 1, '楚軍主帥失去了冷靜的判斷，中了晉軍示弱誘敵之計。'],
+        ['晉文公最終能成為春秋霸主，這場戰役體現了他怎樣的君王素質？', ['殘暴無情', '深謀遠慮，既講究政治信譽又精通軍事謀略', '膽小怕事', '運氣特別好'], 1, '誠信與謀略的結合，是成就霸業的關鍵。'],
+        ['楚成王當初熱情款待流亡的重耳，其背後的政治動機最可能是什麼？', ['喜歡交朋友', '看中重耳潛力，進行長遠的政治投資', '楚國有很多多餘糧食', '重耳長得好看'], 1, '國君之間的交往，往往充滿了長遠的政治利益計算。'],
+        ['「城濮之戰」中晉國的勝利，證明了在戰爭中什麼因素往往比單純的武力更重要？', ['武器的鋒利', '將領的冷靜頭腦與對敵方心理的精準掌控', '士兵的跑步速度', '運氣和天氣'], 1, '謀略和心理戰往往能以弱勝強，扭轉戰局。'],
+        ['在現代商業競爭中，「退避三舍」這個成語通常蘊含了什麼樣的智慧？', ['遇到問題就逃避', '適當的主動退讓，以退為進尋找更好時機', '跑得非常快躲起來', '徹底消滅敵人'], 1, '退讓並不代表懦弱，有時是為了解決衝突或積蓄力量的最高明手段。']
+    ]),
+    cC('圖窮匕見', '戰國末期，秦國實力最強，準備吞併燕國。燕國太子丹為了挽救國家，派勇敢的刺客荊軻去刺殺秦王嬴政。荊軻知道秦王戒備森嚴，便帶著秦國逃將樊於期的頭顱和燕國督亢地區的地圖作為「見面禮」。他把一把鋒利的匕首藏在捲起的地圖最裡面。到了秦國大殿，秦王看到禮物非常高興，讓荊軻把地圖展開給他看。荊軻慢慢地展開地圖，秦王看得全神貫注。當地圖完全展開到盡頭時，藏在裡面的匕首突然露了出來。這就是「圖窮匕見」。荊軻立刻抓起匕首刺向秦王，可惜秦王反應極快，掙脫了。最終刺殺失敗，荊軻被殺，燕國也被秦國消滅。', [
+        ['荊軻去刺殺秦王時，為什麼要帶「敵將頭顱」和「燕國地圖」？', ['想跟秦王做生意', '用秦王渴望之物作誘餌，消除戒心以獲得近身機會', '覺得這些東西很重可當武器', '秦王喜歡收集地圖'], 1, '這是刺客為了突破嚴密安保而精心設計的極致偽裝與致命誘餌。'],
+        ['荊軻把匕首藏在地圖最裡面，這個刺殺計劃的關鍵戰術在於什麼？', ['地圖要畫得漂亮', '利用秦王專注看地圖時放鬆警惕的瞬間發動奇襲', '匕首要非常重', '地圖要非常長'], 1, '這是一個完美的心理與空間刺殺佈局，利用人的注意力盲區發動奇襲。'],
+        ['「圖窮匕見」在字面上的意思是什麼？', ['地圖很窮，買不起匕首', '地圖完全展開到盡頭時，匕首顯露了出來', '用匕首把地圖割破', '畫了一把匕首在地圖上'], 1, '「窮」在這裡是盡頭的意思；「見」通「現」，指顯露。'],
+        ['荊軻雖然刺殺失敗被殺，在歷史上通常被評價為怎樣的形象？', ['不自量力的騙子', '為國家將生死置之度外的慷慨俠義壯士', '膽小怕事的逃兵', '極度貪財的無賴'], 1, '「風蕭蕭兮易水寒，壯士一去兮不復還」，荊軻成為了悲劇英雄的最高代表。'],
+        ['秦王在看到地圖時「全神貫注」，反映了秦王當時什麼心理？', ['對藝術作品的熱愛', '對擴張領土的極度貪婪，導致短暫失去防備', '覺得荊軻長得奇怪', '他想睡覺'], 1, '貪婪往往會讓人放鬆對危險的警惕。'],
+        ['燕國太子丹派人刺殺秦王，這種做法在國家戰略上是明智的嗎？', ['非常明智', '鋌而走險的下策，無法改變國力懸殊的劣勢', '非常有效嚇跑秦軍', '完全沒有任何影響'], 1, '高階歷史思辨。個人的勇猛無法阻擋歷史的車輪和國家實力的巨大差距。'],
+        ['荊軻刺殺失敗的偶然因素與必然因素分別是什麼？', ['匕首不夠利與武功太差', '偶然是秦王反應快；必然是逆歷史潮流難以成功', '地圖太短與秦國有神仙保護', '秦王穿盔甲與荊軻生病'], 1, '分析歷史事件的偶然性與必然性。'],
+        ['在現代社會中，「圖窮匕見」這個成語通常用來比喻什麼情況？', ['看地圖找路', '事情發展到最後，隱藏的惡意意圖終於徹底暴露', '形容刀劍鋒利', '形容一個人很貧窮'], 1, '這是一個帶有貶義的成語，常用於形容陰謀敗露、真面目顯現。']
+    ]),
+    cC('望梅止渴', '三國時期，曹操率領軍隊去討伐張繡。那時正值炎熱的夏天，驕陽似火，大軍在荒涼的山道上行軍，已經很久沒有找到水源了。士兵們個個口乾舌燥，疲憊不堪，行軍速度越來越慢，甚至有人暈倒在路邊。曹操心裡非常著急，如果再找不到水，軍隊就會不戰自潰。他騎在馬上，眉頭一皺，計上心來。他立刻騎馬跑到隊伍前面，用馬鞭指著前方的大山，高聲對士兵們喊道：「大家再堅持一下！我以前走過這條路，翻過前面那個山頭，就有一大片茂密的梅子林。那裡的梅子又大又酸，足夠我們解渴了！」士兵們一聽到「又大又酸的梅子」，嘴裡頓時不由自主地分泌出大量口水，精神大振。大家忘記了口渴，加快了行軍步伐，終於走出了這片乾旱的地帶，找到了真正的水源。', [
+        ['曹操的軍隊在行軍時遇到了什麼可能導致全軍覆沒的危機？', ['遇到敵人伏擊', '炎夏長時間缺水，士兵極度乾渴面臨軍心渙散', '士兵集體抗命', '在山道中迷失方向'], 1, '缺水是軍隊行軍中最致命的自然威脅，會摧毀軍隊的戰鬥力。'],
+        ['曹操為什麼不直接告訴士兵「前面沒有水」，而是編造了「梅子林」的謊言？', ['拖延時間等運水車', '說實話會讓軍隊崩潰；謊言是為了給予虛擬的希望目標', '測試士兵的忠誠度', '自己也出現嚴重幻覺'], 1, '這是一個極高明的「絕境心理學」應用，在絕境中，虛擬的希望比殘酷的真相更有力量。'],
+        ['為什麼士兵們聽到「梅子」，就能暫時緩解口渴的感覺？', ['梅子汁飛到嘴裡', '條件反射；大腦想到酸味，口腔自動分泌唾液', '曹操給每人發了梅子', '覺得曹操的話很好笑'], 1, '曹操極其聰明地利用了人體的生理反射來解決眼前的物理危機。'],
+        ['這個故事展現了曹操作為一名傑出軍事統帥的什麼卓越能力？', ['熟悉地理環境', '在生死關頭保持冷靜，並巧妙運用心理暗示', '體力充沛不怕渴', '非常會種植梅樹'], 1, '這展現了曹操超凡的臨場應變能力和對群體心理的精準掌控。'],
+        ['士兵們「加快了行軍步伐」的真正動力來源於什麼？', ['對敵人的仇恨', '對即將到達「梅子林」解渴的強烈心理期盼', '對曹操嚴厲軍法的恐懼', '天氣突然變涼爽'], 1, '心理暗示成功轉化為了行動的力量。'],
+        ['曹操「眉頭一皺，計上心來」的細節，突出了他怎樣的性格特徵？', ['生性多疑，狡猾奸詐', '臨危不亂，思維敏捷，善於找突破口', '脾氣暴躁，容易生氣', '憂國憂民，多愁善感'], 1, '短時間內想出奇招，是智者的表現。'],
+        ['如果軍隊翻過山頭後依然找不到水，這個「望梅止渴」的計策會導致什麼後果？', ['士兵們覺得曹操很幽默', '希望破滅後遭遇更嚴重的心理崩潰與信任危機', '士兵們會自己去找梅子', '沒有任何後果'], 1, '心理暗示只能救急，不能救窮。如果最終無法兌現，反噬會非常可怕。'],
+        ['在現代社會中，「望梅止渴」這個成語通常用來比喻什麼？', ['用梅子製作飲料', '用空想或虛幻的希望安慰自己，暫時滿足渴望', '形容梅子非常酸', '形容人非常口渴'], 1, '這個成語常用於形容自我安慰的心理防禦機制。']
+    ]),
+    cC('三顧茅廬', '東漢末年，天下大亂，群雄割據。劉備雖然有遠大的抱負，想匡扶漢室，但手下缺乏頂尖的謀士。他聽說隱居在隆中茅廬裡的諸葛亮（號臥龍）是一位擁有驚世才華的奇才，便決定親自去請他出山。第一次去，諸葛亮剛好出門了，劉備只好失望而歸。過了幾天，正值寒冬大雪，劉備不顧結拜兄弟關羽和張飛的勸阻，第二次冒雪前往，結果諸葛亮去閒遊了，劉備只好留下一封信表達敬意。到了第二年春天，劉備挑選了一個好日子，第三次前往茅廬。這次諸葛亮在家，但正在午睡。劉備不讓手下驚醒他，自己恭恭敬敬地站在階下等了很久，直到諸葛亮醒來。諸葛亮被劉備的誠心誠意所深深感動，最終答應出山輔佐劉備，為他制定了著名的「三分天下」戰略，成就了蜀漢霸業。', [
+        ['劉備為什麼要放下將軍的身段，三次親自去茅廬請諸葛亮？', ['想去郊外欣賞風景', '胸懷大志但缺乏戰略家，對頂尖人才極度渴求', '想買下茅廬當別墅', '關羽和張飛強烈要求'], 1, '這反映了古代傑出政治家為了成就霸業，對頂尖人才的極端重視。'],
+        ['在第二次和第三次拜訪中，「冒雪前往」和「階下侍立」這兩個細節，突顯了劉備怎樣的品格？', ['喜歡在惡劣天氣下出門', '為了請得大才，展現出極致的堅韌與誠意', '沒有地方可以住', '害怕打擾別人睡覺'], 1, '這兩個動作將劉備的「誠意」具象化，達到了感人至深的效果。'],
+        ['面對劉備的多次拜訪，關羽和張飛的態度是怎樣的？在寫作上有什麼作用？', ['非常支持積極參與', '很不耐煩甚至傲慢；用他們的浮躁反襯劉備的求才若渴', '想自己當軍師', '也想跟著睡覺'], 1, '透過猛將的短視與抱怨，更加突顯了主公劉備卓越的政治眼光和忍耐力。'],
+        ['從戰略博弈角度看，諸葛亮為什麼前兩次都不見劉備，直到第三次才答應？', ['真的太忙去旅行', '雙向考驗；良臣擇主，確認劉備是否值得付出一生輔佐', '在睡覺起不來', '非常討厭劉備'], 1, '諸葛亮的迴避實際上是在暗中觀察劉備的誠意、耐性與政治度量。'],
+        ['諸葛亮出山後為劉備制定了「三分天下」戰略，這證明了劉備的「三顧茅廬」值得嗎？', ['不值得，花的時間太多', '絕對值得，這是一次改變歷史的完美人才投資', '不值得，諸葛亮只會紙上談兵', '一半一半，運氣成分多'], 1, '人才的價值在於能為組織提供決定性的戰略方向。'],
+        ['劉備「自己恭恭敬敬站在階下等」這個舉動，打破了古代社會的什麼常規？', ['不能站別人家門口', '打破了君尊臣卑、上位者傲慢的階級常規', '中午不能睡覺的規矩', '出門必須騎馬的規矩'], 1, '以皇叔之尊，降階等候一個平民，這種謙卑震撼人心。'],
+        ['如果劉備第二次去沒見到人就放棄了，三國歷史可能會怎樣改寫？', ['劉備會自己想出戰略', '劉備可能永遠只是個流浪軍閥，無法建立蜀漢霸業', '諸葛亮會主動跑去找劉備', '沒有任何改變'], 1, '歷史往往由關鍵人物的關鍵堅持所決定。'],
+        ['「三顧茅廬」這個成語現在通常用來形容什麼樣的行為？', ['去了三次別人家做客', '為了邀請頂尖人才，展現極大誠意和耐心', '形容房子破舊需要修理三次', '形容天氣非常寒冷'], 1, '這是一個高度讚美求賢若渴、誠心誠意的褒義成語。']
+    ]),
+    cC('指桑罵槐', '在複雜的人際交往和歷史政治中，有時候人們不方便直接批評某個人，就會使用「指桑罵槐」的策略。這個成語字面上的意思是：指著桑樹去罵槐樹。它的來源可以追溯到古代兵法《三十六計》之一。例如，在古代軍營裡，一個將軍想要整頓軍紀，但他不敢直接處罰那些有強大背景的驕傲軍官。於是，將軍會故意找一個沒有背景但犯了同樣小錯的普通士兵，在大庭廣眾之下對他進行極其嚴厲的懲罰和痛罵。將軍表面上是在罵這個普通士兵（桑樹），但實際上那些驕傲的軍官（槐樹）在旁邊看了，心裡會感到非常害怕，從而收斂自己的行為。這就是一種透過間接手段達到威懾效果的高明心理戰術。', [
+        ['「指桑罵槐」在古代兵法中，屬於一種什麼性質的戰術？', ['直接消滅敵人的暴力戰術', '透過間接暗示達到心理震懾的高明戰術', '逃跑和妥協的防禦戰術', '結交朋友的外交戰術'], 1, '這是一種不流血但能屈人之兵的權謀。'],
+        ['將軍為什麼不直接處罰那些犯錯的「驕傲軍官」？', ['忘記了他們的名字', '那些軍官有強大背景，直接處罰可能引發兵變或政治風險', '覺得軍官其實沒有錯', '軍官跑得很快抓不到'], 1, '這反映了權力鬥爭中的現實顧忌，需要採用迂迴的策略來達到整頓目的。'],
+        ['將軍嚴厲懲罰普通士兵的「真正目的」是什麼？', ['非常討厭那個士兵', '殺雞儆猴，透過懲罰弱者來震懾背後的強者', '讓士兵趕快退役回家', '向大家展現力氣很大'], 1, '普通士兵只是一個被用來傳遞警告信號的「工具人」。'],
+        ['被罵的「普通士兵」和在旁邊看的「驕傲軍官」，分別對應了成語中的什麼植物？', ['士兵是槐樹，軍官是桑樹', '士兵是桑樹，軍官是槐樹', '兩者都是桑樹', '兩者都是槐樹'], 1, '指著桑樹罵，實際上是為了警告槐樹。'],
+        ['這種類似的心理戰術，在中國另外一句著名成語中也有體現，是哪一句？', ['畫蛇添足', '殺雞儆猴', '守株待兔', '掩耳盜鈴'], 1, '殺雞儆猴與指桑罵槐在策略本質上是一致的。'],
+        ['「指桑罵槐」策略能夠成功的關鍵心理因素是什麼？', ['被罵的人很開心', '旁觀者能聽出弦外之音，並對權威產生恐懼', '將軍的聲音夠大', '桑樹和槐樹長得很像'], 1, '如果旁觀者聽不懂暗示，這個策略就會失效。'],
+        ['從道德角度來看，將軍拿普通士兵來「開刀」的做法存在什麼爭議？', ['非常公平公正', '為達目的，將不成比例的懲罰加諸在弱勢者身上', '非常慈悲善良', '沒有任何爭議'], 1, '高階思辨題。兵法講求實效，但往往犧牲個體的公平。'],
+        ['在現代社會中，「指桑罵槐」通常用來形容什麼樣的說話方式？', ['直接指出優點並讚美', '表面上罵這個人，實際上卻在暗諷另一個人', '說話非常大聲且直接了當', '只和植物說話的奇怪行為'], 1, '這是一種常見的間接批評、諷刺或敲山震虎的手法。']
+    ])
+];
+        let poemProgress = JSON.parse(localStorage.getItem('poemAdvProgress')) || new Array(poemData.length).fill(0);
+        let cultureProgress = JSON.parse(localStorage.getItem('cultureAdvProgress')) || new Array(cultureData.length).fill(0);
+
+        function renderPoemDirectory() {
+            const dirContainer = document.getElementById('poem-content');
+            let html = '';
+            poemData.forEach((item, idx) => {
+                let status = poemProgress[idx];
+                let bgClass = 'bg-white';
+                let borderClass = 'border-slate-200';
+                let icon = ' <span class="text-slate-400 font-bold ml-2"># 未挑戰</span>';
+                if (status === 1) { bgClass = 'bg-yellow-50'; borderClass = 'border-yellow-400'; icon = ' <span class="text-yellow-600 font-bold ml-2">🌟 完美</span>'; }
+                else if (status === 2) { bgClass = 'bg-emerald-50'; borderClass = 'border-emerald-400'; icon = ' <span class="text-emerald-600 font-bold ml-2">✅ 過關</span>'; }
+                else if (status === -1) { bgClass = 'bg-rose-50'; borderClass = 'border-rose-400'; icon = ' <span class="text-rose-600 font-bold ml-2">❌ 錯誤</span>'; }
+                
+                html += `
+                    <button onclick="startPoem(${idx})" class="w-full text-left p-5 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition active:scale-95 flex flex-col justify-between">
+                        <div class="flex justify-between items-center mb-2 w-full">
+                            <span class="bg-slate-100 text-slate-700 text-xs font-bold px-2 py-1 rounded">高階古詩 ${idx+1}</span>
+                            ${icon}
+                        </div>
+                        <h3 class="text-xl font-black text-slate-800">${item.title}</h3>
+                        <p class="text-sm text-slate-500 font-bold mt-1">${item.author}</p>
+                    </button>
+                `;
+            });
+            dirContainer.innerHTML = html;
+        }
+
+        function startPoem(idx, forceStart = false) {
+            if (!forceStart && !localStorage.getItem('tut_seen_t-poem-adv')) {
+                pendingTaskIdx = idx; pendingTaskType = 'poem'; showTutorial('t-poem-adv'); return;
+            }
+            currentIdx = idx; currentQIdx = 0; mistakes = 0;
+            document.getElementById('poem-directory').style.display = 'none';
+            const playArea = document.getElementById('poem-play');
+            playArea.style.display = 'flex';
+            renderPoemScreen();
+        }
+
+        function renderPoemScreen() {
+            const data = poemData[currentIdx];
+            let html = `
+                <div class="w-full max-w-4xl flex justify-between items-center mb-4">
+                    <button onclick="switchMode('poem')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition text-lg">⬅️ 暫停返回</button>
+                    <span class="bg-purple-100 text-purple-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">高階意境鑒賞</span>
+                </div>
+                
+                <div class="w-full max-w-4xl bg-white border-2 border-slate-200 rounded-3xl p-6 md:p-8 shadow-xl flex flex-col items-center">
+                    <h2 class="text-4xl md:text-5xl font-black text-slate-800 mb-3">${data.title}</h2>
+                    <p class="text-xl text-slate-500 font-bold mb-6">${data.author}</p>
+                    
+                    <div class="bg-purple-50 w-full p-6 md:p-10 rounded-2xl border-4 border-purple-200 mb-8 flex flex-col items-center shadow-inner">
+                        <div id="poem-content-area" class="poem-text text-3xl md:text-4xl text-center font-bold text-slate-800 space-y-3">
+                            ${data.lines.map(l => `<p class="read-sentence" onclick="speakSpecificSentence(this)">${l}</p>`).join('')}
+                        </div>
+                        <button id="btn-play-story" onclick="startKaraoke()" class="mt-8 bg-purple-500 hover:bg-purple-600 text-white px-8 py-4 rounded-full text-2xl font-black flex items-center justify-center shadow-lg pop border-4 border-purple-400 transition w-full max-w-sm">▶️ 卡拉OK 帶讀</button>
+                        <button id="btn-stop-story" onclick="stopKaraoke()" class="mt-8 bg-slate-600 hover:bg-slate-500 text-white px-8 py-4 rounded-full text-2xl font-black flex items-center justify-center shadow-lg transition hidden w-full max-w-sm">⏹️ 停止朗讀</button>
+                    </div>
+                    
+                    <button onclick="startPoemQuiz()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-5 rounded-xl shadow-lg transition text-2xl border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">熟讀完畢，開始鑒賞測驗！ 🚀</button>
+                </div>
+            `;
+            document.getElementById('poem-play').innerHTML = html;
+        }
+
+        function startPoemQuiz() {
+            stopKaraoke();
+            renderQuiz('poem', poemData);
+        }
+
+        function renderCultureDirectory() {
+            const dirContainer = document.getElementById('culture-content');
+            let html = '';
+            cultureData.forEach((item, idx) => {
+                let status = cultureProgress[idx];
+                let bgClass = 'bg-white';
+                let borderClass = 'border-slate-200';
+                let icon = ' <span class="text-slate-400 font-bold ml-2"># 未挑戰</span>';
+                if (status === 1) { bgClass = 'bg-yellow-50'; borderClass = 'border-yellow-400'; icon = ' <span class="text-yellow-600 font-bold ml-2">🌟 完美</span>'; }
+                else if (status === 2) { bgClass = 'bg-emerald-50'; borderClass = 'border-emerald-400'; icon = ' <span class="text-emerald-600 font-bold ml-2">✅ 過關</span>'; }
+                else if (status === -1) { bgClass = 'bg-rose-50'; borderClass = 'border-rose-400'; icon = ' <span class="text-rose-600 font-bold ml-2">❌ 錯誤</span>'; }
+                
+                html += `
+                    <button onclick="startCulture(${idx})" class="w-full text-left p-5 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition active:scale-95 flex flex-col justify-between">
+                        <div class="flex justify-between items-center mb-2 w-full">
+                            <span class="bg-slate-100 text-slate-700 text-xs font-bold px-2 py-1 rounded">謀略 ${idx+1}</span>
+                            ${icon}
+                        </div>
+                        <h3 class="text-xl font-black text-slate-800">${item.title}</h3>
+                        <p class="text-xs text-purple-600 font-bold mt-1">共 8 道地獄級推論題</p>
+                    </button>
+                `;
+            });
+            dirContainer.innerHTML = html;
+        }
+
+        function startCulture(idx, forceStart = false) {
+            if (!forceStart && !localStorage.getItem('tut_seen_t-culture-adv')) {
+                pendingTaskIdx = idx; pendingTaskType = 'culture'; showTutorial('t-culture-adv'); return;
+            }
+            currentIdx = idx; currentQIdx = 0; mistakes = 0;
+            document.getElementById('culture-directory').style.display = 'none';
+            const playArea = document.getElementById('culture-play');
+            playArea.style.display = 'flex';
+            renderCultureScreen();
+        }
+
+        function renderCultureScreen() {
+            const data = cultureData[currentIdx];
+            let html = `
+                <div class="w-full max-w-4xl flex justify-between items-center mb-4">
+                    <button onclick="switchMode('culture')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition text-lg">⬅️ 暫停返回</button>
+                    <span class="bg-purple-100 text-purple-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">歷史謀略精讀</span>
+                </div>
+                
+                <div class="w-full max-w-4xl bg-white border-2 border-slate-200 rounded-3xl p-6 md:p-8 shadow-xl flex flex-col items-center">
+                    <h2 class="text-3xl md:text-4xl font-black text-slate-800 mb-6">${data.title}</h2>
+                    
+                    <div class="w-full bg-purple-50 rounded-2xl p-6 md:p-10 mb-8 border-4 border-purple-200 shadow-inner">
+                        <h3 class="text-2xl font-bold mb-6 text-purple-800 text-center border-b-2 border-purple-200 pb-4">📖 邊聽邊深讀</h3>
+                        
+                        <div id="culture-content-area" class="text-xl md:text-2xl leading-loose text-slate-700 font-bold text-justify">
+                            ${parseAndWrapSentences(data.text)}
+                        </div>
+                        
+                        <div class="mt-8 flex gap-4 justify-center w-full">
+                            <button id="btn-play-story" onclick="startKaraoke()" class="bg-purple-500 hover:bg-purple-600 text-white px-8 py-4 rounded-full text-2xl font-black flex items-center justify-center shadow-lg pop border-4 border-purple-400 transition w-full max-w-sm">▶️ 邊看邊聽</button>
+                            <button id="btn-stop-story" onclick="stopKaraoke()" class="bg-slate-600 hover:bg-slate-500 text-white px-8 py-4 rounded-full text-2xl font-black flex items-center justify-center shadow-lg transition hidden w-full max-w-sm">⏹️ 停止朗讀</button>
+                        </div>
+                    </div>
+
+                    <button onclick="startCultureQuiz()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-5 rounded-xl shadow-lg transition text-2xl border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">我理解了，開始謀略測驗！ 🚀</button>
+                </div>
+            `;
+            document.getElementById('culture-play').innerHTML = html;
+        }
+
+        function startCultureQuiz() {
+            stopKaraoke();
+            renderQuiz('culture', cultureData);
+        }
+
+        function shuffleOptionsArray(arr, ansIdx) {
+            let opts = arr.map((opt, i) => ({ text: opt, isCorr: i === ansIdx }));
+            return opts.sort(() => Math.random() - 0.5);
+        }
+
+        // ================= 測驗通用邏輯 =================
+        function renderQuiz(type, dataPool) {
+            const data = dataPool[currentIdx];
+            const qData = data.qs[currentQIdx];
+            
+            let html = `
+                <div class="w-full max-w-4xl flex justify-between items-center mb-4">
+                    <button onclick="switchMode('${type}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition text-lg">⬅️ 暫停返回</button>
+                    <span class="bg-purple-100 text-purple-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${currentQIdx + 1} / ${data.qs.length} 題</span>
+                </div>
+                
+                <div class="w-full max-w-4xl bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center">
+            `;
+
+            let displayQ = qData.q;
+            if (displayQ.includes('___')) {
+                displayQ = displayQ.replace('___', '<span class="text-purple-600 border-b-4 border-purple-500 px-6 font-black bg-purple-50 inline-block mx-1">?</span>');
+            }
+
+            html += `
+                    <div class="w-full flex items-start gap-4 mb-8 bg-purple-50 p-6 rounded-2xl border border-purple-100 shadow-inner mt-4">
+                        <button onclick="speakText('${qData.q.replace(/___/g, '什麼')}')" class="tts-btn flex-shrink-0 bg-white text-purple-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-purple-200">🔊</button>
+                        <div class="text-2xl md:text-3xl font-bold text-slate-800 leading-relaxed w-full">${displayQ}</div>
+                    </div>
+            `;
+
+            let btnClass = "text-xl md:text-2xl py-5 px-6 text-left";
+            html += `<div class="flex flex-col gap-4 w-full mt-auto" id="options-container">`;
+
+            let opts = shuffleOptionsArray(qData.opts, qData.ans);
+
+            opts.forEach((opt, oIdx) => {
+                const safeOpt = opt.text.replace(/'/g, "\\'");
+                const letter = ['A','B','C','D'][oIdx];
+                
+                html += `
+                <div class="flex gap-2 w-full">
+                    <button onclick="checkAnswer(this, ${opt.isCorr}, '${type}')" class="option-btn bg-white border-2 border-slate-200 text-slate-700 font-bold ${btnClass} rounded-2xl hover:bg-purple-50 transition w-full flex items-center gap-4">
+                        <span class="bg-slate-100 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0">${letter}</span> 
+                        <span>${opt.text}</span>
+                    </button>
+                    <button onclick="speakText('${safeOpt}')" class="tts-btn flex-shrink-0 bg-purple-50 text-purple-600 w-16 rounded-2xl text-3xl flex items-center justify-center shadow-sm border-2 border-purple-200 hover:bg-purple-100 transition">🔊</button>
+                </div>`;
+            });
+
+            html += `</div>
+                <!-- 錯誤提示專用框 -->
+                <div id="dynamic-hint-box" class="hidden w-full mt-6 bg-rose-50 border-4 border-rose-400 p-5 rounded-2xl shadow-sm text-rose-800 font-bold text-xl flex items-start gap-3 slide-up">
+                    <div class="text-4xl">💡</div>
+                    <div class="flex-1 space-y-2 leading-relaxed" id="hint-text"></div>
+                    <button id="hint-tts-btn" class="text-3xl hover:scale-110 transition bg-white rounded-full w-12 h-12 flex items-center justify-center shadow-sm border-2 border-rose-300 flex-shrink-0">🔊</button>
+                </div>
+            </div>`;
+            
+            document.getElementById(`${type}-play`).innerHTML = html;
+        }
+
+        function checkAnswer(btn, isCorr, type) {
+            const allBtns = document.querySelectorAll('#options-container .option-btn');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            const dataPool = type === 'poem' ? poemData : cultureData;
+            const data = dataPool[currentIdx];
+            const expReason = data.qs[currentQIdx].exp;
+            
+            if (isCorr) {
+                btn.classList.add('correct');
+                speakText("答對了！"); 
+                
+                setTimeout(() => {
+                    // 動態判斷題數 (自動適應 8 題)
+                    if (currentQIdx < data.qs.length - 1) { 
+                        currentQIdx++;
+                        renderQuiz(type, dataPool);
+                    } else {
+                        // 完結加分
+                        let finalStatus = mistakes === 0 ? 1 : 2;
+                        let progArr = type === 'poem' ? poemProgress : cultureProgress;
+                        let previousStatus = progArr[currentIdx];
+                        let expGained = 0;
+
+                        if (previousStatus !== 1 && previousStatus !== 2) {
+                            expGained = finalStatus === 1 ? 50 : 20;
+                        } else if (previousStatus === 2 && finalStatus === 1) {
+                            expGained = 30; 
+                        }
+
+                        if (expGained > 0) {
+                            advExp += expGained;
+                            localStorage.setItem('cultureAdvancedExp', advExp);
+                            document.getElementById('exp-display').innerText = advExp;
+                            document.getElementById('exp-display').classList.add('pop');
+                            setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+                        }
+                        
+                        if (finalStatus === 1 || previousStatus !== 1) {
+                            progArr[currentIdx] = finalStatus;
+                            if(type==='poem') localStorage.setItem('poemAdvProgress', JSON.stringify(progArr));
+                            else localStorage.setItem('cultureAdvProgress', JSON.stringify(progArr));
+                        }
+
+                        let expMsg = expGained > 0 
+                            ? `<span class="text-purple-600 block text-xl mb-4">獲得 ${expGained} 點經驗值 ✨</span>` 
+                            : `<span class="text-slate-500 block text-lg mb-4">這篇已經成功過關囉！</span>`;
+
+                        document.getElementById('feedback-desc').innerHTML = `你完成了這篇的 ${data.qs.length} 道拔尖測驗！<br>${expMsg}`;
+                        const modal = document.getElementById('feedback-modal');
+                        const content = document.getElementById('feedback-content');
+                        
+                        modal.classList.remove('hidden');
+                        setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+                        
+                        document.getElementById('next-btn').onclick = () => {
+                            modal.classList.add('opacity-0'); content.classList.add('scale-90');
+                            setTimeout(() => { modal.classList.add('hidden'); switchMode(type); }, 300);
+                        };
+                    }
+                }, 1000); 
+            } else {
+                btn.classList.add('wrong', 'shake');
+                mistakes++;
+                
+                let progArr = type === 'poem' ? poemProgress : cultureProgress;
+                if (progArr[currentIdx] !== 1 && progArr[currentIdx] !== 2) {
+                    progArr[currentIdx] = -1;
+                    if(type==='poem') localStorage.setItem('poemAdvProgress', JSON.stringify(progArr));
+                    else localStorage.setItem('cultureAdvProgress', JSON.stringify(progArr));
+                }
+
+                const hintBox = document.getElementById('dynamic-hint-box');
+                document.getElementById('hint-text').innerText = "深度解析：" + expReason;
+                document.getElementById('hint-tts-btn').onclick = () => speakText("深度解析：" + expReason);
+                hintBox.classList.remove('hidden');
+                
+                speakText("推斷有誤喔！請聽解析：" + expReason);
+                
+                setTimeout(() => {
+                    btn.classList.remove('wrong', 'shake');
+                    allBtns.forEach(b => { if (!b.classList.contains('correct')) b.style.pointerEvents = 'auto'; });
+                }, 2500); 
+            }
+        }
+
+        function updateTotalProgress() {
+            let pDone = poemProgress.filter(p => p === 1 || p === 2).length;
+            let cDone = cultureProgress.filter(p => p === 1 || p === 2).length;
+            let percent = ((pDone + cDone) / 20) * 100;
+            const pb = document.getElementById('progress-bar');
+            if (pb) pb.style.width = percent + '%';
+            
+            if(pDone === 10 && cDone === 10) localStorage.setItem('t_culture_3', 'true');
+        }
+
+        function backToDirectoryFromFinish() {
+            const finishModal = document.getElementById('finish-modal');
+            const finishContent = document.getElementById('finish-content');
+            finishModal.classList.add('opacity-0');
+            finishContent.classList.add('scale-90');
+            setTimeout(() => {
+                finishModal.classList.add('hidden');
+                switchMode(currentMode);
+            }, 300);
+        }
+
+        window.onload = function() {
+            document.getElementById('exp-display').innerText = advExp;
+            switchMode('poem');
+        }
+    </script>
+</body>
+</html>
