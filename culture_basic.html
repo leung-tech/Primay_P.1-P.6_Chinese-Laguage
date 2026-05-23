@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>中華文化與古詩 - SEN基礎訓練</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif; background-color: #fff7ed; -webkit-tap-highlight-color: transparent; }
+        .bg-grid-pattern { background-image: linear-gradient(to right, #ffedd5 1px, transparent 1px), linear-gradient(to bottom, #ffedd5 1px, transparent 1px); background-size: 40px 40px; }
+        
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .pop { animation: pop 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* SEN 友善：加大按鈕陰影與點擊反饋 */
+        .option-btn { transition: all 0.2s; box-shadow: 0 6px 0 #fdba74; }
+        .option-btn:active { transform: translateY(6px); box-shadow: 0 0 0 transparent; }
+        .option-btn.correct { background-color: #f0fdf4; border-color: #22c55e; color: #166534; box-shadow: 0 0 0 transparent; transform: translateY(6px); pointer-events: none; }
+        .option-btn.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.6; pointer-events: none; }
+        
+        .tab-btn { transition: all 0.3s; }
+        .tab-active { background-color: #ea580c; color: white; border-color: #c2410c; }
+        .tab-inactive { background-color: white; color: #64748b; border-color: #cbd5e1; }
+
+        .tts-btn { transition: transform 0.2s; }
+        .tts-btn:active { transform: scale(0.9); }
+
+        .toast-msg { visibility: hidden; min-width: 250px; background-color: #ef4444; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px; transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
+        @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
+
+        /* 古詩專屬字體與排版 (加特大) */
+        .poem-text { font-family: 'Kaiti', 'STKaiti', serif; letter-spacing: 0.2em; line-height: 2.5; font-weight: 900; }
+        
+        /* SEN 重點高亮 */
+        .sen-highlight { background-color: #fef08a; padding: 0 4px; border-radius: 4px; border-bottom: 2px solid #eab308; }
+
+        /* 🌟 卡拉OK 跟讀高亮樣式 */
+        .read-sentence { cursor: pointer; border-radius: 6px; padding: 2px 4px; margin: 0 -4px; transition: all 0.2s; display: inline; }
+        .read-sentence:hover { background-color: #ffedd5; color: #c2410c; }
+        .active-sentence { background-color: #fef08a; color: #ea580c; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
+
+    <!-- 頂部導覽列 (Orange 配色) -->
+    <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
+        <div class="p-3 lg:p-4 bg-orange-600 text-white flex justify-between items-center w-full">
+            <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
+                <a href="index.html" class="hover:bg-orange-700 p-1 rounded transition bg-orange-800">⬅️ 返回</a>
+                <span>🏮 中華文化與古詩 (基礎)</span>
+            </h1>
+            <div class="flex gap-2 lg:gap-4 items-center bg-orange-800 px-3 py-1.5 rounded-full border border-orange-500 shadow-inner">
+                <span class="text-lg lg:text-xl">🏆</span>
+                <span class="font-bold text-sm lg:text-lg">EXP: <span id="exp-display" class="text-yellow-400">0</span></span>
+            </div>
+        </div>
+        
+        <div class="flex w-full bg-slate-100 border-b border-slate-300">
+            <button onclick="switchMode('poem')" id="tab-poem" class="tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-orange-600">📜 經典古詩帶讀</button>
+            <button onclick="switchMode('culture')" id="tab-culture" class="tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200">🏮 傳統故事聽講</button>
+        </div>
+        <div id="progress-container" class="w-full bg-slate-200 h-2">
+            <div id="progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
+        </div>
+    </div>
+
+    <!-- 主畫面區 -->
+    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
+        
+        <!-- 古詩目錄 -->
+        <div id="poem-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
+            <div id="poem-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">📜 必讀古詩排行榜</h2>
+                    <button onclick="showTutorial('t-poem')" class="bg-orange-100 text-orange-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-orange-300 hover:bg-orange-200 transition">📘 學習錦囊</button>
+                </div>
+                <p class="text-slate-600 font-bold mb-4">聆聽古人的智慧！請一邊聽廣東話朗讀，一邊記住詩句的意思。每首詩有 <span class="text-orange-600 font-black">5 道挑戰題</span>喔！</p>
+                <div id="poem-content" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+            <div id="poem-play" class="w-full hidden flex-col items-center"></div>
+        </div>
+
+        <!-- 文化故事目錄 -->
+        <div id="culture-mode" class="w-full max-w-5xl mx-auto hidden flex-col gap-4 lg:gap-6">
+            <div id="culture-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">🏮 傳統節日與歷史人物</h2>
+                    <button onclick="showTutorial('t-culture')" class="bg-orange-100 text-orange-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-orange-300 hover:bg-orange-200 transition">📘 學習錦囊</button>
+                </div>
+                <p class="text-slate-600 font-bold mb-4">聽聽有趣的民間傳說與歷史人物故事，了解我們源遠流長的文化！每篇有 <span class="text-orange-600 font-black">5 道挑戰題</span>。</p>
+                <div id="culture-content" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+            <div id="culture-play" class="w-full hidden flex-col items-center"></div>
+        </div>
+
+    </div>
+
+    <!-- 學習錦囊 Modal (SEN友善排版) -->
+    <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform duration-300 flex flex-col max-h-[90vh]" id="tutorial-content">
+            <div class="flex justify-between items-center mb-4 border-b-4 border-orange-200 pb-3">
+                <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-orange-600 flex items-center gap-2">📘 國學小錦囊</h2>
+                <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-5xl font-black transition leading-none">&times;</button>
+            </div>
+            <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4"></div>
+            <div class="mt-6 pt-4 border-t-2 border-slate-100">
+                <button onclick="closeTutorial()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-5 rounded-xl shadow-lg transition text-2xl border-b-4 border-orange-700 active:border-b-0 active:translate-y-1">我明白了！開始 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 答錯/答對 溫馨解析 Modal (SEN 輔助學習) -->
+    <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 pointer-events-none">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-md text-center transform scale-90 transition-transform duration-300 pointer-events-auto" id="feedback-content">
+            <div id="feedback-icon" class="text-8xl mb-4">🎉</div>
+            <h2 id="feedback-title" class="text-3xl font-black text-slate-800 mb-4">答對了！</h2>
+            <div class="bg-orange-50 border-2 border-orange-200 p-4 rounded-xl mb-6">
+                <p id="feedback-desc" class="text-orange-800 font-bold text-xl leading-relaxed text-left"></p>
+            </div>
+            <div class="flex gap-3 w-full">
+                <button onclick="speakText(document.getElementById('feedback-desc').innerText)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-4 px-6 rounded-xl shadow transition text-2xl">🔊 聽解釋</button>
+                <button id="next-btn" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-xl shadow-lg transition text-2xl border-b-4 border-orange-700 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 完成 Modal -->
+    <div id="finish-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 pointer-events-none">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-md text-center transform scale-90 transition-transform duration-300 pointer-events-auto" id="finish-content">
+            <div class="text-8xl mb-4 animate-bounce">🏆</div>
+            <h2 class="text-4xl font-black text-slate-800 mb-4">任務完成！</h2>
+            <p id="finish-desc" class="text-slate-600 font-bold mb-8 text-2xl leading-relaxed">恭喜你掌握了這篇內容！</p>
+            <button onclick="backToDirectoryFromFinish()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-5 rounded-xl shadow-lg transition text-2xl border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">領取獎勵並返回 ✨</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-msg">提示訊息</div>
+
+    <script>
+        // ================= 1. 核心狀態與語音 =================
+        let cultureExp = parseInt(localStorage.getItem('cultureBasicExp')) || 0;
+        document.getElementById('exp-display').innerText = cultureExp;
+        
+        let currentMode = 'poem'; 
+        let currentIdx = -1;
+        let currentQIdx = -1;
+        let mistakes = 0;
+        let pendingTaskIdx = -1;
+        let pendingTaskType = '';
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message; toast.className = "toast-msg show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // 🌟 終極 Emoji 與符號過濾器
+        function cleanTextForSpeech(text) {
+            return text.replace(/<br\s*\/?>/gi, '。')
+                       .replace(/<[^>]*>?/gm, '')
+                       .replace(/[✅❌💡【】]/g, '')
+                       .replace(/&nbsp;/g, ' ')
+                       .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '') // 移除 Surrogate Pairs (大多數 Emoji)
+                       .replace(/[\u2600-\u27BF]/g, '')               // 移除雜項符號與 Dingbats
+                       .replace(/[\uFE0F]/g, '');                     // 移除變體選擇符
+        }
+
+        // 一般短句朗讀
+        function speakText(text, rate = 0.8) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let cleanText = cleanTextForSpeech(text);
+                let msg = new SpeechSynthesisUtterance(cleanText);
+                msg.lang = 'zh-HK'; 
+                msg.rate = rate; 
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        // ================= 🌟 卡拉OK 跟讀引擎 =================
+        let isKaraokePlaying = false;
+        let karaokeIndex = 0;
+        let sentenceElements = [];
+
+        function startKaraoke() {
+            if (isKaraokePlaying) {
+                stopKaraoke();
+                return;
+            }
+            stopKaraoke();
+            isKaraokePlaying = true;
+            
+            // 動態抓取當前的句子容器
+            let containerId = currentMode === 'poem' ? 'poem-content-area' : 'culture-content-area';
+            sentenceElements = document.getElementById(containerId).querySelectorAll('.read-sentence');
+            karaokeIndex = 0;
+            
+            document.getElementById('btn-play-story').classList.add('hidden');
+            document.getElementById('btn-stop-story').classList.remove('hidden');
+            
+            if (sentenceElements.length > 0) playNextKaraokeSentence();
+        }
+
+        function playNextKaraokeSentence() {
+            if (karaokeIndex >= sentenceElements.length || !isKaraokePlaying) {
+                stopKaraoke();
+                return;
+            }
+            
+            // 移除舊高亮，加上新高亮
+            document.querySelectorAll('.read-sentence').forEach(s => s.classList.remove('active-sentence'));
+            let span = sentenceElements[karaokeIndex];
+            span.classList.add('active-sentence');
+            
+            // 讓視窗自動滾動到正在讀的那一句
+            span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            let text = span.innerText;
+            let cleanText = cleanTextForSpeech(text);
+            let msg = new SpeechSynthesisUtterance(cleanText);
+            msg.lang = 'zh-HK';
+            msg.rate = 0.8; 
+            
+            msg.onend = function() {
+                if (isKaraokePlaying) {
+                    karaokeIndex++;
+                    playNextKaraokeSentence();
+                } else {
+                    stopKaraoke();
+                }
+            };
+            msg.onerror = function() { stopKaraoke(); };
+            window.speechSynthesis.speak(msg);
+        }
+
+        function stopKaraoke() {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            isKaraokePlaying = false;
+            document.querySelectorAll('.read-sentence').forEach(s => s.classList.remove('active-sentence'));
+            const bp = document.getElementById('btn-play-story'), bs = document.getElementById('btn-stop-story');
+            if (bp && bs) { bp.classList.remove('hidden'); bs.classList.add('hidden'); }
+        }
+
+        function speakSpecificSentence(spanElement) {
+            stopKaraoke(); // 點擊時打斷全篇跟讀
+            document.querySelectorAll('.read-sentence').forEach(s => s.classList.remove('active-sentence'));
+            spanElement.classList.add('active-sentence');
+            
+            let text = spanElement.innerText;
+            let cleanText = cleanTextForSpeech(text);
+            let msg = new SpeechSynthesisUtterance(cleanText);
+            msg.lang = 'zh-HK';
+            msg.rate = 0.8;
+            
+            msg.onend = function() {
+                spanElement.classList.remove('active-sentence');
+            };
+            window.speechSynthesis.speak(msg);
+        }
+
+        // 把純文字切成句子並包裝成可點擊/跟讀的 span
+        function parseAndWrapSentences(textString) {
+            let parts = textString.split(/([。！？][」』]?)/);
+            let finalHtml = "";
+            let current = "";
+            for(let i=0; i<parts.length; i++) {
+                current += parts[i];
+                if (/[。！？]/.test(parts[i]) || i === parts.length - 1) {
+                    if (current.trim() !== "") {
+                        finalHtml += `<span class="read-sentence" onclick="speakSpecificSentence(this)">${current}</span>`;
+                    }
+                    current = "";
+                }
+            }
+            return finalHtml;
+        }
+
+
+        // ================= 2. SEN 友善教學錦囊 =================
+        const tutorialData = {
+            't-poem': `
+                <div class="text-center mb-6"><span class="text-7xl">📜 🌙</span></div>
+                <p class="font-black text-slate-800 mb-6 text-center text-2xl">如何欣賞古詩？</p>
+                <p class="mb-4 text-slate-600 text-xl font-bold">古詩就像一首歌，字數很少，但藏著很深的感情：</p>
+                <div class="bg-orange-50 p-6 rounded-2xl border-4 border-orange-200 mb-3 space-y-5 font-bold text-orange-900 text-xl">
+                    <p>💡 <span class="bg-white px-3 py-1 rounded shadow-md text-orange-600">看詩題</span> 👉 題目通常會告訴你寫了什麼事。<br><span class="text-lg text-slate-500 font-normal">（例如《靜夜思》= 安靜夜晚的思念）</span></p>
+                    <p>💡 <span class="bg-white px-3 py-1 rounded shadow-md text-orange-600">讀出聲音</span> 👉 跟著系統朗讀，感受好聽的押韻！</p>
+                    <p>💡 <span class="bg-white px-3 py-1 rounded shadow-md text-orange-600">找關鍵字</span> 👉 看到「故鄉」代表思鄉，看到「花落」代表春天。</p>
+                </div>
+            `,
+            't-culture': `
+                <div class="text-center mb-6"><span class="text-7xl">🏮 🐉</span></div>
+                <p class="font-black text-slate-800 mb-6 text-center text-2xl">傳統節日與名人故事</p>
+                <p class="mb-4 text-slate-600 text-xl font-bold">每一個中國節日背後，都有一個神奇的故事：</p>
+                <div class="bg-rose-50 p-6 rounded-2xl border-4 border-rose-200 mb-3 space-y-4 text-xl font-bold text-slate-700 leading-loose">
+                    <p>🧧 春節 👉 趕走「年獸」、收利是。</p>
+                    <p>🚣‍♂️ 端午節 👉 紀念愛國詩人 <span class="text-rose-600 bg-white px-2 rounded">屈原</span>，吃粽子。</p>
+                    <p>🥮 中秋節 👉 嫦娥奔月，吃月餅、賞月。</p>
+                    <p>👦 名人故事 👉 孔融讓梨(謙讓)、司馬光砸缸(機智)。</p>
+                </div>
+                <p class="mt-4 text-rose-600 font-bold text-center">💡 點擊「邊看邊聽」，系統會幫你高亮正在讀的句子喔！</p>
+            `
+        };
+
+        function showTutorial(tutKey) {
+            document.getElementById('tutorial-body').innerHTML = tutorialData[tutKey];
+            const modal = document.getElementById('tutorial-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); document.getElementById('tutorial-content').classList.remove('scale-90'); }, 10);
+            localStorage.setItem('tut_seen_' + tutKey, 'true');
+        }
+
+        function closeTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            modal.classList.add('opacity-0'); content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (pendingTaskIdx !== -1) {
+                    let targetIdx = pendingTaskIdx;
+                    let targetType = pendingTaskType;
+                    pendingTaskIdx = -1;
+                    if (targetType === 'poem') startPoem(targetIdx, true);
+                    else if (targetType === 'culture') startCulture(targetIdx, true);
+                }
+            }, 300);
+        }
+
+        function switchMode(mode) {
+            stopKaraoke();
+            currentMode = mode;
+            const tP = document.getElementById('tab-poem'), tC = document.getElementById('tab-culture');
+            const mP = document.getElementById('poem-mode'), mC = document.getElementById('culture-mode');
+            
+            if(mode === 'poem') {
+                tP.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-orange-600";
+                tC.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                mP.style.display = 'flex'; mC.style.display = 'none';
+                document.getElementById('poem-play').style.display = 'none';
+                document.getElementById('poem-directory').style.display = 'block';
+                renderPoemDirectory();
+            } else {
+                tC.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-orange-600";
+                tP.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                mP.style.display = 'none'; mC.style.display = 'flex';
+                document.getElementById('culture-play').style.display = 'none';
+                document.getElementById('culture-directory').style.display = 'block';
+                renderCultureDirectory();
+            }
+            updateTotalProgress();
+        }
+
+        // ================= 3. 數據庫 (5題擴充版, 包含 Emoji 輔助) =================
+        function cP(title, author, lines, qs) {
+            return {
+                title: title, author: author, lines: lines,
+                qs: qs.map(q => ({ q: q[0], opts: q[1], ans: q[2], exp: q[3] }))
+            };
+        }
+
+        function cC(title, text, qs) {
+            return {
+                title: title, text: text,
+                qs: qs.map(q => ({ q: q[0], opts: q[1], ans: q[2], exp: q[3] }))
+            };
+        }
+
+        // 古詩題庫 (10篇, 每篇5題 = 50題)
+        const poemData = [
+            cP('靜夜思', '唐・李白', ['床前明月光，', '疑是地上霜。', '舉頭望明月，', '低頭思故鄉。'], [
+                ['「床前明月光」的下一句是什麼？', ['疑是地上霜 ❄️', '低頭思故鄉 🏠', '處處聞啼鳥 🐦'], 0, '原詩是「床前明月光，疑是地上霜」。'],
+                ['這首詩主要表達了詩人怎樣的感情？', ['開心快樂 😄', '思念家鄉 🏠', '害怕月亮 😨'], 1, '「低頭思故鄉」直接點出了深深的思鄉之情。'],
+                ['詩中「疑是地上霜」的「疑」字是什麼意思？', ['懷疑/好像 🤔', '凝結成冰 🧊', '非常寒冷 🥶'], 0, '詩人把照在床前的月光，錯看成是好像地上的秋霜。'],
+                ['詩句「舉頭望明月」中的「舉頭」是什麼意思？', ['抬起頭 ⬆️', '舉起手 ✋', '低著頭 ⬇️'], 0, '「舉」有抬起的意思，舉頭就是抬起頭來看月亮。'],
+                ['從詩中的「霜」字，可以推斷這是什麼季節的夜晚？', ['春天 🌸', '夏天 ☀️', '秋天 🍂'], 2, '秋天深夜天氣寒冷，地上才會結霜。']
+            ]),
+            cP('春曉', '唐・孟浩然', ['春眠不覺曉，', '處處聞啼鳥。', '夜來風雨聲，', '花落知多少。'], [
+                ['「春眠不覺曉」的下一句是什麼？', ['花落知多少 🌸', '處處聞啼鳥 🐦', '疑是地上霜 ❄️'], 1, '原詩是「春眠不覺曉，處處聞啼鳥」。'],
+                ['這首詩描寫的是哪個季節的早晨？', ['春天 🌱', '夏天 ☀️', '秋天 🍂'], 0, '從詩題《春曉》及「花落」可以看出是春天的早晨。'],
+                ['「處處聞啼鳥」代表詩人聽到了什麼聲音？', ['風雨聲 🌧️', '小鳥的叫聲 🐦', '人的說話聲 🗣️'], 1, '「聞啼鳥」就是聽到小鳥在到處啼叫。'],
+                ['詩題《春曉》中的「曉」字是什麼意思？', ['天亮 / 早晨 🌅', '睡覺 😴', '知道 💡'], 0, '「曉」代表破曉、天剛亮的時候。'],
+                ['「夜來風雨聲」這句說明了昨天晚上發生了什麼事？', ['非常安靜 🤫', '下雨和刮風 🌧️', '有人唱歌 🎤'], 1, '詩人回想起昨天夜裡聽到了颳風下雨的聲音。']
+            ]),
+            cP('憫農', '唐・李紳', ['鋤禾日當午，', '汗滴禾下土。', '誰知盤中飧，', '粒粒皆辛苦。'], [
+                ['「誰知盤中飧」的下一句是什麼？', ['汗滴禾下土 💦', '粒粒皆辛苦 🍚', '春眠不覺曉 😴'], 1, '原詩是「誰知盤中飧，粒粒皆辛苦」。'],
+                ['這首詩是為了告訴我們什麼道理？', ['多去種田 👨‍🌾', '愛惜糧食不浪費 🍚', '中午太陽大 ☀️'], 1, '詩句道出農夫種田的辛勞，勸告世人要珍惜每一粒米飯。'],
+                ['詩中的「汗滴禾下土」形容農夫工作時怎樣？', ['非常寒冷 🥶', '非常輕鬆 😎', '非常辛苦流汗 💦'], 2, '在烈日下鋤地，汗水滴到了泥土裡，形容極度勞累。'],
+                ['「鋤禾日當午」中的「日當午」是指什麼時候？', ['正中午很熱 ☀️', '傍晚太陽下山 🌅', '早上剛天亮 🌄'], 0, '「日當午」指太陽正當頭頂的正中午，是一天最熱的時候。'],
+                ['「誰知盤中飧」的「飧」(音：孫) 是指什麼東西？', ['盤子 🍽️', '飯菜 / 食物 🍱', '農具 ⛏️'], 1, '「飧」在古文中指的是煮熟的飯菜食物。']
+            ]),
+            cP('登鸛雀樓', '唐・王之渙', ['白日依山盡，', '黃河入海流。', '欲窮千里目，', '更上一層樓。'], [
+                ['「欲窮千里目」的下一句是什麼？', ['更上一層樓 🏢', '黃河入海流 🌊', '低頭思故鄉 🏠'], 0, '原詩是「欲窮千里目，更上一層樓」。'],
+                ['「欲窮千里目，更上一層樓」常用來比喻什麼？', ['看風景要搭電梯 🛗', '想取得更大成就，必須更努力向上 🚀', '黃河水流很急 🌊'], 1, '這是一句千古名言，鼓勵人們不斷努力、積極向上攀登。'],
+                ['詩中「白日依山盡」的「白日」是指什麼？', ['白色的鳥 🕊️', '太陽 ☀️', '白天的時間 ⏰'], 1, '「白日」指太陽。太陽依傍著群山慢慢落下。'],
+                ['詩人站在樓上，看著黃河的水流向哪裡？', ['山谷裡 ⛰️', '長江裡 🏞️', '大海裡 🌊'], 2, '原詩寫道「黃河入海流」，指河水奔流進入大海。'],
+                ['「欲窮千里目」中的「千里目」是指什麼意思？', ['有一千隻眼睛 👀', '看得很遠很遠 🔭', '眼睛很大 👁️'], 1, '「千里目」誇張地形容目光能看見千里之外，代表看得很遠。']
+            ]),
+            cP('詠鵝', '唐・駱賓王', ['鵝，鵝，鵝，', '曲項向天歌。', '白毛浮綠水，', '紅掌撥清波。'], [
+                ['「白毛浮綠水」的下一句是什麼？', ['紅掌撥清波 🦆', '曲項向天歌 🎶', '粒粒皆辛苦 🍚'], 0, '原詩是「白毛浮綠水，紅掌撥清波」。'],
+                ['這首詩主要是描寫什麼動物？', ['雞 🐔', '鴨 🦆', '白鵝 🦢'], 2, '詩題《詠鵝》，整首詩生動地描繪了白鵝在水中遊玩的姿態。'],
+                ['詩中提到了哪些顏色來描繪美麗的畫面？', ['黑、白、藍 🎨', '白、綠、紅 🎨', '黃、綠、紅 🎨'], 1, '詩中寫了「白」毛、「綠」水和「紅」掌，色彩鮮明。'],
+                ['「曲項向天歌」表示白鵝彎著脖子向著哪裡叫？', ['水面 💧', '地面 🛤️', '天空 ☁️'], 2, '「向天」代表白鵝仰著頭，朝向天空歡快地鳴叫。'],
+                ['「紅掌撥清波」中的「清波」是指什麼？', ['紅色的波浪 🔴', '清澈的水波 🌊', '波菜 🥬'], 1, '「清波」形容乾淨、清澈的水面波紋。']
+            ]),
+            cP('絕句', '唐・杜甫', ['兩個黃鸝鳴翠柳，', '一行白鷺上青天。', '窗含西嶺千秋雪，', '門泊東吳萬里船。'], [
+                ['「兩個黃鸝鳴翠柳」的下一句是什麼？', ['一行白鷺上青天 🕊️', '門泊東吳萬里船 ⛵', '花落知多少 🌸'], 0, '原詩是「兩個黃鸝鳴翠柳，一行白鷺上青天」。'],
+                ['這首詩描寫了一幅生機勃勃的什麼季節的景色？', ['春天 🌱', '冬天 ❄️', '秋天 🍂'], 0, '黃鸝唱歌、翠綠的柳樹，都展現了春天生機勃勃的景象。'],
+                ['詩句中「上青天」的動物是什麼？', ['黃鸝 🐤', '白鷺 🕊️', '大雁 🦅'], 1, '原句為「一行白鷺上青天」，白鷺排成一行飛向藍天。'],
+                ['「兩個黃鸝鳴翠柳」中的柳樹是什麼顏色的？', ['翠綠色 🟩', '黃色 🟨', '白色 ⬜'], 0, '「翠」代表翠綠色，形容春天新長出來的柳葉顏色。'],
+                ['詩中提到門口停泊著要開往哪裡的船？', ['西嶺 ⛰️', '東吳 ⛵', '北極 🧊'], 1, '原句寫「門泊東吳萬里船」，指停著要開往遙遠東吳的船。']
+            ]),
+            cP('遊子吟', '唐・孟郊', ['慈母手中線，', '遊子身上衣。', '臨行密密縫，', '意恐遲遲歸。', '誰言寸草心，', '報得三春暉。'], [
+                ['「慈母手中線」的下一句是什麼？', ['意恐遲遲歸 🕰️', '遊子身上衣 👕', '報得三春暉 ☀️'], 1, '原詩是「慈母手中線，遊子身上衣」。'],
+                ['這首詩主要歌頌了什麼偉大的情感？', ['朋友的友情 🤝', '偉大的母愛 👩‍👦', '對故鄉的思念 🏠'], 1, '詩中描寫母親為即將遠行的兒子縫製衣服，深深歌頌了母愛。'],
+                ['「臨行密密縫」表現了母親怎樣的心情？', ['非常生氣 😠', '擔心兒子衣服破，充滿關愛不捨 ❤️', '想快點去睡覺 😴'], 1, '出發前密密地縫合，是因為擔心兒子在外受苦遲遲不歸。'],
+                ['詩題中的「遊子」是指誰？', ['出門在外遠行的兒子 🚶', '遊玩的小孩 🏃', '母親的鄰居 👥'], 0, '「遊子」在古文中指離家在外地漫遊或求學的子女。'],
+                ['母親是在什麼時候幫兒子縫製衣服的？', ['兒子出生時 👶', '兒子臨行(出發)前 🎒', '兒子回來後 🔙'], 1, '「臨行密密縫」，臨行代表即將要出門遠行的時候。']
+            ]),
+            cP('古朗月行 (節錄)', '唐・李白', ['小時不識月，', '呼作白玉盤。', '又疑瑤台鏡，', '飛在青雲端。'], [
+                ['「小時不識月」的下一句是什麼？', ['疑是地上霜 ❄️', '呼作白玉盤 🍽️', '飛在青雲端 ☁️'], 1, '原詩是「小時不識月，呼作白玉盤」。'],
+                ['詩人小時候把「月亮」想像成什麼？', ['白玉盤 和 鏡子 🪞', '好吃的大餅 🫓', '天上的星星 ⭐'], 0, '「白玉盤」和「瑤台鏡」都是詩人對圓月的童真比喻。'],
+                ['這首詩表現了兒童怎樣的特質？', ['天真可愛、充滿豐富的想像力 ✨', '非常貪吃 😋', '膽小害怕 😨'], 0, '用「白玉盤」、「鏡子」來比喻月亮，展現了兒童天真爛漫的想像力。'],
+                ['第一句「小時不識月」中的「不識」是什麼意思？', ['不喜歡 ❌', '不認識 / 不知道 🤷', '不睡覺 👁️'], 1, '因為小時候還不知道那是月亮，所以才會有各種有趣的猜測。'],
+                ['詩中覺得「瑤台鏡」飛在哪裡？', ['大樹上 🌳', '青雲端 (雲朵上) ☁️', '大海裡 🌊'], 1, '原句寫「飛在青雲端」，指月亮像鏡子一樣飛在高高的雲層中。']
+            ]),
+            cP('梅花', '宋・王安石', ['牆角數枝梅，', '凌寒獨自開。', '遙知不是雪，', '為有暗香來。'], [
+                ['「牆角數枝梅」的下一句是什麼？', ['凌寒獨自開 🌸', '為有暗香來 👃', '一歲一枯榮 🍂'], 0, '原詩是「牆角數枝梅，凌寒獨自開」。'],
+                ['詩人怎麼知道牆角白白的那片不是雪，而是梅花？', ['有人告訴他 🗣️', '聞到了梅花傳來的淡淡香氣 👃', '走過去摸了 ✋'], 1, '「為有暗香來」解釋了因為有香氣傳來，所以知道那是梅花不是雪。'],
+                ['梅花「凌寒獨自開」，這常被用來讚美什麼精神？', ['害怕寒冷 🥶', '不畏嚴寒、堅強高潔的品格 💪', '喜歡熱鬧 🎉'], 1, '梅花在寒冬中獨自綻放，象徵著堅忍不拔、不屈服於惡劣環境的高尚品格。'],
+                ['根據第一句，這幾枝梅花開在什麼地方？', ['高山上 ⛰️', '牆角處 🧱', '花盆裡 🪴'], 1, '原句是「牆角數枝梅」，點出了梅花生長在偏僻的牆角。'],
+                ['這首詩描寫的梅花是在什麼天氣下開花的？', ['溫暖的春天 🌱', '炎熱的夏天 ☀️', '寒冷的冬天 (凌寒) ❄️'], 2, '「凌寒」指冒著嚴寒，說明這是在寒冷的冬天。']
+            ]),
+            cP('賦得古原草送別', '唐・白居易', ['離離原上草，', '一歲一枯榮。', '野火燒不盡，', '春風吹又生。'], [
+                ['「野火燒不盡」的下一句是什麼？', ['春風吹又生 🌱', '一歲一枯榮 🍂', '疑是地上霜 ❄️'], 0, '原詩是「野火燒不盡，春風吹又生」。'],
+                ['「野火燒不盡，春風吹又生」讚美了小草的什麼特點？', ['長得很快 🏃', '生命力極其頑強，不怕打擊 💪', '可以當作柴火燒 🔥'], 1, '野火燒不掉它的根，春天一到又會重新生長，象徵極強的生命力。'],
+                ['詩中「一歲一枯榮」的「榮」是什麼意思？', ['榮譽 🏆', '草木茂盛的樣子 🌿', '枯萎 🍂'], 1, '「枯」是枯黃，「榮」是茂盛。指野草每年都會經歷一次枯萎和茂盛。'],
+                ['詩中提到什麼東西燒不盡小草？', ['熱水 💧', '野火 🔥', '太陽 ☀️'], 1, '原句寫「野火燒不盡」，指大火也無法徹底消滅小草的根。'],
+                ['什麼風吹過，小草又會重新生長出來？', ['秋風 🍂', '春風 🌸', '颱風 🌀'], 1, '原句是「春風吹又生」，代表春天溫暖的風帶來生機。']
+            ])
+        ];
+
+        // 文化故事題庫 (10篇, 每篇5題 = 50題)
+        const cultureData = [
+            cC('春節與年獸', '很久以前，有一隻叫「年」的可怕怪獸，每到除夕夜就會出來吃人。後來，人們發現年獸有三怕：怕紅色、怕火光、怕巨大的聲響。於是，大家在門上貼紅色的春聯，掛起紅燈籠，並燃放劈啪作響的爆竹。年獸嚇得逃跑了，從此再也不敢來。為了慶祝趕走年獸，大家互相說「恭喜」，這就是春節「拜年」和「放爆竹」習俗的由來。', [
+                ['傳說中的「年獸」最害怕什麼？', ['紅色、火光和巨大聲響 🧨', '水和食物 💧', '睡覺和安靜 😴'], 0, '人們用紅春聯和爆竹的聲響嚇跑了年獸。'],
+                ['為了慶祝趕走年獸，人們發展出什麼習俗？', ['吃月餅 🥮', '互相拜年和放爆竹 🧧', '賽龍舟 🚣‍♂️'], 1, '這就是春節期間我們貼揮春和拜年的起源。'],
+                ['春聯通常是什麼顏色的？', ['白色 ⚪', '紅色 🔴', '綠色 🟢'], 1, '因為年獸怕紅色，所以春聯都是紅色的，代表吉利。'],
+                ['傳說中，年獸通常在哪一天晚上出來吃人？', ['中秋節 🌕', '除夕夜 🌙', '端午節 🐉'], 1, '文章說「每到除夕夜就會出來吃人」，所以大家要守歲。'],
+                ['人們放爆竹是為了製造什麼來嚇跑年獸？', ['好聽的音樂 🎵', '巨大的聲響 🔊', '好吃的氣味 🍖'], 1, '年獸怕「巨大的聲響」，爆竹劈啪作響剛好能嚇走牠。']
+            ]),
+            cC('端午節的由來', '農曆五月初五是端午節。傳說古代有一位非常愛國的詩人叫屈原。他看到國家被敵人攻破，心裡十分悲痛，便跳進了汨羅江。老百姓為了不讓江裡的魚蝦吃掉屈原的身體，就划著小船在江面上敲鑼打鼓把魚蝦趕走，還用竹葉包著糯米做成「粽子」投進江裡餵魚。後來，這演變成了今天端午節賽龍舟和吃粽子的習俗。', [
+                ['端午節是為了紀念哪位歷史人物？', ['李白 📜', '孔子 👨‍🏫', '屈原 🚣‍♂️'], 2, '端午節是為了紀念投江殉國的愛國詩人屈原。'],
+                ['端午節時，人們主要會吃什麼傳統食物？', ['月餅 🥮', '粽子 🍙', '湯圓 🥣'], 1, '用竹葉包著糯米的食物就是粽子。'],
+                ['人們最初為什麼要划船和往江裡扔粽子？', ['為了比賽好玩 🏆', '為了防止魚蝦吃掉屈原的身體 🐟', '為了餵小鴨子 🦆'], 1, '百姓怕江裡的魚蝦傷害屈原，於是扔粽子餵魚。這演變成了賽龍舟。'],
+                ['故事中提到，屈原是一位怎樣的人？', ['非常調皮的軍人 ⚔️', '非常愛國的詩人 ❤️', '喜歡游泳的漁夫 🎣'], 1, '文章清楚指出「一位非常愛國的詩人叫屈原」。'],
+                ['端午節是在每年的哪一天？', ['農曆八月十五 🌕', '農曆正月十五 🏮', '農曆五月初五 🐉'], 2, '文章第一句話：「農曆五月初五是端午節。」']
+            ]),
+            cC('中秋節嫦娥奔月', '農曆八月十五是中秋節。傳說古代天空有十個太陽，后羿射下了九個，救了百姓。神仙獎勵他一包長生不老藥。后羿的妻子嫦娥為了保護這包藥不被壞人搶走，情急之下吞了下去。結果，她的身體變得輕飄飄的，一直飛到了月亮上的廣寒宮裡。后羿非常思念妻子，便在月光下擺上嫦娥愛吃的月餅。從此，中秋節賞月、吃月餅便成了象徵「人月兩團圓」的習俗。', [
+                ['傳說中，嫦娥最後飛到了哪裡？', ['太陽上 ☀️', '月亮上 🌙', '海裡 🌊'], 1, '嫦娥吞下仙藥後飛到了月亮上的廣寒宮。'],
+                ['中秋節吃月餅，主要象徵著什麼意義？', ['家人團聚，人月兩團圓 👨‍👩‍👧', '慶祝豐收 🌾', '好運連連 🍀'], 0, '圓圓的月亮和月餅都象徵著一家人團團圓圓。'],
+                ['是誰射下了天上的九個太陽？', ['大禹 🌊', '后羿 🏹', '司馬光 🪨'], 1, '后羿射下九個太陽拯救了百姓，獲得了仙藥。'],
+                ['古代天空中本來一共有多少個太陽？', ['一個 ☀️', '五個 ☀️', '十個 ☀️'], 2, '文章說「古代天空有十個太陽，后羿射下了九個」。'],
+                ['嫦娥為什麼要吞下長生不老藥？', ['她想自己長生不老 🤫', '為了保護藥不被壞人搶走 🛡️', '因為她肚子餓 😋'], 1, '文章提到「嫦娥為了保護這包藥不被壞人搶走，情急之下吞了下去。」']
+            ]),
+            cC('司馬光砸缸', '司馬光是宋代著名的歷史學家，他小時候非常機智。有一次，他和幾個小朋友在花園裡玩捉迷藏。一個調皮的小孩爬上了一個裝滿水的大水缸，結果一不小心掉了進去。水缸很高，小孩在水裡掙扎，其他小朋友都嚇得大哭大叫，不知道怎麼辦。只有司馬光保持冷靜，他搬起一塊大石頭，用力砸向水缸。「嘩啦」一聲，水缸破了一個大洞，水流了出來，那個小孩得救了。', [
+                ['當小孩掉進大水缸時，其他小朋友的反應是怎樣的？', ['非常冷靜 😎', '嚇得大哭大叫不知所措 😭', '跑回家拿繩子 🏃'], 1, '其他小朋友都嚇哭了，沒有人知道該怎麼辦。'],
+                ['司馬光用了什麼方法救出掉進水缸裡的小孩？', ['跳進水缸裡拉他 🏊', '去找大人幫忙 🗣️', '搬起大石頭砸破水缸讓水流出來 🪨'], 2, '他打破水缸讓水流走，成功救了人。'],
+                ['這個故事說明了司馬光小時候是一個怎樣的孩子？', ['力氣很大 💪', '非常調皮 😜', '遇事冷靜、機智聰明 🧠'], 2, '在危急時刻不慌張，還能想出好辦法，表現出他非常機智。'],
+                ['那個調皮的小孩不小心掉進了什麼地方？', ['一個深水井裡 🕳️', '一個裝滿水的大水缸裡 🏺', '一條大河裡 🌊'], 1, '文章說「爬上了一個裝滿水的大水缸，結果一不小心掉了進去」。'],
+                ['司馬光是用什麼東西砸破水缸的？', ['一根鐵棒 🦯', '一把鎚子 🔨', '一塊大石頭 🪨'], 2, '文章寫道：「他搬起一塊大石頭，用力砸向水缸。」']
+            ]),
+            cC('孔融讓梨', '孔融是東漢時期的人，他四歲的時候就懂得禮讓。有一天，父親買了一籃梨子回來，叫孔融和哥哥弟弟們一起分來吃。孔融挑了一個最小的梨子。父親覺得很奇怪，問他為什麼不挑大的。孔融回答說：「我年紀小，應該吃小的，大的應該留給哥哥們吃。」這個故事被記錄下來，成為了教導兒童謙虛禮讓的經典典故。', [
+                ['孔融在分梨子時，挑了一個怎樣的梨子？', ['最大最甜的 🤤', '最小的 🤏', '沒熟的 🤢'], 1, '他故意挑了一個最小的梨子給自己。'],
+                ['孔融為什麼把大的梨子留給哥哥們？', ['因為他不喜歡吃梨 🙅', '因為他覺得自己年紀小，應該懂得謙虛禮讓 🙇', '因為大的梨子有蟲 🐛'], 1, '他認為年紀小的人應該尊敬兄長，把好的留給他們。'],
+                ['《孔融讓梨》的故事主要教導我們什麼傳統美德？', ['勇敢 💪', '謙虛禮讓，尊敬兄長 🙏', '誠實不撒謊 😇'], 1, '這個故事是中國傳統文化中關於「禮讓」最著名的典故。'],
+                ['故事中，孔融分梨子時是幾歲？', ['四歲 👦', '八歲 🧑', '十二歲 👨'], 0, '文章第一句說：「他四歲的時候就懂得禮讓。」'],
+                ['孔融把比較大的梨子留給了誰？', ['父母 👨‍👩‍👦', '哥哥們 🧑‍🤝‍🧑', '弟弟 👶'], 1, '孔融說：「大的應該留給哥哥們吃。」']
+            ]),
+            cC('花木蘭代父從軍', '古代有一位勇敢的女子名叫花木蘭。那時國家發生戰爭，皇帝下令每家必須派出一名男子當兵。木蘭的父親年紀老邁，弟弟又還小，無法上戰場。為了保護年邁的父親，木蘭決定女扮男裝，代替父親去當兵。在軍隊裡，木蘭和男士兵們一樣刻苦訓練，英勇殺敵。經過多年的征戰，她立下了赫赫戰功。戰爭結束後，皇帝想獎賞她做大官，但木蘭拒絕了，她只要求一匹快馬，讓她能盡快回到家鄉，回到父母身邊。', [
+                ['花木蘭為什麼要女扮男裝去當兵？', ['因為她喜歡打仗 ⚔️', '為了代替年邁的父親上戰場 👨‍🦳', '因為她想做大官 👑'], 1, '父親太老不能打仗，她為了盡孝道而代父從軍。'],
+                ['戰爭結束後，花木蘭向皇帝提出了什麼要求？', ['要很多金銀珠寶 💎', '要留下來做大官 👑', '只要一匹快馬，趕快回家鄉陪伴父母 🐎'], 2, '她拒絕了高官厚祿，只想回家盡孝。'],
+                ['花木蘭的故事主要展現了她身上什麼偉大的品質？', ['孝順和勇敢 ❤️', '貪慕虛榮 💅', '膽小怕事 😨'], 0, '她既有代替父親的「孝」，又有在戰場殺敵的「勇」。'],
+                ['在軍隊裡，花木蘭假扮成什麼身分？', ['一個護士 👩‍⚕️', '一個男士兵 🪖', '一個廚師 🧑‍🍳'], 1, '文章說「木蘭決定女扮男裝，代替父親去當兵。」'],
+                ['因為木蘭立下了戰功，皇帝原本想獎賞她什麼？', ['很多土地 🗺️', '做大官 👑', '不用繳稅 💰'], 1, '文章說「皇帝想獎賞她做大官，但木蘭拒絕了」。']
+            ]),
+            cC('大禹治水', '遠古時代，中國經常發生嚴重的水災，農田被淹沒，百姓流離失所。大禹奉命治理洪水。他吸取了父親治水失敗的教訓，不再用「堵塞」的方法，而是用「疏導」的方法，挖開河道，讓洪水流入大海。大禹治水十三年，非常辛苦。傳說他曾經三次經過自己的家門，但為了盡快治好洪水拯救百姓，他連一次都沒有進去探望妻兒，這就是著名的「三過家門而不入」。最後，他終於成功治服了洪水。', [
+                ['大禹治理洪水時，採用了什麼有效的方法？', ['用泥土把洪水堵住 🧱', '挖開河道，把洪水疏導流入大海 🌊', '把水喝光 💧'], 1, '他不用堵塞，而是用疏通引導的方法。'],
+                ['「三過家門而不入」這個典故說明了大禹是一個怎樣的人？', ['他不喜歡家 🙅', '為了國家百姓公而忘私，具有偉大奉獻精神 ❤️', '他忘記家在哪 🤷'], 1, '他為了治水救人，放棄了個人家庭的溫暖，非常無私。'],
+                ['大禹治水一共花了多少年的時間？', ['三年 3️⃣', '十年 🔟', '十三年 1️⃣3️⃣'], 2, '大禹治水十三年，歷盡艱辛。'],
+                ['大禹最終把可怕的洪水引導流向哪裡？', ['大山裡 ⛰️', '大海裡 🌊', '沙漠裡 🏜️'], 1, '文章說他「挖開河道，讓洪水流入大海」。'],
+                ['大禹治水期間，曾經多少次經過自己的家門？', ['一次 1️⃣', '兩次 2️⃣', '三次 3️⃣'], 2, '傳說他「三次經過自己的家門...連一次都沒有進去」。']
+            ]),
+            cC('鐵杵磨成針', '李白是唐代最著名的詩人，被稱為「詩仙」。但他小時候非常貪玩，不喜歡讀書。有一天，他逃學跑到河邊，看見一位老婆婆正在石頭上用力地磨著一根粗大的鐵棒。李白好奇地問：「老婆婆，您在磨什麼？」老婆婆回答：「我要把它磨成一根繡花針。」李白吃驚地說：「這麼粗的鐵棒，要磨到什麼時候啊？」老婆婆笑著說：「只要功夫深，鐵杵磨成針。只要每天堅持，總有一天會磨成的。」李白聽了深受感動，從此發奮讀書，終於成了偉大的詩人。', [
+                ['老婆婆在河邊用石頭磨什麼東西？', ['一把刀 🔪', '一根粗大的鐵棒 🦯', '一塊木頭 🪵'], 1, '她在磨一根鐵杵(鐵棒)。'],
+                ['老婆婆想把這根鐵棒磨成什麼？', ['一把劍 🗡️', '一根繡花針 🪡', '一根筷子 🥢'], 1, '她想把它磨成用來縫衣服的細小繡花針。'],
+                ['「只要功夫深，鐵杵磨成針」這句話告訴我們什麼道理？', ['鐵棒很難磨 😓', '只要有恆心，堅持不懈地努力，再難的事也能成功 💪', '不要逃學 🏫'], 1, '這是一句經典的諺語，勉勵人們做事要有恆心和毅力。'],
+                ['李白小時候是一個怎樣的孩子？', ['非常勤奮 📖', '貪玩，不喜歡讀書 🎮', '喜歡幫人磨針 🪡'], 1, '文章開頭說他「小時候非常貪玩，不喜歡讀書」。'],
+                ['李白長大後成為了偉大的詩人，被人們稱為什麼？', ['詩聖 👑', '詩仙 🧚‍♂️', '書生 📚'], 1, '文章開頭提到「李白是唐代最著名的詩人，被稱為『詩仙』」。']
+            ]),
+            cC('曹沖稱象', '三國時期，有人送給曹操一頭巨大的大象。曹操想知道大象有多重，但當時沒有那麼大的秤，官員們都想不出辦法。曹操六歲的兒子曹沖說：「我有辦法！把大象牽到一艘大船上，在船身與水面齊平的地方刻一道記號。然後把大象牽上岸，往船裡裝石頭，一直裝到船下沉至剛才刻記號的地方。最後，把船裡的石頭一塊塊稱出重量加起來，這就是大象的重量了！」曹操聽了非常高興，用這個方法果然稱出了大象的重量。', [
+                ['為什麼官員們都無法稱出大象的重量？', ['大象不肯站好 🐘', '當時沒有足夠大的秤來稱大象 ⚖️', '大象太輕了 🪶'], 1, '古代沒有現代的大型地磅，一般的秤無法承受大象的重量。'],
+                ['曹沖是用什麼東西來代替大象的重量進行稱量的？', ['木頭 🪵', '泥土 🧱', '石頭 🪨'], 2, '他用一塊塊可以分割稱量的石頭來代替大象的總重量。'],
+                ['曹沖稱象的故事，展現了他具備什麼特質？', ['力氣很大 💪', '非常調皮 😜', '善於觀察，懂得變通，機智聰明 🧠'], 2, '他懂得利用船的浮力進行「等量代換」，展現了過人的智慧。'],
+                ['曹沖想出這個聰明辦法時，他幾歲？', ['六歲 👦', '十歲 🧑', '十五歲 👨'], 0, '文章說「曹操六歲的兒子曹沖說...」。'],
+                ['曹沖叫人把大象牽到哪裡去？', ['一座大山上 ⛰️', '一艘大船上 ⛵', '一個大坑裡 🕳️'], 1, '曹沖說：「把大象牽到一艘大船上...」。']
+            ]),
+            cC('元宵節與猜燈謎', '農曆正月十五是元宵節，也是中國農曆新年的第一個月圓之夜，象徵著春天的到來。在這一天，家家戶戶都會吃「湯圓」，因為湯圓的發音和形狀都代表著一家人「團團圓圓」。除了吃湯圓，元宵節晚上最熱鬧的活動就是賞花燈。大街小巷掛滿了各式各樣美麗的燈籠。聰明的人們還會在燈籠上貼上謎語讓大家猜，這就叫「猜燈謎」。猜中了通常會有小禮物，這項活動讓節日充滿了歡樂和智慧的氣氛。', [
+                ['元宵節是在農曆的哪一天？', ['正月初一 🧨', '正月十五 🏮', '八月十五 🥮'], 1, '正月十五是農曆新年的第一個月圓之夜，即元宵節。'],
+                ['元宵節吃的傳統食物「湯圓」，代表什麼美好的意義？', ['長生不老 🧙', '一家人團團圓圓 👨‍👩‍👧‍👦', '變得更聰明 🧠'], 1, '湯圓形狀圓圓的，發音又似團圓，象徵家庭和睦美滿。'],
+                ['元宵節晚上，人們會進行什麼充滿智慧的傳統活動？', ['賞月和吃月餅 🥮', '賞花燈和猜燈謎 🏮', '賽龍舟 🚣‍♂️'], 1, '掛花燈和猜燈謎是元宵節最熱鬧的特色活動。'],
+                ['元宵節是農曆新年的第幾個「月圓之夜」？', ['第一個 1️⃣', '第二個 2️⃣', '第三個 3️⃣'], 0, '文章開頭說：「也是中國農曆新年的第一個月圓之夜」。'],
+                ['猜中燈謎通常會得到什麼？', ['一個大紅包 🧧', '一份小禮物 🎁', '一碗飯 🍚'], 1, '文章結尾提到：「猜中了通常會有小禮物」。']
+            ])
+        ];
+
+        let poemProgress = JSON.parse(localStorage.getItem('poemBasicProgress')) || new Array(poemData.length).fill(0);
+        let cultureProgress = JSON.parse(localStorage.getItem('cultureBasicProgress')) || new Array(cultureData.length).fill(0);
+
+        function renderPoemDirectory() {
+            const dirContainer = document.getElementById('poem-content');
+            let html = '';
+            poemData.forEach((item, idx) => {
+                let status = poemProgress[idx];
+                let bgClass = 'bg-white';
+                let borderClass = 'border-slate-200';
+                let icon = ' <span class="text-slate-400 font-bold ml-2"># 未背誦</span>';
+                if (status === 1) { bgClass = 'bg-orange-50'; borderClass = 'border-orange-400'; icon = ' <span class="text-orange-600 font-bold ml-2">🌟 完成</span>'; }
+                
+                html += `
+                    <button onclick="startPoem(${idx})" class="w-full text-left p-5 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition active:scale-95 flex flex-col justify-between">
+                        <div class="flex justify-between items-center mb-2 w-full">
+                            <span class="bg-slate-100 text-slate-700 text-xs font-bold px-2 py-1 rounded">古詩 ${idx+1}</span>
+                            ${icon}
+                        </div>
+                        <h3 class="text-xl font-black text-slate-800">${item.title}</h3>
+                        <p class="text-sm text-slate-500 font-bold mt-1">${item.author}</p>
+                    </button>
+                `;
+            });
+            dirContainer.innerHTML = html;
+        }
+
+        function startPoem(idx, forceStart = false) {
+            if (!forceStart && !localStorage.getItem('tut_seen_t-poem')) {
+                pendingTaskIdx = idx; pendingTaskType = 'poem'; showTutorial('t-poem'); return;
+            }
+            currentIdx = idx; currentQIdx = 0; mistakes = 0;
+            document.getElementById('poem-directory').style.display = 'none';
+            const playArea = document.getElementById('poem-play');
+            playArea.style.display = 'flex';
+            renderPoemScreen();
+        }
+
+        function renderPoemScreen() {
+            const data = poemData[currentIdx];
+            let html = `
+                <div class="w-full max-w-3xl flex justify-between items-center mb-4">
+                    <button onclick="switchMode('poem')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition text-lg">⬅️ 暫停返回</button>
+                    <span class="bg-orange-100 text-orange-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">經典古詩朗讀</span>
+                </div>
+                
+                <div class="w-full max-w-3xl bg-white border-2 border-slate-200 rounded-3xl p-6 md:p-8 shadow-xl flex flex-col items-center">
+                    <h2 class="text-4xl md:text-5xl font-black text-slate-800 mb-3">${data.title}</h2>
+                    <p class="text-xl text-slate-500 font-bold mb-6">${data.author}</p>
+                    
+                    <div class="bg-orange-50 w-full p-6 md:p-8 rounded-2xl border-4 border-orange-200 mb-8 flex flex-col items-center shadow-inner">
+                        <div id="poem-content-area" class="poem-text text-3xl md:text-4xl text-center font-bold text-slate-800 space-y-3">
+                            ${data.lines.map(l => `<p class="read-sentence" onclick="speakSpecificSentence(this)">${l}</p>`).join('')}
+                        </div>
+                        <button id="btn-play-story" onclick="startKaraoke()" class="mt-8 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-full text-2xl font-black flex items-center justify-center shadow-lg pop border-4 border-orange-400 transition w-full max-w-sm">▶️ 朗讀古詩</button>
+                        <button id="btn-stop-story" onclick="stopKaraoke()" class="mt-8 bg-slate-600 hover:bg-slate-500 text-white px-8 py-4 rounded-full text-2xl font-black flex items-center justify-center shadow-lg transition hidden w-full max-w-sm">⏹️ 停止朗讀</button>
+                    </div>
+                    
+                    <button onclick="startPoemQuiz()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-5 rounded-xl shadow-lg transition text-2xl border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">我會背了，開始測驗！ 🚀</button>
+                </div>
+            `;
+            document.getElementById('poem-play').innerHTML = html;
+        }
+
+        function startPoemQuiz() {
+            stopKaraoke();
+            renderQuiz('poem', poemData);
+        }
+
+        function renderCultureDirectory() {
+            const dirContainer = document.getElementById('culture-content');
+            let html = '';
+            cultureData.forEach((item, idx) => {
+                let status = cultureProgress[idx];
+                let bgClass = 'bg-white';
+                let borderClass = 'border-slate-200';
+                let icon = ' <span class="text-slate-400 font-bold ml-2"># 未挑戰</span>';
+                if (status === 1) { bgClass = 'bg-orange-50'; borderClass = 'border-orange-400'; icon = ' <span class="text-orange-600 font-bold ml-2">🌟 完成</span>'; }
+                
+                html += `
+                    <button onclick="startCulture(${idx})" class="w-full text-left p-5 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition active:scale-95 flex flex-col justify-between">
+                        <div class="flex justify-between items-center mb-2 w-full">
+                            <span class="bg-slate-100 text-slate-700 text-xs font-bold px-2 py-1 rounded">故事 ${idx+1}</span>
+                            ${icon}
+                        </div>
+                        <h3 class="text-xl font-black text-slate-800">${item.title}</h3>
+                    </button>
+                `;
+            });
+            dirContainer.innerHTML = html;
+        }
+
+        function startCulture(idx, forceStart = false) {
+            if (!forceStart && !localStorage.getItem('tut_seen_t-culture')) {
+                pendingTaskIdx = idx; pendingTaskType = 'culture'; showTutorial('t-culture'); return;
+            }
+            currentIdx = idx; currentQIdx = 0; mistakes = 0;
+            document.getElementById('culture-directory').style.display = 'none';
+            const playArea = document.getElementById('culture-play');
+            playArea.style.display = 'flex';
+            renderCultureScreen();
+        }
+
+        function renderCultureScreen() {
+            const data = cultureData[currentIdx];
+            let html = `
+                <div class="w-full max-w-3xl flex justify-between items-center mb-4">
+                    <button onclick="switchMode('culture')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition text-lg">⬅️ 暫停返回</button>
+                    <span class="bg-orange-100 text-orange-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">文化故事聽講</span>
+                </div>
+                
+                <div class="w-full max-w-3xl bg-white border-2 border-slate-200 rounded-3xl p-6 md:p-8 shadow-xl flex flex-col items-center">
+                    <h2 class="text-3xl md:text-4xl font-black text-slate-800 mb-6">${data.title}</h2>
+                    
+                    <div class="w-full bg-orange-50 rounded-2xl p-6 md:p-10 mb-8 border-4 border-orange-200 shadow-inner">
+                        <h3 class="text-2xl font-bold mb-6 text-orange-800 text-center border-b-2 border-orange-200 pb-4">📖 邊聽邊讀故事</h3>
+                        
+                        <div id="culture-content-area" class="text-xl md:text-2xl leading-loose text-slate-700 font-bold text-justify">
+                            ${parseAndWrapSentences(data.text)}
+                        </div>
+                        
+                        <div class="mt-8 flex gap-4 justify-center w-full">
+                            <button id="btn-play-story" onclick="startKaraoke()" class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-full text-2xl font-black flex items-center justify-center shadow-lg pop border-4 border-orange-400 transition w-full max-w-sm">▶️ 邊看邊聽</button>
+                            <button id="btn-stop-story" onclick="stopKaraoke()" class="bg-slate-600 hover:bg-slate-500 text-white px-8 py-4 rounded-full text-2xl font-black flex items-center justify-center shadow-lg transition hidden w-full max-w-sm">⏹️ 停止朗讀</button>
+                        </div>
+                    </div>
+
+                    <button onclick="startCultureQuiz()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-5 rounded-xl shadow-lg transition text-2xl border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">我聽懂了，開始測驗！ 🚀</button>
+                </div>
+            `;
+            document.getElementById('culture-play').innerHTML = html;
+        }
+
+        function startCultureQuiz() {
+            stopKaraoke();
+            renderQuiz('culture', cultureData);
+        }
+
+        // ================= 測驗通用邏輯 (SEN 優化: 無字串注入衝突) =================
+        function renderQuiz(type, dataPool) {
+            const data = dataPool[currentIdx];
+            const qData = data.qs[currentQIdx];
+            
+            let highlightedQ = qData.q.replace(/(什麼|誰|哪裡|為什麼|怎樣|幾歲|多少|哪一個|哪一天)/g, '<span class="sen-highlight">$1</span>');
+
+            let html = `
+                <div class="w-full max-w-3xl flex justify-between items-center mb-4">
+                    <button onclick="switchMode('${type}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition text-lg">⬅️ 暫停返回</button>
+                    <span class="bg-orange-100 text-orange-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${currentQIdx + 1} / 5 題</span>
+                </div>
+                
+                <div class="w-full max-w-3xl bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center">
+                    
+                    <!-- SEN: 讀出全題按鈕 -->
+                    <button onclick="speakFullQuestion()" class="mb-4 w-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 text-lg border-2 border-blue-200">
+                        <span class="text-2xl">🗣️</span> 讀出題目和選項
+                    </button>
+
+                    <h3 class="text-2xl md:text-3xl font-bold text-slate-800 mb-6 w-full flex items-start gap-3 bg-orange-50 p-5 rounded-2xl border-2 border-orange-200">
+                        <button onclick="speakText(this.nextElementSibling.innerText)" class="tts-btn flex-shrink-0 bg-white text-orange-500 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-sm border-2 border-orange-300 mt-1">🔊</button>
+                        <span class="leading-relaxed tracking-wide">${highlightedQ}</span>
+                    </h3>
+
+                    <div class="flex flex-col gap-4 w-full" id="options-container">
+            `;
+
+            let opts = qData.opts.map((opt, i) => ({ text: opt, isCorr: i === qData.ans }));
+            opts.sort(() => Math.random() - 0.5);
+
+            opts.forEach((opt) => {
+                html += `
+                    <div class="flex gap-2 w-full">
+                        <button onclick="checkAnswer(this, ${opt.isCorr}, '${type}')" class="option-btn bg-white border-2 border-slate-200 text-slate-700 text-xl font-bold py-5 px-6 rounded-2xl hover:bg-orange-50 transition w-full text-left flex-1">${opt.text}</button>
+                        <button onclick="speakText(this.previousElementSibling.innerText)" class="tts-btn flex-shrink-0 bg-orange-50 text-orange-500 w-16 rounded-2xl text-3xl flex items-center justify-center shadow-sm border-2 border-orange-200 hover:bg-orange-100 transition">🔊</button>
+                    </div>`;
+            });
+
+            html += `</div>
+                <!-- SEN: 錯誤提示專用框 -->
+                <div id="dynamic-hint-box" class="hidden w-full mt-6 bg-rose-50 border-4 border-rose-400 p-5 rounded-2xl shadow-sm text-rose-800 font-bold text-xl flex items-start gap-3 slide-up">
+                    <div class="text-4xl">💡</div>
+                    <div class="flex-1 space-y-2 leading-relaxed" id="hint-text"></div>
+                    <button id="hint-tts-btn" class="text-3xl hover:scale-110 transition bg-white rounded-full w-12 h-12 flex items-center justify-center shadow-sm border-2 border-rose-300 flex-shrink-0">🔊</button>
+                </div>
+            </div>`;
+            
+            document.getElementById(`${type}-play`).innerHTML = html;
+        }
+
+        // 輔助功能：連讀題目和選項 (動態抓取變數，不經過 HTML 屬性)
+        function speakFullQuestion() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const dataPool = currentMode === 'poem' ? poemData : cultureData;
+                const qData = dataPool[currentIdx].qs[currentQIdx];
+                let fullText = qData.q + " 選項有：";
+                qData.opts.forEach((opt, idx) => {
+                    fullText += `，第${idx+1}：${opt}。`;
+                });
+                let cleanText = cleanTextForSpeech(fullText);
+                let msg = new SpeechSynthesisUtterance(cleanText);
+                msg.lang = 'zh-HK'; 
+                msg.rate = 0.8; 
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        function checkAnswer(btn, isCorr, type) {
+            const allBtns = document.querySelectorAll('#options-container .option-btn');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            const dataPool = type === 'poem' ? poemData : cultureData;
+            const expReason = dataPool[currentIdx].qs[currentQIdx].exp;
+            
+            if (isCorr) {
+                btn.classList.add('correct');
+                speakText("答對了！" + expReason); 
+                
+                setTimeout(() => {
+                    const data = dataPool[currentIdx];
+                    
+                    if (currentQIdx < 4) { 
+                        currentQIdx++;
+                        renderQuiz(type, dataPool);
+                    } else {
+                        // 完結加分
+                        let expGained = mistakes === 0 ? 30 : 10;
+                        let progArr = type === 'poem' ? poemProgress : cultureProgress;
+                        
+                        if (progArr[currentIdx] !== 1) {
+                            cultureExp += expGained;
+                            localStorage.setItem('cultureBasicExp', cultureExp);
+                            document.getElementById('exp-display').innerText = cultureExp;
+                            progArr[currentIdx] = 1;
+                            if(type==='poem') localStorage.setItem('poemBasicProgress', JSON.stringify(progArr));
+                            else localStorage.setItem('cultureBasicProgress', JSON.stringify(progArr));
+                        }
+                        
+                        document.getElementById('feedback-desc').innerText = `太厲害了！你完成了這篇的 5 道挑戰題！\n✨ 獲得 ${expGained} 經驗值`;
+                        const modal = document.getElementById('feedback-modal');
+                        const content = document.getElementById('feedback-content');
+                        
+                        modal.classList.remove('hidden');
+                        setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+                        
+                        document.getElementById('next-btn').onclick = () => {
+                            modal.classList.add('opacity-0'); content.classList.add('scale-90');
+                            setTimeout(() => { modal.classList.add('hidden'); switchMode(type); }, 300);
+                        };
+                    }
+                }, 2000); 
+            } else {
+                btn.classList.add('wrong', 'shake');
+                mistakes++;
+                
+                // SEN 友善錯誤提示：顯示明顯的提示框
+                const hintBox = document.getElementById('dynamic-hint-box');
+                document.getElementById('hint-text').innerText = "溫馨提示：" + expReason;
+                document.getElementById('hint-tts-btn').onclick = () => speakText("溫馨提示：" + expReason);
+                hintBox.classList.remove('hidden');
+                
+                speakText("不對喔！請聽提示：" + expReason);
+                
+                setTimeout(() => {
+                    btn.classList.remove('wrong', 'shake');
+                    allBtns.forEach(b => { if (!b.classList.contains('correct')) b.style.pointerEvents = 'auto'; });
+                }, 2500); 
+            }
+        }
+
+        function updateTotalProgress() {
+            let pDone = poemProgress.filter(p => p === 1).length;
+            let cDone = cultureProgress.filter(p => p === 1).length;
+            let percent = ((pDone + cDone) / 20) * 100;
+            const pb = document.getElementById('progress-bar');
+            if (pb) pb.style.width = percent + '%';
+            
+            // 首頁連動
+            if(pDone === 10 && cDone === 10) localStorage.setItem('t_culture_1', 'true');
+        }
+
+        function backToDirectoryFromFinish() {
+            const finishModal = document.getElementById('finish-modal');
+            const finishContent = document.getElementById('finish-content');
+            finishModal.classList.add('opacity-0');
+            finishContent.classList.add('scale-90');
+            setTimeout(() => {
+                finishModal.classList.add('hidden');
+                switchMode(currentMode);
+            }, 300);
+        }
+
+        window.onload = function() {
+            document.getElementById('exp-display').innerText = cultureExp;
+            switchMode('poem');
+        }
+    </script>
+</body>
+</html>
