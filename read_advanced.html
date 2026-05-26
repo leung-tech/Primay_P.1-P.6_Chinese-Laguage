@@ -6,17 +6,9 @@
     <title>閱讀理解 - 拔尖高階特訓</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif;
-            background-color: #faf5ff; 
-            -webkit-tap-highlight-color: transparent;
-        }
+        body { font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif; background-color: #faf5ff; -webkit-tap-highlight-color: transparent; }
+        .bg-grid-pattern { background-image: linear-gradient(to right, #e9d5ff 1px, transparent 1px), linear-gradient(to bottom, #e9d5ff 1px, transparent 1px); background-size: 40px 40px; }
         
-        .bg-grid-pattern {
-            background-image: linear-gradient(to right, #e9d5ff 1px, transparent 1px), linear-gradient(to bottom, #e9d5ff 1px, transparent 1px);
-            background-size: 40px 40px;
-        }
-
         @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         .pop { animation: pop 0.3s ease-out; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -24,7 +16,10 @@
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
         .shake { animation: shake 0.4s ease-in-out; }
         
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        /* 隱藏滾動條但保留功能 */
+        .no-scrollbar::-webkit-scrollbar { width: 6px; }
+        .no-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .no-scrollbar::-webkit-scrollbar-thumb { background-color: #d8b4fe; border-radius: 10px; }
         
         .option-btn { transition: all 0.2s; box-shadow: 0 4px 0 #c084fc; }
         .option-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
@@ -37,27 +32,23 @@
         .tab-active { background-color: #7e22ce; color: white; border-color: #581c87; }
         .tab-inactive { background-color: white; color: #64748b; border-color: #cbd5e1; }
 
-        /* 閱讀文本專用樣式 - 拔尖版縮進與古文樣式 */
-        .reading-text { line-height: 2.2; font-size: 1.125rem; color: #334155; }
-        .reading-text p { margin-bottom: 1rem; text-indent: 2em; } 
-        .reading-text p.classic-text { font-family: 'Kaiti', 'STKaiti', serif; font-size: 1.25rem; background-color: #f8fafc; padding: 15px; border-left: 4px solid #9333ea; color: #1e293b; letter-spacing: 1px; text-indent: 0; }
-        @media (min-width: 768px) { .reading-text { font-size: 1.25rem; } .reading-text p.classic-text { font-size: 1.5rem; } }
+        /* 🌟 拔尖版排版優化：字體加大、行距加寬、段首縮進兩格、段落之間隔行 */
+        .reading-text { line-height: 2.3; font-size: 1.35rem; color: #1e293b; text-align: justify; }
+        .reading-text p { margin-bottom: 2em; text-indent: 2em; } 
+        .reading-text p.classic-text { font-family: 'Kaiti', 'STKaiti', serif; font-size: 1.55rem; background-color: #f8fafc; padding: 20px; border-left: 5px solid #9333ea; color: #0f172a; letter-spacing: 2px; text-indent: 2em; margin-bottom: 2em; line-height: 2.5; }
+        .text-indent-0 { text-indent: 0 !important; }
+        @media (min-width: 1024px) { .reading-text { font-size: 1.5rem; } .reading-text p.classic-text { font-size: 1.7rem; } }
 
-        /* 🌟 句段點擊與高亮樣式 (卡拉OK) */
-        .read-sentence { cursor: pointer; border-radius: 6px; padding: 2px 4px; margin: 0 -4px; transition: all 0.2s; display: inline; }
+        .read-sentence { cursor: pointer; border-radius: 6px; padding: 2px 0px; transition: all 0.2s; display: inline; }
         .read-sentence:hover { background-color: #e9d5ff; color: #581c87; }
         .active-sentence { background-color: #fef08a; color: #0f172a; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-        .toast-msg {
-            visibility: hidden; min-width: 250px; background-color: #ef4444; color: #fff; text-align: center;
-            border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px;
-            transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+        .toast-msg { visibility: hidden; min-width: 250px; background-color: #ef4444; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px; transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
         @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
     </style>
 </head>
-<body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
+<body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden bg-grid-pattern">
 
     <!-- 頂部導覽列 -->
     <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
@@ -71,60 +62,88 @@
                 <span class="font-bold text-sm lg:text-lg">EXP: <span id="exp-display" class="text-yellow-300">0</span></span>
             </div>
         </div>
-        
-        <!-- Tab 選單 -->
         <div class="flex w-full bg-slate-100 border-b border-slate-300">
-            <button onclick="switchMode('quest')" id="tab-quest" class="tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700">
-                🚀 呈分試閱讀特訓
-            </button>
-            <button onclick="switchMode('tips')" id="tab-tips" class="tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200">
-                💡 拔尖錦囊寶庫
-            </button>
+            <button onclick="switchMode('quest')" id="tab-quest" class="tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700">🚀 呈分試閱讀特訓</button>
+            <button onclick="switchMode('tips')" id="tab-tips" class="tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200">💡 拔尖錦囊寶庫</button>
         </div>
-
         <div id="progress-container" class="w-full bg-slate-200 h-2">
             <div id="progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
         </div>
     </div>
 
     <!-- 主畫面區 -->
-    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
+    <div class="flex-1 w-full relative" id="main-container">
         
         <!-- 模式 1：篇章目錄 -->
-        <div id="quest-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
-            <div class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
-                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">📚 呈分試大魔王：高階分析與評價</h2>
-                <p class="text-slate-600 font-bold mb-4">全面涵蓋「閱讀策略」、「寫作手法」、「修辭表達」、「多重推論」與「深層評價」！</p>
-                
-                <div class="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
-                    <div class="text-purple-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
-                    <div class="flex flex-wrap gap-4 flex-1">
-                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-lg shadow-sm">🌟</span> 完美過關 (+80)</div>
-                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 順利過關 (+40)</div>
-                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-white border-2 border-slate-300 flex items-center justify-center text-lg shadow-sm text-slate-400">#</span> 尚未挑戰</div>
+        <div id="quest-mode" class="absolute inset-0 overflow-y-auto p-3 md:p-6 pb-20">
+            <div class="w-full max-w-6xl mx-auto flex flex-col gap-4 lg:gap-6">
+                <div id="quest-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
+                    <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">📚 呈分試大魔王：高階分析與評價</h2>
+                    <p class="text-slate-600 font-bold mb-4">全面涵蓋「閱讀策略」、「寫作手法」、「修辭表達」、「多重推論」與「深層評價」！(共25篇大挑戰)</p>
+                    <div class="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
+                        <div class="text-purple-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
+                        <div class="flex flex-wrap gap-4 flex-1">
+                            <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-lg shadow-sm">🌟</span> 完美過關</div>
+                            <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 順利過關</div>
+                            <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-slate-100 border-2 border-slate-300 flex items-center justify-center text-lg shadow-sm text-slate-400">#</span> 尚未挑戰</div>
+                        </div>
                     </div>
-                </div>
-
-                <div id="directory-content" class="flex flex-col gap-6">
-                    <!-- 目錄動態生成 -->
+                    <div id="directory-content"></div>
                 </div>
             </div>
         </div>
 
         <!-- 模式 2：錦囊寶庫 -->
-        <div id="tips-hub-mode" class="w-full max-w-6xl mx-auto hidden flex-col gap-6 h-full">
-            <div class="w-full bg-white rounded-3xl p-6 md:p-8 shadow-xl border border-slate-200">
-                <h2 class="text-2xl md:text-3xl font-black text-purple-800 mb-6 text-center">💡 拔尖五大能力錦囊寶庫</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="tips-grid">
-                    <!-- 錦囊動態生成 -->
+        <div id="tips-hub-mode" class="absolute inset-0 overflow-y-auto p-3 md:p-6 pb-20 hidden">
+            <div class="w-full max-w-6xl mx-auto flex flex-col gap-6">
+                <div class="w-full bg-white rounded-3xl p-6 md:p-8 shadow-xl border border-slate-200">
+                    <h2 class="text-2xl md:text-3xl font-black text-purple-800 mb-6 text-center">💡 拔尖五大能力錦囊寶庫</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="tips-grid"></div>
                 </div>
             </div>
         </div>
 
-        <!-- 【已修復佈局】雙屏閱讀與答題區 -->
-        <!-- 移除了 lg:flex-row，確保整個區域是垂直堆疊的（上方按鈕列 + 下方白卡片） -->
-        <div id="quest-play" class="w-full max-w-7xl mx-auto hidden flex-col gap-4 min-h-[600px]">
-            <!-- 內容由 JS 動態生成 -->
+        <!-- 🌟 雙屏獨立滾動閱讀答題區 -->
+        <div id="quest-play" class="absolute inset-0 hidden p-3 md:p-6 pb-6">
+            <div class="w-full max-w-7xl mx-auto h-full flex flex-col lg:flex-row gap-4 lg:gap-6">
+                
+                <!-- 左側：文章顯示區 (固定高度、獨立滾動) -->
+                <div class="w-full lg:w-1/2 bg-white rounded-3xl shadow-xl border-t-8 border-purple-600 flex flex-col h-[45%] lg:h-full flex-shrink-0 lg:flex-shrink">
+                    <div class="p-3 md:p-4 bg-purple-50 border-b border-purple-100 flex justify-between items-center z-10 shadow-sm flex-shrink-0">
+                        <span class="font-bold text-purple-800 text-lg flex items-center gap-2">📖 閱讀文本</span>
+                        <button onclick="speakPassage()" id="btn-read-all" class="bg-white text-purple-600 px-4 py-2 rounded-xl text-sm md:text-base font-bold shadow-sm border border-purple-200 hover:bg-purple-100 transition active:scale-95">▶️ 全文朗讀</button>
+                    </div>
+                    <div class="p-5 md:p-8 overflow-y-auto no-scrollbar flex-1 bg-white relative reading-text text-justify" id="passage-content">
+                        <!-- 文章內容動態生成 -->
+                    </div>
+                </div>
+
+                <!-- 右側：答題區 (固定高度、獨立滾動) -->
+                <div class="w-full lg:w-1/2 bg-white rounded-3xl shadow-xl border-2 border-slate-200 flex flex-col h-[55%] lg:h-full flex-shrink-0 lg:flex-shrink p-4 md:p-6">
+                    <div class="flex justify-between items-center mb-4 pb-4 border-b-2 border-slate-100 flex-shrink-0">
+                        <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition text-sm md:text-base active:scale-95">⬅️ 暫停返回</button>
+                        <span class="bg-fuchsia-100 text-fuchsia-800 px-3 py-1.5 rounded-lg font-bold shadow-sm text-sm" id="question-progress-indicator">題 1 / 8</span>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto no-scrollbar flex flex-col">
+                        <span id="sub-question-type" class="bg-violet-100 text-violet-800 px-3 py-1.5 rounded-lg text-sm font-bold mb-3 inline-block self-start"></span>
+                        
+                        <div class="flex items-start gap-3 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                            <button onclick="speakQuestion()" class="tts-btn flex-shrink-0 bg-white text-purple-500 w-12 h-12 rounded-full flex items-center justify-center shadow-md border border-purple-200 mt-1">🔊</button>
+                            <h3 class="text-xl md:text-2xl font-bold text-slate-800 leading-relaxed" id="current-question-text"></h3>
+                        </div>
+
+                        <div class="flex flex-col gap-3 w-full mb-4" id="options-container">
+                            <!-- 選項動態生成 -->
+                        </div>
+
+                        <div id="dynamic-hint-box" class="hidden w-full mt-2 mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-base flex items-start gap-2 slide-up">
+                            <div class="flex-1 space-y-2" id="hint-text"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </div>
 
     </div>
@@ -136,9 +155,7 @@
                 <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-purple-600 flex items-center gap-2">📘 拔尖神探錦囊</h2>
                 <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
             </div>
-            <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4">
-                <!-- 教學內容動態載入 -->
-            </div>
+            <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4"></div>
             <div class="mt-6 pt-4 border-t-2 border-slate-100">
                 <button onclick="closeTutorial()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-purple-800 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
             </div>
@@ -152,7 +169,8 @@
             <h2 id="feedback-title" class="text-2xl md:text-3xl font-black text-slate-800 mb-2">答對了！</h2>
             <div id="feedback-desc" class="text-slate-600 font-bold mb-4 text-base md:text-lg leading-relaxed text-left overflow-y-auto pr-2 flex-1 w-full"></div>
             <div class="flex gap-3 w-full mt-2 pt-4 border-t border-slate-100">
-                <button id="next-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-purple-800 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
+                <button onclick="backToDirectoryFromModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition text-lg">⬅️ 目錄</button>
+                <button id="next-btn" class="flex-[1.5] bg-purple-600 hover:bg-purple-700 text-white font-black py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-purple-800 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
             </div>
         </div>
     </div>
@@ -160,7 +178,7 @@
     <!-- 篇章完成 Modal -->
     <div id="finish-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 pointer-events-none">
         <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform duration-300 pointer-events-auto" id="finish-content">
-            <div class="text-7xl mb-4">🏆</div>
+            <div class="text-7xl mb-4 animate-bounce">🏆</div>
             <h2 class="text-3xl font-black text-slate-800 mb-2">篇章過關！</h2>
             <p id="finish-desc" class="text-slate-600 font-bold mb-6 text-xl leading-relaxed">恭喜你完成高難度挑戰！</p>
             <button onclick="backToDirectoryFromFinish()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">領取獎勵並返回目錄 ✨</button>
@@ -170,14 +188,12 @@
     <div id="toast" class="toast-msg">提示訊息</div>
 
     <script>
-        // ================= 1. 核心狀態與語音引擎 =================
+        // ================= 1. 核心狀態與語音 =================
         let readExp = parseInt(localStorage.getItem('readAdvExp')) || 0;
         document.getElementById('exp-display').innerText = readExp;
         
-        let currentPassageIdx = -1;
-        let currentSubQuestionIdx = -1;
-        let currentPassageMistakes = 0; 
-        let currentQuestionMistakes = 0; 
+        let currentPassageIdx = -1, currentSubQuestionIdx = -1;
+        let currentPassageMistakes = 0, currentQuestionMistakes = 0; 
         let pendingPassageIdx = -1; 
 
         window.currentUtterance = null;
@@ -185,19 +201,8 @@
         let readingIndex = 0;
         let sentenceSpans = [];
 
-        const categories = [
-            { id: 'p-adv-narrative', title: '📝 記敘文、描寫文與抒情文篇章', color: 'purple' },
-            { id: 'p-adv-expository', title: '🔬 事理說明文與非連續性文本', color: 'teal' },
-            { id: 'p-adv-argument', title: '⚖️ 高級議論文與論證手法', color: 'indigo' },
-            { id: 'p-adv-classic', title: '🏛️ 文言文經典原典與字詞解碼', color: 'rose' }
-        ];
-
         function cleanTextForSpeech(text) {
-            return text.replace(/<br\s*\/?>/gi, '。')
-                       .replace(/<[^>]*>?/gm, '')
-                       .replace(/[✅❌💡【】]/g, '')
-                       .replace(/&nbsp;/g, ' ')
-                       .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDC00-\uDFFF]/g, ''); 
+            return text.replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】]/g, '').replace(/&nbsp;/g, ' '); 
         }
 
         function speakText(text, rate = 0.95) {
@@ -205,66 +210,38 @@
                 window.speechSynthesis.cancel();
                 let cleanText = cleanTextForSpeech(text);
                 let msg = new SpeechSynthesisUtterance(cleanText);
-                msg.lang = 'zh-HK';
-                msg.rate = rate; 
-                window.currentUtterance = msg; 
-                window.speechSynthesis.speak(msg);
+                msg.lang = 'zh-HK'; msg.rate = rate; window.currentUtterance = msg; window.speechSynthesis.speak(msg);
             }
         }
 
         function stopAllSpeechAndHighlights() {
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
             isReadingAll = false;
-            document.querySelectorAll('.read-sentence').forEach(span => {
-                span.classList.remove('active-sentence');
-            });
-            let readBtn = document.getElementById('btn-read-all');
-            if(readBtn) readBtn.innerHTML = '<span class="text-xl">▶️</span> <span class="hidden md:inline">全文朗讀</span>';
+            document.querySelectorAll('.read-sentence').forEach(span => span.classList.remove('active-sentence'));
+            let btn = document.getElementById('btn-read-all');
+            if(btn) btn.innerHTML = '<span class="text-xl">▶️</span> <span class="hidden md:inline">全文朗讀</span>';
         }
 
         function speakPassage() {
-            if (isReadingAll) {
-                stopAllSpeechAndHighlights();
-                return;
-            }
+            if (isReadingAll) { stopAllSpeechAndHighlights(); return; }
             stopAllSpeechAndHighlights();
             isReadingAll = true;
             sentenceSpans = document.querySelectorAll('.read-sentence');
             readingIndex = 0;
-            
-            let readBtn = document.getElementById('btn-read-all');
-            if(readBtn) readBtn.innerHTML = '<span class="text-xl">⏸️</span> <span class="hidden md:inline">停止朗讀</span>';
-            
+            let btn = document.getElementById('btn-read-all');
+            if(btn) btn.innerHTML = '<span class="text-xl">⏸️</span> <span class="hidden md:inline">停止朗讀</span>';
             if(sentenceSpans.length > 0) readNextSentence();
         }
 
         function readNextSentence() {
-            if (readingIndex >= sentenceSpans.length || !isReadingAll) {
-                stopAllSpeechAndHighlights();
-                return;
-            }
-            
+            if (readingIndex >= sentenceSpans.length || !isReadingAll) { stopAllSpeechAndHighlights(); return; }
             document.querySelectorAll('.read-sentence').forEach(s => s.classList.remove('active-sentence'));
             let span = sentenceSpans[readingIndex];
             span.classList.add('active-sentence');
-            
             span.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            let text = span.innerText;
-            let msg = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
-            msg.lang = 'zh-HK';
-            msg.rate = 0.95; 
-            window.currentUtterance = msg;
-            
-            msg.onend = function() {
-                if (isReadingAll) {
-                    readingIndex++;
-                    readNextSentence();
-                } else {
-                    stopAllSpeechAndHighlights();
-                }
-            };
-            
+            let msg = new SpeechSynthesisUtterance(cleanTextForSpeech(span.innerText));
+            msg.lang = 'zh-HK'; msg.rate = 0.95; window.currentUtterance = msg;
+            msg.onend = function() { if (isReadingAll) { readingIndex++; readNextSentence(); } else stopAllSpeechAndHighlights(); };
             msg.onerror = function() { stopAllSpeechAndHighlights(); };
             window.speechSynthesis.speak(msg);
         }
@@ -272,17 +249,9 @@
         function speakSpecificSentence(spanElement) {
             stopAllSpeechAndHighlights();
             spanElement.classList.add('active-sentence');
-            
-            let text = spanElement.innerText;
-            let msg = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
-            msg.lang = 'zh-HK';
-            msg.rate = 0.95;
-            window.currentUtterance = msg;
-            
-            msg.onend = function() {
-                spanElement.classList.remove('active-sentence');
-            };
-            
+            let msg = new SpeechSynthesisUtterance(cleanTextForSpeech(spanElement.innerText));
+            msg.lang = 'zh-HK'; msg.rate = 0.95; window.currentUtterance = msg;
+            msg.onend = function() { spanElement.classList.remove('active-sentence'); };
             window.speechSynthesis.speak(msg);
         }
 
@@ -291,11 +260,10 @@
             tempDiv.innerHTML = htmlString;
             let pTags = tempDiv.querySelectorAll('p');
             pTags.forEach(p => {
+                if (p.classList.contains('classic-translation-text')) return;
                 let html = p.innerHTML;
                 let parts = html.split(/([。！？][」』]?)/);
-                let finalHtml = "";
-                let current = "";
-                
+                let finalHtml = "", current = "";
                 for(let i=0; i<parts.length; i++) {
                     current += parts[i];
                     if (/[。！？]/.test(parts[i]) || i === parts.length - 1) {
@@ -317,44 +285,34 @@
             setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
         }
 
-        // ================= 2. 五大高階能力錦囊寶庫 =================
-        const allTips = [
-            { id: 'p-adv-narrative', title: "📖 記敘文：結構與寫作手法", content: "1. <span class='font-bold text-sky-700'>倒敘法</span>：先把結局或最精彩的回憶寫出來，製造懸念，再慢慢從頭說起。<br>2. <span class='font-bold text-sky-700'>插敘法</span>：寫到一半，突然暫停，插入一段以前的往事來「補充背景或原因」。<br>3. <span class='font-bold text-sky-700'>借景抒情 / 託物言志</span>：不直接說心情，而是藉由讚美死物或植物來表達感情和志向。", color: "purple" },
-            { id: 'p-adv-expository', title: "🔬 說明文：四大說明方法", content: "1. <span class='font-bold text-teal-700'>舉例子</span>：舉出具體事物。<br>2. <span class='font-bold text-teal-700'>列數字</span>：包含精確的數據（如高達80%）。<br>3. <span class='font-bold text-teal-700'>打比方</span>：說明文裡的比喻。<br>4. <span class='font-bold text-teal-700'>作比較</span>：把 A 和 B 放在一起比。", color: "teal" },
-            { id: 'p-adv-argument', title: "⚖️ 議論文：四大論證手法", content: "1. <span class='font-bold text-indigo-700'>例證法</span>：舉真實故事或史實作例子。<br>2. <span class='font-bold text-indigo-700'>引證法</span>：引用名言、詩句或科學數據。<br>3. <span class='font-bold text-indigo-700'>對比論證</span>：把好與壞、成與敗對比。<br>4. <span class='font-bold text-indigo-700'>比喻論證</span>：用打比方的方式來把抽象道理說清楚。", color: "indigo" },
-            { id: 'p-adv-classic', title: "🏛️ 文言文：解碼密碼", content: "古文的用詞跟現在不同！<br>✔️ <span class='bg-rose-100 px-1 rounded font-bold text-rose-800'>走</span> = 跑<br>✔️ <span class='bg-rose-100 px-1 rounded font-bold text-rose-800'>之</span> = 他/她/它 (代名詞)，或「的」<br>✔️ <span class='bg-rose-100 px-1 rounded font-bold text-rose-800'>使</span> = 出使/派去<br>💡 讀古文時，一定要「聯繫上下文」猜測詞義！", color: "rose" }
+        // ================= 2. 學習錦囊庫 =================
+        const categories = [
+            { id: 'p-adv-narrative', title: '📝 記敘文、描寫文與抒情文篇章', color: 'purple', theme: { text: 'text-purple-800', border: 'border-purple-200', btnText: 'text-purple-600', btnBorder: 'border-purple-300', btnHover: 'hover:bg-purple-50', badgeBg: 'bg-purple-100', badgeText: 'text-purple-800', hoverText: 'group-hover:text-purple-600' } },
+            { id: 'p-adv-expository', title: '🔬 事理說明文與非連續性文本', color: 'teal', theme: { text: 'text-teal-800', border: 'border-teal-200', btnText: 'text-teal-600', btnBorder: 'border-teal-300', btnHover: 'hover:bg-teal-50', badgeBg: 'bg-teal-100', badgeText: 'text-teal-800', hoverText: 'group-hover:text-teal-600' } },
+            { id: 'p-adv-argument', title: '⚖️ 高級議論文與論證手法', color: 'indigo', theme: { text: 'text-indigo-800', border: 'border-indigo-200', btnText: 'text-indigo-600', btnBorder: 'border-indigo-300', btnHover: 'hover:bg-indigo-50', badgeBg: 'bg-indigo-100', badgeText: 'text-indigo-800', hoverText: 'group-hover:text-indigo-600' } },
+            { id: 'p-adv-classic', title: '🏛️ 文言文經典原典與字詞解碼', color: 'rose', theme: { text: 'text-rose-800', border: 'border-rose-200', btnText: 'text-rose-600', btnBorder: 'border-rose-300', btnHover: 'hover:bg-rose-50', badgeBg: 'bg-rose-100', badgeText: 'text-rose-800', hoverText: 'group-hover:text-rose-600' } }
         ];
+
+        const tutorialContents = {
+            'p-adv-narrative': `<div class="text-center mb-4"><span class="text-6xl">📖 🎨</span></div><p class="font-bold text-slate-700 mb-4 text-center">記敘文與抒情文錦囊</p><p class="mb-4 text-slate-600">1. <span class="font-bold text-purple-600">欲揚先抑</span>：先貶低，後讚美，反差極大。<br>2. <span class="font-bold text-purple-600">借景抒情</span>：透過風景描寫來烘托內心情感。<br>3. <span class="font-bold text-purple-600">託物言志</span>：藉由物品或植物，表達自己的人生志向。</p>`,
+            'p-adv-expository': `<div class="text-center mb-4"><span class="text-6xl">🔬 📊</span></div><p class="font-bold text-slate-700 mb-4 text-center">說明文錦囊</p><p class="mb-4 text-slate-600">找準四大說明方法：<span class="font-bold text-teal-600">舉例子、列數字、打比方、作比較</span>。如果遇到圖表(非連續性文本)，要特別留意圖例和軸線數據！</p>`,
+            'p-adv-argument': `<div class="text-center mb-4"><span class="text-6xl">⚖️ 💡</span></div><p class="font-bold text-slate-700 mb-4 text-center">議論文錦囊</p><p class="mb-4 text-slate-600">議論文的核心在於「論點」。尋找四大論證手法：<span class="font-bold text-indigo-600">引證法</span>(名言)、<span class="font-bold text-indigo-600">例證法</span>(故事)、<span class="font-bold text-indigo-600">對比論證</span>和<span class="font-bold text-indigo-600">比喻論證</span>。</p>`,
+            'p-adv-classic': `<div class="text-center mb-4"><span class="text-6xl">🏛️ 📜</span></div><p class="font-bold text-slate-700 mb-4 text-center">文言文解碼錦囊</p><p class="mb-4 text-slate-600">古人說話很精簡！<br>✔️ 走 = 跑<br>✔️ 使 = 出使<br>遇到不懂的字，先猜猜上下文的意思。這關你可以點擊按鈕查看白話文翻譯喔！</p>`
+        };
 
         function renderTipsHub() {
             const grid = document.getElementById('tips-grid');
             let html = '';
-            allTips.forEach(tip => {
-                html += `
-                    <div class="bg-${tip.color}-50 border-2 border-${tip.color}-200 p-5 rounded-2xl shadow-sm hover:shadow-md transition">
-                        <h3 class="text-xl font-black text-${tip.color}-800 mb-3 border-b border-${tip.color}-200 pb-2">${tip.title}</h3>
-                        <p class="text-slate-700 text-sm md:text-base leading-relaxed">${tip.content}</p>
-                    </div>
-                `;
+            categories.forEach(cat => {
+                html += `<div class="bg-${cat.color}-50 border-2 border-${cat.color}-200 p-5 rounded-2xl shadow-sm hover:shadow-md transition"><h3 class="text-xl font-black text-${cat.color}-800 mb-3 border-b border-${cat.color}-200 pb-2">${cat.title}</h3><div class="text-slate-700 text-sm md:text-base leading-relaxed">${tutorialContents[cat.id]}</div></div>`;
             });
             grid.innerHTML = html;
         }
-
-        const tutorialContents = {};
-        allTips.forEach(tip => {
-            tutorialContents[tip.id] = `
-                <div class="bg-${tip.color}-50 p-6 rounded-2xl border-2 border-${tip.color}-200 mb-3">
-                    <div class="text-center mb-4"><span class="text-6xl">${tip.title.split(' ')[0]}</span></div>
-                    <p class="font-black text-${tip.color}-800 text-2xl mb-4 text-center">${tip.title.substring(2)}</p>
-                    <p class="text-lg text-slate-700 leading-loose">${tip.content}</p>
-                </div>
-            `;
-        });
 
         function showTutorial(tutKey) {
             const modal = document.getElementById('tutorial-modal');
             const content = document.getElementById('tutorial-content');
             document.getElementById('tutorial-body').innerHTML = tutorialContents[tutKey];
-            
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
             localStorage.setItem('tut_seen_' + tutKey, 'true');
@@ -363,401 +321,298 @@
         function closeTutorial() {
             const modal = document.getElementById('tutorial-modal');
             const content = document.getElementById('tutorial-content');
-            modal.classList.add('opacity-0');
-            content.classList.add('scale-90');
+            modal.classList.add('opacity-0'); content.classList.add('scale-90');
             setTimeout(() => {
                 modal.classList.add('hidden');
-                if (pendingPassageIdx !== -1) {
-                    let targetIdx = pendingPassageIdx;
-                    pendingPassageIdx = -1;
-                    startPassage(targetIdx, true); 
-                }
+                if (pendingPassageIdx !== -1) { let targetIdx = pendingPassageIdx; pendingPassageIdx = -1; startPassage(targetIdx, true); }
             }, 300);
         }
 
         function switchMode(mode) {
-            const tabQuest = document.getElementById('tab-quest');
-            const tabTips = document.getElementById('tab-tips');
-            const questMode = document.getElementById('quest-mode');
-            const tipsMode = document.getElementById('tips-hub-mode');
-            const questPlay = document.getElementById('quest-play');
-
+            stopAllSpeechAndHighlights();
+            const tQ = document.getElementById('tab-quest'), tT = document.getElementById('tab-tips');
+            const qM = document.getElementById('quest-mode'), tM = document.getElementById('tips-hub-mode');
+            const qP = document.getElementById('quest-play');
+            
             if (mode === 'quest') {
-                tabQuest.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700";
-                tabTips.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
-                questMode.style.display = 'flex';
-                tipsMode.style.display = 'none';
-                questPlay.style.display = 'none';
+                tQ.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700"; 
+                tT.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                qM.classList.remove('hidden'); tM.classList.add('hidden'); qP.classList.add('hidden');
                 renderDirectory(); 
             } else {
-                tabTips.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700";
-                tabQuest.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
-                questMode.style.display = 'none';
-                questPlay.style.display = 'none';
-                tipsMode.style.display = 'flex'; 
+                tT.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700"; 
+                tQ.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                qM.classList.add('hidden'); qP.classList.add('hidden'); tM.classList.remove('hidden'); 
                 renderTipsHub();
             }
         }
 
-        // ================= 3. 拔尖呈分試 25篇高質量文章庫 (200題) 絕對無重複 =================
+        // ================= 3. 拔尖呈分試 25篇深度題庫 (全新重建) =================
+        function cA(id, c, t, txt, qs) {
+            return {
+                id: id, category: c, title: t, text: txt,
+                questions: qs.map(q => ({ type: q[0], q: q[1], options: [q[2], q[3], q[4], q[5]], ans: q[6], hint: q[7], exp: q[8] }))
+            };
+        }
+
         const rawQuestDataObj = [
-            // --- 記敘文、描寫文與抒情文 (10篇) ---
-            {
-                id: 'pa1', category: 'p-adv-narrative', title: '巷口的修鞋匠',
-                text: '<p>那年冬天特別冷。巷口那位修鞋的老伯，整天板著臉，身上總是散發著難聞的皮革和膠水味。我們這群孩子平時對他避之唯恐不及。大家都覺得他是一個脾氣暴躁、難以親近的人。</p><p>然而，一件事改變了我的看法。記得上個月的一個雨天，我放學回家時鞋底突然裂開了，雨水灌進鞋裡，凍得我直發抖。正當我無助地站在屋簷下哭泣時，老伯向我招了招手。他一言不發地脫下我的鞋，熟練地用粗線縫合，還用烤熱的布把我冰冷的腳裹住。修好後，他不僅沒收我的錢，還遞給我一把破舊但結實的雨傘。「快回家吧，別凍著。」他的聲音沙啞，卻透著一股說不出的溫暖。</p><p>回過神來，現在那個角落已經空空如也，老伯搬走了。每次路過那裡，我總會想起那雙佈滿老繭的手和那把舊雨傘。有些人就像那粗糙的皮革，外表雖然不起眼，內心卻比黃金還要珍貴。</p>',
-                questions: [
-                    { type: '寫作手法', q: '第一段作者先寫老伯「難以親近」，這種寫法在文學上有何作用？', options: ['說明作者特別討厭老伯', '欲揚先抑，以先前的偏見反襯老伯後來的善良無私', '純粹記錄客觀的環境事實', '為了讓文章字數變多'], ans: 1, hint: '先抑後揚，對比能讓後者的美好形象更加突出鮮明。', exp: '這種手法叫「欲揚先抑」（反襯），利用前後觀感反差，極大突顯了修鞋匠高尚且溫暖的靈魂。' },
-                    { type: '寫作手法', q: '第二段回憶「上個月的一個雨天」，在記敘結構上屬於哪一種？', options: ['順敘法', '插敘法 (中斷主線，插入過去事件以補充背景)', '倒敘法', '補敘法'], ans: 1, hint: '文章在寫現在的思緒時，突然暫停，插進了一段上個月的回憶。', exp: '在記敘的過程中，暫時中斷主線，插入一段與主題密切相關的往事以補充背景，是插敘。' },
-                    { type: '多重推論', q: '老伯「一言不發」卻細心修鞋、烘腳、送傘，這反映了他什麼特質？', options: ['他不喜歡與小孩子說話', '他身體不適、無法開口', '他外冷內熱，用實際行動默默關愛他人', '他心疼自己的工具'], ans: 2, hint: '他不說好聽話，但每一個動作都是在溫暖並幫助作者。', exp: '這展現了老伯「外冷內熱」的性格，不善言辭但富有愛心與同理心。' },
-                    { type: '閱讀策略', q: '若想快速找出作者對老伯一生品質的昇華評價，應該採取什麼策略？', options: ['精讀第一段的環境描寫', '掃讀(Scanning)尋找「雨天」等字眼', '略讀(Skimming)並鎖定最後一段的感悟句', '通讀全文並大聲朗讀'], ans: 2, hint: '文章最後通常是用來總結人生道理和主旨的。', exp: '略讀尾段最符合高效閱讀策略，能迅速抓取「外表不起眼，內心比黃金珍貴」的核心昇華。' },
-                    { type: '深層評價', q: '你認同「有些人外表不起眼，內心卻比黃金珍貴」這句話嗎？為什麼？', options: ['不認同，外表重要', '認同，因為評價一個人不應只看外表，更要看他的品格與實際行動', '不認同，黃金比較貴', '認同，因為老伯很有錢'], ans: 1, hint: '這句話是文章的核心道理，教我們怎麼看人。', exp: '這句話強調了內在美勝於外在美，是整篇文章的昇華。' },
-                    { type: '修辭與表達', q: '第三段「有些人就像那粗糙的皮革」運用了哪種修辭手法？', options: ['暗喻', '明喻 (有本體、喻體和喻詞)', '借喻', '擬人'], ans: 1, hint: '有本體(有些人)、喻體(粗糙的皮革)，並且使用了喻詞「就像」。', exp: '同時出現了本體、喻體和喻詞，是標準的明喻。' },
-                    { type: '字詞積累', q: '第一段中「避之唯恐不及」形容大家對老伯的心態是？', options: ['覺得他很親切想靠近', '害怕或討厭他，極力想要躲開', '不知道該走哪一條路', '覺得他很有趣'], ans: 1, hint: '因為覺得他脾氣暴躁，所以大家都不想靠近他。', exp: '「避之唯恐不及」形容躲避得極快，非常不願意接近。' },
-                    { type: '情感分析', q: '最後一段表達了作者對老伯怎樣的深層情感？', options: ['對老伯突然搬走的生氣與無奈', '對老伯高尚品質的深深敬意與無限懷念', '對鞋子裂開這件事的心有餘悸', '對下雨天的厭惡'], ans: 2, hint: '作者說「我總會想起」，並把老伯比作黃金。', exp: '作者借對往事的回憶，表達了對老伯無私幫助的感恩、致敬與永恆的懷念。' }
-                ]
-            },
-            {
-                id: 'pa2', category: 'p-adv-narrative', title: '牆角的野百合',
-                text: '<p>在廢棄的工廠後院，雜草叢生，瓦礫遍地。深秋的寒風無情地刮過，捲起漫天的黃沙。然而，就在這片荒涼與破敗的牆角，竟然奇蹟般地挺立著一株野百合。它沒有溫室花朵那般肥沃的土壤，也沒有園丁精心的呵護，但它依然倔強地生長著。</p><p>它的莖雖然纖細，卻筆直地刺向天空；它的葉子雖然沾滿了灰塵，卻依然透出不屈的綠意。最令人驚嘆的是那朵潔白的花，在滿目瘡痍的背景襯托下，顯得無比純潔和高貴。它靜靜地散發著淡淡的幽香，彷彿在向世界宣告：無論環境多麼惡劣，都不能剝奪我開花的權利。</p><p>看著這株野百合，我的內心受到了深深的震撼。生活中，我們總會抱怨環境的不公、資源的匱乏。但與這株牆角的野百合相比，我們的抱怨顯得多麼蒼白無力。只要心中有光，哪怕身處廢墟，也能開出最美麗的人生之花。</p>',
-                questions: [
-                    { type: '寫作手法', q: '這篇文章主要運用了哪種高階寫作手法？', options: ['借景抒情', '託物言志 (借讚美野百合逆境綻放，寄託自強不息的人生志向)', '步移法', '倒敘法'], ans: 1, hint: '作者不僅僅是寫百合花，更是藉由這株植物，點出「哪怕身處廢墟，也能開出人生之花」的道理。', exp: '將個人的志向、品格或精神寄託在一件具體的「物」上進行描寫，是「託物言志」。' },
-                    { type: '修辭與表達', q: '第一段詳細描寫廢棄工廠、瓦礫和寒風，這在修辭上起到了什麼效果？', options: ['說明工廠很髒', '反襯 (以極度荒涼破敗的環境，反襯野百合生命力的頑強)', '說明秋天的天氣非常寒冷', '為了讓讀者感到害怕'], ans: 1, hint: '環境描寫得越艱難，生長在那裡的百合花就顯得越厲害、越美麗。', exp: '這叫作「環境烘托」或「反襯」，用惡劣的環境對比，使野百合的生命奇蹟更具震撼力。' },
-                    { type: '修辭與表達', q: '第二段「它的莖雖然纖細，卻筆直地刺向天空」中的「刺」字有何表達效果？', options: ['說明百合花的莖像針一樣會刺傷人', '生動傳神地刻畫出百合不向命運低頭、頑強抗爭的傲骨與力量', '這是一個錯字，應該用長字', '說明這是一株變異的百合'], ans: 1, hint: '「刺」是一個極具爆發力和動態感的動詞，寫出了百合生長時不屈的姿態。', exp: '「刺」字將柔弱的植物賦予了剛強、挑釁命運的動態靈魂，極具視覺衝擊力。' },
-                    { type: '多重推論', q: '百合花彷彿在宣告「不能剝奪我開花的權利」，這其實是作者借百合表達什麼觀點？', options: ['百合花是一種很聰明會說話的植物', '不論出身或身處多麼糟糕的逆境，每個人都有追求美好和實現自我價值的權利', '我們不應該去廢棄的工廠玩耍', '溫室裡的花朵生命力太脆弱了'], ans: 1, hint: '「開花的權利」在人類社會中，對應著什麼？', exp: '借花言志，指無論環境多麼惡劣，命運都掌握在自己手中，人人都有追求卓越與綻放的權利。' },
-                    { type: '深層評價', q: '作者為什麼認為人類的抱怨「顯得多麼蒼白無力」？', options: ['因為人類的聲音沒有百合花大', '因為百合在全無資源、極度破敗的廢墟中依然努力綻放，而人類擁有更多卻愛抱怨', '因為人類的皮膚比百合花白', '因為抱怨是沒有用的'], ans: 1, hint: '對比野百合所處的廢墟，和我們平時抱怨「環境不公、資源匱乏」的處境。', exp: '野百合在毫無資源的廢墟中尚能綻放，而人類擁有優越條件卻因小挫折怨天尤人，兩相對照，顯得人類的抱怨十分羞愧。' },
-                    { type: '修辭與表達', q: '第二段「彷彿在向世界宣告」運用了什麼修辭手法？', options: ['明喻', '暗喻', '擬人', '誇張'], ans: 2, hint: '宣告是人類才會做出的社會性動作。', exp: '賦予植物人類發布宣言的動作，是擬人手法。' },
-                    { type: '閱讀策略', q: '如果要快速提煉這篇文章所寄託的核心人生哲理，應採取何種策略？', options: ['精讀第一段的環境描寫', '略讀(Skimming)最後一段的抒情與感悟句', '掃讀(Scanning)尋找「百合」二字', '反覆閱讀第二段的長句子'], ans: 1, hint: '「託物言志」的文章，其「志」與哲理通常在文章最後一段進行昇華與總結。', exp: '略讀尾段的哲理抒發（如：只要心中有光……），是提煉主旨最高效的策略。' },
-                    { type: '詮釋整合', q: '文章的最終主旨是什麼？', options: ['介紹野百合的生長環境', '批評廢棄工廠的衛生', '借野百合勉勵人們在逆境中也要保持希望，努力綻放自我', '教導我們如何種花'], ans: 2, hint: '綜合植物的象徵精神與實踐意義。', exp: '文章詠物，旨在鼓舞讀者不向命運低頭，在廢墟般的人生困境中也要心中有光、自強不息。' }
-                ]
-            },
-            {
-                id: 'pa3', category: 'p-adv-narrative', title: '那年夏天的雷雨',
-                text: '<p>每當盛夏的午後，天空中響起沉悶的雷聲，我總會下意識地望向陽台那盆茂盛的萬年青。這盆植物綠意盎然，但在我的眼裡，它不僅僅是一盆植物，更是承載著一段十年前冰冷而溫暖的回憶。</p><p>那年我只有九歲。一個午後，天空突然像打翻了墨水般黑了下來。狂風像一隻咆哮的野獸，猛烈地搖晃著窗戶。這時，媽媽出門了，家裡只剩下我一人。突然，「轟隆」一聲巨響，一道刺眼的閃電劃破夜空，家裡瞬間停電了。黑暗中，我嚇得縮在牆角，全身發抖，眼淚不爭氣地流了下來。就在我極度恐懼時，門開了，爸爸全身濕透、像個水人般衝了進來。他一把將我緊緊抱在懷裡：「別怕，爸爸回來了！」他的身上冰冷，但他的懷抱卻無比溫暖。</p><p>原來，爸爸在路上聽到雷聲，知道我怕黑，便不顧風雨狂奔回來。看著陽台上在狂風暴雨中依然挺拔的萬年青，再看著身邊的爸爸，那一刻，我懂得了什麼是守護。如今，爸爸雖然老了，但那份溫暖的父愛，依然像那盆萬年青一樣，在我心中永遠常青。</p>',
-                questions: [
-                    { type: '寫作手法', q: '文章第一段從「現在的盛夏午後和萬年青」寫起，然後引入「十年前的雷雨夜」，這運用了：', options: ['順敘法', '倒敘法 (以眼前的景物引發回憶)', '插敘法', '補敘法'], ans: 1, hint: '先寫「現在的萬年青」，再把思緒拉回「十年前」，這叫倒敘。', exp: '由眼前的物或景觸發思緒，將時間線拉回過去，屬於標準的倒敘結構。' },
-                    { type: '修辭與表達', q: '「天空突然像打翻了墨水般黑了下來」運用了什麼修辭？有何好處？', options: ['擬人，把天空當作人在寫', '明喻，生動形象地寫出暴雨前天空迅速變得漆黑、陰暗的恐怖氣氛', '誇張，說明有人在天上倒墨水', '借代，代替下雨'], ans: 1, hint: '有喻詞「像」，把黑黑的天空比作打翻的墨水。', exp: '將黑雲壓頂的天空比作潑墨，是明喻，渲染了暴雨將至、令人壓抑恐懼的環境氣氛。' },
-                    { type: '修辭與表達', q: '第二段描寫「狂風如野獸、雷聲巨響、停電」，這在記敘文中有何襯托作用？', options: ['說明夏天的天氣很壞', '反襯 (以大自然環境的可怕，反襯出作者年幼時的極度恐懼與後文父愛的溫暖)', '說明這家房子的質量不好', '為了科普自然現象'], ans: 1, hint: '環境寫得越可怕，小孩子就越害怕，爸爸回來時的拯救就顯得越溫暖。', exp: '用惡劣、可怕的自然環境作「反襯」，烘托出主角孤立無助的心理，並加深了父愛的溫暖感。' },
-                    { type: '多重推論', q: '爸爸全身濕透「像個水人般衝了進來」，這反映了爸爸當時怎樣的心理？', options: ['他忘記帶傘，覺得很狼狽', '他極度擔心獨自留在家中的作者，因此在風雨中全力狂奔回家', '他想快點回家洗澡', '他覺得這場雨很好玩'], ans: 1, hint: '爸爸知道作者怕黑，「在路上聽到雷聲，不顧風雨狂奔」。', exp: '「衝」和「狂奔」體現了父親對孩子安危的極度焦慮與無私的關愛。' },
-                    { type: '寫作手法', q: '文章以「萬年青」貫穿全文，最後說父愛像萬年青一樣「常青」，這運用了：', options: ['借景抒情', '託物言志', '借物抒情 (以萬年青為媒介，表達對父愛的感激與讚美)', '順敘'], ans: 2, hint: '萬年青是一件具體的植物（物），作者借它來表達對爸爸的感情。', exp: '將對親人的情感寄託在一件具體的物件（萬年青）上，是「借物抒情」。' },
-                    { type: '字詞積累', q: '第二段中「滿目瘡痍」用來形容暴雨後的環境，其意思是？', options: ['滿眼都是美麗的景象', '形容到處都是殘破、遭到嚴重破壞的景象', '身上受了很嚴重的傷', '眼睛看得很累'], ans: 1, hint: '狂風暴雨過後，陽台或街道通常是怎樣的？', exp: '「滿目瘡痍」比喻眼前看到的都是殘破、受災的景象。' },
-                    { type: '閱讀策略', q: '如果要找「爸爸為什麼要狂奔回家」的直接因果原因，應用掃讀(Scanning)在第幾段找？', options: ['第一段', '第二段', '第三段 (尋找「原來、因為」等因果關鍵字)', '標題'], ans: 2, hint: '解釋事件「謎底」或「原因」的句子，通常在第三段開頭。', exp: '第三段開頭「原來，爸爸在路上聽到雷聲……」，掃讀第三段能最快找到因果關係。' },
-                    { type: '深層評價', q: '你如何評價文章中父親的行為？', options: ['不理智，下大雨狂奔很容易受傷', '展現了偉大、無私且細膩的父愛，是孩子最堅實的守護者', '他應該打電話，而不是跑回家', '他只是想保護那盆萬年青'], ans: 1, hint: '從父愛的偉大與對孩子的守護角度來評價。', exp: '父親在暴雨中為孩子奔波，甚至不顧自己淋濕，是崇高母愛/父愛的真實寫照。' }
-                ]
-            },
-            {
-                id: 'pa4_2', category: 'p-adv-narrative', title: '那一雙溫暖的鞋',
-                text: '<p>每到寒冬，看著鞋櫃裡那雙已經有些褪色的羊毛短靴，我的雙腳彷彿又感受到了那一股揮之不去的溫暖。那是一雙極其普通的鞋子，但在我的生命中，它是一件珍貴的「傳家寶」。</p><p>那年我十一歲，正面臨嚴重的考試壓力，心情極度焦躁。一個寒冷的冬夜，我因為一道數學題解不開，氣得把筆摔在地上，對著前來送熱牛奶的奶奶大吼大叫。奶奶沒有生氣，只是默默地撿起筆，退了出去。第二天清晨，當我準備上學時，發現大門口整齊地擺放著這雙羊毛短靴，裡面還塞著暖烘烘的熱水袋。奶奶站在一旁，慈祥地看著我：「孩子，腳暖了，心就不累了。」那一刻，看著奶奶長滿凍瘡的手，我的淚水模糊了雙眼。</p><p>原來，奶奶為了在清晨給我這份溫暖，自己半夜就起床燒水、暖鞋。現在，奶奶已經去世多年了，但每當我面對生活的挫折想要放棄時，看着這雙鞋，耳邊就會響起奶奶那溫暖的叮嚀。這雙鞋，將永遠指引我堅強地走下去。</p>',
-                questions: [
-                    { type: '寫作手法', q: '這篇文章在敘事結構上，主要採用了哪一種手法？', options: ['順敘法', '倒敘法 (以眼前的舊毛靴，引出對往事的回憶)', '插敘法', '平鋪直敘'], ans: 1, hint: '文章從「現在看著鞋櫃」寫起，然後回憶「那年我十一歲」，這是倒敘。', exp: '由眼前的物件引發對童年深刻往事的回憶，是標準的倒敘手法。' },
-                    { type: '寫作手法', q: '這篇文章以一雙「羊毛短靴」貫穿全文，抒發對奶奶的感恩，這屬於：', options: ['借景抒情', '借物抒情 (將對奶奶的愛與懷念寄託在毛靴上)', '託物言志', '空間順序'], ans: 1, hint: '短靴是一件具體的物品，作者藉由這件物品表達對親人的懷念與感恩。', exp: '透過具體的物件（羊毛短靴）來凝聚、抒發對親人的情感，稱為「借物抒情」。' },
-                    { type: '多重推論', q: '第二段中，作者因為解不開題而「對奶奶大吼大叫」，這反映了作者當時：', options: ['討厭奶奶', '面對學業壓力極度焦慮，卻將脾氣發洩在最親的人身上', '肚子很餓', '想跟奶奶開玩笑'], ans: 1, hint: '作者正面臨重大的「考試壓力」，「大吼大叫」是焦慮發洩的行為。', exp: '這句動作描寫真實呈現了青少年在壓力下情緒失控、傷害親人後的懊悔心理。' },
-                    { type: '人物評價', q: '奶奶被吼後「沒有生氣，只是默默撿起筆並在半夜為作者暖鞋」，這說明奶奶是個怎樣的人？', options: ['性格軟弱，不敢反抗', '極具包容心，對孫子有著無私、深沉且細緻的愛', '很喜歡玩水和暖水袋', '不關心作者的成績'], ans: 1, hint: '奶奶用實際的溫暖（暖鞋）來回應孫子的無禮，並說「腳暖了，心就不累了」。', exp: '奶奶的行為展現了母愛/祖孫情中最無私、最懂得體貼包容的一面。' },
-                    { type: '深層評價', q: '奶奶說「腳暖了，心就不累了」，這句話在文中有何深層含義？', options: ['只要多穿鞋，就不會覺得功課累', '外在身體的溫暖（關愛），能撫平內心因挫折而產生的焦慮與疲憊', '穿鞋能讓人變聰明', '心臟需要鞋子來保暖'], ans: 1, hint: '這是一句富有哲理的關懷。溫暖了腳，其實是在溫暖什麼？', exp: '奶奶借「腳暖」來隱喻親情的支持，鼓勵孩子放鬆心情，勇敢面對困難。' },
-                    { type: '修辭與表達', q: '第一段中說這雙鞋是珍貴的「傳家寶」，引號的作用是？', options: ['表示直接引用別人的話', '表示特殊含義 (這不是真的古董，但對作者來說具有無上情感價值)', '表示諷刺與否定', '表示書名'], ans: 1, hint: '這雙鞋不值錢，但對作者來說卻像寶貝一樣。', exp: '引號在此處標示出具有特殊、非字面意義的詞語，強調其情感上的珍貴。' },
-                    { type: '閱讀策略', q: '若想快速找出「奶奶是具體如何為作者暖鞋的細節」，應用掃讀(Scanning)在第幾段尋找？', options: ['第一段', '第二段 (尋找「暖烘烘、熱水袋」等關鍵細節)', '第三段', '標題'], ans: 2, hint: '奶奶暖鞋的具體動作發生在回憶的解釋中（第三段）。', exp: '掃讀（Scanning）第三段能快速定位到「半夜起床燒水、暖鞋」等動作細節。' },
-                    { type: '詮釋整合', q: '這篇文章最終想要表達的核心主旨是？', options: ['羊毛短靴非常耐穿', '難題真的很難，需要多做練習', '透過一雙羊毛短靴，頌揚奶奶無私包容的愛，並以此作為激勵自己面對困難的動力', '我們不應該對長輩大吼大叫'], ans: 2, hint: '結合舊物、奶奶的愛以及對作者「指引我堅強走下去」的深遠影響。', exp: '文章借物抒情，旨在讚頌偉大的親情力量能跨越時空，成為我們戰勝人生挫折的精神支柱。' }
-                ]
-            },
-            {
-                id: 'pa5_2', category: 'p-adv-narrative', title: '一場未完的棋局',
-                text: '<p>爺爺是小鎮上有名的象棋高手，他下棋時總是氣定神閒，步步為營。小時候，我常坐在他膝頭，看他與鄰居張伯伯在榕樹下對弈。那時，爺爺總愛摸著我的頭說：「下棋如做人，落子無悔。走每一步，都要看清前路。」</p><p>隨着我考上中學，功課日益繁忙，加上沉迷於手機遊戲的世界，我回小鎮探望爺爺的次數屈指可數。半年前，爺爺突然中風住院，言語不清，右半身癱瘓。當我急忙趕回醫院時，看著床上瘦骨嶙峋、連說話都無比吃力的爺爺，我的淚水止不住地流了下來。爺爺用顫抖的左手，吃力地從枕頭下摸出了兩個木製的棋子——「車」和「馬」，放進我的手心。他看著我，眼裡閃著亮光，似乎想說什麼，卻終究沒能說出口。</p><p>如今，爺爺已經離世。這兩枚棋子一直放在我的書桌上。每當我沉迷手機、荒廢學業時，摸著這兩枚棋子，耳邊就會響起爺爺「落子無悔」的教誨。人生這盤棋，我才剛開始，我絕不能讓自己走錯關鍵的每一步。</p>',
-                questions: [
-                    { type: '對比分析', q: '文章中，爺爺「小時候的氣定神閒」與「半年前中風後的瘦骨嶙峋、顫抖」形成了什麼寫作效果？', options: ['說明醫院的伙食不好', '反襯 (以過去的強壯與現在的病弱對比，強烈激發心疼與悲傷)', '說明爺爺老了很正常', '為了說明象棋很難學'], ans: 1, hint: '將人物最輝煌的過去與最淒涼的現在放在一起，能產生強烈的情感震撼。', exp: '這叫「對比/反襯」，凸顯了生命老去的殘酷，強烈渲染了悲涼和心疼的氣氛。' },
-                    { type: '多重推論', q: '爺爺臨終前吃力地把「車」和「馬」放進作者手心，這行為有什麼「弦外之音」（深層含義）？', options: ['爺爺想跟作者在床上下一盤棋', '爺爺希望作者能繼承他遺志，像「車」、「馬」一樣勇往直前、踏實前行，不要荒廢人生', '爺爺想把這兩個貴重的古董賣掉', '爺爺神智不清，拿錯了東西'], ans: 1, hint: '象棋中的「車」和「馬」都是勇猛前進、發揮重要作用的棋子。結合爺爺以前的教誨「下棋如做人」。', exp: '這是一個極具深意的象徵動作，寄託了祖父對孫子要勇往直前、走好人生每一步的期盼。' },
-                    { type: '寫作手法', q: '這篇文章以「兩枚棋子」貫穿全文，並借此抒發對爺爺的懷念，這屬於：', options: ['借景抒情', '借物抒情 (將對爺爺的愛與教導凝聚在棋子上)', '託物言志', '順敘'], ans: 1, hint: '棋子是一件具體的、不變的物件，作者透過它來傳遞對逝去親人的感情。', exp: '藉由具體物件（棋子）作為情感的載體，抒發思念與感恩，屬於「借物抒情」。' },
-                    { type: '修辭與表達', q: '「人生這盤棋，我才剛開始」這句話運用了哪種修辭手法？', options: ['明喻', '暗喻 (將人生比喻為一盤棋，用『是』連接)', '借喻', '擬人'], ans: 1, hint: '本體是「人生」，喻體是「棋」，中間用了「這盤」或「是」。', exp: '將人生比作棋局，沒有使用喻詞「像」，是暗喻。' },
-                    { type: '字詞積累', q: '第二段中「屈指可數」形容作者去探望爺爺的次數是？', options: ['手指算不完，非常多', '非常少，用手指就能數得過來', '一次都沒有', '指手指頭受傷了'], ans: 1, hint: '「沉迷於手機遊戲...回小鎮探望爺爺的次數...」。', exp: '「屈指可數」形容數量極少。' },
-                    { type: '深層評價', q: '爺爺教導的「落子無悔，走每一步都要看清前路」，這句話對我們的人生有何啟發？', options: ['玩遊戲時不能悔棋', '人生沒有回頭路，每做一個決定都要深思熟慮並對自己的選擇負責', '我們要學會預測未來', '下棋比讀書更重要'], ans: 1, hint: '「落子無悔」指棋子放下就不能收回。人生也是一樣，時間和決定都無法倒流。', exp: '這句話勉勵我們做決定前要深思熟慮，做決定後要勇於承擔後果，不虛度光陰。' },
-                    { type: '閱讀策略', q: '若想快速找出「爺爺在什麼地方跟鄰居對弈」，應運用掃讀(Scanning)在第幾段找尋？', options: ['第一段 (尋找「對弈、榕樹下」等場景關鍵字)', '第二段', '第三段', '標題'], ans: 0, hint: '爺爺與鄰居對弈的溫馨畫面是小時候的回憶（第一段）。', exp: '掃讀第一段能快速定位到「在鄰居張伯伯在榕樹下對弈」這一地點細節。' },
-                    { type: '詮釋整合', q: '整篇文章的主旨可以歸納為？', options: ['介紹象棋的下法和「車」、「馬」的走法', '批評年輕人沉迷手機遊戲危害健康', '借兩枚棋子回憶爺爺的教誨，表達對爺爺的懷念及走好人生每一步的決心', '說明小鎮的榕樹大'], ans: 2, hint: '綜合棋子、爺爺中風的感動、以及作者最後決心「絕不能走錯關鍵的每一步」。', exp: '文章藉由棋子與回憶，深刻表達了對長輩的愛與感恩，以及對自我人生的擔當與反思。' }
-                ]
-            },
-            {
-                id: 'pa6_2', category: 'p-adv-narrative', title: '古井與童年',
-                text: '<p>外婆家後院有一口古老的水井，井口覆蓋著一層青翠的苔蘚，井旁的石板因歲月洗禮而顯得油亮斑駁。小時候，炎熱的夏日午後，外婆總會從古井裡打上一桶清涼的井水。那水，冰涼徹骨，洗一把臉，吃一個浸在井水裡的西瓜，那份甜美與清涼，是我童年最深切的期盼。</p><p>隨著時間流逝，我搬到了喧囂的城市，住進了高樓大廈。這裡有先進的自來水和製冷冰箱，冰水隨手可得，但我卻再也找不到當年在後院吃西瓜時那份發自內心的喜悅與寧靜。每當深夜，窗外下著淅淅瀝瀝的秋雨，敲打著冷冰冰的防盜網，我的思緒總會穿過重重樓宇，回到那個有古井的後院。</p><p>回到故鄉，那口古井已被封存，後院也蓋起了新樓。雖然古井不在了，但那一桶冰涼的井水，卻像一股永不枯竭的泉源，永遠滋潤著我乾燥、疲憊的心田。這口古井，不只是童年的玩樂之地，更凝聚著外婆對我無微不至的關愛與溫馨。</p>',
-                questions: [
-                    { type: '寫作手法', q: '第二段「窗外下著淅淅瀝瀝的秋雨，敲打著冷冰冰的防盜網」，這運用了：', options: ['插敘法', '借景抒情 (用秋雨和冷冰冰的防盜網烘托作者孤獨、思鄉的愁緒)', '直接抒情', '步移法'], ans: 1, hint: '作者寫雨和冰冷的網，是在藉由這些景物表達他內心寂寞、懷念童年的心情。', exp: '「景」乃情之媒介。用冷清憂鬱的雨景烘托思鄉的孤寂，是借景抒情。' },
-                    { type: '前後對比', q: '文章將城市裡「隨手可得的冰水」與故鄉「浸在井水裡的西瓜」對比，目的是：', options: ['說明冰箱製冷效果很好', '說明自來水比井水乾淨', '反襯出童年井水西瓜背後，有著金錢無法買到的親情溫暖與童真樂趣', '說明西瓜很好吃'], ans: 2, hint: '物質上變豐富了，但精神上的「快樂與親情」卻變少了，這是反襯。', exp: '對比現代物質便利與童年樸素生活的精神豐足，突顯了親情的無價與珍貴。' },
-                    { type: '修辭與表達', q: '第三段「那一桶冰涼的井水，卻像一股永不枯竭的泉源」運用了：', options: ['擬人', '明喻', '暗喻', '借喻'], ans: 1, hint: '有本體(井水)、喻詞(像)和喻體(泉源)。', exp: '有「像」字連接本體和喻體，是標準的明喻。' },
-                    { type: '多重推論', q: '古井已經被封存、不復存在，為什麼作者仍稱它「滋潤著我乾燥、疲憊的心田」？', options: ['因為古井漏水了', '因為外婆對他的愛與童年的美好回憶，已化為他面對社會壓力時的精神養分', '因為作者想回去挖井', '因為他覺得很渴'], ans: 1, hint: '井水雖然沒了，但回憶還在。回憶能給疲憊的成年人帶來什麼？', exp: '古井與井水已內化為情感象徵，代表親情的支持與心靈的避風港。' },
-                    { type: '自然段落', q: '這篇文章的第一段主要描寫了什麼？', options: ['介紹外婆家的後院有多大', '細緻描寫古井的外觀與童年井水西瓜帶來的甜美回憶', '說明西瓜的種植過程', '投訴夏天的炎熱'], ans: 1, hint: '第一段前半寫井，後半寫吃西瓜。', exp: '第一段作為回憶的起點，建立了古井「溫馨、清涼」的最初意象。' },
-                    { type: '字詞積累', q: '第二段中「淅淅瀝瀝」用來形容什麼？', options: ['大風吹過的聲音', '小雨落下的聲音（擬聲詞）', '打雷的巨響', '走路的腳步聲'], ans: 1, hint: '「秋雨，敲打著...」。', exp: '「淅淅瀝瀝」是形容小雨落下的模擬聲音。' },
-                    { type: '標點符號', q: '第一段中的「百寶園」加了引號，是因為？', options: ['表示直接引用', '表示特殊含義（對作者來說，這塊空地藏著無數童年樂趣，像百寶箱）', '表示反話諷刺', '表示這是一本書'], ans: 1, hint: '空地不是真的裝滿寶貝的園子，但對小孩子來說，在那裡玩就像尋寶。', exp: '引號標示出比喻意義的特定稱謂，強調童年玩樂的樂趣無窮。' },
-                    { type: '詮釋整合', q: '這篇文章最主要的中心思想是？', options: ['介紹古井的歷史與保養方法', '建議大家多吃浸冰水的西瓜', '借古井的回憶抒發對逝去時光的留戀與對外婆深切的懷念', '說明城市生活比鄉下生活好'], ans: 2, hint: '從後院古井寫到城市孤單，再到最後一段對外婆關愛的昇華。', exp: '文章借古井這一特定物件，表達了對童年無憂時光以及至親關愛的永恆追憶。' }
-                ]
-            },
-            {
-                id: 'pa7_2', category: 'p-adv-narrative', title: '爺爺的菜園',
-                text: '<p>爺爺家後面有一塊空地，那是他的「百寶園」。每天清晨，天剛矇矇亮，爺爺就會戴著草帽，拿著鋤頭到菜園裡工作。他細心地為每一棵菜苗澆水、除草，像照顧嬰兒一樣呵護著它們。</p><p>夏天到了，菜園裡迎來了大豐收。紅彤彤的番茄像一個個小燈籠掛在枝頭；綠油油的青瓜藏在葉子底下跟我們捉迷藏。爺爺摘下一個大番茄遞給我，我咬了一口，酸酸甜甜的汁液在嘴裡散開，這是我吃過最美味的番茄！</p><p>看著滿園的蔬菜，爺爺擦了擦額頭上的汗水，臉上露出了燦爛的笑容。我這才明白，原來辛勤的勞動能結出最甜美的果實。</p>',
-                questions: [
-                    { type: '修辭與表達', q: '第一段中說爺爺「像照顧嬰兒一樣呵護著它們」，這反映了爺爺對菜苗的態度是怎樣的？', options: ['覺得種菜很麻煩', '非常隨便', '非常用心、充滿愛心', '覺得菜苗會哭'], ans: 2, hint: '對待嬰兒通常是非常小心和疼愛的。', exp: '這個比喻生動地表現出爺爺對菜苗極其細心和充滿愛護。' },
-                    { type: '修辭手法', q: '「紅彤彤的番茄像一個個小燈籠掛在枝頭」運用了哪兩種修辭手法？', options: ['疊字 與 擬人', '疊字 與 明喻', '誇張 與 借喻', '擬人 與 反問'], ans: 1, hint: '「紅彤彤」是哪種詞？「像...」又是什麼修辭？', exp: '「紅彤彤」是疊字詞；「像一個個小燈籠」是明喻手法。' },
-                    { type: '修辭手法', q: '「綠油油的青瓜藏在葉子底下跟我們捉迷藏」運用了什麼修辭手法？', options: ['明喻', '暗喻', '誇張', '擬人'], ans: 3, hint: '青瓜會玩「捉迷藏」嗎？這是誰的動作？', exp: '賦予青瓜人類小孩「捉迷藏」的動作，是擬人手法。' },
-                    { type: '推論訊息', q: '第三段中，爺爺流著汗水卻「露出了燦爛的笑容」，這是因為？', options: ['他覺得天氣很好', '他看到了自己辛勤勞動換來的大豐收，感到無比滿足', '他準備去休息了', '他看到我在吃番茄覺得好笑'], ans: 1, hint: '農夫看到自己種的東西大豐收，即使辛苦也會覺得怎樣？', exp: '雖然流汗辛苦，但看到豐收的成果，內心充滿了成就感和喜悅。' },
-                    { type: '詮釋整合', q: '作者在爺爺的菜園裡悟出了一個什麼道理？', options: ['番茄很好吃', '種菜不需要澆水', '辛勤的勞動能結出最甜美的果實（一分耕耘一分收穫）', '夏天很適合睡覺'], ans: 2, hint: '看看文章最後一句話。', exp: '文章結尾點明主旨：「原來辛勤的勞動能結出最甜美的果實。」' },
-                    { type: '字詞積累', q: '第二段中「紅彤彤」是形容紅色的程度，這屬於：', options: ['量詞', '擬聲詞', '疊字詞 (形容詞)', '代名詞'], ans: 2, hint: '紅彤彤、綠油油都是三個字的重疊形容詞。', exp: '「紅彤彤」是典型的ABB式疊字詞，能增強文章的色彩感與節奏感。' },
-                    { type: '閱讀策略', q: '如果要找「夏天菜園裡大豐收時具體有哪些蔬菜成熟」，應運用何種閱讀策略？', options: ['精讀第一段的清晨工作', '掃讀(Scanning)第二段，尋找「番茄、青瓜」等蔬菜名稱', '略讀最後一段的感想', '反覆閱讀標題'], ans: 1, hint: '蔬菜的描寫在第二段（分述夏日豐收）。', exp: '掃讀（Scanning）能以最高效率幫讀者在篇章中尋找特定的名詞資訊。' },
-                    { type: '深層評價', q: '這篇文章主要運用了哪種高階寫作手法？', options: ['倒敘法', '借景抒情', '託物言志 (借爺爺經營菜園的成果，寄託付出汗水必有回報的人生志向)', '插敘法'], ans: 2, hint: '作者借由菜園和番茄，帶出「付出必有回報」的心志與反思。', exp: '將自己的人生體會和志向寄託在具體的景物描寫（菜園大豐收）中，是託物言志的體現。' }
-                ]
-            },
-            {
-                id: 'pa8_2', category: 'p-adv-narrative', title: '漫步植物園',
-                text: '<p>週末，我來到植物園散步，彷彿走進了一個生機勃勃的綠色王國。走進植物園的大門，首先映入眼簾的是一個巨大的音樂噴泉，水柱隨著音樂的高低起伏在空中跳舞，吸引了許多遊客駐足觀賞。</p><p>順著林蔭小道往前走，我們來到了玫瑰園。這裡簡直是花的世界！紅的像火，粉的像霞，白的像雪。微風吹過，一朵朵玫瑰在風中搖曳，彷彿在向我們點頭微笑，空氣中彌漫著濃郁的芳香，令人陶醉。</p><p>離開玫瑰園，再往前走，便是一片清澈的人工湖。湖畔種滿了一排排依依的垂柳。長長的柳條垂在水面上，就像小姑娘在洗滌自己長長的秀髮。幾條錦鯉在湖水中自由自在地穿梭。這次植物園之旅，真是一次讓身心放鬆的美好體驗。</p>',
-                questions: [
-                    { type: '寫作手法', q: '作者在描寫植物園時，使用了「走進大門...順著林蔭小道往前走...再往前走」的順序。這屬於哪種描寫手法？', options: ['插敘法', '倒敘法', '步移法 (空間順序)', '借物抒情'], ans: 2, hint: '跟隨作者移動的腳步來變換觀察的地點。', exp: '作者隨著腳步移動，依序描寫大門噴泉 👉 玫瑰園 👉 人工湖，這種手法稱為「步移法」。' },
-                    { type: '修辭手法', q: '第一段中「水柱隨著音樂的高低起伏在空中跳舞」運用了什麼修辭手法？', options: ['誇張', '明喻', '排比', '擬人'], ans: 3, hint: '水柱是沒有生命的，但作者說它在「跳舞」。', exp: '賦予水柱人類「跳舞」的動作，是擬人手法。' },
-                    { type: '修辭手法', q: '第二段中「紅的像火，粉的像霞，白的像雪」這句話運用了哪些修辭手法？', options: ['排比 和 暗喻', '排比 和 明喻', '誇張 和 擬人', '設問 和 借喻'], ans: 1, hint: '連續三個結構相同的「X的像Y」，有「像」字。', exp: '連續三個結構相似的短句構成排比，句子中使用了「像」進行比喻，是明喻。' },
-                    { type: '修辭句意', q: '第三段中「長長的柳條垂在水面上，就像小姑娘在洗滌自己長長的秀髮」，這個比喻的作用是什麼？', options: ['說明柳樹需要洗頭', '生動形象地寫出了柳條柔軟、細長且隨風輕觸水面的優美姿態', '誇大柳樹的長度', '說明湖水很乾淨'], ans: 1, hint: '把柳條比喻成頭髮，給人什麼樣的畫面感？', exp: '比喻的作用是將事物具象化，這裡完美展現了垂柳婀娜多姿的美感。' },
-                    { type: '段落歸納', q: '這篇文章的結構特點是什麼？', options: ['總起(綠色王國) 👉 分述(噴泉、玫瑰園、人工湖) 👉 總結(美好體驗)', '按時間順序(早中晚)描寫', '全部都是舉例子', '先寫缺點再寫優點'], ans: 0, hint: '看看第一段開頭和最後一段結尾。', exp: '文章首段總括植物園是綠色王國，中間分點描寫不同景點，結尾總結是一次美好體驗，為標準的「總-分-總」結構。' },
-                    { type: '字詞積累', q: '第二段中「陶醉」的意思是什麼？', options: ['喝醉了酒', '沉浸在某種美好的境界中', '感到非常生氣', '覺得很疲倦'], ans: 1, hint: '聞到花香覺得很享受。', exp: '「陶醉」比喻沉浸在某種境界或思想中。' },
-                    { type: '提取聽覺', q: '在人工湖面，可以聽到什麼聲音？', options: ['青蛙呱呱叫', '野鴨嘎嘎的叫聲', '小鳥唱歌', '瀑布水聲'], ans: 1, hint: '第三段的描寫。', exp: '「偶爾發出『嘎嘎』的叫聲。」' },
-                    { type: '標點符號', q: '「這裡簡直是花的世界！」句末的感嘆號代表了什麼？', options: ['極度的讚嘆', '極度的憤怒', '提出疑問', '傷心'], ans: 0, hint: '看到這麼多花，心裡會怎樣？', exp: '表達對玫瑰園花朵繁多、美麗的極大讚美。' }
-                ]
-            },
-            {
-                id: 'pa9_2', category: 'p-adv-narrative', title: '秋夜思鄉',
-                text: '<p>深秋的夜晚，一陣冷風吹過，院子裡的梧桐樹發出沙沙的聲響。枯黃的落葉宛如斷了翅膀的蝴蝶，無力地盤旋、墜落，最後孤零零地躺在冰冷的青石板上。望著天上那輪殘缺的下弦月，我緊了緊身上的大衣，不禁打了一個寒顫。</p><p>還記得小時候在故鄉，每到秋天，奶奶總會在院子裡架起火爐，烤著香噴噴的番薯。那時的月亮總是圓的，火爐的光總是暖的。而現在，我獨自一人在這座陌生的鋼筋水泥城市裡求學，周圍只有汽車的喧囂和冷漠的霓虹燈。</p><p>一陣夜風再次襲來，把我從回憶中拉回現實。那枯黃的梧桐葉，不正如現在漂泊異鄉的我嗎？不知道故鄉的奶奶，此刻是否也在看著這輪明月？</p>',
-                questions: [
-                    { type: '寫作手法', q: '這篇文章主要運用了哪種寫作手法來表達思鄉之情？', options: ['說明法', '借景抒情 (透過描寫秋夜淒涼的景色來烘托孤獨的心情)', '舉例論證', '步移法'], ans: 1, hint: '作者第一段寫了冷風、落葉、殘月，這些風景給人什麼感覺？', exp: '文章沒有直接說「我很孤單」，而是透過淒清的秋景來渲染、寄託思鄉的愁緒，這是借景抒情。' },
-                    { type: '修辭手法', q: '第一段中「落葉宛如斷了翅膀的蝴蝶」運用了什麼修辭手法？', options: ['明喻 (帶有悲涼色彩的比喻)', '誇張', '排比', '擬聲'], ans: 0, hint: '有「宛如」(像) 這個喻詞。', exp: '將落葉比作斷翅的蝴蝶，不僅是明喻，更深刻地烘托出無力、悲涼的氣氛。' },
-                    { type: '對比分析', q: '第二段中，作者將「故鄉的秋天」與「城市的秋天」進行了對比。這種對比有什麼作用？', options: ['說明城市的番薯不好吃', '說明城市比故鄉發達', '以故鄉的溫暖反襯出現在城市的冷漠與作者內心的孤寂', '說明作者不喜歡看月亮'], ans: 2, hint: '過去有火爐和奶奶，現在只有喧囂和霓虹燈。', exp: '利用昔日溫馨的回憶來強烈反襯今日獨處異鄉的孤冷，加深了思鄉之情。' },
-                    { type: '深層寓意', q: '第三段中「那枯黃的梧桐葉，不正如現在漂泊異鄉的我嗎？」這句話暗含了什麼意思？', options: ['作者喜歡撿樹葉', '作者覺得自己老了', '作者藉落葉無根飄零的狀態，自喻為離開故鄉、孤獨無依的遊子', '作者想種梧桐樹'], ans: 2, hint: '落葉離開了樹(家)，隨風飄蕩。', exp: '這是一個借物自喻，落葉的孤零正象徵了遊子漂泊無根的淒涼心境。' },
-                    { type: '修辭作用', q: '最後一句「不知道故鄉的奶奶，此刻是否也在看著這輪明月？」運用了設問還是反問？', options: ['設問', '反問', '都不是，這是一句真誠的疑問（表達跨越時空的思念）', '排比'], ans: 2, hint: '作者真的知道答案嗎？', exp: '這是一個抒情性的疑問，並非修辭上的設問或反問，它表達了「但願人長久，千里共嬋娟」的深深思念。' },
-                    { type: '提取視覺', q: '第一段中，天上掛著的是怎樣的月亮？', options: ['又圓又大', '殘缺的下弦月', '沒有月亮', '紅色的月亮'], ans: 1, hint: '看看第一段最後一句。', exp: '「望著天上那輪殘缺的下弦月」。殘月更能烘托不圓滿的悲傷。' },
-                    { type: '字詞積累', q: '第二段中「喧囂」的意思是什麼？', options: ['安靜', '聲音大而嘈雜、吵鬧', '美麗', '黑暗'], ans: 1, hint: '城市的汽車發出的聲音。', exp: '「喧囂」指聲音雜亂，不清靜。' },
-                    { type: '自然段落', q: '這篇文章的結構是如何安排的？', options: ['全都是回憶', '寫景 👉 回憶 👉 回到現實並昇華情感', '全都是寫景', '議論 👉 寫景 👉 總結'], ans: 1, hint: '看看三段分別寫了什麼時間點。', exp: '文章先寫眼前的秋景，觸景生情引發童年回憶，最後回到現實抒發思鄉之愁。' }
-                ]
-            },
-            {
-                id: 'pa10_2', category: 'p-adv-narrative', title: '夏日的海灘',
-                text: '<p>炎熱的夏日，我們一家來到了淺水灣海灘。踏上沙灘，那金黃色的沙子軟綿綿的，就像踩在地毯上一樣。無數個五顏六色的貝殼點綴在沙灘上，閃閃發光。</p><p>走向海邊，一望無際的大海呈現出迷人的蔚藍色。海浪一波接著一波地湧上岸，發出「嘩啦嘩啦」的聲音。遠處，有幾隻海鷗在海面上低飛盤旋，尋找著獵物。海面上還有點點白帆，那是漁民們正在辛勤地捕魚。</p><p>抬頭望向天空，一輪火紅的驕陽高高掛著。幾朵白雲像棉花糖般悠閒地飄浮著。這片美麗的海灘，真是一個消暑的好地方。</p>',
-                questions: [
-                    { type: '寫作手法', q: '這篇文章描寫海灘時，採用了什麼空間觀察順序？', options: ['由遠及近', '由上到下', '踏上沙灘 👉 走向海邊 👉 抬頭望向天空 (步移法/空間轉移)', '先寫海面，再寫沙灘'], ans: 2, hint: '看看每一段開頭的第一句話，作者的視線是怎麼移動的。', exp: '第一段「踏上沙灘」、第二段「走向海邊」、第三段「抬頭望向天空」，這是標準的步移法與空間順序。' },
-                    { type: '修辭手法', q: '第一段中「那金黃色的沙子軟綿綿的，就像踩在地毯上一樣」運用了什麼修辭手法？', options: ['擬人', '明喻', '誇張', '排比'], ans: 1, hint: '有「像...一樣」的字眼，把沙子比作地毯。', exp: '將軟軟的沙子比喻為地毯，使用了喻詞「像」，是明喻。' },
-                    { type: '提取視覺', q: '第二段描寫海面上的景物，包含了哪些顏色？', options: ['只有藍色', '蔚藍色的海水、白色的帆', '紅色的浪花', '金黃色的魚'], ans: 1, hint: '在第二段尋找顏色的詞語。', exp: '文中提到「蔚藍色」的大海以及點點「白帆」。' },
-                    { type: '修辭作用', q: '「幾朵白雲像棉花糖般悠閒地飄浮著」這句比喻有什麼作用？', options: ['生動地表現出白雲潔白柔軟的樣子和輕鬆的氣氛', '說明白雲可以吃', '表示天氣即將下雨', '誇大白雲的數量'], ans: 0, hint: '棉花糖給人什麼感覺？', exp: '將白雲比作棉花糖，生動具體地寫出了雲的潔白鬆軟，配合「悠閒」烘托出輕鬆的氛圍。' },
-                    { type: '段落歸納', q: '這篇文章的第三段主要描寫了什麼？', options: ['海浪的聲音', '漁民捕魚的辛苦', '天空的景象（太陽與白雲）', '貝殼的顏色'], ans: 2, hint: '第三段開頭是「抬頭望向天空」。', exp: '第三段主要描寫天空中的驕陽和白雲。' },
-                    { type: '字詞積累', q: '第二段中「一望無際」的意思是？', options: ['看不清楚', '一眼望不到邊，非常廣闊', '很快就看完了', '只有一種顏色'], ans: 1, hint: '形容大海很大。', exp: '「一望無際」形容視野廣闊，一眼看不到邊際。' },
-                    { type: '提取時間', q: '這個故事發生在什麼季節？', options: ['春天', '夏天', '秋天', '冬天'], ans: 1, hint: '第一段第一句。', exp: '「炎熱的夏日...」' },
-                    { type: '提取聽覺', q: '海浪湧上岸時發出什麼聲音？', options: ['轟隆轟隆', '嘰嘰喳喳', '嘩啦嘩啦', '滴滴答答'], ans: 2, hint: '第二段關於海浪的描寫。', exp: '「海浪一波接著一波地湧上岸，發出『嘩啦嘩啦』的聲音。」' }
-                ]
-            },
-            
-            // --- 事理說明文 (5篇) ---
-            {
-                id: 'pa11', category: 'p-adv-expository', title: '圖表——非連續性文本',
-                text: '<p>在現代資訊爆炸的時代，我們每天都會接觸到大量的信息。除了由段落文字組成的「連續性文本」外，還有一種越來越重要的閱讀材料，那就是「非連續性文本」。什麼是非連續性文本呢？簡單來說，它包括圖表、地圖、說明書、廣告和火車時刻表等。與傳統長篇文章相比，它具有直觀、簡明、信息量大且便於快速檢索的特點。</p><p>數據圖表是非連續性文本中最常見的一種。根據調查，人類大腦處理視覺圖像的速度，比處理純文字快大約六萬倍！因此，一張精心設計的統計圖表（例如折線圖），能在一秒鐘內向讀者傳達出數據的走勢和變化，而同樣的信息如果用文字描述，可能需要密密麻麻的幾百字。這就是為什麼現代新聞和商業報告中，圖表無處不在的原因。</p><p>但是，閱讀非連續性文本也需要特別的策略。首先，我們要先看「標題」和「圖例」，明白圖表在說明什麼；其次，要特別注意「橫軸」和「縱軸」的單位，避免讀錯數據；最後，要將不同的數據進行「橫向與縱向的比較」，從中分析出規律和趨勢。掌握這種閱讀策略，能讓我們在信息時代中快人一步，精準獲取關鍵信息。</p>',
-                questions: [
-                    { type: '說明方法', q: '第一段對「非連續性文本」進行了解釋：「簡單來說，它包括圖表、地圖...」，這運用了：', options: ['下定義 (簡明扼要地揭示非連續性文本的範疇與特徵)', '下定義 兼 舉例子 (列舉圖表、地圖等具體例子)', '打比方', '作比較'], ans: 1, hint: '既解釋了「什麼是」，又列舉了「圖表、地圖」等具體事物。', exp: '結合了「下定義」的本質解釋，與「舉例子」的具體列列，能讓讀者最快明白抽象概念。' },
-                    { type: '說明方法', q: '第一段將「非連續性文本」與「傳統長篇文章」放在一起比較，這屬於：', options: ['列數字', '作比較 (以突出非連續性文本直觀、簡明的特點)', '打比方', '下定義'], ans: 1, hint: '將兩種類型的文本放在一起，說出它們在特點上的差別。', exp: '將兩者對比，鮮明地突出了解放讀者時間、直觀檢索的優勢，是「作比較」。' },
-                    { type: '說明方法', q: '第二段提到「大腦處理視覺圖像的速度比純文字快大約六萬倍」，這運用了：', options: ['打比方', '列數字 兼 作比較 (以六萬倍的數據對比大腦處理圖與字的速度)', '下定義', '下定義 兼 舉例子'], ans: 1, hint: '出現了精確的數字「六萬倍」，且是在對比「圖像」與「文字」。', exp: '同時使用了數字數據（列數字），並進行了兩者的對比（作比較），極具科學說服力。' },
-                    { type: '閱讀策略', q: '根據第三段，閱讀數據圖表時，為了避免讀錯數據，我們應「特別注意」什麼？', options: ['圖表的顏色是否漂亮', '橫軸和縱軸的單位', '圖表的大小', '作者的名字'], ans: 1, hint: '在第三段尋找「避免讀錯數據」的具體建議。', exp: '文中指出：「要特別注意『橫軸』和『縱軸』的單位，避免讀錯數據。」' },
-                    { type: '多重推論', q: '為什麼現代商務報告和新聞中，數據圖表「無處不在」？', options: ['因為圖表比較便宜', '因為圖表能在一秒內傳達走勢，大大節省現代人的閱讀時間，符合高效社會的需求', '因為打字很麻煩', '因為大家都看不懂文字'], ans: 1, hint: '結合第二段中處理速度「快六萬倍」以及「幾百字描述VS一秒看懂」的推論。', exp: '圖表能高度凝練數據，直觀呈現趨勢，完美契合了現代高效、快速獲取資訊的節奏。' },
-                    { type: '修辭與表達', q: '文章第一段將段落文字稱為「連續性文本」，這在分類上起到了什麼效果？', options: ['這是一種諷刺的手法', '專業、嚴謹地對文本進行分類，與非連續性文本形成對稱', '沒有任何好處', '這是作者自己編造的詞語'], ans: 1, hint: '這符合教育局對語文文體分類的專業用語。', exp: '使用科學專業的學術名詞，能增強說明文的權威性與嚴謹度。' },
-                    { type: '閱讀策略', q: '若想快速掌握「閱讀非連續性文本的具體三步驟」，應採取何種策略？', options: ['精讀第一段的定義', '掃讀(Scanning)第三段，尋找「首先、其次、最後」等順序連接詞', '略讀第二段的數據', '大聲朗讀全文'], ans: 1, hint: '步驟和方法通常使用順序詞在最後一段展開。', exp: '掃讀第三段能迅速提取出「看標題、注意軸線、進行比較」這三個核心步驟。' },
-                    { type: '詮釋整合', q: '這篇文章最主要的寫作目的是什麼？', options: ['呼籲大家不要再讀傳統長篇文章', '說明大腦的生理構造有多麼奇妙', '介紹「非連續性文本」的概念、優勢以及高效的閱讀策略', '教導讀者如何繪製折線圖'], ans: 2, hint: '綜合全篇，從什麼是、有何好處到怎麼讀。', exp: '文章旨在向高年級學生普及「非連續性文本」這一重要考點的實用知識與閱讀技巧。' }
-                ]
-            },
-            {
-                id: 'pa12_2', category: 'p-adv-expository', title: '破解「記憶」的密碼',
-                text: '<p>為什麼有些單字背了幾十遍還是會忘記，而多年前發生的一件趣事卻歷歷在目？這就涉及到大腦「記憶密碼」的運作機制。人類的記憶系統就像一座巨大的圖書館，分為「短期記憶」的暫存區 and 「長期記憶」的深處書架。</p><p>短期記憶的容量非常有限，通常只能記住7個左右的資訊片段，而且只會停留幾十秒。當我們死記硬背時，資訊只停留在暫存區，很快就會被新資訊覆蓋。要將短期記憶轉化為長期記憶，關鍵在於「意義的連結」和「情緒的參與」。研究表明，如果學習時能將新知識與舊經驗聯繫起來，或者在學習過程中伴隨著強烈的情緒波動（如極度開心或驚訝），大腦海馬體就會將這些資訊打上「重要」的標籤，永久存入深處的書架。</p><p>掌握了這個密碼，我們就可以採取更高效的學習策略。例如，運用圖像聯想法，或者向別人講述學到的知識，這都能大大提高記憶的留存率。</p>',
-                questions: [
-                    { type: '閱讀策略', q: '若想快速找出「提高記憶的具體方法」，應運用掃讀(Scanning)尋找哪一段？', options: ['第一段', '第二段', '第三段 (尋找「學習策略、例如」等關鍵字)', '標題'], ans: 2, hint: '方法通常會放在文章的最後，並伴隨「例如」等字眼。', exp: '掃讀第三段能快速定位到「圖像聯想法」、「向別人講述」等具體方法。' },
-                    { type: '說明方法', q: '第一段將記憶系統比喻為「巨大的圖書館」，這在說明文裡屬於哪種說明方法？', options: ['下定義', '作比較', '打比方', '列數字'], ans: 2, hint: '在說明文中，用比喻的手法來解釋複雜或抽象的科學現象，稱為打比方。', exp: '利用圖書館「暫存區」與「深處書架」的運作，來打比方說明記憶分類，更易理解。' },
-                    { type: '提取訊息', q: '根據第二段，人類的短期記憶在「容量」和「時間」上有何限制？', options: ['容量無限，但時間只有幾秒', '容量極其有限（約7個片段），且停留時間極短（幾十秒）', '只能記住數字，記不住文字', '沒有任何限制'], ans: 1, hint: '在第二段前兩句找關於短期記憶的精確描述。', exp: '文中指出：「短期記憶的容量非常有限，通常只能記住7個左右的資訊片段，而且只會停留幾十秒。」' },
-                    { type: '說明方法', q: '第二段中出現的「7個左右」、「幾十秒」，運用了哪種說明方法？', options: ['打比方', '下定義', '列數字', '作比較'], ans: 2, hint: '出現了明確的數值與時間數據。', exp: '使用具體的、確鑿的數據來說明事物特徵，是列數字。' },
-                    { type: '多重推論', q: '為什麼多年前發生的「趣事」能讓我們終生難忘？', options: ['因為趣事發生在長期記憶的書架上', '因為當時伴隨著強烈的情緒波動(極度開心)，被大腦打上了重要標籤', '因為我們每天都在複習這件趣事', '因為趣事比較短，容易背誦'], ans: 1, hint: '結合第二段中提到的「情緒的參與」如何影響大腦海馬體的機制。', exp: '強烈的情緒波動（如極度開心）能促使海馬體給資訊打上重要標籤，轉化為長期記憶。' },
-                    { type: '深層評價', q: '根據文章，為什麼「死記硬背」往往是低效的學習方法？', options: ['因為這會讓學生覺得很累', '因為資訊只停留在容量有限的短期記憶區，缺乏「意義的連結」', '因為死記硬背會損害大腦海馬體', '因為死記硬背沒有用到書本'], ans: 1, hint: '死記硬背缺少了哪一個將短期記憶轉移到長期記憶的關鍵因素？', exp: '死記硬背缺乏將新知識與舊經驗「聯結」的過程，資訊無法存入深處書架，極易被覆蓋。' },
-                    { type: '字詞積累', q: '第一段中「歷歷在目」的意思是？', options: ['看得很不清楚', '過去發生的事清清楚楚地重現在眼前', '眼睛感到非常疲倦', '事情發生在眼前'], ans: 1, hint: '多年前的事，現在回想起來就像在眼前。', exp: '「歷歷在目」形容記憶極其清晰，畫面猶在眼前。' },
-                    { type: '修辭與表達', q: '大腦海馬體會將資訊「打上重要標籤」，這句話運用了：', options: ['誇張', '明喻', '擬人 (賦予海馬體人類打標籤的動作)', '暗喻'], ans: 2, hint: '海馬體是人體器官，它不可能像人類一樣拿著貼紙去打標籤。', exp: '賦予無生命的生物器官人類的行為動作（打標籤），是擬人修辭。' }
-                ]
-            },
-            {
-                id: 'pa13', category: 'p-adv-expository', title: '地球的「綠色之肺」',
-                text: '<p>森林被科學家公認為地球的「綠色之肺」，這不僅是因為它們面積遼闊，更是因為它們在維持地球生態平衡中，起著和人類肺部一樣至關重要的氣體交換作用。大自然如果失去了森林，地球的生命將面臨毀滅。</p><p>首先，森林能高效地淨化空氣。一公頃的闊葉林，每天可以吸收大約一噸的二氧化碳，並釋放出約七百三十公斤的氧氣！這個效率是任何人造機器都無法比擬的。其次，森林是天然的「蓄水庫」。森林的泥土和樹根像一塊巨大的海綿，能在大雨時迅速吸收並儲存雨水，防止山洪暴發；在乾旱時，這些水分又會慢慢釋放出來，滋潤溪流。此外，森林還能防風固沙，保護土壤不被雨水沖走。</p><p>然而，因為人類的過度砍伐和開發，地球上的森林面積正在以每分鐘相當於三十個足球場的速度急劇減少！這導致全球暖化加劇，無數野生動物失去家園。保護森林，已經是全人類刻不容緩的責任。</p>',
-                questions: [
-                    { type: '修辭與表達', q: '第一段將森林稱為地球的「綠色之肺」，這運用了：', options: ['明喻', '暗喻 (以肺部氣體交換比喻森林產生氧氣、吸收二氧化碳的作用)', '借喻', '擬人'], ans: 1, hint: '本體(森林)和喻體(綠色之肺)，中間用「被公認為...」連接，意思相當於「是」。', exp: '這是一個暗喻，生動具體地說明了森林在地球大氣循環中不可或缺的呼吸作用。' },
-                    { type: '說明方法', q: '第二段提到「一公頃的闊葉林，每天可以吸收大約一噸的二氧化碳」，這運用了：', options: ['打比方', '作比較', '列數字 (以精確的面積與重量數據說明淨化效率)', '下定義'], ans: 2, hint: '出現了精確的計量單位「一公頃」、「一噸」。', exp: '使用具體、科學的數據來說明森林吸收二氧化碳的高效率，是列數字。' },
-                    { type: '說明方法', q: '第二段「森林的泥土和樹根像一塊巨大的海綿」，在說明文裡屬於哪種說明方法？', options: ['列數字', '作比較', '打比方 (將泥土樹根吸水比作海綿)', '下定義'], ans: 2, hint: '用讀者極其熟悉的「海綿吸水」來比喻「森林蓄水」的自然功能。', exp: '利用比喻手法來說明複雜的自然現象，在說明文中屬於「打比方」。' },
-                    { type: '因果推斷', q: '根據第二段，為什麼森林被稱為「蓄水庫」？有何好處？', options: ['張原了', '因為樹根能像海綿般在大雨時吸水防洪，乾旱時釋放水分滋潤溪流', '因為森林裡經常下雨', '因為森林有很多人造機器'], ans: 1, hint: '找出森林泥土和樹根「像海綿一樣」在大雨和乾旱時的不同反應。', exp: '森林能調節大自然的水循環，起到旱澇保收的自然蓄水作用。' },
-                    { type: '說明方法', q: '第三段提到「森林面積正以每分鐘相當於三十個足球場的速度急劇減少」，這運用了：', options: ['打比方', '列數字 兼 作比較 (以三十個足球場的面積對比每分鐘流失的森林面積)', '下定義', '舉例子'], ans: 1, hint: '「三十個」是列數字，「足球場的面積」與「流失面積」放在一起是作比較。', exp: '用讀者熟悉的足球場面積，來直觀對比並說明森林流失速度之驚人，是列數字與作比較結合。' },
-                    { type: '詞意推斷', q: '最後一段中「刻不容緩」形容保護森林的責任是？', options: ['非常不重要，可以慢慢來', '形勢非常緊迫，一刻也不能拖延', '刀子很鋒利', '時間過得很慢'], ans: 1, hint: '森林正在快速消失，保護行動必須要怎樣？', exp: '「刻不容緩」比喻情勢極為緊迫，必須立即採取行動，絕不能耽擱。' },
-                    { type: '閱讀策略', q: '若想快速找出「森林能為人類生活帶來哪三大具體好處」，應採取何種策略？', options: ['精讀第一段的定義', '掃讀(Scanning)第二段，尋找「首先、其次、此外」等邏輯順序詞', '略讀最後一段的警示', '反覆閱讀文章標題'], ans: 1, hint: '具體好處的分點列舉，通常在第二段（分述段）展開，並使用順序詞。', exp: '掃讀第二段的順序詞，能以最快速度抓取「淨化空氣、蓄水庫、防風固沙」三大好處。' },
-                    { type: '詮釋整合', q: '這篇文章最主要的說明意圖是？', options: ['說明海綿是如何吸水的', '介紹森林作為「地球之肺」的多重生態功用，並警告砍伐危機，呼籲保護', '批評人類建造的化工廠破壞環境', '說明足球場的面積有多大'], ans: 1, hint: '綜合全篇，從功能介紹（吸碳、蓄水）到危機警示，再到最後一行的保護責任。', exp: '文章旨在普及森林的環保常識，加強高年級學生的生態環保意識與責任感。' }
-                ]
-            },
-            {
-                id: 'pa14', category: 'p-adv-expository', title: '植物的「自衛武器」',
-                text: '<p>在大自然中，動物遇到危險時可以奔跑逃命，或者用利爪進行反擊。然而，不能動彈的植物如果遇到飢餓的昆蟲或草食動物，該如何自衛呢？原來，看似溫和的植物，也擁有各式各樣的神奇「自衛武器」。</p><p>首先，有些植物會給自己穿上堅硬的「盔甲」。例如仙人掌和玫瑰，牠們的身上長滿了尖銳的刺。這能讓想要啃食牠們的動物「無從下口」，望而卻步。其次，許多植物會使用「化學武器」。當毛毛蟲開始啃食番茄的葉子時，葉子會釋放出一種特殊的化學物質，使毛毛蟲消化不良，甚至中毒死亡。此外，更神奇的是，有些植物在受到攻擊時，會釋放出氣味向鄰近的植物「通風報信」，提醒同伴提早做好防禦準備！</p><p>大自然的設計真是巧妙無比。植物雖然沒有聲音，但牠們卻用獨特的生命智慧，在殘酷的生存競爭中繁衍至今。</p>',
-                questions: [
-                    { type: '修辭與表達', q: '第一段將植物保護自己的本領稱為「自衛武器」，這運用了：', options: ['明喻', '暗喻 (將植物防禦本領比作武器，用『是』連接)', '借喻', '擬人'], ans: 1, hint: '本體是「自衛本領」，喻體是「武器」，中間用「是/就是」連接。', exp: '這是一個暗喻，能讓讀者一目了然，明白植物並非毫無防禦能力。' },
-                    { type: '說明方法', q: '第二段「例如仙人掌和玫瑰，牠們的身上長滿了尖銳的刺」，這運用了哪種說明方法？', options: ['列數字', '作比較', '舉例子 (以仙人掌和玫瑰長刺為例說明植物的盔甲)', '下定義'], ans: 2, hint: '用「例如」引出具體的植物名稱。', exp: '用具體、常見的植物實例來說明「盔甲防禦」，屬於舉例子。' },
-                    { type: '說明方法', q: '第二段「有些植物會給自己穿上堅硬的『盔甲』」，這屬於哪種說明方法？', options: ['下定義', '作比較', '打比方 (將植物的刺比作士兵防禦的盔甲)', '列數字'], ans: 2, hint: '將刺比作盔甲。在說明文中，用比喻來說明事物特徵叫打比方。', exp: '用「盔甲」生動形象地說明刺的保護功能，屬於打比方。' },
-                    { type: '因果推斷', q: '番茄葉子如何對付啃食牠們的毛毛蟲？', options: ['番茄會長出刺把毛毛蟲刺死', '葉子會釋放出特殊的化學物質，讓毛毛蟲消化不良或中毒', '番茄會招引小鳥來吃毛毛蟲', '番茄會把葉子合攏起來'], ans: 1, hint: '在第二段中間尋找番茄的防禦機制。', exp: '文中指出：「當毛毛蟲開始啃食番茄...葉子會釋放出一種特殊的化學物質...」。' },
-                    { type: '修辭與表達', q: '第二段中說植物會向同伴「通風報信」，這運用了什麼修辭手法？', options: ['明喻', '暗喻', '擬人 (將植物釋放化學信號比作人類傳遞消息)', '誇張'], ans: 2, hint: '通風報信是人類在傳遞危險消息時的動作。', exp: '賦予植物發送信號以警告同伴的行為人類的動作特徵，是擬人修辭。' },
-                    { type: '字詞積累', q: '第二段中「望而卻步」形容動物面對長刺的植物時：', options: ['一邊看著一邊走過去', '看到危險或困難就往後退縮不前', '開心地跳起舞來', '大口大口地吃'], ans: 1, hint: '刺很尖，動物想咬，但看到了會怎樣？', exp: '「望而卻步」指遠遠看著就嚇得退步了，不敢前進。' },
-                    { type: '閱讀策略', q: '若想快速找出「植物釋放信號通風報信」的細節，應採取何種策略？', options: ['略讀第一段', '掃讀(Scanning)第二段，鎖定「更神奇、通風報信、釋放氣味」等詞語', '精讀最後一段的感想', '看文章標題'], ans: 1, hint: '這個神奇的通風報信特徵，屬於第二段的最後一項「此外...」的內容。', exp: '掃讀第二段後半部能以最高效率提取出這項「植物通訊」的科學細節。' },
-                    { type: '詮釋整合', q: '這篇文章最主要的中心思想是？', options: ['說明動物是如何捕食植物的', '介紹植物在長期生存演化中，所產生的各種神奇防禦機制與生命智慧', '呼籲大家多種植玫瑰和仙人掌', '批評昆蟲對大自然的破壞'], ans: 2, hint: '從不能動彈引出疑問，分述盔甲、化學武器、通訊，最後讚歎智慧。', exp: '文章旨在普及植物生態常識，帶出大自然生物為了生存而產生的巧妙智慧。' }
-                ]
-            },
-            {
-                id: 'pa15_2', category: 'p-adv-expository', title: '人工智能的崛起',
-                text: '<p>近年來，人工智能（Artificial Intelligence，簡稱 AI）成為了科技界的熱門話題。所謂人工智能，是指由人類製造出來的機器或電腦系統，能夠模擬人類的智能行為，如學習、推理和解決問題等。</p><p>人工智能與傳統電腦程序有著本質的區別。傳統程序只能按照程序員預先寫好的死板指令來執行任務；而人工智能，尤其是機器學習系統，具備自我進化的能力。例如，當人工智能與人類下棋時，它不僅能計算出當下的最佳走法，還能從每一次失敗的對局中吸取經驗，不斷提升自己的棋力。相較之下，人類的學習速度和計算能力，在某些特定領域已經被 AI 遠遠拋在後面。</p><p>目前，人工智能已經廣泛應用於我們的生活中。智能手機裡的語音助手、自動駕駛汽車、甚至是醫院裡協助醫生看X光片的醫療系統，都有 AI 的身影。不可否認，人工智能極大地提高了生產效率，但同時也引發了部分人對「機器取代人類工作」的擔憂。如何與 AI 和諧共存，將是我們未來必須面對的重要課題。</p>',
-                questions: [
-                    { type: '說明方法', q: '第一段對「人工智能」進行了解釋，這運用了哪種說明方法？', options: ['舉例子', '下定義 (準確簡明地解釋概念的本質特徵)', '打比方', '列數字'], ans: 1, hint: '「所謂...是指...」這是對名詞進行解釋的句型。', exp: '用簡明準確的語言揭示事物的本質屬性，這叫作「下定義」。' },
-                    { type: '說明方法', q: '第二段將「人工智能」和「傳統電腦程序」放在一起對比，運用了什麼說明方法？', options: ['列數字', '打比方', '作比較 (突出人工智能具備自我進化能力的特點)', '下定義'], ans: 2, hint: '把A和B放在一起，說出它們的分別。', exp: '透過比較兩者的不同，更加鮮明地突出了AI能自我學習的核心特徵。' },
-                    { type: '說明方法', q: '第二段提到「例如，當人工智能與人類下棋時...」，這運用了什麼說明方法？', options: ['舉例子 (用具體事例來說明抽象的自我學習能力)', '打比方', '列數字', '作比較'], ans: 0, hint: '「例如」兩個字是明顯的提示。', exp: '用下棋這個具體、易懂的例子，把深奧的「機器學習」概念具象化。' },
-                    { type: '提取與推論', q: '根據第二段，人工智能與傳統程序最大的區別是什麼？', options: ['AI 比較貴', 'AI 具備從經驗中學習和自我進化的能力，而傳統程序只會死板執行指令', '傳統程序比較聰明', '傳統程序不需要用電'], ans: 1, hint: '在第二段尋找「本質的區別」。', exp: '文章指出傳統程序是「死板指令」，而AI具備「自我進化的能力」。' },
-                    { type: '段落歸納', q: '第三段主要說明了人工智能的什麼內容？', options: ['AI 的發展歷史', 'AI 在現代生活中的廣泛應用及其帶來的社會影響（擔憂）', 'AI 點讚', '如何製造 AI'], ans: 1, hint: '第三段列舉了語音助手、自動駕駛等，最後提到人們的擔憂。', exp: '第三段從實際應用層面切入，並引申出科技發展帶來的雙面影響。' },
-                    { type: '字詞積累', q: '第三段中「不可否認」的意思是？', options: ['不能承認', '絕對不能否定，表示事情非常確鑿真實', '可以不理會', '不可以相信'], ans: 1, hint: '雙重否定表肯定。', exp: '「不可否認」意思是不容許否定，即絕對是這樣。' },
-                    { type: '深層評價', q: '作者對人工智能的發展持有什麼態度？', options: ['極度恐懼，認為應該立刻禁止', '盲目樂觀，認為 AI 完美無缺', '客觀理性，既看到其提高效率的好處，也提醒我們要正視其帶來的挑戰', '完全不關心'], ans: 2, hint: '看看最後一段的總結。', exp: '作者指出AI極大地提高了效率，但也引發了擔憂，呼籲我們要學會與之和諧共存，態度十分客觀。' },
-                    { type: '修辭手法', q: '第三段中「機器取代人類工作」的引號有什麼作用？', options: ['表示這是一個書名', '表示特定稱謂', '標示出這是一種社會上普遍討論的特定觀點或話題', '表示反語'], ans: 2, hint: '這句話不是專有名詞，而是大家都在說的一種擔憂。', exp: '引號在這裡用來強調和標示出這個備受爭議的核心觀點。' }
-                ]
-            },
-            
+            // --- 記敘文、抒情文與描寫文 (10篇) ---
+            cA('pa1', 'p-adv-narrative', '巷口的修鞋匠', '<p>那年冬天特別冷。巷口那位修鞋的老伯，整天板著臉，身上總是散發著難聞的皮革和膠水味。我們這群孩子平時對他避之唯恐不及。大家都覺得他是一個脾氣暴躁、難以親近的人。</p><p>然而，一件事改變了我的看法。記得上個月的一個雨天，我放學回家時鞋底突然裂開了，雨水灌進鞋裡，凍得我直發抖。正當我無助地站在屋簷下哭泣時，老伯向我招了招手。他一言不發地脫下我的鞋，熟練地用粗線縫合，還用烤熱的布把我冰冷的腳裹住。修好後，他不僅沒收我的錢，還遞給我一把破舊但結實的雨傘。「快回家吧，別凍著。」他的聲音沙啞，卻透著一股說不出的溫暖。</p><p>回過神來，現在那個角落已經空空如也，老伯搬走了。每次路過那裡，我總會想起那雙佈滿老繭的手和那把舊雨傘。有些人就像那粗糙的皮革，外表雖然不起眼，內心卻比黃金還要珍貴。</p>', [
+                ['寫作手法', '第一段作者先寫老伯「難以親近」，這種寫法在文學上有何作用？', '說明作者對外表不修邊幅的長者懷有深刻的偏見', '欲揚先抑，以先前的偏見反襯老伯後來的善良無私', '客觀記錄環境事實，為後文老伯的職業背景作鋪墊', '暗示老伯的生意不好，導致他性格變得孤僻', 1, '先抑後揚，對比能讓後者的美好形象更加突出鮮明。', '這種手法叫「欲揚先抑」（反襯），利用前後觀感反差，極大突顯了修鞋匠高尚且溫暖的靈魂。'],
+                ['寫作手法', '第二段回憶「上個月的一個雨天」，在記敘結構上屬於哪一種？', '順敘法', '插敘法 (中斷主線，插入過去事件以補充背景)', '倒敘法', '補敘法', 1, '文章在寫現在的思緒時，突然暫停，插進了一段上個月的回憶。', '在記敘的過程中，暫時中斷主線，插入一段與主題密切相關的往事以補充背景，是插敘。'],
+                ['多重推論', '老伯「一言不發」卻細心修鞋、烘腳、送傘，這反映了他什麼特質？', '對自己手藝缺乏自信，不敢開口與客人交流', '長期受到社會邊緣化而導致的心理自卑', '外冷內熱，不善言辭但用實際行動默默關愛他人', '專注於修鞋的工作，不善交際且性格冷漠', 2, '他不說好聽話，但每一個動作都是在溫暖並幫助作者。', '這展現了老伯「外冷內熱」的性格，不善言辭但富有愛心與同理心。'],
+                ['閱讀策略', '若想快速找出作者對老伯一生品質的昇華評價，應該採取什麼策略？', '精讀第一段的環境描寫，分析社會背景', '掃讀尋找「雨天」等字眼，重組事件經過', '略讀並鎖定最後一段的感悟句，提煉核心主旨', '通讀全文並尋找老伯說過的所有對話', 2, '文章最後通常是用來總結人生道理和主旨的。', '略讀尾段最符合高效閱讀策略，能迅速抓取「外表不起眼，內心比黃金珍貴」的核心昇華。'],
+                ['修辭與表達', '第三段「有些人就像那粗糙的皮革」運用了哪種修辭手法？', '暗喻', '明喻', '借喻', '擬人', 1, '有本體(有些人)、喻體(粗糙的皮革)，並且使用了喻詞「就像」。', '同時出現了本體、喻體和喻詞，是標準的明喻。'],
+                ['字詞積累', '第一段中「避之唯恐不及」形容大家對老伯的心態是？', '對他感到極度好奇但不敢輕易接近', '害怕或討厭他，極力想要躲開，生怕受到牽連', '因為敬畏他的權威而選擇保持距離', '覺得他性格怪異而產生同情心', 1, '因為覺得他脾氣暴躁，所以大家都不想靠近他。', '「避之唯恐不及」形容躲避得極快，非常不願意接近。'],
+                ['情感分析', '最後一段表達了作者對老伯怎樣的深層情感？', '對當年未能好好道謝的無盡遺憾與自責', '對老伯高尚品質的深深敬意與超越時間的懷念', '對童年時光流逝的無奈與對社會變遷的感慨', '對下層勞動人民生活艱辛的深切同情', 1, '作者說「我總會想起」，並把老伯比作黃金。', '作者借對往事的回憶，表達了對老伯無私幫助的感恩、致敬與永恆的懷念。'],
+                ['深層評價', '你認同「有些人外表不起眼，內心卻比黃金珍貴」這句話嗎？為什麼？', '不認同，因為在現代社會中，外表的包裝與人際交往能力同樣重要', '認同，因為評價一個人的核心價值不應停留於外在階級，更要看他的品格與實際行動', '不認同，因為黃金的實體價值遠高於抽象的品格', '認同，因為老伯雖然穿著破舊，但實際上積累了大量的財富', 1, '這句話是文章的核心道理，教我們怎麼看人。', '這句話強調了內在美勝於外在美，是整篇文章的昇華。']
+            ]),
+            cA('pa2', 'p-adv-narrative', '牆角的野百合', '<p>在廢棄的工廠後院，雜草叢生，瓦礫遍地。深秋的寒風無情地刮過，捲起漫天的黃沙。然而，就在這片荒涼與破敗的牆角，竟然奇蹟般地挺立著一株野百合。它沒有溫室花朵那般肥沃的土壤，也沒有園丁精心的呵護，但它依然倔強地生長著。</p><p>它的莖雖然纖細，卻筆直地刺向天空；它的葉子雖然沾滿了灰塵，卻依然透出不屈的綠意。最令人驚嘆的是那朵潔白的花，在滿目瘡痍的背景襯托下，顯得無比純潔和高貴。它靜靜地散發著淡淡的幽香，彷彿在向世界宣告：無論環境多麼惡劣，都不能剝奪我開花的權利。</p><p>看著這株野百合，我的內心受到了深深的震撼。生活中，我們總會抱怨環境的不公、資源的匱乏。但與這株牆角的野百合相比，我們的抱怨顯得多麼蒼白無力。只要心中有光，哪怕身處廢墟，也能開出最美麗的人生之花。</p>', [
+                ['寫作手法', '這篇文章主要運用了哪種高階寫作手法？', '借景抒情，純粹表達對大自然生命力的熱愛', '託物言志，借讚美野百合逆境綻放，寄託自強不息的人生志向', '步移法，跟隨作者視角觀察工廠環境', '倒敘法，先寫結果再回憶百合生長過程', 1, '作者不僅僅是寫百合花，更是藉由這株植物，點出生命精神。', '將個人的志向、品格或精神寄託在一件具體的「物」上進行描寫，是「託物言志」。'],
+                ['修辭與表達', '第一段詳細描寫廢棄工廠、瓦礫和寒風，這在修辭上起到了什麼效果？', '暗示社會環境的冷酷無情與工業化的破壞', '環境烘托與反襯，以極度荒涼破敗的環境，反襯野百合生命力的頑強', '說明植物生長需要特定的艱苦條件才能茁壯', '為後文野百合最終無法抵擋寒風而枯萎作鋪墊', 1, '環境描寫得越艱難，生長在那裡的百合花就顯得越厲害、越美麗。', '這叫作「環境烘托」或「反襯」，用惡劣的環境對比，使野百合的生命奇蹟更具震撼力。'],
+                ['修辭與表達', '第二段「它的莖雖然纖細，卻筆直地刺向天空」中的「刺」字有何表達效果？', '說明百合花的莖部演化出了防禦敵人的尖刺結構', '生動傳神地刻畫出百合不向命運低頭、頑強抗爭的傲骨與力量', '表現出作者在觸碰百合時受到傷害的真實觸感', '說明這是一株受到環境污染而產生變異的植物', 1, '「刺」是一個極具爆發力和動態感的動詞，寫出了百合生長時不屈的姿態。', '「刺」字將柔弱的植物賦予了剛強、挑釁命運的動態靈魂，極具視覺衝擊力。'],
+                ['多重推論', '傳統花朵在溫室中被細心照顧，野百合卻在瓦礫中頑強綻放，這兩者對比旨在：', '批評人類對自然界過度干預的溫室培育技術', '突顯野百合在逆境中展現的生命韌性與不屈的高潔特質', '證明野外植物的基因比溫室植物更為優良', '說明廢棄工廠的土壤其實含有特殊的化學養分', 1, '對比是為了突顯一方的卓越精神。', '透過與溫室花朵的對比，將野百合自強不息的精神特質推到了最高點。'],
+                ['深層評價', '作者為什麼認為人類的抱怨「顯得多麼蒼白無力」？', '因為人類面臨的困難比野百合少得多，不應誇大自己的痛苦', '因為百合在全無資源、極度破敗的廢墟中依然努力綻放，而人類擁有更多卻遇挫即怨', '因為野百合根本聽不到人類的聲音，抱怨無法改變植物的命運', '因為環境的改變不是單靠抱怨就能解決的，必須依賴政府的政策', 1, '對比野百合所處的廢墟，和我們平時抱怨「環境不公、資源匱乏」的優越處境。', '野百合在毫無資源的廢墟中尚能綻放，而人類擁有優越條件卻因小挫折怨天尤人，兩相對照，顯得人類的抱怨十分羞愧。'],
+                ['修辭與表達', '第二段「彷彿在向世界宣告」運用了什麼修辭手法？', '明喻', '暗喻', '擬人', '誇張', 2, '宣告是人類才會做出的社會性動作。', '將植物賦予人類發布宣言的行為動作（宣告），是擬人手法。'],
+                ['閱讀策略', '如果要快速提煉這篇文章所寄託的核心人生哲理，應採取何種策略？', '精讀第一段的環境描寫，分析意象', '略讀最後一段的感悟句，提取主旨', '掃讀尋找「百合」二字，統計出現頻率', '反覆閱讀第二段的長句子，分析語法結構', 1, '「託物言志」的文章，其「志」與哲理通常在文章最後一段進行昇華與總結。', '略讀尾段的哲理抒發（如：只要心中有光……），是提煉主旨最高效的策略。'],
+                ['詮釋整合', '文章的最終主旨是什麼？', '介紹野百合極端適應力的生物學特徵', '批評現代社會廢棄工廠缺乏管理的衛生問題', '借野百合勉勵人們在逆境中也要保持希望，努力綻放自我生命價值', '教導讀者如何在惡劣環境中培育觀賞植物', 2, '綜合植物的象徵精神與人類實踐意義。', '文章詠物，旨在大肆宣揚與鼓舞讀者不向命運低頭，在廢墟般的人生困境中自強不息。']
+            ]),
+            cA('pa3', 'p-adv-narrative', '那年夏天的雷雨', '<p>每當盛夏的午後，天空中響起沉悶的雷聲，我總會下意識地望向陽台那盆茂盛的萬年青。這盆植物綠意盎然，但在我的眼裡，它不僅僅是一盆植物，更是承載著一段十年前冰冷而溫暖的回憶。</p><p>那年我只有九歲。一個午後，天空突然像打翻了墨水般黑了下來。狂風像一隻咆哮的野獸，猛烈地搖晃著窗戶。這時，媽媽出門了，家裡只剩下我一人。突然，「轟隆」一聲巨響，一道刺眼的閃電劃破夜空，家裡瞬間停電了。黑暗中，我嚇得縮在牆角，全身發抖，眼淚不爭氣地流了下來。就在我極度恐懼時，門開了，爸爸全身濕透、像個水人般衝了進來。他一把將我緊緊抱在懷裡：「別怕，爸爸回來了！」他的身上冰冷，但他的懷抱卻無比溫暖。</p><p>原來，爸爸在路上聽到雷聲，知道我怕黑，便不顧風雨狂奔回來。看著陽台上在狂風暴雨中依然挺拔的萬年青，再看著身邊的爸爸，那一刻，我懂得了什麼是守護。如今，爸爸雖然老了，但那份溫暖的父愛，依然像那盆萬年青一樣，在我心中永遠常青。</p>', [
+                ['寫作手法', '文章第一段從「現在的盛夏午後和萬年青」寫起，然後引入「十年前的雷雨夜」，這運用了：', '順敘法', '倒敘法 (以眼前的景物引發回憶)', '插敘法', '補敘法', 1, '先寫「現在的萬年青」，再把思緒拉回「十年前」，這叫倒敘。', '由眼前的物或景觸發思緒，將時間線拉回過去，屬於標準的倒敘結構。'],
+                ['修辭與表達', '「天空突然像打翻了墨水般黑了下來」運用了什麼修辭？有何好處？', '擬人，將天空賦予了人類打翻物品的動作', '明喻，生動形象地寫出暴雨前天空迅速變得漆黑、陰暗的恐怖氣氛', '誇張，極力渲染了天空中墨水降落的超自然現象', '借代，以墨水代替即將到來的暴風雨', 1, '有喻詞「像」，把黑黑的天空比作打翻的墨水。', '將黑雲壓頂的天空比作潑墨，是明喻，渲染了暴雨將至、令人壓抑恐懼的環境氣氛。'],
+                ['寫作手法', '第二段描寫「狂風如野獸、雷聲巨響、停電」，這在記敘文中有何襯托作用？', '強調當時自然環境的極端危險，警告讀者不可輕忽', '環境反襯，以大自然的可怕反襯出作者年幼時的極度恐懼與後文父愛的溫暖', '暗示作者從小就缺乏安全感，容易受到外界環境的驚嚇', '推動故事情節發展，為父親因停電而提早下班提供合理契機', 1, '環境寫得越可怕，小孩子就越害怕，爸爸回來時的拯救就顯得越溫暖。', '用惡劣、可怕的自然環境作「反襯」，烘托出主角孤立無助的心理，並加深了父愛的溫暖感。'],
+                ['多重推論', '爸爸全身濕透「像個水人般衝了進來」，這反映了爸爸當時怎樣的心理？', '對突然下大雨而未帶雨具感到十分無奈與狼狽', '他極度擔心獨自留在家中怕黑的作者，因此在風雨中全力狂奔回家', '希望盡快回到家中躲避惡劣的風雨以防感冒', '想要在孩子面前展現父親不畏風雨的威嚴形象', 1, '爸爸知道作者怕黑，「在路上聽到雷聲，不顧風雨狂奔」。', '「衝」和「狂奔」體現了父親對孩子安危的極度焦慮與無私的關愛。'],
+                ['寫作手法', '文章以「萬年青」貫穿全文，最後說父愛像萬年青一樣「常青」，這屬於：', '借景抒情，將情感融入陽台的風雨景色中', '託物言志，表達自己希望像萬年青一樣堅強的志向', '借物抒情，以萬年青為具體媒介，表達對父愛永恆的感激與讚美', '首尾呼應的客觀寫實敘事', 2, '萬年青是一件具體的植物（物），作者借它來表達對爸爸的感情。', '將對親人的情感寄託在一件具體的物件（萬年青）上，是「借物抒情」。'],
+                ['字詞積累', '第二段中「滿目瘡痍」通常用來形容暴雨後的環境，其意思是？', '滿眼都是美麗而獨特的自然奇觀', '形容到處都是殘破、遭到嚴重破壞的災後景象', '形容身體受到外界極端天氣的嚴重傷害', '形容因為長時間注視黑暗而導致視覺疲勞', 1, '狂風暴雨過後，環境通常是殘破不堪的。', '「滿目瘡痍」比喻眼前看到的都是殘破、受災的景象。'],
+                ['多重推論', '第三段結尾將父愛比喻為「永遠常青」的萬年青，這蘊含了怎樣的深層涵義？', '說明父愛像植物一樣默默無聞，從不求回報', '象徵父愛具有永不褪色、無懼風雨的生命力，在作者心中永遠溫暖恆久', '說明爸爸非常注重養生，身體像植物一樣長壽健康', '暗示作者打算傳承父親的愛，種植更多萬年青', 1, '常青代表生命力的無限延續與堅守。', '這是一種借物抒情的高階運用，將隱形抽象的愛賦予了常青植物般永恆不變的特質。'],
+                ['深層評價', '結合這篇文章的意境，你如何評價「守護」在家庭關係中的深層價值？', '守護意味著提供最優渥的物質條件以抵擋外界風雨', '守護是在家人遇到恐懼與黑暗時，能第一時間給予無私的陪伴與無條件的心理支撐', '守護代表時刻監督家人的行動以確保絕對安全', '守護就是承擔起家庭所有的勞動與責任，讓孩子無憂無慮', 1, '爸爸不顧暴雨跑回來，給了孤立無助的孩子最大的心理安全感。', '在黑暗危難中展現出的陪伴行動（守護），是家庭關係中最核心、最珍貴的情感基石。']
+            ]),
+            cA('pa4', 'p-adv-narrative', '那一雙溫暖的鞋', '<p>每到寒冬，看著鞋櫃裡那雙已經有些褪色的羊毛短靴，我的雙腳彷彿又感受到了那一股揮之不去的溫暖。那是一雙極其普通的鞋子，但在我的生命中，它是一件珍貴的「傳家寶」。</p><p>那年我十一歲，正面臨嚴重的考試壓力，心情極度焦躁。一個寒冷的冬夜，我因為一道數學題解不開，氣得把筆摔在地上，對著前來送熱牛奶的奶奶大吼大叫。奶奶沒有生氣，只是默默地撿起筆，退了出去。第二天清晨，當我準備上學時，發現大門口整齊地擺放著這雙羊毛短靴，裡面還塞著暖烘烘的熱水袋。奶奶站在一旁，慈祥地看著我：「孩子，腳暖了，心就不累了。」那一刻，看著奶奶長滿凍瘡的手，我的淚水模糊了雙眼。</p><p>原來，奶奶為了在清晨給我這份溫暖，自己半夜就起床燒水、暖鞋。現在，奶奶已經去世多年了，但每當我面對生活的挫折想要放棄時，看着這雙鞋，耳邊就會響起奶奶那溫暖的叮嚀。這雙鞋，將永遠指引我堅強地走下去。</p>', [
+                ['寫作手法', '這篇文章在敘事結構上，主要採用了哪種手法？', '順敘法，按時間發展詳細記錄了作者度過寒冬的過程', '倒敘法，以眼前舊毛靴的視覺觸發，引出對童年往事的深刻回憶', '插敘法，在敘述現在生活的過程中，突然插入一段奶奶的故事', '平鋪直敘，毫無波瀾地陳述了一件家庭瑣事', 1, '文章從「現在看著鞋櫃」寫起，然後回憶「那年我十一歲」，這是倒敘。', '由眼前的物件引發對童年深刻往事的回憶，是標準的倒敘手法。'],
+                ['寫作手法', '這篇文章以一雙「羊毛短靴」貫穿全文，抒發對奶奶的感恩，這屬於：', '借景抒情，利用冬天的寒冷景色烘托悲傷氣氛', '借物抒情，將對奶奶的無限愛意與精神追思凝聚在具體的毛靴上', '託物言志，藉由讚美毛靴的保暖功能表達自己想成為製鞋匠的志向', '空間轉移，跟隨視線從書桌轉移到大門口', 1, '短靴是一件具體的物品，作者藉由這件物品表達對親人的懷念與感恩。', '透過具體的物件（羊毛短靴）來凝聚、抒發對親人的情感，稱為「借物抒情」。'],
+                ['修辭與表達', '作者說這雙普通的鞋子是珍貴的「傳家寶」，引號的作用是什麼？', '表示這句話是直接引用自奶奶生前的名言', '表示特殊含義，強調這雙鞋雖非古董，卻蘊含了無可替代的厚重精神價值', '表示諷刺與否定，暗指這雙鞋其實毫無價值', '表示這是一部關於家庭歷史的書籍名稱', 1, '這雙鞋不值錢，但對作者來說卻像寶貝一樣。', '引號在此處標示出具有特殊、非字面意義的詞語，強調其情感上的極度珍貴。'],
+                ['人物評價', '「我因為數學題解不開對著奶奶大吼大叫」，這段描寫對塑造奶奶的形象有何深層作用？', '突顯當時高壓考試制度對學童心理的嚴重摧殘與扭曲', '欲揚先抑與反襯，以作者青春期的無禮暴躁，強烈襯托出奶奶深沉無私且充滿智慧的包容心', '暗示作者當時已經處於精神崩潰的邊緣，為後文的淚水作鋪墊', '鋪墊後文奶奶親自教導作者如何解開數學難題的情節發展', 1, '作者表現得越暴躁，奶奶的「默默撿筆」與包容就顯得越偉大。', '這是一種反襯手法。用孩子的無禮，來極大化襯托奶奶那份不言而喻的慈愛與大度。'],
+                ['深層評價', '奶奶說「腳暖了，心就不累了」，這句話在文中有何深層的象徵含義？', '只要身體保持健康溫暖，就能應付任何繁重的考試壓力', '奶奶借「腳暖」隱喻親情的無聲支持，用外在的關愛撫平孩子內心因挫折而產生的焦慮與疲憊', '提醒作者要注意身體保暖，以免生病影響隔天的重要學業', '暗示生活中的困難就像寒冬，只要忍耐過去總會迎來春天的', 1, '溫暖了腳，其實是在溫暖孩子焦慮、疲憊的心靈。', '這是一句充滿哲理的雙關語，將物理的溫暖昇華為心靈的撫慰與支持。'],
+                ['閱讀策略', '若想快速找出「奶奶是具體如何為作者準備這份溫暖的細節」，應用掃讀(Scanning)在第幾段尋找？', '第一段，尋找關於舊毛靴外觀的描寫', '第二段，仔細閱讀作者發脾氣的經過', '第三段，掃描「半夜」、「燒水」等關鍵動作詞彙', '標題，從標題中推測具體過程', 2, '具體動作的「真相揭曉」發生在回憶的解釋中。', '掃讀第三段能快速定位到「半夜起床燒水、暖鞋」等隱藏的動作細節。'],
+                ['多重推論', '「看著奶奶長滿凍瘡的手，我的淚水模糊了雙眼」，這一處「淚水」的背後，蘊含了作者怎樣的複雜情感轉折？', '只有因為學業壓力過大而感到委屈和痛苦的崩潰眼淚', '包含了對自己無端發火的極度自責內疚，以及被奶奶不計前嫌、無私付出的愛深深震撼與感動的淚水', '因為清晨天氣太冷而受刺激留下的生理性淚水', '意識到奶奶身體狀況惡化而產生的極度恐懼與悲傷', 1, '作者前面對奶奶大吼，第二天卻看到奶奶用長凍瘡的手在早晨為他暖鞋。', '這是情感的核心爆發點，從自私的煩躁瞬間轉向了對長輩無私付出的深刻愧疚與無限感恩。'],
+                ['深層評價', '你認為「言教」（講述大道理）和「身教」（以實際行動示範）在家庭教育中哪一個更具直指人心的力量？請結合文章評述。', '言教更重要，因為大聲嚴厲地講道理才能讓孩子深刻記住規矩', '身教更具力量。奶奶沒有破口大罵，而是用半夜暖鞋的溫馨行動與寬容體貼，無聲地感化了作者叛逆的心靈', '兩者都不重要，孩子隨著年齡增長自然會明白社會的殘酷', '身教的作用有限，因為現代孩子更需要物質上的滿足而非無言的行動', 1, '奶奶面對吼叫時，沒有生氣說教，而是「默默撿起筆」並「半夜起床暖鞋」。', '無言的行動（身教）往往比嚴厲的指責（言教）更能穿透防備，觸動孩子的心靈深處，具有持久的教育力量。']
+            ]),
+            cA('pa5', 'p-adv-narrative', '一場未完的棋局', '<p>爺爺是小鎮上有名的象棋高手，他下棋時總是氣定神閒，步步為營。小時候，我常坐在他膝頭，看他與鄰居張伯伯在榕樹下對弈。那時，爺爺總愛摸著我的頭說：「下棋如做人，落子無悔。走每一步，都要看清前路。」</p><p>隨着我考上中學，功課日益繁忙，加上沉迷於手機遊戲的世界，我回小鎮探望爺爺的次數屈指可數。半年前，爺爺突然中風住院，言語不清，右半身癱瘓。當我急忙趕回醫院時，看著床上瘦骨嶙峋、連說話都無比吃力的爺爺，我的淚水止不住地流了下來。爺爺用顫抖的左手，吃力地從枕頭下摸出了兩個木製的棋子——「車」和「馬」，放進我的手心。他看著我，眼裡閃著亮光，似乎想說什麼，卻終究沒能說出口。</p><p>如今，爺爺已經離世。這兩枚棋子一直放在我的書桌上。每當我沉迷手機、荒廢學業時，摸著這兩枚棋子，耳邊就會響起爺爺「落子無悔」的教誨。人生這盤棋，我才剛開始，我絕不能讓自己走錯關鍵的每一步。</p>', [
+                ['對比分析', '文章中，將爺爺「小時候下棋時的氣定神閒」與「半年前中風後的瘦骨嶙峋」並列描寫，形成了什麼強烈的文學效果？', '突顯中風這種心血管疾病對人體的嚴重破壞力，提醒讀者注意健康', '反襯手法，以昔日強壯從容與今日病弱淒涼的巨大落差，強烈激發讀者內心的悲涼與心疼', '暗示爺爺已經徹底失去了當年下棋的雄心壯志，變得消極', '反映出作者對時間流逝、無法改變生老病死現狀的極度無力感', 1, '將人物最輝煌的過去與最淒涼的現在放在一起，能產生強烈的情感震撼。', '這叫「對比/反襯」，凸顯了生命老去的殘酷，強烈渲染了悲涼和心疼的氣氛。'],
+                ['多重推論', '爺爺臨終前吃力地把「車」和「馬」放進作者手心，這行為蘊含了什麼「弦外之音」（深層期盼）？', '希望作者能保留這兩枚棋子，作為古董將來賣個好價錢', '「車馬」代表勇往直前；爺爺希望孫子能繼承遺志，在人生道路上踏實前行，不再沉迷虛擬遊戲而荒廢光陰', '暗示爺爺一生最放不下的就是象棋這項愛好，希望孫子代為完成未完的棋局', '表達爺爺對過去與張伯伯在榕樹下對弈時光的深深眷戀', 1, '象棋中的「車」和「馬」都是勇猛前進、發揮重要作用的棋子。', '這是一個極具深意的象徵動作，寄託了祖父對孫子要勇往直前、走好人生每一步的殷切期盼。'],
+                ['寫作手法', '這篇文章以「兩枚棋子」貫穿全文，並借此抒發對爺爺的無盡懷念，這在散文寫作中屬於：', '借景抒情，將情感寄託在醫院冰冷的環境描寫中', '借物抒情，將對親人的深厚愛意與精神教誨凝聚在具體的物件上', '託物言志，藉由讚美木製棋子的堅硬材質來表達自己的高尚志向', '首尾呼應的客觀敘事，純粹記錄物品的傳承過程', 1, '棋子是一件具體的、不變的物件，作者透過它來傳遞對逝去親人的感情。', '藉由具體物件（棋子）作為情感的載體，抒發思念與感恩，屬於「借物抒情」。'],
+                ['修辭與表達', '「人生這盤棋，我才剛開始」這句話運用了哪種修辭手法？', '明喻，使用了類似「像」的喻詞', '暗喻，將無形的「人生」直接比喻為有形的「一盤棋」，不使用「像」而使用「是」或直接代入', '借喻，完全省略了本體「人生」', '擬人，賦予棋盤人類的生命特徵', 1, '本體是「人生」，喻體是「棋」，中間用了「這盤」或隱含的「是」。', '將人生比作棋局，沒有使用喻詞「像」，是暗喻。'],
+                ['深層評價', '爺爺教導的「落子無悔。走每一步，都要看清前路」，對正處於青春期的作者有何深刻啟發？', '告誡作者在玩手機遊戲時不能作弊或反悔', '人生沒有時間倒流的魔法，做任何重大決定（如學業規劃）前必須深思熟慮，並勇於承擔後果', '教導作者要學會預測未來的社會發展趨勢，以便早作打算', '強調學習象棋的戰術比學校裡的課本知識更重要', 1, '「落子無悔」指棋子放下就不能收回，代表時間無法倒流。', '這句話勉勵年輕人做決定前要深思熟慮，不虛度光陰，為自己的人生負責。'],
+                ['閱讀策略', '若想快速找出「導致作者回小鎮探望爺爺次數銳減的原因」，應運用掃讀(Scanning)在第幾段找尋？', '第一段，尋找童年時期的生活細節', '第二段，快速定位「功課繁忙」與「沉迷手機遊戲」等關鍵字眼', '第三段，掃描作者後悔時的心理獨白', '標題，從標題中推測可能的原因', 1, '作者長大後的行為變化出現在第二段開頭。', '掃讀第二段開頭能快速定位到「功課日益繁忙，加上沉迷於手機遊戲的世界」這兩個核心原因。'],
+                ['多重推論', '爺爺「用顫抖的左手，吃力地從枕頭下摸出了兩個木製的棋子」，這個「摸」和「枕頭下」的細節展現了什麼？', '爺爺對象棋的極度痴迷，至死不忘自己的娛樂愛好', '雖然身體極度病弱，但爺爺心中一直掛念著孫子，這兩枚寄託厚望的棋子他早已準備好並隨身貼身珍藏', '爺爺試圖透過觸摸熟悉的物件來喚醒自己因中風而模糊的記憶', '爺爺想要將自己最值錢的遺產秘密地留給孫子', 1, '中風病人行動不便，但爺爺卻把棋子藏在「枕頭下」，這代表這對他極其重要且早已準備好。', '細節描寫表現了即使在生命彌留之際，祖父對孫子未來的關切依然深沉如海。'],
+                ['深層評價', '古人說「子欲養而親不待」，結合文章，我們學到了該如何去平衡「個人娛樂」與「陪伴家人」的優先順序？', '學業和個人娛樂始終是最重要的，長輩長大後再補償陪伴也不遲', '陪伴家人是一件無法等待、絕對不容忽視的事；我們應展現高度自律，合理克制娛樂誘惑，珍惜眼前與長輩相處的每一刻', '應該徹底放棄所有的學業和娛樂，每天寸步不離地陪在長輩身邊', '陪伴長輩太浪費青春時間，只要心裡有他們就足夠了', 1, '作者因為考中學和沉迷遊戲，很少去探望爺爺，直到中風才追悔莫及。', '這是一道具有深層教育意義的開放式評價題，啟發學生要懂得生命脆弱，親情不容等待的殘酷現實。']
+            ]),
+            cA('pa6', 'p-adv-narrative', '古井與童年', '<p>外婆家後院有一口古老的水井，井口覆蓋著一層青翠的苔蘚，井旁的石板因歲月洗禮而顯得油亮斑駁。小時候，炎熱的夏日午後，外婆總會從古井裡打上一桶清涼的井水。那水，冰涼徹骨，洗一把臉，吃一個浸在井水裡的西瓜，那份甜美與清涼，是我童年最深切的期盼。</p><p>隨著時間流逝，我搬到了喧囂的城市，住進了高樓大廈。這裡有先進的自來水和製冷冰箱，冰水隨手可得，但我卻再也找不到當年在後院吃西瓜時那份發自內心的喜悅與寧靜。每當深夜，窗外下著淅淅瀝瀝的秋雨，敲打著冷冰冰的防盜網，我的思緒總會穿過重重樓宇，回到那個有古井的後院。</p><p>回到故鄉，那口古井已被封存，後院也蓋起了新樓。雖然古井不在了，但那一桶冰涼的井水，卻像一股永不枯竭的泉源，永遠滋潤著我乾燥、疲憊的心田。這口古井，不只是童年的玩樂之地，更凝聚著外婆對我無微不至的關愛與溫馨。</p>', [
+                ['寫作手法', '第二段「窗外下著淅淅瀝瀝的秋雨，敲打著冷冰冰的防盜網」，這運用了哪種高階寫作手法？', '插敘法，中斷回憶插入現實天氣', '借景抒情，利用秋雨和冷冰冰的防盜網等淒清意象，烘托出作者身處都市的孤獨與深沉的思鄉愁緒', '直接抒情，毫無保留地宣洩內心的寂寞', '步移法，視線從窗內移動到窗外', 1, '作者寫雨和冰冷的網，是在藉由這些景物表達他內心缺乏溫暖的孤寂感。', '「景」乃情之媒介。用冷清憂鬱的雨景烘托思鄉的孤寂，是借景抒情。'],
+                ['前後對比', '文章將城市裡「隨手可得的冰水」與故鄉「浸在井水裡的西瓜」作強烈對比，其核心目的是：', '說明現代科技進步帶來了極大的生活便利，冰箱製冷效果遠勝古井', '說明城市自來水的衛生標準遠遠高於鄉下的井水', '反襯手法，突顯童年井水西瓜背後，蘊含著金錢與現代科技無法取代的親情溫暖與純粹的精神快樂', '突出城市生活節奏過快，讓人無法細細品味食物的美味', 2, '物質上變豐富了，但精神上的「快樂與親情」卻變少了，這是一種深層的反思。', '對比現代物質極度便利與童年樸素生活的精神豐足，強烈突顯了親情的無價。'],
+                ['修辭與表達', '第三段「那一桶冰涼的井水，卻像一股永不枯竭的泉源」運用了：', '擬人，賦予井水奔跑的生命', '明喻，使用了「像」字連接本體與喻體', '暗喻，直接將井水定義為泉源', '借喻，完全省略了井水這個本體', 1, '有本體(井水)、喻詞(像)和喻體(泉源)。', '有「像」字連接本體和喻體，是標準的明喻。'],
+                ['深層評價', '文末提到「那一桶冰涼的井水，永遠滋潤心田」，這表達了作者怎樣的生命觀與價值觀？', '自然資源雖然會枯竭，但人類尋找新水源的創造力是無限的', '真正的精神滋養並非來自物質的豐裕，而是來自深厚的愛與美好回憶，它能化為人在逆境中持續前行的內在力量', '過去的艱苦生活能讓人更加珍惜現在城市裡優越的物質條件', '城鄉發展的矛盾最終會透過新樓房的建設與文化傳承得到解決', 1, '物理的井已經被封存了，但心裡的「泉源」還在，因為那是愛。', '外在物體會消逝，但它承載的美好記憶將成為永恆的精神動力。'],
+                ['自然段落', '這篇文章的第一段主要發揮了什麼敘事功能？', '客觀介紹外婆家後院的實際面積與建築結構', '細緻描寫古井的滄桑外觀，並重現童年井水西瓜的甜美回憶，為全文定下溫馨的情感基調', '詳細說明西瓜在井水中冰鎮的物理降溫過程', '強烈投訴夏日天氣的炎熱，表達對氣候的不滿', 1, '第一段前半寫井，後半寫吃西瓜的快樂。', '第一段作為回憶的起點，成功建立了古井「溫馨、清涼、期盼」的最初意象。'],
+                ['字詞積累', '第二段中「淅淅瀝瀝」通常用來形容什麼樣的聽覺意象？', '狂風吹過樹林的呼嘯聲', '連綿不斷的細雨落下的聲音（擬聲詞）', '夏日雷暴的震耳欲聾巨響', '深夜防盜網金屬摩擦的刺耳聲', 1, '「秋雨，敲打著...」。', '「淅淅瀝瀝」是形容小雨落下的模擬聲音，帶有憂鬱色彩。'],
+                ['多重推論', '第二段中說自己「住進了高樓大廈...冰水隨手可得」，卻感嘆「再也找不到那份喜悅與寧靜」，這句感嘆背後透露出都市人怎樣的普遍精神困境？', '城市的物質條件變差了，冰箱無法提供足夠的製冷', '在高度物質化與便利的鋼筋森林中，人心被物化，心靈因缺乏真誠溫暖的情感連結而感到極度的孤單與疲憊', '城市的自來水水質不佳，影響了居民的心理健康', '作者在城市裡生了重病，導致味覺和情緒受損', 1, '「先進的設施」對比「無法取代的外婆關愛」。', '這反映了高階寫作中「反思現代文明與傳統溫情流失」的宏大主題，說明唯有情感溫飽才能真正滋潤心靈。'],
+                ['詮釋整合', '這篇文章最主要的中心思想（主旨）是什麼？', '詳細介紹古老水井的保養方法與歷史演變', '強烈建議現代人多吃傳統的井水冰鎮西瓜以保持健康', '借由對古井與童年時光的回憶，深沉抒發對逝去純真歲月的無限留戀，以及對外婆深切無私關愛的懷念與感恩', '客觀說明城市現代化生活相比農村帶來的巨大優勢與好處', 2, '從後院古井寫到城市孤單，再到對外婆關愛的昇華。', '文章借古井這特定物件，表達了對童年無憂時光及至親關愛的追憶，情感真摯。']
+            ]),
+            cA('pa7', 'p-adv-narrative', '爺爺的菜園', '<p>爺爺家後面有一塊空地，那是他的「百寶園」。每天清晨，天剛矇矇亮，爺爺就會戴著草帽，拿著鋤頭到菜園裡工作。他細心地為每一棵菜苗澆水、除草，像照顧嬰兒一樣呵護著它們。</p><p>夏天到了，菜園裡迎來了大豐收。紅彤彤的番茄像一個個小燈籠掛在枝頭；綠油油的青瓜藏在葉子底下跟我們捉迷藏。爺爺摘下一個大番茄遞給我，我咬了一口，酸酸甜甜的汁液在嘴裡散開，這是我吃過最美味的番茄！</p><p>看著滿園的蔬菜，爺爺擦了擦額頭上的汗水，臉上露出了燦爛的笑容。我這才明白，原來辛勤的勞動能結出最甜美的果實。</p>', [
+                ['修辭與表達', '第一段中說爺爺「像照顧嬰兒一樣呵護著它們」，這生動的比喻反映了什麼？', '暗示爺爺在晚年缺乏家人的陪伴，感到極度孤單', '突出種植蔬菜需要極高超的農業技術與豐富經驗', '表現出爺爺對自己親手栽種的生命傾注了極度的用心、細緻與充滿慈愛的關懷', '表現出農夫對於農業生產過程的敬畏與謹慎恐懼', 2, '對待嬰兒通常是非常小心和疼愛的，這裡將感情轉移到了菜苗上。', '這個比喻極其生動地表現出爺爺對菜苗極其細心和充滿愛護的態度。'],
+                ['多重推論', '爺爺把這塊普通的空地稱為自己的「百寶園」，這反映了他抱持著怎樣的情感與價值觀？', '他深信菜園的地底下埋藏著古代的黃金財寶', '展現了勞動者對自身勞動成果的無比珍視與熱愛，認為親手種出的每一棵蔬菜都價值連城', '他覺得每天種菜是一件極度浪費時間且回報低的工作', '他打算將這些有機蔬菜包裝成高價商品賣個好價錢', 1, '這些菜都是爺爺親手種出來的，每一棵都是他的心血。', '「百寶園」展現了農夫對自己辛勤耕耘的土地與作物的深厚、純樸的感情。'],
+                ['修辭手法', '「紅彤彤的番茄像一個個小燈籠掛在枝頭」這句話同時運用了哪兩種修辭手法？', '疊字（增強色彩節奏） 與 擬人（賦予燈籠生命）', '疊字（強化視覺感受） 與 明喻（使用「像」連接本體喻體）', '誇張（極度放大番茄體積） 與 借喻（省略本體）', '擬人（賦予番茄動作） 與 反問（加強語氣）', 1, '「紅彤彤」是哪種詞？「像...」又是什麼修辭？', '「紅彤彤」是ABB式疊字詞；「像一個個小燈籠」是標準的明喻手法。'],
+                ['修辭手法', '「綠油油的青瓜藏在葉子底下跟我們捉迷藏」運用了什麼修辭手法？', '明喻，將青瓜比作躲藏的人', '暗喻，暗示青瓜其實是調皮的小孩', '誇張，極力描寫青瓜體積微小難以發現', '擬人，賦予青瓜人類孩童的遊戲動作特徵', 3, '青瓜真的會玩「捉迷藏」嗎？這是人類的專屬動作。', '賦予植物人類小孩「捉迷藏」的動作與心理，是極為生動的擬人手法。'],
+                ['多重推論', '「青瓜跟我們捉迷藏」這樣的擬人化描寫，在文章中烘托出了怎樣的特殊氛圍？', '暗示菜園裡的植物生長雜亂無章，缺乏爺爺的有效打理', '展現了自然界植物為了躲避昆蟲啃食而演化出的保護色偽裝', '營造出一種充滿探索樂趣、如童話般純真歡樂的田園野趣', '突出作者在缺乏現代娛樂的農村生活中感受到的無聊與寂寞', 2, '捉迷藏是孩子的遊戲，用在這裡讓靜態的蔬菜和人都充滿了生命力。', '這是擬人化在情境營造中的高階作用，讓原本靜止的蔬菜充滿了靈動的童真色彩。'],
+                ['推論訊息', '第三段中，爺爺明明流著辛苦的汗水，卻「露出了燦爛的笑容」，這看似矛盾的描寫背後原因為何？', '因為他覺得夏天的炎熱天氣非常好', '因為他看到了自己長期辛勤勞動換來的大豐收，內心的巨大滿足感與成就感蓋過了肉體的疲憊', '因為他準備結束工作去樹下休息了', '因為他看到作者吃番茄的樣子覺得非常滑稽好笑', 1, '農夫看到自己種的東西大豐收，即使再辛苦也會覺得值得。', '雖然流汗辛苦，但看到豐收的成果，內心充滿了成就感和喜悅，這正是勞動的最高回報。'],
+                ['詮釋整合', '作者在爺爺的菜園裡，最終悟出了一個什麼具有普遍意義的人生道理？', '現代農業技術的進步讓番茄變得更加美味', '種植蔬菜其實不需要太多的水分管理', '只有付出實實在在、辛勤踏實的勞動，才能結出人生中最甜美的果實（一分耕耘，一分收穫）', '夏天是最適合在戶外睡覺和休息的季節', 2, '看看文章最後一句話的昇華總結。', '文章結尾點明主旨：「原來辛勤的勞動能結出最甜美的果實。」將種菜昇華為人生哲理。'],
+                ['深層評價', '這篇文章主要運用了哪種高階寫作手法？請評價其在文中的作用。', '倒敘法，先寫吃番茄再回憶種菜過程', '借景抒情，純粹為了讚美夏日農村的自然風光', '託物言志，借由描寫耕耘菜園最終迎來豐收的甜美，寄託了「付出汗水必有回報」的自強人生觀', '插敘法，在敘事中插入了爺爺過去的故事', 2, '作者不僅僅是寫菜園，更是借由這片菜園帶出「勞動與回報」的深刻心志與反思。', '將自己的人生體會和志向寄託在具體的景物描寫（菜園大豐收）中，是託物言志的高階體現。']
+            ]),
+            cA('pa8', 'p-adv-narrative', '漫步植物園', '<p>週末，我來到植物園散步，彷彿走進了一個生機勃勃的綠色王國。走進植物園的大門，首先映入眼簾的是一個巨大的音樂噴泉，水柱隨著音樂的高低起伏在空中跳舞，吸引了許多遊客駐足觀賞。</p><p>順著林蔭小道往前走，我們來到了玫瑰園。這裡簡直是花的世界！紅的像火，粉的像霞，白的像雪。微風吹過，一朵朵玫瑰在風中搖曳，彷彿在向我們點頭微笑，空氣中彌漫著濃郁的芳香，令人陶醉。</p><p>離開玫瑰園，再往前走，便是一片清澈的人工湖。湖畔種滿了一排排依依的垂柳。長長的柳條垂在水面上，就像小姑娘在洗滌自己長長的秀髮。幾條錦鯉在湖水中自由自在地穿梭。這次植物園之旅，真是一次讓身心放鬆的美好體驗。</p>', [
+                ['寫作手法', '作者在描寫植物園時，使用了「走進大門...順著林蔭小道往前走...再往前走」的順序。這屬於哪種高階空間描寫手法？', '插敘法，在遊覽中插入了歷史背景介紹', '倒敘法，從出口往回回憶整個遊覽過程', '步移法 (空間順序)，跟隨作者移動的腳步和視角來依次變換觀察地點', '借物抒情，將強烈的感情寄託在腳下的道路上', 2, '跟隨作者移動的腳步來變換觀察的地點，像導遊一樣。', '作者隨著腳步移動，依序描寫大門噴泉 👉 玫瑰園 👉 人工湖，這種手法稱為「步移法」。'],
+                ['深層評價', '作者採用「步移法」描寫植物園，這種寫作結構有什麼最顯著的文學優點？', '能夠同時展現出植物園在春夏秋冬不同季節的奇妙變化', '條理極其清晰，為讀者提供了明確的導覽動線，讓讀者彷彿跟隨作者的腳步，產生強烈的身歷其境代入感', '可以讓讀者自由選擇想要閱讀的段落順序，互不影響', '有助於作者在文章結尾提出深刻的哲學或政治思考', 1, '跟著作者的腳步走，讀者會覺得自己也親自遊覽了一遍植物園。', '步移法（空間順序）能提供清晰的導覽動線，極大增強遊記散文的畫面感和代入感。'],
+                ['修辭手法', '第一段中「水柱隨著音樂的高低起伏在空中跳舞」運用了什麼修辭手法？', '誇張，極力放大水柱噴射的高度', '明喻，將水柱比喻為專業的舞蹈家', '排比，連續使用結構相同的句子', '擬人，賦予無生命的水柱人類「跳舞」的動態特徵', 3, '水柱是沒有生命的物理現象，但作者說它在「跳舞」。', '賦予水柱人類「跳舞」的動作與靈性，是典型的擬人手法。'],
+                ['修辭手法', '第二段中「紅的像火，粉的像霞，白的像雪」這句話同時運用了哪些修辭手法？', '排比（三個結構相似的短句） 與 暗喻（隱含的喻詞）', '排比（增強氣勢與節奏） 與 明喻（使用「像」字進行視覺色彩的比喻）', '誇張（極端放大色彩飽和度） 與 擬人（賦予花朵性格）', '設問（自問自答） 與 借喻（省略本體直接寫喻體）', 1, '連續三個結構相同的「X的像Y」，有「像」字。', '連續三個結構相似的短句構成排比，句子中使用了「像」進行明喻，節奏明快。'],
+                ['修辭句意', '第三段中「長長的柳條垂在水面上，就像小姑娘在洗滌自己長長的秀髮」，這個比喻的作用是什麼？', '說明柳樹因為缺乏水分而需要進行清洗', '將靜態的植物具象化為動態的人物，生動形象地寫出了柳條柔軟、細長且隨風輕觸水面時婀娜多姿的優美姿態', '運用誇張手法極力誇大柳樹的長度，使其顯得詭異', '從側面說明人工湖的湖水非常清澈乾淨，適合洗滌', 1, '把柳條比喻成小姑娘洗頭髮，給人何等生動柔美的畫面感？', '比喻的核心作用是將事物具象化，這裡完美展現了垂柳婀娜多姿的動態美感。'],
+                ['段落歸納', '這篇文章在整體篇章佈局上，呈現出什麼樣的經典結構特點？', '總起(概括綠色王國) 👉 分述(依序描寫噴泉、玫瑰園、人工湖) 👉 總結(總述美好體驗) 的總分總結構', '按時間順序(早晨、中午、傍晚)描寫的線性結構', '全部都是舉例子說明的並列結構', '先寫缺點再寫優點的對比結構', 0, '看看第一段開頭和最後一段結尾。', '文章首段總括植物園是生機勃勃的王國，中間分點描寫不同景點，結尾總結是一次美好體驗，為標準的「總-分-總」結構。'],
+                ['多重推論', '說玫瑰花「彷彿在向我們點頭微笑」，這種擬人化描寫，除了寫花，還如何傳神地透露出作者當時的深層內心感受？', '生動地描繪出玫瑰花在強風中即將凋謝、無力支撐的姿態', '「一切景語皆情語」，以花朵的熱情、歡快，側面反襯並烘托出作者走入大自然時那份無比愉悅、放鬆的暢快心境', '暗示植物園的園丁對花朵進行了特殊的修剪，使其像人臉', '強調人類應該與大自然建立平等的對話關係，互相尊重', 1, '花笑了，其實是看花的人的心在笑。', '文學描寫中，景物的生命化（點頭微笑）往往是作者內心喜悅與自然和諧相處的情感投射。'],
+                ['深層評價', '大自然常被稱為「心靈的療癒師」，結合這篇《漫步植物園》，你如何評價現代都市人定期親近大自然的重要性？', '沒有必要，大自然中充滿未知危險，親近大自然容易被蚊蟲叮咬而感染疾病', '親近大自然能讓我們暫時遠離高壓的電子屏幕與都市喧囂，藉由大自然的色彩、聲音和芬芳，重獲心靈的平靜與生命活力', '大自然只是提供網紅拍照打卡、炫耀生活品質的社交場所', '我們應該將植物園全部剷除，改蓋成高樓大廈以解決住房問題', 1, '文章最後一句話「這是一次讓身心放鬆的美好體驗」，大自然給了我們精神滋養。', '這道評價題引導學生反思人與自然的關係，在大自然中尋找精神釋壓的科學與情感途徑。']
+            ]),
+            cA('pa9_2', 'p-adv-narrative', '秋夜思鄉', '<p>深秋的夜晚，一陣冷風吹過，院子裡的梧桐樹發出沙沙的聲響。枯黃的落葉宛如斷了翅膀的蝴蝶，無力地盤旋、墜落，最後孤零零地躺在冰冷的青石板上。望著天上那輪殘缺的下弦月，我緊了緊身上的大衣，不禁打了一個寒顫。</p><p>還記得小時候在故鄉，每到秋天，奶奶總會在院子裡架起火爐，烤著香噴噴的番薯。那時的月亮總是圓的，火爐的光總是暖的。而現在，我獨自一人在這座陌生的鋼筋水泥城市裡求學，周圍只有汽車的喧囂和冷漠的霓虹燈。</p><p>一陣夜風再次襲來，把我從回憶中拉回現實。那枯黃的梧桐葉，不正如現在漂泊異鄉的我嗎？不知道故鄉的奶奶，此刻是否也在看著這輪明月？</p>', [
+                ['寫作手法', '這篇文章主要運用了哪種高階寫作手法來表達思鄉之情？', '說明法，客觀介紹秋天落葉的自然現象', '借景抒情，透過描寫秋夜淒涼、殘缺的客觀景色，來烘托、渲染內心極度孤獨的思鄉愁緒', '舉例論證，列舉奶奶烤番薯的例子證明故鄉的美好', '步移法，跟隨視線從天上轉移到地下', 1, '作者第一段寫了冷風、落葉、殘月，這些風景給人落寞悲傷之感。', '文章沒有直接大喊「我很孤單」，而是透過淒清的秋景來渲染、寄託思鄉的愁緒，這是高階的借景抒情。'],
+                ['修辭手法', '第一段中「落葉宛如斷了翅膀的蝴蝶」運用了什麼修辭手法？', '明喻，使用了喻詞「宛如」連接本體和喻體', '誇張，極力放大落葉飄落時的體積', '排比，連續使用結構相同的動詞', '擬聲，模擬落葉掉在地上的聲音', 0, '有「宛如」(像) 這個明顯的喻詞。', '將落葉比作斷翅的蝴蝶，不僅是明喻，更深刻地烘托出無力、悲涼的氣氛。'],
+                ['多重推論', '文章中將落葉比喻為「斷了翅膀的蝴蝶」，這個特殊的意象如何簡化並深化了作者的思鄉之情？', '說明作者從小就非常喜歡收集和觀察蝴蝶標本', '具象化了作者身處異鄉、缺乏保護的無力感與孤獨感（斷翅即無依無靠），極大增強了文字的悲涼感染力', '說明深秋時節有很多死掉的昆蟲掉在地上，環境惡劣', '暗示作者的手臂在旅途中受傷了，像斷翅一樣無法動彈', 1, '斷了翅膀代表飛不起來、無依無靠、失去方向。這完美契合了作者在異鄉的心境。', '透過殘缺、受傷的意象，完美投射了遊子漂泊無根、渴望歸家的深沉情感。'],
+                ['對比分析', '第二段中，作者將「故鄉的秋天」與「城市的秋天」進行了強烈的對比。這種對比在文章中有什麼核心作用？', '突出城鄉之間在物質生活水平與基礎設施上的巨大差距', '暗示作者對放棄故鄉來到大城市求學的強烈懊悔與憤怒', '以故鄉曾經的溫暖、圓滿，強烈反襯出現在城市環境的冷漠與作者內心無法排解的孤寂', '強調現代都市的快速發展嚴重破壞了傳統的家庭關係與倫理', 2, '過去有火爐和奶奶，現在只有喧囂和霓虹燈，一暖一冷。', '利用昔日溫馨的回憶來強烈反襯今日獨處異鄉的孤冷，加深了思鄉之情的厚度。'],
+                ['深層寓意', '第三段中「那枯黃的梧桐葉，不正如現在漂泊異鄉的我嗎？」這句話暗含了什麼深層次的意思？', '感嘆時光飛逝，自己的青春就像落葉般一去不返，充滿焦慮', '暗示作者在學業上遭遇了嚴重的挫折，感到前途黯淡無光', '這是一個借物自喻，落葉離開大樹的孤零飄蕩，正象徵了遊子離開家鄉、漂泊無根的淒涼心境', '表達作者想要擺脫城市束縛、徹底回歸自然原始生活的渴望', 2, '落葉離開了樹(家)，只能隨風無助地飄蕩。', '這是一個借物自喻，落葉的孤零正象徵了遊子漂泊無根的淒涼心境。'],
+                ['修辭作用', '最後一句「不知道故鄉的奶奶，此刻是否也在看著這輪明月？」這句話在修辭和情感表達上屬於？', '設問，作者準備在下一篇文章中給出明確的答案', '反問，強烈暗示奶奶根本沒有在看月亮', '這並非修辭上的反詰，而是一句跨越時空的真誠抒情疑問，表達了極致的思念與心靈寄託', '排比，為文章增加節奏感', 2, '作者真的不知道答案。這是一份遙遠的牽掛。', '這是一個抒情性的疑問，並非修辭上的設問或反問，它表達了「但願人長久，千里共嬋娟」的深深思念。'],
+                ['多重推論', '第一段中作者特意寫到「天上那輪殘缺的下弦月」，在中國古典文學傳統中，月缺和月圓各自隱含著怎樣的文化情感寓意？', '月圓代表農作物豐收，月缺代表遭遇嚴重的自然飢荒', '月圓象徵「人月兩團圓」的美好與幸福；月缺則反襯著「親人分離、漂泊思鄉」的殘缺、遺憾與悲涼', '月缺只是單純的科學天文規律描寫，沒有任何附加的情感含意', '月圓代表夏天炎熱的氣候，月缺代表秋天涼爽的氣候', 1, '中國古詩詞常說「月有陰晴圓缺，人有悲歡離合」。月相常與親情與團圓綑綁。', '這是高年級文學常識與深層詮釋整合，月缺在此被作者用作「殘缺、分離、思念」的強烈視覺隱喻。'],
+                ['深層評價', '你如何評價這篇文章的敘事結構（從眼前之景 ➡️ 回憶溫暖 ➡️ 回到現實的跨時空思念）？這在表達情感上有什麼獨特的好處？', '這種時空頻繁切換的結構太混亂，會導致讀者看不懂文章的主題', '透過強烈的冷（眼前）與暖（回憶）的時空交錯對比，使思鄉的情感逐層加深，最後昇華為跨越空間的溫情寄託', '沒有任何好處，寫作應該順著時間線一直平鋪直敘寫下去最好', '這種寫法純粹是為了增加文章的字數，以符合考試的要求', 1, '對比和情感的層層推進，比平鋪直敘更能打動讀者的心。', '時空的交織與對比是抒情散文的高階手法，能讓看似平淡的思鄉之情展現出厚重而動人的藝術力量。']
+            ]),
+            cA('pa10_2', 'p-adv-narrative', '夏日的海灘', '<p>炎熱的夏日，我們一家來到了淺水灣海灘。踏上沙灘，那金黃色的沙子軟綿綿的，就像踩在地毯上一樣。無數個五顏六色的貝殼點綴在沙灘上，閃閃發光。</p><p>走向海邊，一望無際的大海呈現出迷人的蔚藍色。海浪一波接著一波地湧上岸，發出「嘩啦嘩啦」的聲音。遠處，有幾隻海鷗在海面上低飛盤旋，尋找著獵物。海面上還有點點白帆，那是漁民們正在辛勤地捕魚。</p><p>抬頭望向天空，一輪火紅的驕陽高高掛著。幾朵白雲像棉花糖般悠閒地飄浮著。這片美麗的海灘，真是一個消暑的好地方。</p>', [
+                ['寫作手法', '這篇文章在描寫海灘風景時，嚴格採用了什麼空間觀察順序？', '由遠及近，先寫天空再寫沙灘', '由上到下，從天空寫到地面', '踏上沙灘 👉 走向海邊 👉 抬頭望向天空，這屬於標準的「步移法」與視線空間轉移', '先寫海面動態，再寫沙灘靜態的對比順序', 2, '看看每一段開頭的第一句話，作者的視線和腳步是怎麼移動的。', '第一段「踏上沙灘」、第二段「走向海邊」、第三段「抬頭望向天空」，這是標準的步移法與空間順序。'],
+                ['修辭手法', '第一段中「那金黃色的沙子軟綿綿的，就像踩在地毯上一樣」運用了什麼修辭手法？', '擬人，賦予沙子人類的觸覺', '明喻，使用了喻詞「像」，將沙子的觸感比作地毯', '誇張，極力放大沙子的柔軟度', '排比，連續使用疊字', 1, '有「像...一樣」的字眼，把沙子比作地毯。', '將軟軟的沙子比喻為地毯，使用了喻詞「像」，是明喻。'],
+                ['提取視覺', '第二段詳細描寫了海面上的景物，其中包含了哪些豐富的色彩詞彙？', '只有單一的藍色調', '蔚藍色的海水、白色的帆，形成了鮮明的色彩對比', '紅色的浪花與黑色的礁石', '金黃色的魚與灰色的天空', 1, '在第二段尋找關於顏色的具體詞語。', '文中明確提到「蔚藍色」的大海以及點點「白帆」。'],
+                ['修辭作用', '「幾朵白雲像棉花糖般悠閒地飄浮著」這句比喻在營造文章氣氛上有什麼作用？', '暗示作者當時已經感到飢餓，想要購買海灘上的甜食', '生動具體地表現出白雲潔白柔軟的視覺特徵，同時配合「悠閒」一詞烘托出夏日海灘輕鬆恬靜的氛圍', '為後文天氣突然變壞、下起暴雨埋下隱蔽的伏筆', '強調白雲的形狀變化多端，猶如魔術般難以捉摸', 1, '棉花糖給人何等輕柔甜美的感覺？這與「消暑的好地方」的氣氛是否一致？', '將白雲比作棉花糖，生動具體地寫出了雲的潔白鬆軟，配合「悠閒」完美烘托出輕鬆的氛圍。'],
+                ['多重推論', '第二段中，作者在描寫蔚藍的大海之餘，特意寫到「遠處點點白帆，那是漁民們正在辛勤地捕魚」，這在靜態的自然景色中，融入了什麼獨特的元素？', '暗示海面上船隻過多，交通非常擁擠且危險', '加入了動態的人類勞作與人文氣息，使單一的自然畫面達到了「動靜交融、以人襯景」的高階藝術效果', '說明過度捕魚的漁船會嚴重破壞海洋生態環境', '說明當地的海鮮資源豐富，味道極其鮮美', 1, '只寫海和白雲是純自然景物，加入漁民捕魚，景物就有了人類的生活氣息、活了起來。', '這是高階山水寫景散文的常用手法「動靜交融/以人襯景」，能讓風景展現出真實而溫暖的生活氣息。'],
+                ['段落歸納', '這篇文章的第三段在內容和結構上主要發揮了什麼作用？', '專注描寫海浪的聲音與力量', '詳細描述漁民捕魚的辛苦過程，表達同情', '描寫天空的景象（太陽與白雲），並在最後一句總結全文，點出「消暑好地方」的主旨', '單純分析貝殼的顏色與種類', 2, '第三段開頭是「抬頭望向天空」，結尾是「這片美麗的海灘...」。', '第三段主要描寫天空中的驕陽和白雲，並以一句讚嘆總結全文。'],
+                ['字詞積累', '第二段中形容大海「一望無際」，這個成語的精確意思是？', '因為霧氣太大而完全看不清楚前方的景物', '一眼望不到邊際，形容視野極其遼闊、廣大無垠', '視線移動得非常快，很快就把風景看完了', '海面只有一種單調的顏色，缺乏層次', 1, '形容大海極其廣大，看不到盡頭。', '「一望無際」形容視野廣闊，一眼看不到邊際。'],
+                ['深層評價', '有學者指出，這篇散文看似只寫風景，實則展現了一種「物我兩忘、和諧共生」的境界。結合文章，你如何評價大自然對調節現代人心理壓力的功能？', '大自然能夠提供人類生存所需的一切豐富物質資源，解決經濟壓力', '大自然廣闊無邊且萬物悠閒，能讓久居鬧市、焦慮忙碌的現代人放慢腳步，藉由景物洗滌心靈，感受生命的和諧、寧靜與深層放鬆', '大自然的極端天氣（如暴曬）會讓人感到更加煩躁與不安，增加心理負擔', '大自然是激發人類藝術創作與發明機器的唯一泉源，不具備放鬆功能', 1, '「消暑的好地方」不僅僅是指身體溫度的消暑，更是指心靈的洗滌與壓力的釋放。', '大自然的安寧能起到極佳的心理療癒作用。這道評價題引導高年級學生建立尊重自然、與自然和諧共處的價值觀。']
+            ]),
+
+            // --- 事理說明文與非連續性文本 (5 篇) ---
+            cA('pa11', 'p-adv-expository', '圖表——非連續性文本', '<p>在現代資訊爆炸的時代，我們每天都會接觸到大量的信息。除了由段落文字組成的「連續性文本」外，還有一種越來越重要的閱讀材料，那就是「非連續性文本」。什麼是非連續性文本呢？簡單來說，它包括圖表、地圖、說明書、廣告和火車時刻表等。與傳統長篇文章相比，它具有直觀、簡明、信息量大且便於快速檢索的特點。</p><p>數據圖表是非連續性文本中最常見的一種。根據調查，人類大腦處理視覺圖像的速度，比處理純文字快大約六萬倍！因此，一張精心設計的統計圖表（例如折線圖），能在一秒鐘內向讀者傳達出數據的走勢和變化，而同樣的信息如果用文字描述，可能需要密密麻麻的幾百字。這就是為什麼現代新聞和商業報告中，圖表無處不在的原因。</p><p>但是，閱讀非連續性文本也需要特別的策略。首先，我們要先看「標題」和「圖例」，明白圖表在說明什麼；其次，要特別注意「橫軸」和「縱軸」的單位，避免讀錯數據；最後，要將不同的數據進行「橫向與縱向的比較」，從中分析出規律和趨勢。掌握這種閱讀策略，能讓我們在信息時代中快人一步，精準獲取關鍵信息。</p>', [
+                ['說明方法', '第一段對「非連續性文本」進行了解釋：「簡單來說，它包括圖表、地圖...」，這同時運用了哪兩種說明方法？', '下定義 與 舉例子 (先解釋本質，再列舉具體事物)', '打比方 與 列數字', '作比較 與 下定義', '舉例子 與 打比方', 0, '既解釋了「什麼是」，又列舉了「圖表、地圖」等具體事物。', '結合了「下定義」的本質解釋，與「舉例子」的具體列舉，能讓讀者最快明白抽象概念。'],
+                ['說明方法', '第一段將「非連續性文本」與「傳統長篇文章」放在一起比較，這屬於：', '列數字', '作比較 (以突出非連續性文本直觀、簡明的特點)', '打比方', '下定義', 1, '將兩種類型的文本放在一起，說出它們在特點上的差別。', '將兩者對比，鮮明地突出了解放讀者時間、直觀檢索的優勢，是「作比較」。'],
+                ['說明方法', '第二段提到「大腦處理視覺圖像的速度比純文字快大約六萬倍」，這運用了：', '打比方', '列數字 兼 作比較 (以六萬倍的數據精確對比大腦處理圖與字的速度差異)', '下定義', '舉例子 兼 分類別', 1, '出現了精確的數字「六萬倍」，且是在對比「圖像」與「文字」。', '同時使用了數字數據（列數字），並進行了兩者的對比（作比較），極具科學說服力。'],
+                ['閱讀策略', '根據第三段，閱讀數據圖表時，為了避免產生致命的數據誤讀，我們應「特別注意」什麼？', '圖表的顏色搭配是否符合美學', '橫軸和縱軸所代表的精確單位', '圖表的整體尺寸大小', '圖表設計者的個人背景', 1, '在第三段尋找「避免讀錯數據」的具體前置建議。', '文中指出：「要特別注意『橫軸』和『縱軸』的單位，避免讀錯數據。」這是數據分析的基礎。'],
+                ['多重推論', '為什麼在快節奏的現代商務報告和新聞中，數據圖表會「無處不在」？', '因為印製圖表比排版文字更便宜', '因為圖表能在一秒內傳達複雜的走勢，極大地降低了認知負荷，完美契合現代社會追求高效閱讀的需求', '因為現代人的識字率下降，打字溝通變得非常麻煩', '因為大家都只喜歡看生動的圖畫而排斥嚴肅的內容', 1, '結合第二段中處理速度「快六萬倍」以及「幾百字描述 VS 一秒看懂」的核心推論。', '圖表能高度凝練數據，直觀呈現趨勢，完美契合了現代高效、快速獲取資訊的社會節奏。'],
+                ['修辭與表達', '文章第一段將傳統的段落文字專業地稱為「連續性文本」，這在科普文章分類上起到了什麼核心效果？', '這是一種諷刺現代人缺乏耐心的文學手法', '使用了嚴謹的學術名詞對文本進行對稱分類，極大地增強了說明文的專業性與客觀權威度', '沒有任何好處，反而增加了閱讀困難', '這是作者為了展現詞彙量而自己編造的詞語', 1, '這符合教育學與語言學對閱讀材料分類的專業用語。', '使用科學專業的學術名詞，能增強說明文的權威性與嚴謹度，讓對比更加鮮明。'],
+                ['多重推論', '第二段中說「一張精心設計的統計圖表，能在一秒鐘內向讀者傳達出數據的走勢與變化」，這強烈暗示了設計圖表時最核心的黃金原則應該是？', '越複雜、字數越多越好，以顯得資料詳實專業', '必須極致的「直觀、清晰、易讀」，將龐雜的數據轉化為一目了然的視覺資訊，去除一切干擾', '要把顏色塗得五顏六色、花裡胡哨，以最大限度吸引眼球', '絕對不需要寫任何輔助說明的文字標題', 1, '一秒看懂的關鍵，在於圖表的設計不能繁雜，必須重點突出。', '資訊設計的核心在於降低讀者的「認知負荷」，讓關鍵規律立刻凸顯。'],
+                ['深層評價', '在當今「資訊爆炸」的網絡時代，你認為「非連續性文本」（如數據圖表）能「完全取代」傳統的「連續性文本」（如長篇文章）嗎？請從媒介功能的角度陳述理由。', '可以完全取代，因為現代人生活忙碌，已經沒有時間和耐心去閱讀長文章了', '不能完全取代。圖表雖然在快速檢索和呈現宏觀趨勢上佔優，但深入的邏輯論證、細膩的情感表達與系統性的哲學思考，仍然必須絕對依賴文字段落來完整呈現', '可以取代，因為圖像的視覺衝擊力永遠大於文字，圖表更好看', '不能取代，因為圖表在傳遞信息時往往會出現嚴重的錯誤，沒有任何實用價值', 1, '圖表雖然快，但它能表達深刻的哲理或細膩的情感嗎？', '這是高階批判性思考題。兩種文本各有其不可替代的媒介功能：圖表求「快與精準」，文字求「深與系統」。']
+            ]),
+            cA('pa12', 'p-adv-expository', '破解「記憶」的密碼', '<p>為什麼有些單字背了幾十遍還是會忘記，而多年前發生的一件趣事卻歷歷在目？這就涉及到大腦「記憶密碼」的運作機制。人類的記憶系統就像一座巨大的圖書館，分為「短期記憶」的暫存區和「長期記憶」的深處書架。</p><p>短期記憶的容量非常有限，通常只能記住7個左右的資訊片段，而且只會停留幾十秒。當我們死記硬背時，資訊只停留在暫存區，很快就會被新資訊覆蓋。要將短期記憶轉化為長期記憶，關鍵在於「意義的連結」和「情緒的參與」。研究表明，如果學習時能將新知識與舊經驗聯繫起來，或者在學習過程中伴隨著強烈的情緒波動（如極度開心或驚訝），大腦海馬體就會將這些資訊打上「重要」的標籤，永久存入深處的書架。</p><p>掌握了這個密碼，我們就可以採取更高效的學習策略。例如，運用圖像聯想法，或者向別人講述學到的知識，這都能大大提高記憶的留存率。</p>', [
+                ['閱讀策略', '若想快速找出「提高大腦記憶留存率的具體實踐方法」，應運用掃讀(Scanning)技巧尋找文章的哪一個部分？', '第一段，尋找關於圖書館的描述', '第二段，尋找關於海馬體的科學名詞', '第三段，尋找帶有「學習策略、例如」等總結性關鍵字的段落', '標題，從標題中直接推斷方法', 2, '方法和具體建議通常會放在科普文章的最後作為總結，並伴隨「例如」等字眼。', '掃讀第三段能快速定位到「圖像聯想法」、「向別人講述」等具體落地方法。'],
+                ['說明方法', '第一段將複雜的記憶系統生動地比喻為「巨大的圖書館」，這在說明文裡屬於哪種說明方法？', '下定義', '作比較', '打比方 (利用讀者熟悉的圖書館運作，具象化解釋抽象的記憶分類)', '列數字', 2, '在說明文中，用比喻的手法來解釋複雜或極度抽象的科學現象，稱為打比方。', '利用圖書館「暫存區」與「深處書架」的運作，來打比方說明記憶的兩大分類，大大降低了理解門檻。'],
+                ['提取訊息', '根據第二段的神經科學解釋，人類的「短期記憶」在「容量」和「時間」上具有怎樣的嚴苛限制？', '容量無限大，但停留時間只有幾秒鐘', '容量極其有限（僅約7個資訊片段），且停留時間極短（僅幾十秒）', '只能記住阿拉伯數字，完全記不住文字', '沒有任何物理或時間上的限制', 1, '在第二段前兩句找關於短期記憶的精確數據描述。', '文中精確指出：「短期記憶的容量非常有限，通常只能記住7個左右的資訊片段，而且只會停留幾十秒。」'],
+                ['說明方法', '第二段中出現的「7個左右」、「幾十秒」，運用了哪種增強文章客觀性的說明方法？', '打比方', '下定義', '列數字 (提供明確的科學觀測數據以增強說服力)', '作比較', 2, '出現了明確的數值與時間數據。', '使用具體的、確鑿的實驗數據來說明大腦特徵，是列數字。'],
+                ['多重推論', '為什麼多年前發生的一件小「趣事」能讓我們終生難忘，歷歷在目？', '因為趣事本來就儲存在長期記憶的深處書架上', '因為趣事發生時伴隨著強烈的情緒波動(極度開心)，觸發了大腦海馬體的機制，被打上了「重要」的永久標籤', '因為我們每天都在不自覺地複習這件趣事', '因為趣事的故事結構比較短，容易被大腦死記硬背下來', 1, '結合第二段中提到的「情緒的參與」如何影響大腦海馬體運作的機制。', '強烈的情緒波動（如極度開心或驚訝）能強烈刺激海馬體給資訊打上重要標籤，從而順利轉化為長期記憶。'],
+                ['深層評價', '根據文章的科學原理解釋，為什麼傳統的「死記硬背」往往是極度低效且徒勞的學習方法？', '因為大腦會自動排斥那些沒有伴隨情緒波動的枯燥資訊', '因為死記的資訊只停留在容量極其有限的短期暫存區，缺乏深層的「意義連結」，極易被新資訊覆蓋而遺忘', '因為這種死記硬背的方法會過度消耗大腦的能量，導致嚴重的生理疲勞', '因為現代的考試制度已經不再考查學生的基礎記憶能力了', 1, '死記硬背缺少了哪一個將短期記憶轉移到長期記憶的關鍵因素？', '死記硬背缺乏將新知識與舊經驗「聯結」的深度處理過程，資訊無法存入深處書架，只能停留在暫存區被迅速覆蓋。'],
+                ['多重推論', '第三段提到「向別人講述學到的知識，能大大提高記憶留存率」，這在教育心理學上常被稱為「輸出式學習」，其大腦深層運作原理是什麼？', '向別人炫耀知識可以讓大腦產生興奮感，從而記住內容', '在講述的過程中，大腦被迫對知識進行了深度的邏輯重組與理解，並主動建立了「意義的連結」，從而將其牢牢釘入長期記憶區', '講話可以鍛鍊面部神經肌肉，進而刺激大腦皮層', '別人的掌聲和讚美會強烈刺激大腦海馬體分泌激素', 1, '講給別人聽時，你必須自己先理清邏輯。這是一種深度大腦建構。', '輸出（Teaching others）是最主動、最高階的知識內化過程，強迫大腦激活長期記憶書架並建立神經網路連結。'],
+                ['深層評價', '科學家常說「睡眠是大腦記憶的整理師」。結合本篇說明文的知識，你認為學生在考試前夕「熬夜死記硬背」會引發什麼隱藏的大腦危機？', '會導致大腦海馬體永久性萎縮，造成智力不可逆的下降', '熬夜導致睡眠嚴重不足，大腦在夜晚無法進行記憶的鞏固、分類和儲存；那些凌亂堆積在暫存區的知識會在第二天考試時迅速崩潰遺忘', '會讓大腦產生過多錯誤的意義連結，導致知識體系徹底混亂', '會嚴重影響身體生長激素的分泌，導致身體發育遲緩', 1, '死記硬背的知識只在「暫存區」，而大腦夜晚需要整理「書架」。沒有睡眠，書架就會倒塌。', '熬夜不僅破壞了生理規律，更中斷了大腦對記憶的固化整理過程，是極其低效且自毀考試效率的錯誤做法。']
+            ]),
+            cA('pa13', 'p-adv-expository', '地球的「綠色之肺」', '<p>森林被科學家公認為地球的「綠色之肺」，這不僅是因為它們面積遼闊，更是因為它們在維持地球生態平衡中，起著和人類肺部一樣至關重要的氣體交換作用。大自然如果失去了森林，地球的生命將面臨毀滅。</p><p>首先，森林能高效地淨化空氣。一公頃的闊葉林，每天可以吸收大約一噸的二氧化碳，並釋放出約七百三十公斤的氧氣！這個效率是任何人造機器都無法比擬的。其次，森林是天然的「蓄水庫」。森林的泥土和樹根像一塊巨大的海綿，能在大雨時迅速吸收並儲存雨水，防止山洪暴發；在乾旱時，這些水分又會慢慢釋放出來，滋潤溪流。此外，森林還能防風固沙，保護土壤不被雨水沖走。</p><p>然而，因為人類的過度砍伐和開發，地球上的森林面積正在以每分鐘相當於三十個足球場的速度急劇減少！這導致全球暖化加劇，無數野生動物失去家園。保護森林，已經是全人類刻不容緩的責任。</p>', [
+                ['修辭與表達', '第一段將森林高度讚譽為地球的「綠色之肺」，這在說明文寫作中運用了什麼修辭手法？', '明喻，明確使用了「像」字', '暗喻 (以人體肺部的氣體交換功能，精準比喻森林產生氧氣、吸收二氧化碳的核心作用)', '借喻，完全隱藏了森林這個本體', '擬人，賦予了森林人類的呼吸動作', 1, '本體(森林)和喻體(綠色之肺)，中間用「被公認為...」連接，意思相當於「是」。', '這是一個暗喻，生動具體地說明了森林在地球大氣循環中不可或缺的呼吸作用。'],
+                ['說明方法', '第二段提到「一公頃的闊葉林，每天可以吸收大約一噸的二氧化碳」，這句話運用了哪種極具說服力的說明方法？', '打比方', '作比較', '列數字 (以精確的面積與重量數據，具體說明森林淨化空氣的高效率)', '下定義', 2, '出現了精確的科學計量單位「一公頃」、「一噸」。', '使用具體、科學的龐大數據來說明森林吸收二氧化碳的高效率，是列數字，極具震撼力。'],
+                ['說明方法', '第二段「森林的泥土和樹根像一塊巨大的海綿」，在說明文裡屬於哪種說明方法？', '列數字', '作比較', '打比方 (將泥土樹根吸水的物理現象比作日常熟悉的海綿吸水)', '下定義', 2, '用讀者極其熟悉的「海綿吸水」來比喻「森林蓄水」的自然功能。', '利用生動的比喻手法來說明複雜的自然現象與機制，在說明文中屬於「打比方」。'],
+                ['因果推斷', '根據第二段的詳細解說，為什麼森林被譽為大自然的「蓄水庫」？它對生態有何好處？', '因為森林裡蘊藏著極為豐富的地下水資源', '因為樹根和泥土能像海綿般在大雨時強大吸水以防止山洪，在乾旱時緩慢釋放水分以滋潤溪流，發揮了極佳的水量調節功能', '因為森林所在地區的年降雨量遠高於其他地區', '因為森林裡安裝了許多人造的抽水與蓄水機器', 1, '找出森林泥土和樹根「像海綿一樣」在大雨和乾旱時的不同雙向反應。', '森林能智能地調節大自然的水循環，起到旱澇保收的自然蓄水與防護作用。'],
+                ['說明方法', '「森林面積正以每分鐘相當於三十個足球場的速度急劇減少」，這句話為了突顯危機感，同時運用了哪兩種說明方法？', '打比方 與 舉例子', '列數字 (三十個) 兼 作比較 (以熟悉的足球場面積對比抽象的流失面積)', '下定義 與 列數字', '舉例子 與 作比較', 1, '「三十個」是列數字，「足球場的面積」與「森林流失面積」放在一起是直觀的作比較。', '用讀者極度熟悉的足球場面積，來直觀對比並說明森林流失速度之驚人，是列數字與作比較結合的典範。'],
+                ['多重推論', '第二段提到一公頃森林「吸收二氧化碳並釋放氧氣的效率，是任何『人造機器』都無法比擬的」，作者這樣寫的深層反思是什麼？', '呼籲各國政府應該投入更多的研發資金去製造超越大自然的環保機器', '提醒人類必須敬畏大自然完美且不可思議的生態功能，不能傲慢天真地以為人類科技能完美解決所有因砍伐帶來的環境災難', '批評現代科學家在空氣淨化技術上的研發進度過於緩慢', '暗示森林的存在是阻礙人類工業科技向前發展的主要障礙', 1, '人造機器比不過大自然本身的「肺部」功能。這是在說明人類科技的巨大侷限性。', '這是科普事實中帶出環保與自然尊嚴的高階思維。科技不是萬能的，守護自然的自淨系統才是治本之道。'],
+                ['深層評價', '第二段在論述森林功能時，使用了「首先...其次...此外...」等連接詞，這在說明文結構上體現了什麼？', '說明文章的內容過於繁雜囉嗦，缺乏重點', '展現了文章邏輯分點非常嚴密清晰、條理分明，層層遞進地剖析了森林的多重價值', '說明大自然的功能存在很多先天性的缺陷需要彌補', '說明大樹的生長速度非常快', 1, '首先、其次、此外是用來連接不同特點的高級邏輯關係詞。', '使用這類順序連接詞，能使說明文在分點解說時層次分明、條理清晰，易於讀者吸收。'],
+                ['深層評價', '第三段發出「每分鐘減少三十個足球場森林」的嚴重警告。作為小學生，我們在日常生活中可以採取什麼最具體、最直接的行動來回應這個「刻不容緩的責任」？', '我們應該每天去足球場踢球以增強體魄', '在日常生活中極力實踐環保：如雙面用紙、拒絕使用即棄木筷子、積極參與廢紙回收，因為節約紙張就是最直接的保護森林', '我們應該要求父母多買昂貴的實木家具來保值', '我們不需要做任何事，因為保護森林完全是國家政府和科學家的責任', 1, '紙張是用木頭做的，我們每節約一張紙，其實就是在減緩森林的砍伐。', '大環境的破壞是由無數微小的浪費累積而成的，保護自然需要我們每個人從日常微小的習慣做起。']
+            ]),
+            cA('pa14', 'p-adv-expository', '植物的「自衛武器」', '<p>在大自然中，動物遇到危險時可以奔跑逃命，或者用利爪進行反擊。然而，不能動彈的植物如果遇到飢餓的昆蟲或草食動物，該如何自衛呢？原來，看似溫和的植物，也擁有各式各樣的神奇「自衛武器」。</p><p>首先，有些植物會給自己穿上堅硬的「盔甲」。例如仙人掌和玫瑰，牠們的身上長滿了尖銳的刺。這能讓想要啃食牠們的動物「無從下口」，望而卻步。其次，許多植物會使用「化學武器」。當毛毛蟲開始啃食番茄的葉子時，葉子會釋放出一種特殊的化學物質，使毛毛蟲消化不良，甚至中毒死亡。此外，更神奇的是，有些植物在受到攻擊時，會釋放出氣味向鄰近的植物「通風報信」，提醒同伴提早做好防禦準備！</p><p>大自然的設計真是巧妙無比。植物雖然沒有聲音，但牠們卻用獨特的生命智慧，在殘酷的生存競爭中繁衍至今。</p>', [
+                ['修辭與表達', '第一段將植物保護自己的本能機制稱為「自衛武器」，這運用了什麼修辭手法？', '明喻，因為讀者可以明顯看出兩者的相似之處', '暗喻 (將植物防禦的本領直接比喻為人類戰鬥用的武器，中間隱含了『是』的關係)', '借喻，完全沒有出現植物這個詞', '擬人，賦予了植物人類使用武器的動作', 1, '本體是「自衛本領」，喻體是「武器」，中間用「是/就是」連接。', '這是一個暗喻，能讓讀者一目了然，深刻明白植物並非毫無防禦能力。'],
+                ['說明方法', '第二段「例如仙人掌和玫瑰，牠們的身上長滿了尖銳的刺」，這運用了哪種常見的說明方法？', '列數字', '作比較', '舉例子 (以我們極為熟悉的仙人掌和玫瑰長刺為例，具體說明植物的實體盔甲)', '下定義', 2, '用「例如」引出了具體、廣為人知的植物名稱。', '用具體、常見的植物實例來說明抽象的「盔甲防禦」概念，屬於舉例子，增強了文章的真實感。'],
+                ['說明方法', '第二段「有些植物會給自己穿上堅硬的『盔甲』」，這句話在說明文的表達上屬於哪種方法？', '下定義，嚴格規範了盔甲的科學意義', '作比較，將植物的刺與動物的皮毛作對比', '打比方 (將植物身上尖銳的刺，生動形象地比作古代士兵防禦用的盔甲)', '列數字', 2, '將植物表面的刺比作人類的盔甲。在說明文中，用比喻來說明事物特徵叫打比方。', '用「盔甲」生動形象地說明刺的保護功能，屬於打比方，增加了文章的趣味性。'],
+                ['因果推斷', '根據文章，看似柔弱的番茄葉子是如何致命地對付啃食牠們的毛毛蟲的？', '番茄葉子會迅速長出毒刺把毛毛蟲當場刺死', '葉子被啃食時會啟動防禦機制，釋放出特殊的化學物質，破壞毛毛蟲的消化系統使其消化不良甚至中毒', '番茄會散發出香味招引天敵小鳥來吃掉毛毛蟲', '番茄會像捕蠅草一樣把葉子迅速合攏悶死毛毛蟲', 1, '在第二段中間仔細尋找關於番茄的「化學武器」防禦機制。', '當毛毛蟲開始啃食番茄的葉子時，葉子會釋放出一種特殊的化學物質...使毛毛蟲消化不良甚至死亡。'],
+                ['修辭與表達', '第二段中說植物受到攻擊時會向同伴「通風報信」，這運用了什麼修辭手法？', '明喻', '暗喻', '擬人 (將植物釋放化學氣味信號的生物本能，生動地賦予了人類傳遞危險情報的動作特徵)', '誇張', 2, '「通風報信」是人類在傳遞危險情報時的專屬動作與社會行為。', '賦予植物發送氣味信號以警告同伴的行為人類的動作特徵，是極為生動的擬人修辭。'],
+                ['字詞積累', '第二段中「望而卻步」一詞，精準地形容了動物面對長刺植物時的什麼狀態？', '一邊看著植物一邊無所畏懼地走過去', '看到植物長滿尖刺，預見到危險或困難，就嚇得往後退縮，不敢再向前靠近', '開心地跳起舞來準備享用大餐', '不管不顧地大口大口吃下去', 1, '刺很尖，動物想咬，但看到了會本能地往後退。', '「望而卻步」指遠遠看著就嚇得退步了，不敢前進，形容植物防禦的阻嚇力極強。'],
+                ['多重推論', '植物受到攻擊時會釋放氣味「通風報信」的現象被科學家證實。這項發現徹底打破了我們對植物的什麼刻板認知？', '證明了植物也擁有和人類一樣複雜的痛覺與情感系統', '打破了我們認為植物是毫無知覺、只能孤立挨打的刻板印象，揭示了大自然演化出的極其精妙的群體化學溝通與互助生存智慧', '揭示了植物為了爭奪陽光和水分而互相攻擊的殘酷真相', '說明植物的進化速度已經完全超越了食草動物', 1, '釋放氣味（化學分子）讓風帶給鄰近的樹，這是一種無聲但高效的化學通信網路。', '這打破了我們對植物是毫無知覺、彼此孤立的刻板印象，展示了其精妙的群體生存智慧。'],
+                ['深層評價', '作者在結尾讚歎「大自然的設計真是巧妙無比」，從植物不能動彈卻演化出絕妙防禦機制的現象中，你獲得了怎樣的深層「生存啟發」？', '在競爭激烈的社會中，我們必須主動出擊去傷害別人才能獲得生存空間', '生命總會自己尋找出路；即使身處無法移動、極度被動與劣勢的客觀環境中，只要善用智慧和變通，也能演化出強大的自我保護方式', '為了保護自己絕對不受傷害，我們應該像仙人掌一樣對每個人都長滿防禦的刺，拒絕交流', '外表的堅強往往只是為了掩飾內心的軟弱與無能', 1, '植物雖然不會跑、不會叫，處於絕對劣勢，但牠們絕不坐以待斃。', '生命的堅韌在於智慧的演化，任何處於劣勢的生命都有自己抗爭和守護尊嚴的獨特方式。']
+            ]),
+            cA('pa15', 'p-adv-expository', '人工智能的崛起', '<p>近年來，人工智能（Artificial Intelligence，簡稱 AI）成為了科技界的熱門話題。所謂人工智能，是指由人類製造出來的機器或電腦系統，能夠模擬人類的智能行為，如學習、推理和解決問題等。</p><p>人工智能與傳統電腦程序有著本質的區別。傳統程序只能按照程序員預先寫好的死板指令來執行任務；而人工智能，尤其是機器學習系統，具備自我進化的能力。例如，當人工智能與人類下棋時，它不僅能計算出當下的最佳走法，還能從每一次失敗的對局中吸取經驗，不斷提升自己的棋力。相較之下，人類的學習速度和計算能力，在某些特定領域已經被 AI 遠遠拋在後面。</p><p>目前，人工智能已經廣泛應用於我們的生活中。智能手機裡的語音助手、自動駕駛汽車、甚至是醫院裡協助醫生看X光片的醫療系統，都有 AI 的身影。不可否認，人工智能極大地提高了生產效率，但同時也引發了部分人對「機器取代人類工作」的擔憂。如何與 AI 和諧共存，將是我們未來必須面對的重要課題。</p>', [
+                ['說明方法', '第一段對「人工智能」進行了解釋：「所謂人工智能，是指由人類製造出來的機器...」，這運用了哪種說明方法？', '舉例子', '下定義 (使用嚴謹、準確且簡明的科學語言，直接揭示該概念的本質特徵與範疇)', '打比方', '列數字', 1, '「所謂...是指...」這是對專有名詞進行嚴格學術解釋的標準句型。', '用簡明準確的語言揭示事物的本質屬性，界定其範圍，這叫作「下定義」。'],
+                ['說明方法', '第二段將「人工智能」和「傳統電腦程序」放在一起進行對比，這運用了什麼說明方法？', '列數字', '打比方', '作比較 (透過兩者的巨大反差，鮮明地突出人工智能具備自我進化能力的革命性特點)', '下定義', 2, '把A和B放在一起，說出它們在運作邏輯上的根本分別。', '透過比較傳統程序的「死板」與AI的「進化」，更加鮮明地突出了AI能自我學習的核心特徵。'],
+                ['說明方法', '第二段提到「例如，當人工智能與人類下棋時...」，這運用了什麼說明方法？', '舉例子 (用具體、廣為人知的下棋事例，將深奧的機器學習理論具象化說明)', '打比方', '列數字', '作比較', 0, '「例如」兩個字是極其明顯的提示詞。', '用下棋這個具體、易懂的實際應用例子，把深奧的「機器學習」概念具象化，讓讀者輕易理解。'],
+                ['提取與推論', '根據第二段的論述，人工智能與傳統電腦程序在運作邏輯上最大的「本質區別」是什麼？', '人工智能的開發成本遠比傳統程序昂貴', '人工智能具備從經驗中主動學習和自我進化的能力；而傳統程序只會被動、死板地執行預設指令', '傳統程序在處理複雜數學運算時比人工智能更聰明、更穩定', '傳統程序不需要依賴電力和網絡就能獨立運作', 1, '在第二段仔細尋找「本質的區別」後面的解釋。', '傳統程序是「死板指令」，而AI具備革命性的「自我進化的能力」。'],
+                ['段落歸納', '第三段在整篇文章的結構中，主要說明了人工智能的什麼核心內容？', '詳細回顧人工智能漫長曲折的發展歷史', '探討人工智能在現代生活中的廣泛實際應用，並客觀指出其帶來的社會效率提升與就業擔憂的雙面影響', '單方面歌頌人工智能對醫療技術的偉大貢獻', '詳細教導讀者如何編寫並製造出屬於自己的人工智能', 1, '列舉了語音助手、自動駕駛等應用，並在最後提到效率提升與失業擔憂的矛盾。', '從實際應用層面切入，並引申出科技發展帶來的雙面社會影響與未來課題。'],
+                ['字詞積累', '第三段中「不可否認」一詞，在表達作者態度時起到了什麼作用？', '表示作者對這件事持保留和不能承認的態度', '雙重否定表極度肯定，表示該事實非常確鑿真實、絕對不容置疑，增強了文章的客觀說服力', '表示這是一件可以不理會的小事', '表示這項技術目前還不可以被大眾相信', 1, '雙重否定表肯定，而且語氣比直接肯定更強烈。', '「不可否認」意思是不容許任何人否定，即絕對是這樣，展現了科普文章的客觀嚴謹。'],
+                ['多重推論', '第二段提到「人類的學習速度和計算能力已被 AI 遠遠拋在後面」，這是否暗示未來人類將會「被機器完全淘汰」？', '是的，因為機器的運算效率與精準度永遠高於人類的肉體極限，人類終將失去價值', '不會。因為 AI 始終缺乏人類獨有的創造力、同理心、審美觀與情感道德，人類的靈魂與核心價值依然是機器無法取代的', '是的，未來的社會將由機器統治，人類不用再進行任何學習了', '不會，因為人工智能的運行仍需要消耗極其龐大的電力資源，隨時可能停機', 1, 'AI 是模擬出來的智能，它有真正的感情、道德判斷和愛嗎？它是誰發明的？', '科技是強大的計算工具，但人類獨特的思想、創造力和情感才是文明不滅的火種。'],
+                ['深層評價', '作為一名二十一世紀的學生，面對日新月異且極具挑戰的 AI 浪潮，我們應該抱持怎樣的高階學習態度？', '感到極度恐懼並拒絕使用任何電腦科技，堅守傳統的學習方式', '客觀擁抱科技，將 AI 當作高效的輔助工具，並將學習重心轉移到培養思辨能力、跨領域創造力與道德素養等機器無法具備的核心競爭力上', '不求甚解，把所有的功課和思考任務都直接外判交給 AI 撰寫', '完全不關心，認為這是科學家和政府才需要面對的問題', 1, '「做科技的主人，而不是機器的奴隸」。結合最後一段「如何和諧共存」的探討。', '培養學生成為具有批判性思考的主動學習者，專注於人類獨特價值的提升，而非被動接受或逃避科技。']
+            ]),
+
             // --- 議論文 (5篇) ---
-            {
-                id: 'pa16', category: 'p-adv-argument', title: '談「專注」',
-                text: '<p>莊子曾說：「用志不分，乃凝於神。」這句話告訴我們：做任何事情如果能專心致志，心無旁鶩，就能達到神奇的境界。我認為，專注是通往卓越的必經之路，也是現代人最缺乏的「超能力」。</p><p>專注能爆發出驚人的創造力。偉大的物理學家愛因斯坦，在研究相對論時，經常整天躲在辦公室裡，廢寢忘食。有一次，他甚至一邊走路一邊思考問題，竟然撞到了路旁的電線桿，還禮貌地向電線桿道歉！正是因為這種達到忘我境界的專注，讓他得以揭開宇宙的深層奧秘。這有力地證明了，卓越的成就往往孕育於極度的專注之中。</p><p>相反，心心兩意、一心多用則是平庸的根源。在資訊發達的今天，許多同學喜歡一邊做功課一邊聽音樂，甚至一邊回覆手機訊息。這種「多任務處理」看似高效，實則讓大腦的專注力被切割得支離破碎，導致學習效率低下，功課錯漏百出。這不正如「心心兩意，一事無成」的寫照嗎？因此，我們必須鍛鍊自己的「專注肌群」，在特定的時間內只做好一件事。</p>',
-                questions: [
-                    { type: '論證手法', q: '第一段引用莊子的話「用志不分，乃凝於神」，這運用了哪種論證手法？', options: ['例證法', '引證法 (引用古人思想名言證明專注的境界)', '對比論證', '比喻論證'], ans: 1, hint: '引用古代先哲的名言來作證自己的觀點，增強說服力。', exp: '引用名人名言、權威觀點來證明論點，屬於引證法（理論論證）。' },
-                    { type: '尋找論點', q: '這篇文章的中心論點是什麼？', options: ['愛因斯坦曾經撞到電線桿。', '我們應該放下手機不回訊息。', '專注是通往卓越的必經之路，也是我們必須鍛鍊的品質。', '莊子是一個很聰明的人。'], ans: 2, hint: '第一段最後一句，作者提出了他的觀點「我認為……」。', exp: '第一段結尾明確點題：「專注是通往卓越的必經之路，也是現代人最缺乏的超能力。」' },
-                    { type: '尋找論據', q: '第二段中，作者舉了愛因斯坦撞電線桿的趣事，這屬於：', options: ['正面論據 (以科學家的忘我專注證明專注能產生卓越成就)', '反面論據', '假設論據', '數據論據'], ans: 0, hint: '這個例子證明了愛因斯坦有多專注，以及專注帶來的成功，是正面支持論點的。', exp: '舉出科學家的真實事蹟作為正面例子支持論點，屬於例證法中的正面論據。' },
-                    { type: '修辭與表達', q: '第三段「這不正如『三心兩意，一事無成』的寫照嗎？」這句反問有何表達效果？', options: ['表示作者不知道是不是這個寫照，希望同學解答', '加強語氣，強烈肯定「三心兩意只會導致失敗」的鐵律，警醒讀者', '表示作者對前途感到悲觀', '為了讓問號看起來更生動'], ans: 1, hint: '反問是明知故問，用來強烈肯定某個事實，加強批判力度。', exp: '反問句能增強文章的氣勢和說服力，這裡強烈警告了「一心多用」的危害。' },
-                    { type: '論證手法', q: '第三段將「一邊做功課一邊打機的同學」與「愛因斯坦的忘我專注」對比，這運用了：', options: ['比喻論證', '引證法', '對比論證 (以專注的成功與分心的失敗對比，突顯專注的重要)', '層遞論證'], ans: 2, hint: '第二段是「專注成功」，第三段是「分心失敗」，一正一反. ', exp: '將正反兩方面的現象進行對照分析，屬於對比論證，能鮮明對比出優劣。' },
-                    { type: '詞意推斷', q: '第一段中「心無旁鶩」(音：務)的意思是什麼？', options: ['心裡沒有養鴨子', '心思集中，不被外界其他事物所吸引和干擾', '心情非常悲傷', '經常胡思亂想'], ans: 1, hint: '「鶩」指野鴨，比喻雜念。心無旁鶩代表沒有雜念、非常專心。', exp: '「心無旁鶩」形容心思極其專注，沒有任何雜念。' },
-                    { type: '修辭與表達', q: '最後一段作者說要鍛鍊自己的「專注肌群」，這運用了：', options: ['誇張', '明喻', '暗喻 (將專注力比喻為需要鍛鍊的肌肉)', '擬人'], ans: 2, hint: '專注力不是真的肌肉，但作者說要像鍛鍊肌肉一樣去訓練它。', exp: '用「是/成為」的暗喻方式將抽象的專注力比喻為可以鍛鍊強壯的肌肉群。' },
-                    { type: '詮釋整合', q: '根據文章，作者認為現代人專注力下降、學習效率低下的主要原因是什麼？', options: ['因為考試題目太難', 'because 現代人普遍缺乏睡眠', '因為資訊發達、過度使用手機進行多任務處理導致專注力被切割', '因為大腦退化了'], ans: 2, hint: '在第三段尋找「資訊發達、一邊做功課一邊手機訊息」等描述。', exp: '現代科技產品源源端端地干擾，主動或被動地切割了人們的深度專注力。' }
-                ]
-            },
-            {
-                id: 'pa17', category: 'p-adv-argument', title: '謙虛的力量',
-                text: '<p>古人云：「滿招損，謙受益。」這句傳誦千古的名言，道出了謙虛的可貴。謙虛不僅是一種美德，更是我們不斷進步、取得成功的強大力量。我們無論在什麼時候，都應該保持一顆謙虛的心。</p><p>謙虛能讓我們看清自己的不足，從從學到更多知識。著名的物理學家牛頓，在科學上取得了舉世矚目的成就，但他卻謙虛地說：「我只是一個在海邊玩耍的孩子，有幸撿到了幾枚美麗的貝殼，而真理的海洋依然在我面前，未被開拓。」正是因為這種虛懷若谷的胸襟，讓他能永無止境地探索科學。這難道不值得我們深思和學習嗎？</p><p>相反，驕傲自滿則是前進路上的絆腳石。歷史上，楚霸王項羽雖然力拔山兮氣蓋世，卻因為驕傲自滿，不肯聽取謀士的意見，最終落得烏江自刎的悲慘下場。俗話說：「驕兵必敗。」這正是對傲慢者的無情警告。因此，我們要時刻警惕自滿，將謙虛作為前行的風帆。</p>',
-                questions: [
-                    { type: '論證手法', q: '第一段引用「滿招損，謙受益」，這運用了哪種論證手法？', options: ['例證法', '引證法 (引用古人名言證明謙虛的價值)', '對比論證', '比喻論證'], ans: 1, hint: '引用古代名言、古籍中的話來支持自己的觀點。', exp: '引用經典名言來證明論點，增強說服力，是引證法。' },
-                    { type: '尋找論點', q: '這篇文章的中心論點是什麼？', options: ['牛頓是一個非常偉大的物理學家。', '我們無論在什麼時候，都應該保持一顆謙虛的心。', '項羽是一個很驕傲的將領。', '驕兵必敗。'], ans: 1, hint: '第一段最後一句，作者提出了他的核心主張。', exp: '文章第一段結尾點題：「我們無論在什麼時候，都應該保持一顆謙虛的心。」這是中心論點。' },
-                    { type: '尋找論據', q: '第二段中，作者舉了牛頓自謙為「在海邊撿貝殼的孩子」的例子，這屬於：', options: ['正面論據 (證明虛懷若谷能讓人永無止境地探索)', '反面論據', '假設論據', '事實數據'], ans: 0, hint: '牛頓的謙虛讓他成功，這是一個用來支持「謙虛有好處」的正面例子。', exp: '舉出牛頓的實例作為支持中心論點的正面證據，屬於例證法中的正面論據。' },
-                    { type: '修辭與表達', q: '第二段結尾「這難道不值得我們深思和學習嗎？」這句反問有何效果？', options: ['表示作者不確定值不值得，需要問讀者', '加強肯定語氣，強調牛頓的精神「非常」值得我們學習', '為了增加問號的數量', '表示懷疑'], ans: 1, hint: '這句「難道不...嗎」是反問，意在加強語氣，表達肯定的意思。', exp: '反問的作用是用疑問句表達確定無疑的觀點，能極大加強宣傳與肯定的語氣。' },
-                    { type: '論證手法', q: '第三段提到項羽驕傲自滿導致烏江自刎的例子，這與第二段的牛頓形成：', options: ['比喻論證', '對比論證 (以牛頓的成功對比項羽的失敗，凸顯主題)', '引證法', '層遞論證'], ans: 1, hint: '第二段是謙虛成功的正面例子，第三段是驕傲失敗的反面例子。', exp: '正面（牛頓謙虛）與反面（項羽驕傲）進行對照，高下立判，屬於對比論證。' },
-                    { type: '詞意推斷', q: '第二段中形容牛頓「虛懷若谷」，這個成語的意思是？', options: ['肚子像山谷一樣大', '胸懷像山谷一樣深廣，形容極為謙虛', '身體很虛弱', '非常固執'], ans: 1, hint: '牛頓認為自己只是在海邊撿貝殼的小孩，這代表他很怎樣？', exp: '「虛懷若谷」形容心胸寬廣、極度謙虛，願意接受新事物。' },
-                    { type: '深層評價', q: '作者把謙虛比喻為「前行的風帆」，這句比喻暗指了什麼？', options: ['謙虛像帆布一樣薄', '謙虛是推動我們前進、不斷取得進步的動力', '我們應該去坐帆船', '謙虛會隨風飄蕩'], ans: 2, hint: '風帆的作用是推動船隻前進。謙虛對人生有什麼推動作用？', exp: '這是一個暗喻，說明謙虛能像風帆一樣，推動我們的人生不斷航向成功的彼岸。' },
-                    { type: '詮釋整合', q: '綜合全文，作者認為「驕傲自滿」會帶來什麼嚴重後果？', options: ['會讓人生病', '會讓人一事無成、甚至招致徹底的失敗', '會讓人變得很窮', '會讓人失去朋友'], ans: 1, hint: '看看第三段「驕兵必敗」和項羽自刎的下場。', exp: '作者指出傲慢是前進的絆腳石，會使人看不清缺點，終致慘敗。' }
-                ]
-            },
-            {
-                id: 'pa18', category: 'p-adv-argument', title: '科技與人情',
-                text: '<p>隨着智能手機的普及，我們的生活發生了翻天覆地的變化。在地鐵上、餐廳裡，甚至家庭聚餐時，總能看到人們低著頭，手指在螢幕上飛快地滑動。科技縮短了地球村的物理距離，卻似乎拉遠了人與人之間的心靈距離。</p><p>不可否認，科技帶來了極大的便利。我們可以用視像通話與遠在海外的親友見面，可以用社交軟件瞬間把快樂分享給幾百個朋友。然而，這種虛擬的交流真的能完全取代面對面的陪伴嗎？當我們把所有的空閒時間都交給了冷冰冰的螢幕，我們便失去了欣賞沿途風景的眼睛，失去了聆聽家人傾訴的耳朵。難道點一個「讚」，就能代替給父母的一個擁抱嗎？</p><p>水能載舟，亦能覆舟。科技本身沒有錯，錯的是我們過度沉迷、被科技綁架的態度。我們應該做科技的主人，而不是淪為手機的奴隸。放下手機，抬起頭來，你會發現，真實世界裡的人情冷暖，遠比虛擬網路中的點讚來得更加珍貴。</p>',
-                questions: [
-                    { type: '尋找論點', q: '這篇文章的核心觀點是什麼？', options: ['智能手機是不好的東西，應該被淘汰。', '我們應該合理利用科技，不要過度沉迷手機，應重視現實生活中的人際交流。', '視像通話比面對面聊天更好。', '科技發展太快了，我們無法適應。'], ans: 1, hint: '看看最後一段作者的呼籲。', exp: '作者並不全盤否定科技，而是呼籲不要被手機綁架，要珍惜真實的人情。' },
-                    { type: '修辭作用', q: '第一段中「科技縮短了地球村的物理距離，卻似乎拉遠了人與人之間的心靈距離」，這句話運用了什麼手法？', options: ['對比 (物理距離的近 VS 心靈距離的遠)', '誇張', '擬人', '排比'], ans: 0, hint: '「縮短」和「拉遠」是相反的狀態。', exp: '透過對比，尖銳地指出了科技發展帶來的社交疏離問題。' },
-                    { type: '修辭作用', q: '第二段中「難道點一個『讚』，就能代替給父母的一個擁抱嗎？」這句反問的作用是什麼？', options: ['表示作者真的不知道答案', '強烈地指出虛擬的互動絕對無法取代真實的肢體接觸與情感交流', '為了調查讀者的意見', '說明點讚比較方便'], ans: 1, hint: '反問句是用來強調某個不容置疑的事實。', exp: '反問加強了語氣，深刻地批評了用敷衍的網絡互動代替真實陪伴的現象。' },
-                    { type: '論證手法', q: '第三段引用古語「水能載舟，亦能覆舟」，在這裡是用來比喻什麼？', options: ['手機掉進水裡會壞掉', '科技既能帶來極大的便利（載舟），過度沉迷也會帶來嚴重的負面影響（覆舟）', '我們應該多去手划船', '水是很危險的'], ans: 1, hint: '這句話是在說科技的「雙面刃」特性。', exp: '這是一個比喻論證，把科技比作水，說明凡事皆有兩面性，關鍵在於如何駕馭。' },
-                    { type: '詞意推斷', q: '第三段中「沦為手機的奴隸」是什麼意思？', options: ['被手機賣掉', '完全被手機控制，失去自我管理的能力', '幫手機充電', '買不起手機'], ans: 1, hint: '奴隸是沒有自由、受人控制的。', exp: '形容人過度依賴手機，生活作息完全被電子產品支配的可悲狀態。' },
-                    { type: '字詞積累', q: '第一段中「翻天覆地」的意思是？', options: ['天氣變化很大', '形容變化巨大而徹底', '形容地動山搖', '形容人很生氣'], ans: 1, hint: '智能手機出現後，生活改變了多少？', exp: '「翻天覆地」形容變化極大。' },
-                    { type: '深層評價', q: '作者在第二段承認「科技帶來了極大的便利」，這種寫法有什麼好處？', options: ['因為作者改變主意了', '先肯定優點，再指出缺點，使論證顯得更加客觀、全面且有說服力', '為了湊字數', '怕被科技公司告'], ans: 1, hint: '議論文如果只罵缺點，會讓人覺得偏激。', exp: '這種「先揚後抑」的寫法體現了批判性思考的客觀性，避免片面之詞。' },
-                    { type: '詮釋整合', q: '根據文章，如果我們把所有空閒時間交給螢幕，會失去什麼？', options: ['會失去視力', '會失去欣賞風景的眼睛和聆聽家人傾訴的耳朵（錯過真實生活的美好）', '會失去手機', '會失去朋友'], ans: 1, hint: '在第二段中間找答案。', exp: '文章指出：「我們便失去了欣賞沿途風景的眼睛，失去了聆聽家人傾訴的耳朵。」' }
-                ]
-            },
-            {
-                id: 'pa24', category: 'p-adv-argument', title: '談「誠實」',
-                text: '<p>誠實是社會信用體系的基石，也是個人道德尊嚴的根本。古人言：「言必信，行必果。」誠信是無價之寶，失去誠信無異於自毀前程。</p><p>不誠實往往會付出巨大的代價。有的人為了謀取暴利而出售假冒偽劣產品。短期內，他們可能獲得了金錢。然而，一旦東窗事發，他們不僅面臨法律的嚴懲，更會徹底失去商業信譽。就如《曾子殺豬》的典故中所揭示，如果對孩子撒謊，就是教孩子去欺騙，非成教也。連教育孩子都需要保持絕對誠信，何況是立身社會？</p><p>相反，誠實的人雖然有時會因坦白而面臨暫時的被動，但最終會贏得大家的尊重。因此，不論在求學還是處事中，我們都必須把誠實作為不容踐踏的底線，做一個光明磊落的人。</p>',
-                questions: [
-                    { type: '尋找論點', q: '這篇文章的中心論點是什麼？', options: ['做生意很難保持誠實', '誠實是立身社會與個人修養不容妥協的道德底線，我們應當堅守誠信', '曾子殺豬是一個很好的教育故事', '金錢比誠實更重要'], ans: 1, hint: '論點在第一段以及最後一段中進行了首尾呼應的提煉。', exp: '文章旨在強調誠信的重大社會價值和個人品格價值，反對任何欺騙行為。' },
-                    { type: '說明方法/論證', q: '第一段引用「言必信，行必果」，這運用了哪種論證方法？', options: ['例證法', '引證法 (引用名言證明誠實的必要)', '對比論證', '比喻論證'], ans: 1, hint: '引用前人的經典名言。', exp: '引證法能極大增強議論文的歷史厚重感和理論權威性。' },
-                    { type: '尋找論據', q: '第二段中，作者使用了什麼作為論證不誠實代價的「理論論據」？', options: ['愛迪生發明電燈的例子', '《曾子殺豬》中關於教育孩子不能欺騙的哲理', '萊特兄弟的試飛失败', '項羽自刎的歷史事實'], ans: 1, hint: '第二段後半句提到了曾子的教育理念。', exp: '引用曾子關於「母欺子，子而不信其母」的教育論述作為誠信重要性的理論支撐。' },
-                    { type: '詞意推斷', q: '第二段中「東窗事發」的意思是？', options: ['東邊的窗戶壞了', '陰謀或非法罪行敗露、被揭穿', '天亮了，太陽照進窗戶', '事情辦成功了'], ans: 1, hint: '「一旦...不僅面臨法律的嚴懲...」。', exp: '「東窗事發」指不可告人的壞事、秘密被揭穿暴露。' },
-                    { type: '修辭與表達', q: '「誠實是社會信用體系的基石」這句話運用了什麼修辭？', options: ['明喻', '暗喻 (將誠實比作基石，中間用『是』連接)', '借喻', '擬人'], ans: 1, hint: '用「是」來做比喻詞。', exp: '將誠實比作奠定大廈的基石，屬於暗喻。' },
-                    { type: '論證手法', q: '第二段寫撒謊面臨懲罰，第三段寫誠實贏得尊重，這兩段形成：', options: ['比喻論證', '對比論證 (以誠與不誠的結果對照，突出誠信價值)', '引證法', '例證法'], ans: 1, hint: '一正一反進行結果和價值的論述。', exp: '正反對照是議論文中最具說服力的結構手法之一。' },
-                    { type: '字詞積累', q: '最後一段中「光明磊落」的意思是？', options: ['身上有很多石頭', '做事坦蕩、行為正派，沒有不可告人的秘密', '天色非常晴朗', '形容很聰明'], ans: 1, hint: '誠實的人不說謊，做人做事就會怎樣？', exp: '「光明磊落」形容人心地無私，胸懷坦白，行為正大光明。' },
-                    { type: '深層評價', q: '你如何評價曾子「為了一句玩笑而殺豬」的誠信教育？', options: ['太浪費，完全不值得', '這是最偉大的身教，用實物代價維護了孩子的誠實心靈，建立起不可動搖的信任', '他應該把豬賣了換錢', '他只是嘴饞想吃肉'], ans: 1, hint: '從曾子教育觀點「欺騙孩子是教他欺騙」出發評述。', exp: '曾子寧可損失財產，也要向孩子展示言出必行，是誠信教育的至高境界。' }
-                ]
-            },
-            {
-                id: 'pa25_2', category: 'p-adv-argument', title: '談「寬容」',
-                text: '<p>法國大文豪雨果曾說：「世界上最寬闊的是海洋，比海洋更寬闊的是天空，比天空更寬闊的是人的胸懷。」這句話深刻地闡明了寬容的偉大。寬容，不僅是人際交往中的潤滑劑，更是個人修養的最高境界。我們在生活中，應該學會用寬容的心去對待他人。</p><p>寬容能化解矛盾，贏得友誼。戰國時期，藺相如憑藉完璧歸趙立下大功，地位超過了老將廉頗。廉頗非常不服氣，揚言要羞辱藺相如。但藺相如為了國家的利益，處處退讓，不與廉頗計較。這份寬容的胸襟最終感動了廉頗，他「負荊請罪」，兩人成為了生死之交。如果當時藺相如針鋒相對，趙國必然內亂。可見，寬容並非軟弱，而是一種化干戈為玉帛的強大力量。</p><p>相反，心胸狹窄、斤斤計較的人，往往會將自己逼入孤立無援的境地。因為一點小事就與人爭吵，最終只會失去朋友的信任，讓自己的生活充滿戾氣。俗話說：「退一步海闊天空。」讓我們敞開胸懷，用寬容去溫暖這個世界吧。</p>',
-                questions: [
-                    { type: '尋找論點', q: '這篇文章的中心論點是什麼？', options: ['海洋比天空更寬闊。', '我們在生活中，應該學會用寬容的心去對待他人。', '藺相如比廉頗更厲害。', '退一步海闊天空。'], ans: 1, hint: '第一段結尾，作者提出了他的呼籲。', exp: '文章第一段結尾明確點出：「我們在生活中，應該學會用寬容的心去對待他人。」這就是中心論點。' },
-                    { type: '論證手法', q: '第一段引用雨果的名言，這運用了哪種論證方法？', options: ['例證法', '引證法 (引用名人名言證明寬容的偉大)', '對比論證', '比喻論證'], ans: 1, hint: '雨果是外國的名人，引用他的話叫什麼？', exp: '引用名人的經典話語來支撐自己的觀點，是標準的引證法。' },
-                    { type: '尋找論據', q: '第二段中，作者使用了什麼例子來證明「寬容能化解矛盾」？', options: ['雨果寫小說的例子', '藺相如寬容廉頗，最終兩人成為生死之交的歷史故事', '愛迪生發明電燈的例子', '海洋和天空的例子'], ans: 1, hint: '第二段提到的兩個戰國時期的人物是誰？', exp: '引用「將相和」（藺相如與廉頗）的著名歷史事件作為事實論據。' },
-                    { type: '深層評價', q: '作者說「寬容並非軟弱，而是一種強大的力量」，你如何理解這句話？', options: ['寬容的人其實力氣很大', '寬容需要極大的自我克制與胸襟，能以德服人，這比武力報復更難得', '軟弱的人才會選擇寬容', '寬容能讓人長肌肉'], ans: 1, hint: '忍讓別人有時比打架更需要勇氣和修養。', exp: '真正的寬容源於內心的強大和對大局的考量（如藺相如為國退讓），能從根本上感化對手。' },
-                    { type: '論證手法', q: '第三段提到「心胸狹窄的人會孤立無援」，這與第二段形成了什麼關係？', options: ['比喻論證', '對比論證 (以斤斤計較的惡果對比寬容的好處)', '引證法', '舉例子'], ans: 1, hint: '第二段說寬容好，第三段說狹窄不好，一正一反。', exp: '透過正面事例與反面假設的對照，鮮明地突出了寬容的重要性，是對比論證。' },
-                    { type: '詞意推斷', q: '第二段中「化干戈為玉帛」是什麼意思？', options: ['把武器變成珠寶', '比喻把衝突、戰爭化解為和平與友好', '說明古人很喜歡玉器', '比喻變魔術'], ans: 1, hint: '干戈代表打仗的武器，玉帛代表和平送禮的東西。', exp: '「化干戈為玉帛」比喻將敵對、爭鬥轉化為友好與和平。' },
-                    { type: '字詞積累', q: '第三段中「戾氣」的意思是？', options: ['香氣', '暴戾、暴躁、充滿敵意的怨氣', '運氣', '空氣'], ans: 1, hint: '斤斤計較的人，生活會充滿什麼不好的東西？', exp: '「戾氣」指凶狠、暴躁、殘忍的氣息或情緒。' },
-                    { type: '修辭與表達', q: '第一段雨果的名言「世界上最寬闊的是海洋，比海洋更寬闊的是...」運用了什麼修辭？', options: ['層遞 (範圍和境界一層比一層大)', '排比', '誇張', '擬人'], ans: 0, hint: '海洋 👉 天空 👉 胸懷，境界一級一級上升。', exp: '按照事物的大小、深淺等依次遞進排列，是層遞修辭。' }
-                ]
-            },
-            
-            // --- 文言文 (5篇) ---
-            {
-                id: 'pa5', category: 'p-adv-classic', title: '晏子使楚',
-                text: '<p class="classic-text">晏子使楚。楚人以晏子短，為小門於大門之側而延晏子。晏子不入，曰：「使狗國者，從狗門入。今臣使楚，不當從此門入。」楚人只好開大門迎之。</p><p>【譯文】晏子出使楚國。楚國人因為晏子身材矮小，便在大門旁邊開了一個小門來迎接晏子。晏子不肯進去，說：「出使到狗國的人，才從狗門進去。今天我出使的是楚國，不應該從這個門進去。」楚國人聽了，只好打開大門請他進去。</p><p>見到楚王後，楚王故意嘲笑他：「齊國難道沒有人了嗎？怎麼派你這樣的人來？」晏子從容地回答：「齊國派使臣，都是按對象來派的。賢能的人被派去賢能的國家，不肖的人被派去不肖的國家。我晏嬰是最不肖的人，所以只好被派到楚國來了。」楚王聽後，羞愧得啞口無言。</p>',
-                questions: [
-                    { type: '文言實詞', q: '「晏子使楚」中的「使」字是什麼意思？', options: ['使用', '出使 / 被派往另一個國家', '使喚', '假使'], ans: 1, hint: '晏子是齊國的特使，他去楚國代表的是國家。', exp: '「使」在古代漢語外交語境中，作動詞用，指「出使」。' },
-                    { type: '文言虛詞', q: '「為小門於大門之側」中的「之」字是什麼意思？', options: ['代指大門', '去 / 往', '的', '這'], ans: 2, hint: '「大門之側」翻譯成白話文是「大門的旁邊」。', exp: '「之」在此處是結構助詞，相當於白話文中的「的」。' },
-                    { type: '言外之意', q: '晏子說「使狗國者從狗門入」，他這句話在邏輯上的言外之意是什麼？', options: ['楚國是一個有很多寵物狗的國家', '如果楚國強迫我走這個小門，那就等於承認楚國是狗國', '他自己非常喜歡狗，想走狗門', '齊國和楚國都是狗國'], ans: 1, hint: '這是一個邏輯套路：小門=狗門。如果楚國人逼他進小門，那麼楚國就是...。', exp: '晏子將「走小門」與「進狗國」綑綁，逼使楚國人為了維護國格，必須大開大門。' },
-                    { type: '深層評價', q: '楚國人特意在大門旁開小門迎接晏子，這反映了楚國人什麼樣的企圖？', options: ['他們非常體貼晏子的矮小身材', '他們想藉由羞辱齊國使臣的外貌，來打擊齊國的尊嚴和國格', '因為大門壞了，來不及修理', '楚國的禮儀就是走小門'], ans: 1, hint: '在古代，使臣代表國家。侮辱使臣，就是侮辱他的國家。', exp: '這是一次蓄意的外交羞辱，企圖給齊國特使一個下馬威，彰顯楚國的強盛。' },
-                    { type: '修辭與表達', q: '楚王問「齊國難道沒有人了嗎？」，這句反問的真正心理意圖是？', options: ['楚王關心齊國的人口普查數量', '極度傲慢地諷刺齊國缺乏外交人才，居然派一個矮子來', '想幫齊國介紹一些高大的武將', '楚王真的不知道齊國有多少人'], ans: 1, hint: '這句「難道沒有人」是反話，意在嘲諷晏子外貌矮小、齊國無人可派。', exp: '反問語氣極具挑釁意味，意在當眾羞辱晏子。' },
-                    { type: '多重推論', q: '晏子回答說「我晏嬰是最不肖(最無能)的人，所以被派到楚國」，這句話的妙處和深層殺傷力在哪裡？', options: ['他承認自己真的很差，向楚王示弱', '順水推舟：既然我最無能所以去最差的國家，那楚國就是最差的國家', '說明齊國人人都想來楚國', '表示他想立刻回齊國'], ans: 1, hint: '「賢能去賢國，不肖去不肖國。」如果最不肖的我去楚國，那意味著楚國是...？', exp: '晏子以極高的幽默感和邏輯，將楚王的嘲諷反彈回去，罵楚國是不肖之國，極具外交殺傷力。' },
-                    { type: '人物評價', q: '綜合晏子的兩次反擊，這展現了他怎樣的性格和智慧？', options: ['膽小懦弱，只會自貶迎合強國', '機智善辯、不卑不亢、極具外交智慧與維護國格的勇氣', '脾氣暴躁，動不動就罵楚國人', '喜歡捉弄別人的調皮性格'], ans: 1, hint: '在強大的楚國面前，他既沒有動武，也沒有忍氣吞聲，而是用語言邏輯完勝。', exp: '晏子面對侮辱從容不迫，用巧妙的言語維護了國家的尊嚴。' },
-                    { type: '寫作手法', q: '晏子的回答主要運用了什麼邏輯技巧？', options: ['破口大罵', '以子之矛，攻子之盾 (利用對方的邏輯來反擊對方)', '逃避問題', '轉移話題'], ans: 1, hint: '你說我差？對啊我很差，所以我才被派來你這個差的國家。', exp: '晏子擅長順著對方的邏輯推導出對對方不利的結論，是極高明的反擊技巧。' }
-                ]
-            },
-            {
-                id: 'pa9_3', category: 'p-adv-classic', title: '曾子殺豬',
-                text: '<p class="classic-text">曾子之妻之市，其子隨之而泣。其母曰：「女還，顧反為女殺豬。」妻適市反，曾子欲捕彘殺之。妻止之曰：「特與嬰兒戲耳。」曾子曰：「嬰兒非與戲也。嬰兒非有知也，待父母而學者也，聽父母之教。今子欺之，是教子欺也。母欺子，子而不信其母，非以成教也。」遂烹彘也。</p><p>【譯文】曾子的妻子準備去市場，她的兒子哭著要跟著去。媽媽對孩子說：「你先回去，我回來後殺豬給你吃。」妻子從市場回來後，曾子便準備去抓豬殺了。妻子阻止他說：「我只是跟孩子開玩笑的。」曾子說：「不能跟孩子開玩笑。孩子年幼無知，是看著父母、聽著父母的教導來學習的。今天你欺騙他，就是教他去欺騙別人。母親欺騙孩子，孩子就不再相信母親，這不是正確的教育方法。」於是，曾子真的把豬殺了煮肉給孩子吃。</p>',
-                questions: [
-                    { type: '文言實詞', q: '「曾子之市」中的「市」字在古文中通常指什麼地方？', options: ['城市', '市場 / 集市', '市政府', '超市'], ans: 1, hint: '曾子妻子要去買東西，所以是去哪裡？', exp: '古漢語中，「市」作動詞指去市場，作名詞指集市、市場。' },
-                    { type: '文言實詞', q: '古文「女還」中的「女」字，在此處作何解釋？', options: ['女性', '你 (通假字「汝」)', '女兒', '女朋友'], ans: 1, hint: '這是媽媽對「兒子」說的話：「你回去」。', exp: '在文言文中，「女」字經常通假為「汝」，解作「你」。' },
-                    { type: '文言實詞', q: '「曾子欲捕彘殺之」中的「彘」(音：製)是指什麼動物？', options: ['雞', '羊', '豬', '狗'], ans: 2, hint: '看看譯文：媽媽答應孩子回來後要殺什麼？', exp: '「彘」是古代漢語對「豬」的稱呼。' },
-                    { type: '多重推論', q: '曾子妻子說「特與嬰兒戲耳」，這裡的「戲」字代表什麼意思？', options: ['演戲', '開玩笑 / 哄騙', '做運動', '看戲'], ans: 1, hint: '妻子覺得只是隨口說說，哄哄哭鬧的小孩，不必當真。', exp: '「特...耳」是只不過...罷了；「戲」是開玩笑。意思是我只是隨口開玩笑罷了。' },
-                    { type: '深層評價', q: '你同意曾子的做法嗎？為什麼？', options: ['不同意，為了一句玩笑殺掉一頭珍貴的豬，太浪費了', '同意，因為父母是孩子的鏡子，言信行果才能建立誠實的品格', '不同意，孩子很快就會忘記這件事的', '同意，因為曾子自己想吃豬肉'], ans: 1, hint: '這是一個開放性的高階評價題，但應緊扣曾子的教育觀念「教子誠實」來評述。', exp: '曾子用行動實踐了「言必信，行必果」，雖然損失了一頭豬，但保護了孩子的誠實心靈，是偉大的身教。' },
-                    { type: '文言虛詞', q: '「妻適市反，曾子欲捕彘殺之」中的「之」字指代什麼？', options: ['妻子', '兒子', '彘 (豬)', '鐵鎚'], ans: 2, hint: '曾子要去抓豬並殺了「它」。', exp: '「之」在此處是代名詞，指代「彘」（豬）。' },
-                    { type: '言外之意', q: '曾子說「今子欺之，是教子欺也」，這句話暗含了什麼教育哲理？', options: ['父母不應該帶孩子去市場', '父母的言行是孩子的榜樣，欺騙孩子會導致孩子學會欺騙', '不應該讓孩子吃太多肉', '說謊是小孩子的天性'], ans: 1, hint: '「待父母而學者也，聽父母之教。」父母做什麼，孩子就學什麼。', exp: '這強調了「身教重於言教」，父母如果說謊，就會給孩子帶來負面的示範效應。' },
-                    { type: '詮釋整合', q: '這則文言故事最終想要傳達的中心思想是？', options: ['小孩子非常喜歡吃豬肉', '父母去市場時不能帶小孩子去', '人必須遵守諾言，特別是父母在教育孩子時要做到言行一致、誠實守信', '曾子的妻子是一個很不負責任的人'], ans: 2, hint: '綜合曾子殺豬的起因、妻子的態度以及曾子的長篇大論教育。', exp: '故事借曾子殺豬的日常小事，闡明了誠信教育、身教重於言教的深刻道理。' }
-                ]
-            },
-            {
-                id: 'pa18', category: 'p-adv-classic', title: '守株待兔',
-                text: '<p class="classic-text">宋人有耕者。田中有株，兔走觸株，折頸而死。因釋其耒而守株，冀復得兔。兔不可復得，而身為宋國笑。</p><p>【譯文】宋國有一個農夫。他的田裡有一棵樹樁，一隻兔子跑得太快，撞在樹樁上，折斷頸骨死了。於是這個農夫便放下他的農具，天天守在樹樁旁，希望能再撿到死兔子。當然，兔子是永遠等不到的，而他自己卻成了整個宋國的笑柄。</p>',
-                questions: [
-                    { type: '文言實詞', q: '古文「兔走觸株」中的「走」是什麼意思？', options: ['走路', '跑 / 奔跑', '離開', '跳躍'], ans: 1, hint: '在古代漢語中，「走」和現代的意思不同。兔子是怎麼撞死的？', exp: '古文中的「走」是奔跑的意思，兔子因為跑得太快才撞死。' },
-                    { type: '文言虛詞', q: '古文「因釋其耒而守株」中的「其」指代什麼？', options: ['兔子的', '樹樁的', '農夫自己的', '宋國的'], ans: 2, hint: '是誰放下了農具(耒)？', exp: '「其」是代名詞，指的是農夫他自己的（農具）。' },
-                    { type: '文言實詞', q: '古文「冀復得兔」中的「冀」是什麼意思？', options: ['害怕', '看見', '希望 / 盼望', '拒絕'], ans: 2, hint: '看看譯文裡農夫在樹樁旁「希望」什麼。', exp: '「冀」在古文中表示希望、企盼。' },
-                    { type: '文言實詞', q: '「身為宋國笑」中的「笑」字在此處作何解？', options: ['開心', '笑柄 / 嘲笑的對象', '微笑', '大笑'], ans: 1, hint: '農夫的愚蠢行為讓全宋國的人對他怎樣？', exp: '此處是被動句，意為「被宋國人嘲笑」，成了笑柄。' },
-                    { type: '推論訊息', q: '農夫為什麼會放下農具不再種田？', options: ['因為他生病了', '因為農具壞了', '因為他想不勞而獲，靠運氣白撿死兔子', '因為他想改行當獵人'], ans: 2, hint: '他嘗到了一次甜頭後，心態發生了什麼變化？', exp: '農夫把偶然發生的幸運當作必然，妄想從此不用勞動就能有收穫。' },
-                    { type: '深層評價', q: '你認為這隻兔子撞樹而死是「必然」還是「偶然」的現象？', options: ['必然的，兔子都很笨', '偶然的，這只是一次罕見的意外', '必然的，樹樁有磁力', '偶然的，但明天一定還會有'], ans: 1, hint: '這種事每天都會發生嗎？', exp: '這極具偶然性，農夫的錯誤在於把偶然當成了必然的規律。' },
-                    { type: '詮釋整合', q: '《守株待兔》這個成語現在用來諷刺什麼樣的人？', options: ['非常聰明的人', '喜歡養兔子的人', '拘泥狹隘經驗，妄想不勞而獲、坐享其成的人', '非常勤奮種田的人'], ans: 2, hint: '綜合農夫的行為 and 結局來判斷。', exp: '諷刺那些死守狹隘經驗，不知變通，妄圖不勞而獲的人。' },
-                    { type: '比較評估', q: '如果農夫撿到兔子後，第二天繼續努力種田，結果會怎樣？', options: ['兔子會來報仇', '他會被宋國人嘲笑', '他既得到了一次意外收穫，又不會荒廢農作，日子會過得更好', '樹樁會消失'], ans: 2, hint: '反思農夫的致命錯誤在哪裡。', exp: '幸運是可以接受的，但他錯在放棄了原本應盡的努力(種田)。' }
-                ]
-            },
-            {
-                id: 'pa23', category: 'p-adv-classic', title: '東施效顰',
-                text: '<p class="classic-text">西施病心而顰其里。其里之醜人見而美之，歸亦捧心而顰其里。其里之富人見之，堅閉門而不出；貧人見之，挈妻子而去之走。彼知顰美而不知顰之所美。</p><p>【譯文】美女西施因患心痛病，在村里皺著眉頭。村里的醜女東施看見了，覺得這個樣子非常美麗，回家後也學著西施捧著心口、皺著眉頭在村里走來走去。村里的富人看見她這副怪模樣，緊閉大門不肯出來；窮人看見了，帶著妻子兒女遠遠地避開她跑了。東施只知道皺眉頭的動作很美，卻不知道西施皺眉頭為什麼美（是因為西施原本長得美，皺眉有一種病態的柔弱美；而東施原本長得醜，胡亂模仿只會更醜）。</p>',
-                questions: [
-                    { type: '文言實詞', q: '「西施病心而顰其里」中的「顰」(音：貧)字是什麼意思？', options: ['大笑', '皺眉頭', '唱歌', '跳舞'], ans: 1, hint: '看看譯文：東施學西施捧著心口做了什麼動作？', exp: '「顰」在古代漢語中是指皺眉頭。' },
-                    { type: '文言實詞', q: '古文「挈妻子而去之走」中的「妻子」在當時指什麼？', options: ['男性的配偶', '老婆和孩子 / 妻子與兒女', '未婚女子', '親戚朋友'], ans: 1, hint: '在古代漢語中，「妻子」是一個雙音節詞，拆開來解釋。', exp: '古文中的「妻子」是「妻」和「子（兒女）」的合稱，與現代單指「配偶」不同。' },
-                    { type: '文言實詞', q: '古文「挈妻子而去之走」中的「走」是什麼意思？', options: ['慢步走', '跑 / 奔跑避開', '留下來', '跳'], ans: 1, hint: '窮人看見她這副怪模樣，急忙帶著家人怎樣？', exp: '古文中的「走」代表跑、奔跑避開。' },
-                    { type: '多重推論', q: '為什麼村里的富人看見東施「堅閉門而不出」？', options: ['因為天要下雨了', '因為東施的怪模樣太嚇人了，他們想躲開她', '開心的進來', '因為富人不在家'], ans: 1, hint: '東施捧心皺眉，原本長得醜的人做這個動作會變得很怪異可怕。', exp: '東施盲目模仿，效果極其滑稽和恐怖，以致於富人們嚇得關門躲避。' },
-                    { type: '深層評價', q: '你認為東施「效顰」之所以失敗，其「根本原因」在於什麼？', options: ['因為她沒有買好看的衣服', '因為她盲目模仿別人的外表動作，卻忽略了自身的條件與本質，結果適得其反', '因為西施不願意教她', '因為她生病了'], ans: 1, hint: '「彼知顰美而不知顰之所美。」她只學了動作，沒搞懂為什麼這個動作美。', exp: '東施只注重表面模仿，沒有自知之明，盲目跟風，反而暴露並放大了自己的缺點。' },
-                    { type: '文言虛詞', q: '「其里之醜人見而美之」中的「美之」在古文中是什麼意思？', options: ['覺得這很美 (意動用法)', '西施的名字', '給她化妝', '變漂亮了'], ans: 0, hint: '醜人看見西施皺眉的樣子，覺得怎樣？', exp: '在古文中，這是一種意動用法，指「以之為美」，即覺得西施皺眉的樣子很美。' },
-                    { type: '詮釋整合', q: '《東施效顰》這個成語現在用來諷刺什麼樣的人？', options: ['非常愛美的人', '盲目模仿別人，結果不但學不像，反而顯得更醜、弄巧成拙的人', '喜歡幫助別人的人', '生病不肯看醫生的人'], ans: 1, hint: '東施越學越醜，成了笑柄。', exp: '諷刺那些不顧自身實際情況，盲目跟風、機械模仿他人的人。' },
-                    { type: '比較評估', q: '如果東施想讓自己受人歡迎，她正確的做法應該是？', options: ['去學習畫畫或讀書', '發揮自己的特長，展現自信和本色，而不是盲目複製別人的病態美', '繼續努力模仿西施的動作', '買更貴的化妝品'], ans: 1, hint: '每個人都有自己的特點。美不只有一種。', exp: '做人應該保持真實的自我，盲目東施效顰只會自取其辱。' }
-                ]
-            },
-            {
-                id: 'pa24', category: 'p-adv-classic', title: '曹沖稱象',
-                text: '<p class="classic-text">曹操得巨象，欲知其輕重。群臣皆不能稱。其子沖，年六歲，曰：「置象大船之上，而刻其水痕所至。稱物以載之，則校可知矣。」操大悅，從其計。</p><p>【譯文】曹操得到一頭巨大的大象，想知道牠的重量。大臣們都想不出秤量的方法。他的兒子曹沖當時只有六歲，說：「把大象趕到大船上，然後在水面淹到的船身位置刻下記號。把大象牽上岸，再把石頭等重物裝到船上，直到水面再次淹到那個記號為止。然後稱量這些石頭的重量，就可以知道大象的重量了。」曹操非常高興，聽從了他的計策。</p>',
-                questions: [
-                    { type: '文言實詞', q: '「群臣皆不能稱」中的「稱」是什麼意思？', options: ['稱呼', '秤量重量', '稱讚', '相稱'], ans: 1, hint: '曹操想知道大象的輕重。', exp: '「稱」在這裡作動詞，意為測量重量。' },
-                    { type: '文言虛詞', q: '「而刻其水痕所至」中的「其」指代什麼？', options: ['大象的', '曹操的', '大船的', '水面的'], ans: 2, hint: '大象在哪裡，水痕就會留在哪裡？', exp: '「其」是代名詞，指代前面的「大船」。' },
-                    { type: '文言實詞', q: '「操大悅，從其計」中的「從」是什麼意思？', options: ['跟隨', '聽從 / 採納', '從來', '隨從'], ans: 1, hint: '曹操覺得這辦法很好，所以他怎樣？', exp: '「從」意為聽從、採納別人的建議。' },
-                    { type: '科學原理', q: '曹沖稱象的方法，暗合了現代哪一個物理學原理？', options: ['槓桿原理', '浮力原理 (阿基米德原理)', '慣性原理', '光學反射原理'], ans: 1, hint: '利用船排開水的體積來等效替換重量。', exp: '同等重量的物體在水中會排開同等體積的水，這是浮力原理的應用。' },
-                    { type: '人物評價', q: '六歲的曹沖能想出這個辦法，說明他具有什麼特質？', options: ['力氣很大', '善於觀察事物，並能進行靈活的邏輯轉換思考', '喜歡玩水', '比大臣更懂數學'], ans: 1, hint: '大臣們只想著找個大秤，曹沖卻想到用水和石頭代替。', exp: '曹沖打破了常規思維，懂得利用等量代換解決難題，展現了極高的智慧。' },
-                    { type: '文言實詞', q: '「則校可知矣」中的「校」在古文中有時通哪個字？', options: ['學校', '比較 / 較量', '校長', '校對'], ans: 1, hint: '把石頭的重量和大象的重量拿來怎樣？', exp: '「校」通「較」，在這裡意為比較、核對，從而得知重量。' },
-                    { type: '深層評價', q: '為什麼「群臣」想不出辦法，而六歲的曹沖卻想得出？', options: ['群臣太笨了', '群臣陷入了思維定勢，而孩童的思維不受局限，更具創造力', '群臣不想幫曹操', '大象不聽群臣的話'], ans: 1, hint: '成年人往往被傳統經驗束縛。', exp: '群臣只想到傳統的「秤」，思維僵化；曹沖沒有框框，反而能創新思維。' },
-                    { type: '詮釋整合', q: '這個故事給我們的啟發是什麼？', options: ['大象非常重', '遇到困難時要打破常規，善於運用智慧和變通來解決問題', '小孩子比大人聰明', '船可以用來裝石頭'], ans: 1, hint: '這是一個關於解決困難的智慧故事。', exp: '故事啟發我們面對難題時不要死板，要靈活變通，運用智慧尋求替代方案。' }
-                ]
-            }
+            cA('pa16', 'p-adv-argument', '談「專注」', '<p>莊子曾說：「用志不分，乃凝於神。」這句話告訴我們：做任何事情如果能專心致志，心無旁鶩，就能達到神奇的境界。我認為，專注是通往卓越的必經之路，也是現代人最缺乏的「超能力」。</p><p>專注能爆發出驚人的創造力。偉大的物理學家愛因斯坦，在研究相對論時，經常整天躲在辦公室裡，廢寢忘食。有一次，他甚至一邊走路一邊思考問題，竟然撞到了路旁的電線桿，還禮貌地向電線桿道歉！正是因為這種達到忘我境界的專注，讓他得以揭開宇宙的深層奧秘。這有力地證明了，卓越的成就往往孕育於極度的專注之中。</p><p>相反，三心兩意、一心多用則是平庸的根源。在資訊發達的今天，許多同學喜歡一邊做功課一邊聽音樂，甚至一邊回覆手機訊息。這種「多任務處理」看似高效，實則讓大腦的專注力被切割得支離破碎，導致學習效率低下，功課錯漏百出。這不正如「三心兩意，一事無成」的寫照嗎？因此，我們必須鍛鍊自己的「專注肌群」，在特定的時間內只做好一件事。</p>', [
+                ['論證手法', '第一段開頭引用莊子的名言，這運用了哪種高階論證手法？', '例證法', '引證法 (引用古代經典先哲的名言來作證自己的觀點，增強權威性)', '對比論證', '比喻論證', 1, '引用古代先哲的名言來作證自己的觀點。', '引用名人名言、權威觀點來證明論點，屬於引證法。'],
+                ['多重推論', '文章首段引用莊子的名言，在整篇議論文的結構中發揮了什麼關鍵作用？', '展示作者讀書很多，詞彙量豐富', '破題並作為強而有力的理論論據，自然地引出並確立「專注能達到卓越境界」的核心論點', '純粹為了湊字數，沒有實際意義', '作為全文的結尾總結', 1, '名言放在開頭，通常是用來引出接下來要討論的主題的。', '開篇名義，用古代經典語錄直接確立了文章的論點基調與高度。'],
+                ['尋找論點', '這篇文章的核心中心論點是什麼？', '愛因斯坦走路會撞到電線桿', '我們必須放下手機不回訊息', '專注是通往卓越的必經之路，也是現代人必須鍛鍊的品質', '莊子是非常聰明的人', 2, '第一段最後一句，作者提出了他的觀點。', '明確點題：「專注是通往卓越的必經之路...」'],
+                ['尋找論據', '第二段中，作者舉了愛因斯坦撞電線桿的趣事，這在議論文中屬於：', '正面論據 (以科學家的真實事蹟作為正面例子支持論點)', '反面論據', '假設論據', '數據論據', 0, '這個例子是為了證明專注帶來的成功還是失敗？', '舉出偉大科學家因為專注而成功的真實事蹟，屬於正面例證法。'],
+                ['修辭與表達', '第三段中「這不正如『三心兩意，一事無成』的寫照嗎？」這句反問有何強烈的表達效果？', '希望同學能幫忙解答這個問題', '加強語氣，強烈且不容置疑地肯定「三心兩意只會導致失敗」的鐵律，以警醒讀者', '表示作者對未來感到非常悲觀', '純粹讓句子結尾有個問號顯得生動', 1, '反問是明知故問，用來強烈肯定某個事實，不容反駁。', '反問句能極大增強文章氣勢，強烈警告了「一心多用」的致命危害。'],
+                ['論證手法', '第三段將「一邊做功課一邊聽音樂的失敗」與第二段「愛因斯坦的專注成功」並列，運用了：', '比喻論證', '引證法', '對比論證 (將正反現象進行強烈對照，突顯優劣)', '層遞論證', 2, '第二段是「專注=成功」，第三段是「分心=失敗」。', '將正反現象進行對照分析，屬於對比論證，能鮮明對比優劣，加深讀者印象。'],
+                ['修辭與表達', '最後一段作者說要鍛鍊自己的「專注肌群」，這運用了什麼修辭手法？', '誇張', '明喻', '暗喻 (將抽象的專注力隱含地比喻為可以鍛鍊的實體肌肉)', '擬人', 2, '專注力不是真的肌肉，但作者把它當作肌肉一樣去形容鍛鍊。', '將抽象的專注力暗喻為可以鍛鍊強壯的肌肉群，生動傳神。'],
+                ['深層評價', '你同意「專注力是可以通過刻意練習來強壯的（如鍛鍊肌肉）」這個觀點嗎？在現代社會中我們該如何實踐？', '不同意，專注力是天生的，無法後天改變', '同意。在充滿誘惑的現代社會，我們可以透過主動屏蔽干擾源（如規定無手機溫習時間），來逐步延長大腦集中精神的時間，這是一種必備的自我管理能力', '不同意，因為我太喜歡玩手機了', '同意，因為肌肉越多專注力就一定越好', 1, '這是一道實踐性思辨評價題。', '藉由「刻意練習」訓練大腦意志力，是通往卓越的寶貴心靈肌肉。']
+            ]),
+            cA('pa17', 'p-adv-argument', '謙虛的力量', '<p>古人云：「滿招損，謙受益。」這句傳誦千古的名言，道出了謙虛的可貴。謙虛不僅是一種美德，更是我們不斷進步、取得成功的強大力量。我們無論在什麼時候，都應該保持一顆謙虛的心。</p><p>謙虛能讓我們看清自己的不足，從而學到更多知識。著名的物理學家牛頓，在科學上取得了舉世矚目的成就，但他卻謙虛地說：「我只是一個在海邊玩耍的孩子，有幸撿到了幾枚美麗的貝殼，而真理的海洋依然在我面前，未被開拓。」正是因為這種虛懷若谷的胸襟，讓他能永無止境地探索科學。這難道不值得我們深思和學習嗎？</p><p>相反，驕傲自滿則是前進路上的絆腳石。歷史上，楚霸王項羽雖然力拔山兮氣蓋世，卻因為驕傲自滿，不肯聽取謀士的意見，最終落得烏江自刎的悲慘下場。俗話說：「驕兵必敗。」這正是對傲慢者的無情警告。因此，我們要時刻警惕自滿，將謙虛作為前行的風帆。</p>', [
+                ['論證手法', '第一段開頭引用「滿招損，謙受益」，這運用了哪種論證方法？', '例證法', '引證法 (引用古代權威名言來支持觀點，增強說服力)', '對比論證', '比喻論證', 1, '引用古代名言來支持觀點。', '引用經典名言來證明論點，增強說服力，是引證法。'],
+                ['尋找論點', '這篇文章的中心論點是什麼？', '牛頓是世界上最偉大的物理學家', '我們無論在什麼時候，都應該保持一顆謙虛的心', '項羽是一個非常驕傲的人', '驕兵必敗是戰爭的真理', 1, '第一段最後一句，作者提出了他的核心主張。', '第一段結尾點題：「我們無論在什麼時候，都應該保持一顆謙虛的心。」'],
+                ['尋找論據', '第二段中，作者舉了牛頓自謙為「在海邊撿貝殼的孩子」的例子，這在議論文中屬於：', '正面論據 (以偉大科學家的實例作為支持中心論點的正面證據)', '反面論據', '假設論據', '事實數據', 0, '牛頓的謙虛讓他成功，這是一個正面的好例子。', '舉出牛頓的實例作為支持中心論點的正面證據，屬於正面論據/例證法。'],
+                ['修辭與表達', '第二段結尾「這難道不值得我們深思和學習嗎？」這句反問有何強烈效果？', '真的需要向讀者詢問答案', '加強肯定語氣，強調牛頓的謙虛精神「絕對」且「非常」值得我們學習', '增加問號數量讓排版好看', '表示對牛頓的謙虛感到懷疑', 1, '反問意在加強語氣，表達肯定的意思。', '用疑問句表達確定無疑的觀點，能極大加強宣傳與肯定的語氣。'],
+                ['論證手法', '第三段提到項羽因驕傲自滿導致烏江自刎，這與第二段的牛頓成功史形成了：', '比喻論證', '對比論證 (將正面與反面歷史人物進行對照，高下立判)', '引證法', '層遞論證', 1, '第二段是謙虛成功，第三段是驕傲失敗。', '正面與反面進行對照，高下立判，屬於對比論證，極大強化了論點。'],
+                ['多重推論', '牛頓將自己比作「撿貝殼的小孩」，這透露出在求知路上怎樣的高階哲學智慧？', '說明真理是永遠無法被人類認知的', '知識越豐富，越能看清宇宙的廣闊與自身的渺小，從而保持對未知的敬畏與探索慾望', '說明去海邊撿貝殼是一件非常有趣的事', '大科學家其實覺得自己沒有真材實料', 1, '懂得越多，才知道未知世界有多龐大。', '唯有認識到自己的不足（虛懷若谷），才能不斷容納新的真理，這是頂尖學者的認知境界。'],
+                ['深層評價', '作者把謙虛比喻為「前行的風帆」，這句暗喻暗指了謙虛的什麼核心作用？', '謙虛像帆布一樣非常薄且脆弱', '謙虛不僅是美德，更是推動我們在人生大海上不斷前進、獲取進步的核心動力', '我們應該多去坐帆船航海', '謙虛會讓人像風一樣隨波逐流', 1, '風帆的作用是推動船隻在海上前進。', '這是一個暗喻，說明謙虛能推動我們的人生不斷航向成功的彼岸。'],
+                ['深層評價', '對比牛頓和項羽，這給了我們在贏得勝利或取得好成績後，該如何進行「自我管理」的深刻反思？', '拿到好成績就應該立刻向別人炫耀', '成功只是階段性的，過度驕傲會蒙蔽雙眼導致錯誤決策；保持自省與謙虛才能守住成果並持續強大', '失敗完全是因為運氣不好，與驕傲無關', '為了不驕傲，我們不應該去爭取第一名', 1, '驕兵必敗揭示了人性最大的弱點。', '理解謙虛不僅是道德上的美德，更是自我保護和持續強大的底層心理智慧。']
+            ]),
+            cA('pa18', 'p-adv-argument', '科技與人情', '<p>隨着智能手機的普及，我們的生活發生了翻天覆地的變化。在地鐵上、餐廳裡，甚至家庭聚餐時，總能看到人們低著頭，手指在螢幕上飛快地滑動。科技縮短了地球村的物理距離，卻似乎拉遠了人與人之間的心靈距離。</p><p>不可否認，科技帶來了極大的便利。我們可以用視像通話與遠在海外的親友見面，可以用社交軟件瞬間把快樂分享給幾百個朋友。然而，這種虛擬的交流真的能完全取代面對面的陪伴嗎？當我們把所有的空閒時間都交給了冷冰冰的螢幕，我們便失去了欣賞沿途風景的眼睛，失去了聆聽家人傾訴的耳朵。難道點一個「讚」，就能代替給父母的一個擁抱嗎？</p><p>水能載舟，亦能覆舟。科技本身沒有錯，錯的是我們過度沉迷、被科技綁架的態度。我們應該做科技的主人，而不是淪為手機的奴隸。放下手機，抬起頭來，你會發現，真實世界裡的人情冷暖，遠比虛擬網路中的點讚來得更加珍貴。</p>', [
+                ['尋找論點', '這篇文章的核心觀點是什麼？', '智能手機帶來太多壞處，應該被全面淘汰', '我們應客觀合理利用科技，拒絕過度沉迷，重視並回歸現實生活中有溫度的人際交流', '視像通話比面對面聊天更好更方便', '科技發展太快導致人類變得愚蠢', 1, '看看最後一段作者的強烈呼籲。', '作者並未全盤否定科技，而是呼籲不要被手機綁架，應珍惜真實人情。'],
+                ['修辭作用', '「科技縮短了物理距離，卻似乎拉遠了心靈距離」，這句話運用了什麼寫作手法？', '對比 (利用「縮短」與「拉遠」的強烈反差，尖銳指出科技的負面影響)', '誇張', '擬人', '排比', 0, '「縮短」和「拉遠」是完全相反的狀態。', '透過物理近與心理遠的對比，尖銳地指出了科技發展帶來的社交疏離問題。'],
+                ['修辭作用', '「難道點一個『讚』，就能代替給父母的一個擁抱嗎？」這句反問的深層作用是？', '真的不知道答案，向社會大眾尋求解答', '強烈且心痛地指出，虛擬的網絡互動絕對無法取代真實的肢體接觸與深厚的情感交流', '調查讀者對社交軟件點讚功能的意見', '說明在網上點讚非常方便快捷', 1, '反問句是用來強調不容置疑的事實。', '深刻地批評了現代人用敷衍的網絡互動來代替真實陪伴的可悲現象。'],
+                ['論證手法', '第三段引用古語「水能載舟，亦能覆舟」，這是用來比喻什麼深刻道理？', '手機掉進水裡會立刻壞掉', '科技具有「雙面刃」特性：既能帶來極大便利，但過度沉迷也會帶來嚴重的心靈毀滅', '我們應該多去划船親近大自然', '水是非常危險的自然力量', 1, '說明科技的「雙面刃」特性。', '比喻論證，把科技比作水，說明凡事皆有兩面性，關鍵在於人類如何駕馭。'],
+                ['詞意推斷', '「淪為手機的奴隸」是什麼意思？', '被手機公司賣掉', '完全被手機控制了心智，失去自我管理和分配時間的自由與能力', '每天都要幫手機充電和清潔', '因為買不起昂貴的手機而負債', 1, '奴隸是沒有自由、受人控制的。', '形容人過度依賴手機，生活作息與精神完全被電子產品支配的悲慘狀態。'],
+                ['多重推論', '作者用「冷冰冰的螢幕」來形容手機，帶有怎樣的情感色彩與寫作目的？', '客觀描寫電子產品的物理溫度', '帶有強烈的批判色彩，旨在強烈對比真實人際交往的「溫度」與親情', '說明這部手機的散熱系統質量很好', '說明手機已經壞了無法發熱', 1, '「冷冰冰」和後文的「人情冷暖」是相對應的。', '帶有主觀情感色彩，為後文呼籲回歸真實、有溫度的親情陪伴做完美鋪墊。'],
+                ['多重推論', '作者認為「科技本身沒有錯」，那導致現代人際關係極度疏離的真正「元凶」是什麼？', '因為網絡的傳輸速度太慢', '人類缺乏自律，過度沉迷誘惑並被科技工具反向綁架的生活態度', '因為手機的螢幕太小傷眼睛', '因為父母不理解年輕人的網絡文化', 1, '錯的不是工具，而是使用工具的人。', '人際疏離的根源在於人類讓渡了生活主導權，自甘墮落於虛擬世界的短暫快感。'],
+                ['深層評價', '請結合自身生活，評估一個能有效「做科技主人」的具體時間管理實踐方案。', '完全不使用手機和電腦，退回原始古代生活', '約定家庭聚餐時「手機集中保管」，並規定每日溫習時徹底屏蔽通訊軟件的干擾', '把家裡所有的電子產品都扔掉', '把所有的決定權都交給 AI 幫我們安排', 1, '方案必須具備「主動控制、防沉迷」的合理實踐性。', '科技的主人代表能「主動駕馭、定時抽離」，這是在數字時代急需培養的心靈自律與時間管理能力。']
+            ]),
+            cA('pa19', 'p-adv-argument', '談「誠實」', '<p>誠實是社會信用體系的基石，也是個人道德尊嚴的根本。古人言：「言必信，行必果。」誠信是無價之寶，失去誠信無異於自毀前程。</p><p>不誠實往往會付出巨大的代價。有的人為了謀取暴利而出售假冒偽劣產品。短期內，他們可能獲得了金錢。然而，一旦東窗事發，他們不僅面臨法律的嚴懲，更會徹底失去商業信譽。就如《曾子殺豬》的典故中所揭示，如果對孩子撒謊，就是教孩子去欺騙，非成教也。連教育孩子都需要保持絕對誠信，何況是立身社會？</p><p>相反，誠實的人雖然有時會因坦白而面臨暫時的被動，但最終會贏得大家的尊重。因此，不論在求學還是處事中，我們都必須把誠實作為不容踐踏的底線，做一個光明磊落的人。</p>', [
+                ['尋找論點', '這篇文章的中心論點是什麼？', '做生意很難保持誠實，因為大家都想賺錢', '誠實是立身社會與個人修養不容妥協的道德底線，我們應堅守誠信', '曾子殺豬是一個非常殘忍的古代故事', '金錢的獲取有時候比誠實更重要', 1, '論點在第一段以及最後一段中首尾呼應。', '文章旨在強調誠信的重大社會價值與個人品格價值，絕對反對任何欺騙。'],
+                ['說明方法/論證', '第一段開頭引用「言必信，行必果」，運用了哪種高階論證方法？', '例證法', '引證法 (引用前人的經典名言作為真理基礎，增強說服力)', '對比論證', '比喻論證', 1, '引用前人的經典名言。', '引證法能極大增強議論文的歷史厚重感和理論權威性。'],
+                ['尋找論據', '第二段中，作者使用了什麼作為論證「不誠實代價」的「理論與事實論據」？', '愛迪生發明電燈的艱辛過程', '《曾子殺豬》中關於教育孩子不能欺騙的典故與深刻哲理', '萊特兄弟試飛飛機的實驗數據', '項羽烏江自刎的悲慘歷史', 1, '第二段後半句提到了曾子的教育理念。', '引用曾子關於「母欺子，子不信其母」的教育論述，作為誠信重要性的強大理論支撐。'],
+                ['多重推論', '「連教育孩子都需要保持絕對誠信，何況是立身社會？」這句話採用了什麼強烈的邏輯推演？', '因果倒裝的錯誤邏輯', '由小及大、由淺入深的「反詰/遞進類比」推論，強調誠實是不分對象與場合的絕對底線', '說明小孩子很容易被欺騙', '說明學校教育比家庭教育更重要', 1, '連小事都要做到，何況是大事？這是一種強烈的遞進和反問邏輯。', '利用微觀的家庭誠信，強烈類比宏觀的社會信用，推導出誠實是不分場合的絕對底線。'],
+                ['修辭與表達', '「誠實是社會信用體系的基石」這句話運用了什麼修辭手法？', '明喻', '暗喻 (將抽象的誠實直接比喻為支撐大廈的實體石頭)', '借喻', '擬人', 1, '用「是」來做比喻詞，沒有「像」。', '將誠實比作奠定大廈的基石，屬於暗喻。'],
+                ['論證手法', '第二段寫撒謊面臨懲罰，第三段寫誠實贏得尊重，這兩段在論述結構上形成了：', '比喻論證', '對比論證 (一正一反進行結果和價值的強烈論述)', '引證法', '例證法', 1, '一正一反進行結果和價值的對照論述。', '正反對照是議論文中最具說服力的結構手法之一，黑白分明。'],
+                ['多重推論', '出售假冒產品「短期獲得金錢，但徹底失去信譽」。這反映了不誠實者在認知上的什麼致命弱點？', '他們製造的產品質量太差', '只顧短暫蠅頭小利，卻透支了長遠生存的信用資本，這是一種愚蠢的「殺雞取卵」行為', '他們產品的定價太高', '他們宣傳推廣的力度不夠', 1, '為了眼前的快錢，丟掉了長遠生存的信譽，得不償失。', '信用是社會唯一的長遠通行證，一旦破產便無法立足，不誠實是極端短視的自毀行為。'],
+                ['深層評價', '有人認為在極端情況下「善意的謊言」也是必要的，這與文章所堅持的「誠實底線」絕對衝突嗎？請作高階思辨。', '完全衝突，說謊就是壞人，沒有任何藉口', '不一定衝突。文章強調的是「不能為私利去惡意欺騙」，而善意謊言是為了保護他人免受傷害，其道德本質依然是善良的', '絕對衝突，因為誠實的人連開玩笑都不可以', '不衝突，因為只要能賺錢，說什麼謊都可以', 1, '思考誠實的本質與動機，而非死板教條。', '這是一道高階哲學思辨題。誠實是底線，但善意的謊言是道德情境下的慈悲變通，核心判斷在於「不存惡意」。']
+            ]),
+            cA('pa20', 'p-adv-argument', '談「寬容」', '<p>法國大文豪雨果曾說：「世界上最寬闊的是海洋，比海洋更寬闊的是天空，比天空更寬闊的是人的胸懷。」這句話深刻地闡明了寬容的偉大。寬容，不僅是人際交往中的潤滑劑，更是個人修養的最高境界。我們在生活中，應該學會用寬容的心去對待他人。</p><p>寬容能化解矛盾，贏得友誼。戰國時期，藺相如憑藉完璧歸趙立下大功，地位超過了老將廉頗。廉頗非常不服氣，揚言要羞辱藺相如。但藺相如為了國家的利益，處處退讓，不與廉頗計較。這份寬容的胸襟最終感動了廉頗，他「負荊請罪」，兩人成為了生死之交。如果當時藺相如針鋒相對，趙國必然內亂。可見，寬容並非軟弱，而是一種化干戈為玉帛的強大力量。</p><p>相反，心胸狹窄、斤斤計較的人，往往會將自己逼入孤立無援的境地。因為一點小事就與人爭吵，最終只會失去朋友的信任，讓自己的生活充滿戾氣。俗話說：「退一步海闊天空。」讓我們敞開胸懷，用寬容去溫暖這個世界吧。</p>', [
+                ['尋找論點', '這篇文章的中心論點是什麼？', '世界上海洋比天空還要寬闊', '我們在生活中，應該學會用寬容的心去對待他人，提升個人境界', '藺相如的智謀比廉頗的武力更厲害', '退一步海闊天空只是一句騙人的話', 1, '第一段結尾，作者提出了強烈的呼籲。', '第一段結尾明確點出：「我們在生活中，應該學會用寬容的心去對待他人。」這就是文章的靈魂主張。'],
+                ['論證手法', '第一段開頭引用法國大文豪雨果的名言，這運用了哪種論證方法？', '例證法', '引證法 (引用中外名人的經典話語來支撐自己的觀點)', '對比論證', '比喻論證', 1, '雨果是外國的名人，引用他的話叫什麼？', '引用名人的經典語錄來證明論點，提升文章格局，是標準的引證法。'],
+                ['尋找論據', '第二段中，作者使用了什麼具體例子來強有力地證明「寬容能化解矛盾」？', '雨果創作小說的經歷', '藺相如寬容廉頗，最終感動對方化敵為友的著名歷史故事（將相和）', '愛迪生寬容失敗並發明電燈', '海洋和天空的自然現象', 1, '第二段提到的兩個戰國時期人物。', '引用「將相和」（藺相如與廉頗）的著名歷史事件作為堅實的事實論據（例證法）。'],
+                ['修辭與表達', '「世界上最寬闊的是海洋，比海洋更寬闊的是天空...比天空更寬闊的是人的胸懷」運用了什麼高階修辭？', '層遞 (海洋 👉 天空 👉 胸懷，境界一級一級上升，極致昇華)', '排比', '誇張', '擬人', 0, '海洋 👉 天空 👉 胸懷，空間和境界一級一級往上推。', '按照事物的大小、深淺等依次遞進排列，產生強烈的昇華效果，是層遞修辭。'],
+                ['論證手法', '第三段「心胸狹窄的人會孤立無援」，與第二段形成了什麼嚴密的邏輯論證關係？', '比喻論證', '對比論證 (正面事例與反面假設的強烈對照)', '引證法', '舉例子', 1, '第二段說寬容好，第三段說狹窄不好。', '透過正面事實與反面後果的對照，鮮明地突出了寬容的重要性與狹隘的危害。'],
+                ['多重推論', '藺相如「處處退讓，不與廉頗計較」，體現了他在國家利益面前的何種超凡境界？', '因為膽小怕死而不敢惹怒老將', '以大局為重、相忍為國的高尚愛國情操與卓越的政治大智慧', '想透過退讓來討好敵國秦國', '想在朝廷中博取弱者的同情以立足', 1, '如果兩虎相爭，國家就危險了。', '藺相如的寬容絕非軟弱，而是看清「將相不和則國危」大局後的極度理性的抉擇。'],
+                ['深層評價', '藺相如的退讓，為什麼被作者極高地評價為「強大的力量」而非「軟弱」？', '因為他個人的力氣比廉頗大', '因為這種退讓基於宏大的格局觀，能以德服人從根本上化解內亂，這比單純的武力對抗更難做到，需要極強的內心支撐', '因為廉頗當時已經老了打不動了', '因為國王偏心偏袒藺相如', 1, '忍讓別人並感化對手，有時比直接打架更需要勇氣和修養。', '寬容源於內心的強大與無私，能從根本上征服對手的心，這正是「不戰而屈人之兵」的偉大之處。'],
+                ['深層評價', '在充滿競爭的現代校園生活中，我們該如何實踐「退一步海闊天空」的寬容精神？', '遇到欺凌時默默忍受，暗中尋找機會報復', '發生摩擦時主動保持冷靜，換位思考，用溫和包容的溝通化解誤會，從而贏得真正的尊重與友誼', '遇到問題就大聲爭吵，絕不吃虧', '不要交任何朋友，完全封閉自己', 1, '這道評價題引導學生進行人際交往反思與美德實踐。', '寬容是人際關係的潤滑劑，能主動化解敵意，創造和諧的成長氛圍，是極高EQ的表現。']
+            ]),
+
+            // --- 文言文原典 (5篇) ---
+            cA('pa21', 'p-adv-classic', '晏子使楚', '<p class="classic-text">晏子使楚。楚人以晏子短，為小門於大門之側而延晏子。晏子不入，曰：「使狗國者，從狗門入。今臣使楚，不當從此門入。」楚人只好開大門迎之。</p><p class="classic-translation-text">【譯文】晏子出使楚國。楚國人因為晏子身材矮小，便在大門旁邊開了一個小門來迎接晏子。晏子不肯進去，說：「出使到狗國的人，才從狗門進去。今天我出使的是楚國，不應該從這個門進去。」楚國人聽了，只好打開大門請他進去。</p><p class="classic-text">見到楚王後，楚王故意嘲笑他：「齊國難道沒有人了嗎？怎麼派你這樣的人來？」晏子從容地回答：「齊國派使臣，都是按對象來派的。賢能的人被派去賢能的國家，不肖的人被派去不肖的國家。我晏嬰是最不肖的人，所以只好被派到楚國來了。」楚王聽後，羞愧得啞口無言。</p>', [
+                ['文言實詞', '「晏子使楚」中的「使」字是什麼意思？', '使用', '出使 / 奉命作為使者派往另一個國家', '使喚', '假使', 1, '晏子代表齊國去楚國。', '「使」在古代漢語外交語境中，作動詞用，指「出使」。'],
+                ['文言虛詞', '「為小門於大門之側」中的「之」字是什麼意思？', '代指大門', '的 (結構助詞)', '去 / 往', '這', 1, '「大門之側」翻譯成白話文是「大門的旁邊」。', '「之」在此處是結構助詞，相當於「的」。'],
+                ['言外之意', '晏子說「使狗國者從狗門入」，他這句話在嚴密的邏輯上的言外之意（隱藏殺傷力）是什麼？', '楚國有很多兇猛的狗', '如果楚國強迫我走小門，就等於楚國人自己承認楚國是個低賤的「狗國」', '他很喜歡走狗門', '齊國和楚國都是狗國', 1, '小門=狗門。如果楚國人逼他進小門，楚國就是...。', '晏子將「走小門」與「進狗國」進行邏輯綑綁，逼迫楚國為了維護自身國格而必須開大門。'],
+                ['深層評價', '楚國人特意開小門迎接晏子，這反映了楚國人什麼樣的政治企圖？', '體貼晏子矮小身材的特殊設計', '想藉由公開羞辱齊國使臣的外貌，來打擊齊國的尊嚴，給齊國一個下馬威以彰顯楚國霸權', '大門剛好壞了正在維修', '楚國特有的最高規格禮儀', 1, '侮辱使臣，就是侮辱他的國家。', '這是一次蓄意的外交羞辱與政治博弈，企圖在心理上壓倒齊國使臣。'],
+                ['修辭與表達', '楚王當面問「齊國難道沒有人了嗎？」，這句反問的真正心理意圖是？', '真心關心齊國的人口數量下降問題', '極度傲慢地諷刺齊國缺乏真正的人才，居然派一個外表殘缺的矮子來當外交官', '想請晏子介紹武將給他認識', '真的不知道齊國發生了什麼事', 1, '這句「難道沒有人」是惡毒的反話。', '反問語氣極具挑釁意味，意在當眾撕破臉皮羞辱晏子。'],
+                ['多重推論', '晏子回答「我最不肖，所以被派到楚國」，這句話的深層殺傷力在哪裡？', '向楚王示弱，請求寬恕', '順水推舟的絕殺：既然齊國的規矩是「最無能的人去最差的國家」，那我來楚國，就證明楚國是最垃圾的國家', '說明齊國人人都想來楚國旅遊', '表示想立刻辭職回國', 1, '「賢能去賢國，不肖去不肖國。」既然最不肖的晏子去了楚國...那楚國就是什麼國？', '晏子以無懈可擊的邏輯將楚王的嘲諷完美反彈回去，指桑罵槐地羞辱楚國是不肖之國，殺傷力極大。'],
+                ['多重推論', '晏子面對接連的巨大侮辱，為何不生氣大罵，而是用巧妙的言辭回應？', '他膽子太小不敢大聲說話', '展現了極高的情緒智商與邏輯智慧，在外交場合「以其人之道還治其人之身」，讓對手啞巴吃黃連', '他覺得這是一個很好玩的遊戲', '他年紀大了忘記怎麼罵人', 1, '生氣大罵只會丟失國格，用邏輯反擊才能贏得真正的尊重。', '這是真正的頂級外交辭令，用對方設立的陷阱來困死對方，兵不血刃贏得尊嚴。'],
+                ['深層評價', '晏子的言行體現了「個人尊嚴」與「國家尊嚴」之間的何種深層連帶關係？', '個人名譽在國家面前完全不重要', '外交官個人是國家的縮影。晏子的智慧與不卑不亢的風骨，直接且強有力地維護了齊國的國家尊嚴與威望', '只要自己不吃虧就行，不用管國家', '只有力氣大的人才能維護尊嚴', 1, '晏子捍衛自己，就是在捍衛齊國。', '個人的德行與智慧是團體國格的最佳載體，面對強權欺凌，無論何時都要不卑不亢。']
+            ]),
+            cA('pa22', 'p-adv-classic', '曾子殺豬', '<p class="classic-text">曾子之妻之市，其子隨之而泣。其母曰：「女還，顧反為女殺豬。」妻適市反，曾子欲捕彘殺之。妻止之曰：「特與嬰兒戲耳。」曾子曰：「嬰兒非與戲也。嬰兒非有知也，待父母而學者也，聽父母之教。今子欺之，是教子欺也。母欺子，子而不信其母，非以成教也。」遂烹彘也。</p><p class="classic-translation-text">【譯文】曾子的妻子準備去市場，她的兒子哭著要跟著去。媽媽對孩子說：「你先回去，我回來後殺豬給你吃。」妻子從市場回來後，曾子便準備去抓豬殺了。妻子阻止他說：「我只是跟孩子開玩笑的。」曾子說：「不能跟孩子開玩笑。孩子年幼無知，是看著父母、聽著父母的教導來學習的。今天你欺騙他，就是教他去欺騙別人。母親欺騙孩子，孩子就不再相信母親，這不是正確的教育方法。」於是，曾子真的把豬殺了煮肉給孩子吃。</p>', [
+                ['文言實詞', '「曾子之妻之市」中的第二個「之」字，以及「市」字分別作何解釋？', '之：的；市：城市', '之：前往/去 (動詞)；市：市場/集市 (名詞)', '之：代詞；市：市政府', '之：這；市：超市', 1, '妻子要「去」「市場」。', '在文言文中，「之」作動詞指「前往」，「市」指集市。'],
+                ['文言實詞', '古文「女還，顧反為女殺豬」中的兩個「女」字，在此處作何解釋？', '女性', '你 (通假字「汝」，代指兒子)', '女兒', '女朋友', 1, '這是媽媽對「兒子」說的話。', '在文言文中，「女」字經常通假為「汝」，解作「你」。'],
+                ['文言實詞', '「曾子欲捕彘殺之」中的「彘」(音：秩) 是指什麼動物？', '雞', '羊', '豬', '狗', 2, '媽媽答應回來後要殺什麼？', '「彘」是古代漢語對「豬」的書面稱呼。'],
+                ['多重推論', '曾子妻子說「特與嬰兒戲耳」，這裡的「特...耳」與「戲」字代表什麼意思？', '特別...演戲', '只不過是...跟孩子開玩笑/哄騙罷了', '特地...做運動', '特色...看戲', 1, '妻子覺得只是隨口說說，不必當真。', '「特...耳」句式表示「只不過...罷了」；「戲」是開玩笑、哄騙。'],
+                ['多重推論', '曾子妻子認為只是「與嬰兒戲耳」，這反映了當時乃至現代父母對兒童教育的什麼嚴重錯誤觀念？', '認為小孩子太聰明會識破謊言', '認為小孩子年幼不懂事，不需要對他們信守承諾，可以隨便用謊言來敷衍哄騙', '認為小孩子不喜歡吃豬肉', '認為小孩子聽不懂人類的語言', 1, '大人往往覺得「他還小，騙騙他也沒關係」。', '點出了家庭教育中極易犯的盲點——忽視了幼童的認知發展與對父母的絕對信任。'],
+                ['言外之意', '曾子說「今子欺之，是教子欺也」，這句話暗含了什麼深刻的教育哲理？', '不該隨便去市場買東西', '父母的言行是孩子的絕對榜樣（鏡子），父母撒謊會產生負面的「模仿效應」，導致孩子學會欺騙', '小孩子不該吃太多肉', '說謊是人類不可改變的天性', 1, '父母做什麼，孩子就學什麼。', '強烈強調了「身教重於言教」的真理，父母說謊會帶來毀滅性的負面示範。'],
+                ['深層評價', '曾子為了一句不經意的玩笑話而殺了一頭珍貴的豬，這在現代看來代價是否太大？為什麼？', '太大，因為古代的豬非常昂貴，這會導致家庭破產', '不大。因為誠信品格的建立與父母威信是無價的，身教的影響力遠超短暫的物質損失', '太大，因為孩子長大後就會忘記這件事', '不大，因為本來晚上就要吃豬肉', 1, '如果騙了孩子，孩子以後還會相信父母嗎？', '父母的信用一旦破產便無法挽回，曾子的做法看似物質損失，實則是無價且震撼的教育投資。'],
+                ['詮釋整合', '這則著名的文言故事最終想要傳達的中心思想是？', '小孩子非常喜歡吃豬肉，家長要滿足他們', '父母去市場時絕對不能帶小孩', '父母在教育孩子時必須做到言行一致、絕對的誠實守信，因為身教大於言教', '曾子的妻子是一個非常不負責任的壞母親', 2, '綜合曾子殺豬的起因與他嚴厲的說教。', '深刻闡明了誠信教育、身教重於言教的家庭教育真理。']
+            ]),
+            cA('pa23', 'p-adv-classic', '守株待兔', '<p class="classic-text">宋人有耕者。田中有株，兔走觸株，折頸而死。因釋其耒而守株，冀復得兔。兔不可復得，而身為宋國笑。</p><p class="classic-translation-text">【譯文】宋國有一個農夫。他的田裡有一棵樹樁，一隻兔子跑得太快，撞在樹樁上，折斷頸骨死了。於是這個農夫便放下他的農具，天天守在樹樁旁，希望能再撿到死兔子。當然，兔子是永遠等不到的，而他自己卻成了整個宋國的笑柄。</p>', [
+                ['文言實詞', '古文「兔走觸株」中的「走」字，在古代漢語中是什麼意思？', '慢慢地散步', '跑 / 快速奔跑', '離開某個地方', '向上跳躍', 1, '兔子是怎麼撞死的？必須要有速度。', '古文中的「走」是奔跑的意思（如：走馬看花）。'],
+                ['文言虛詞', '古文「因釋其耒而守株」中的「其」指代什麼？「耒」又是什麼？', '兔子的；尾巴', '樹樁的；樹枝', '農夫自己的；農具', '宋國的；武器', 2, '是誰放下了什麼東西不去種田了？', '「其」是代名詞，指代農夫他自己的；「耒」是古代的一種翻土農具。'],
+                ['文言實詞', '古文「冀復得兔」中的「冀」字是什麼意思？', '感到害怕', '看見', '希望 / 盼望 / 企圖', '拒絕', 2, '農夫在樹樁旁「期待」什麼事情發生？', '「冀」在古文中表示強烈的希望、企盼（如：希冀）。'],
+                ['文言實詞', '「而身為宋國笑」中的「為...笑」在此處作何高階句法解釋？', '開心地笑', '被動句式：「為」表被動，意即「成為宋國人的笑柄 / 被宋國人嘲笑」', '保持微笑', '大聲狂笑', 1, '農夫的行為讓全宋國的人對他怎樣？', '此處是典型的文言文被動句，意為「被宋國人嘲笑」。'],
+                ['推論訊息', '農夫為什麼會果斷「釋其耒」（放下農具）不再種田？', '他生了重病無法勞動', '他的農具突然壞了', '他嘗到了一次甜頭，被貪婪蒙蔽，想不勞而獲靠運氣白撿死兔子', '他決定改行當一名專業的獵人', 2, '嘗到一次意外的甜頭後，人的心態發生了扭曲的變化。', '農夫把偶然發生的幸運當作必然，妄想永遠不勞而獲。'],
+                ['多重推論', '農夫「身為宋國笑」的根本原因，在於他犯了什麼嚴重的邏輯與認知謬誤？', '他忘記了怎麼種田的技術', '他將一次「偶然」發生的低概率意外，荒謬地當成了可以守株待兔的「必然」規律', '他沒有把撿到的兔子藏好被別人發現了', '他跑得沒有兔子快', 1, '兔子撞樹每天都會發生嗎？這是極小概率的意外。', '這是認知上的致命錯誤，荒廢了主業去追求虛無縹緲的機率，極度愚蠢。'],
+                ['詮釋整合', '《守株待兔》這個成語現在主要用來強烈諷刺什麼樣的人？', '非常聰明且有耐心的人', '喜歡養兔子的小動物愛好者', '死守狹隘經驗，不知變通，妄想不勞而獲、坐享其成的人', '勤奮種田但收成不好的農夫', 2, '綜合農夫荒謬的行為和可悲的結局。', '諷刺那些死守狹隘經驗，不知變通，妄圖不勞而獲的愚昧之人。'],
+                ['深層評價', '在現代社會的學習或工作中，有沒有哪些行為本質上也是「守株待兔」的不健康心態？', '平時完全不溫習功課，只期盼考試時能靠運氣猜中答案，而不去踏實努力', '每天按時交功課並認真檢查', '遇到不懂的問題多做練習', '主動查字典尋找答案', 0, '「守株待兔」的核心是「心存僥倖，不願付出」。', '不付出實質努力而幻想好結果（如考試猜題、買彩票致富），就是現代版的「守株待兔」。']
+            ]),
+            cA('pa24', 'p-adv-classic', '東施效顰', '<p class="classic-text">西施病心而顰其里。其里之醜人見而美之，歸亦捧心而顰其里。其里之富人見之，堅閉門而不出；貧人見之，挈妻子而去之走。彼知顰美而不知顰之所美。</p><p class="classic-translation-text">【譯文】美女西施因患心痛病，在村里皺著眉頭。村里的醜女東施看見了，覺得這個樣子非常美麗，回家後也學著西施捧著心口、皺著眉頭在村里走來走去。村里的富人看見她這副怪模樣，緊閉大門不肯出來；窮人看見了，帶著妻子兒女遠遠地避開她跑了。東施只知道皺眉頭的動作很美，卻不知道西施皺眉頭為什麼美（是因為西施原本長得美，皺眉有一種病態的柔弱美；而東施原本長得醜，胡亂模仿只會更醜）。</p>', [
+                ['文言實詞', '「西施病心而顰其里」中的「顰」(音：貧)字是什麼意思？', '大聲狂笑', '皺眉頭', '大聲唱歌', '跳舞', 1, '東施學西施做了什麼面部表情？', '「顰」在古代漢語中是指皺眉頭。'],
+                ['文言實詞', '古文「挈妻子而去之走」中的「妻子」在當時確切指什麼？', '男性的配偶（老婆）', '老婆和孩子 / 妻與兒女（這是一個詞組）', '未婚女子', '親戚朋友', 1, '「妻子」在古文通常是一個包含兩個對象的雙音節詞。', '古文中的「妻子」是「妻」和「子（兒女）」的合稱，並非現代漢語單指老婆。'],
+                ['多重推論', '為什麼村里的富人看見東施會「堅閉門而不出」？', '因為天要下暴雨了', '因為東施盲目模仿的怪模樣極度滑稽且嚇人，他們感到厭惡並想躲開她', '因為想邀請她進來做客但門壞了', '因為富人剛好都不在家', 1, '原本長得醜的人強行做出病態的嬌弱動作，會變得很怪異恐怖。', '東施盲目模仿，效果滑稽恐怖，嚇得富人關門躲避。'],
+                ['文言虛詞', '「其里之醜人見而美之」中的「美之」在文言語法中是什麼高階用法？', '意動用法：覺得這（西施皺眉的樣子）很美', '這是西施的另一個名字', '給她化妝讓她變美', '感嘆她變漂亮了', 0, '醜人看見西施皺眉的樣子，心裡覺得怎樣？', '這是一種「意動用法」，即主觀上認為賓語具有某種特質（覺得...很美）。'],
+                ['多重推論', '最後一句「彼知顰美而不知顰之所美」，一語道破了模仿者在認知上的何種致命缺陷？', '她不認識字，沒有文化', '她只懂得表面形式的生搬硬套，卻完全不理解其背後的內在原因、本質條件與自身差異', '西施很自私不肯教她', '村民沒有同情心不包容她', 1, '東施以為學了動作就能變美，完全忽略了美醜的本質差別在於自身的底子。', '形式主義的生搬硬套不僅無法獲得高雅，反而會東施效顰，顯得極度滑稽。'],
+                ['深層評價', '你認為東施「效顰」之所以會遭遇如此慘烈的失敗，其「根本原因」在於什麼？', '她沒有買到和西施一樣名貴的衣服', '她盲目模仿別人的外表動作，卻嚴重忽略了自身的條件與本質，缺乏最基本的「自知之明」', '西施故意教錯她動作', '她模仿的時候剛好生病了', 1, '她只學了動作，沒搞懂為什麼美（是因為西施本來就美）。', '東施只注重表面模仿，缺乏自知之明，盲目跟風反而放大了自己的缺點。'],
+                ['詮釋整合', '《東施效顰》這個成語現在主要用來強烈諷刺什麼樣的人？', '非常愛美、喜歡化妝的人', '不顧自身實際情況，盲目模仿別人，結果不但學不像，反而顯得更醜、弄巧成拙的人', '喜歡熱心幫助別人的人', '生病了卻不肯去看醫生的人', 1, '東施越學越醜，成了千古笑柄。', '諷刺不顧自身實際情況，盲目跟風、機械複製他人而鬧出笑話的人。'],
+                ['深層評價', '這個寓言故事深刻地告訴我們，在欣賞或學習別人的優點時，應該抱持什麼樣的高階態度？', '努力不懈地模仿到一模一樣為止，絕不改變', '必須了解自己的長處與短處，因應自身的真實情況來消化學習，做到自信自然，絕不一味複製外在形式', '完全不要去學習別人，保持自我就好', '花大量金錢買名牌來包裝自己的外表', 1, '美與卓越，是建立在「自知之明」與「適合自己」的基礎上的。', '真正的進步來自於消化吸收別人的長處並化為己用，而非機械複製表皮。']
+            ]),
+            cA('pa25', 'p-adv-classic', '刻舟求劍', '<p class="classic-text">楚人有涉江者，其劍自舟中墜於水。遽契其舟，曰：「是吾劍之所從墜。」舟止，從其所契者入水求之。舟已行矣，而劍不行，求劍若此，不亦惑乎！</p><p class="classic-translation-text">【譯文】楚國有一個渡江的人，他的寶劍從船上掉進了水裡。他急忙在船邊刻下一個記號，說：「這是我寶劍掉下去的地方。」當船停泊靠岸後，他便從自己刻記號的地方跳進水裡去找劍。船是一直在向前行駛的，但掉進水裡的劍卻不會跟著船走。像這樣去找劍，難道不是太糊塗了嗎！</p>', [
+                ['文言實詞', '「楚人有涉江者」中的「涉」字是什麼意思？', '干涉 / 介入', '渡過 / 坐船過江', '涉獵 / 閱讀', '步行', 1, '楚人正在做什麼動作過江？', '「涉」在這裡是渡水、渡過的意思。'],
+                ['文言實詞', '「遽契其舟」中的「遽」和「契」分別是什麼意思？', '遽：巨大；契：契約', '遽：急忙 / 立即；契：雕刻 / 刻記號', '遽：害怕；契：放棄', '遽：悲傷；契：敲打', 1, '寶劍掉水裡後，他「急忙」在船上「刻」了什麼？', '「遽」意為急忙、立刻；「契」作動詞，意為用刀刻。'],
+                ['物理邏輯', '這個楚國人最後為什麼會撈不到劍？他的致命邏輯錯誤在哪裡？', '因為劍被江裡的魚吃掉了', '因為他忽略了「相對運動」的客觀事實：劍掉水裡就不動了，但「船是一直在往前開的」，他刻在船上的記號早就離開了掉劍的真實地點', '因為江水太深了，他潛不下去', '因為他忘記了記號刻在哪裡', 1, '這是一個典型的忽略了「相對運動」與「環境變化」的邏輯謬誤。'],
+                ['人物心理', '楚國人刻完記號後說「是吾劍之所從墜」，這反映了他當時什麼樣的荒謬心態？', '非常害怕寶劍找不回來', '自以為非常聰明、找到了絕妙辦法的自滿與愚昧心理', '感到很羞愧不敢聲張', '非常生氣地指責別人推他', 1, '他的得意與最後的愚蠢失敗形成了強烈的諷刺對比。'],
+                ['修辭與表達', '最後一句「求劍若此，不亦惑乎！」使用了什麼修辭手法？', '設問', '反問（用疑問語氣強烈表達「這樣實在太糊塗了」的肯定判斷）', '誇張', '排比', 1, '「不亦...乎」是古文中經典的反問句式，加強譏諷語氣。'],
+                ['弦外之音', '在這個著名的寓言故事中，「船」和「劍」在現實生活中可以分別象徵（比喻）什麼？', '船比喻交通工具，劍比喻防身武器', '船比喻「不斷變化發展的客觀時代與環境」，劍比喻「舊有的問題、死板的規矩或舊經驗」', '船比喻溫暖的家，劍比喻遠方的朋友', '船比喻廣闊的大海，劍比喻海裡的魚', 1, '這是一道高階象徵意義題。環境變了，解決問題的方法也要跟著變。'],
+                ['主旨歸納', '「刻舟求劍」這個成語現在主要用來強烈批評什麼樣的人？', '喜歡在船上畫畫搞藝術的人', '批評那些辦事死板、教條主義、拘泥固執，完全不懂得根據實際情況的變化來靈活變通的人', '非常聰明且記憶力很好的人', '喜歡游泳和潛水尋寶的人', 1, '這是一個批評教條主義、不知變通的著名貶義成語。'],
+                ['深層評價', '從「刻舟求劍」的故事中，我們在面對現代快速變化的社會時，應該學到什麼高階思維？', '只要記性好，用什麼方法都能成功', '必須具備「動態發展」的眼光，與時俱進；當客觀環境改變時，我們的思維和解決方法也必須靈活創新，絕不能死守舊經驗', '遇到困難就在原地做個記號等別人來救', '不管世界怎麼變，都要堅持最古老的方法', 1, '「唯一不變的就是變化本身」，這教導我們必須具備動態適應與創新的批判性思維。']
+            ])
         ];
 
         let userProgress = JSON.parse(localStorage.getItem('readAdvProgress')) || new Array(rawQuestDataObj.length).fill(0);
@@ -770,12 +625,13 @@
                 if (hasQuestions) {
                     html += `
                         <div class="mb-8">
-                            <div class="flex items-center justify-between border-b-2 border-${cat.color}-200 pb-2 mb-4">
-                                <h3 class="text-xl md:text-2xl font-black text-${cat.color}-800">${cat.title}</h3>
-                                <button onclick="showTutorial('${cat.id}')" class="bg-white text-${cat.color}-600 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-${cat.color}-300 hover:bg-${cat.color}-50 transition flex items-center gap-1 active:scale-95">💡 高級錦囊</button>
+                            <div class="flex items-center justify-between border-b-2 ${cat.theme.border} pb-2 mb-4">
+                                <h3 class="text-xl md:text-2xl font-black ${cat.theme.text}">${cat.title}</h3>
+                                <button onclick="showTutorial('${cat.id}')" class="bg-white ${cat.theme.btnText} px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border ${cat.theme.btnBorder} ${cat.theme.btnHover} transition flex items-center gap-1 active:scale-95">💡 學習錦囊</button>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     `;
+                    
                     rawQuestDataObj.forEach((passage, idx) => {
                         if(passage.category === cat.id) {
                             let status = userProgress[idx];
@@ -791,25 +647,31 @@
                                 icon = ' <span class="text-emerald-600 font-bold ml-2 text-sm bg-emerald-100 px-2 py-1 rounded-full">✅ 過關</span>';
                             }
 
-                            let catName = cat.title.split(' ')[1] || "閱讀篇章";
+                            let catName = "高階篇章";
+                            if(passage.category.includes('narrative')) catName = "記敘抒情";
+                            if(passage.category.includes('expository')) catName = "說明文";
+                            if(passage.category.includes('argument')) catName = "議論文";
+                            if(passage.category.includes('classic')) catName = "文言文";
 
                             html += `
                                 <button onclick="startPassage(${idx})" class="w-full text-left p-5 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition group active:scale-95 flex flex-col justify-between min-h-[140px]">
                                     <div>
                                         <div class="flex justify-between items-center mb-3">
-                                            <span class="bg-${cat.color}-100 text-${cat.color}-800 text-xs font-bold px-2 py-1 rounded">${catName}</span>
+                                            <span class="${cat.theme.badgeBg} ${cat.theme.badgeText} text-xs font-bold px-2 py-1 rounded">${catName}</span>
                                             ${icon}
                                         </div>
-                                        <h3 class="text-lg md:text-xl font-black text-slate-800 group-hover:text-${cat.color}-600 transition leading-snug">${passage.title}</h3>
+                                        <h3 class="text-lg md:text-xl font-black text-slate-800 ${cat.theme.hoverText} transition leading-snug">${passage.title}</h3>
                                     </div>
                                     <p class="text-sm text-slate-500 font-bold mt-3 bg-white/60 inline-block px-2 py-1 rounded">共 ${passage.questions.length} 題挑戰</p>
                                 </button>
                             `;
                         }
                     });
+                    
                     html += `</div></div>`;
                 }
             });
+            
             dirContainer.innerHTML = html;
             updateTotalProgress();
         }
@@ -825,6 +687,20 @@
             return opts.sort(() => Math.random() - 0.5);
         }
 
+        function toggleTranslation() {
+            const btn = document.getElementById('btn-toggle-translation');
+            const transArea = document.getElementById('classic-translation-container');
+            if (transArea.classList.contains('hidden')) {
+                transArea.classList.remove('hidden');
+                btn.innerHTML = '🙈 隱藏白話文對照譯文';
+                speakText("已展開翻譯");
+            } else {
+                transArea.classList.add('hidden');
+                btn.innerHTML = '🔍 查看白話文對照譯文';
+                speakText("已隱藏翻譯");
+            }
+        }
+
         function startPassage(idx, forceStart = false) {
             const passage = rawQuestDataObj[idx];
             let tutKey = passage.category;
@@ -838,86 +714,44 @@
             currentQuestionMistakes = 0; 
             currentPassageMistakes = 0;
             currentPassageIdx = idx;
-            currentQuestionIdx = 0;
-            window.currentHints = []; 
+            currentSubQuestionIdx = 0;
             
             let hintBox = document.getElementById('dynamic-hint-box');
             if(hintBox) hintBox.classList.add('hidden');
 
-            document.getElementById('quest-mode').style.display = 'none';
-            document.getElementById('tips-hub-mode').style.display = 'none';
-            const questPlay = document.getElementById('quest-play');
-            questPlay.style.display = 'flex';
-            document.getElementById('main-scroll-area').scrollTop = 0;
+            document.getElementById('main-container').scrollTop = 0;
+            document.getElementById('quest-mode').classList.add('hidden');
+            document.getElementById('tips-hub-mode').classList.add('hidden');
             
-            const qCatTitle = categories.find(c => c.id === passage.category).title;
-
-            let html = `
-                <div class="w-full flex justify-between items-center mb-4">
-                    <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
-                    <span class="bg-violet-100 text-violet-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${idx + 1} 篇 / 共 ${rawQuestDataObj.length} 篇</span>
-                </div>
-                
-                <div class="slide-up w-full bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center relative transition-all duration-500">
-                    <span class="absolute -top-4 bg-violet-600 text-white px-5 py-1.5 rounded-full font-bold shadow-md text-sm md:text-base">
-                        ${qCatTitle}
-                    </span>
-                    
-                    <div class="w-full flex items-center gap-3 mt-4 mb-6">
-                        <span class="bg-violet-100 text-violet-800 px-3 py-1 rounded text-sm font-bold whitespace-nowrap">閱讀篇章</span>
-                        <h2 class="text-lg md:text-xl font-bold text-slate-700">${passage.title}</h2>
-                    </div>
-            `;
-
+            const questPlay = document.getElementById('quest-play');
+            questPlay.classList.remove('hidden');
+            questPlay.classList.add('flex'); 
+            
             let textHtml = '';
             if (passage.category === 'p-adv-classic') {
-                let parts = passage.text.split('<p>【譯文】');
-                let classicPart = parts[0].replace('<p>', '').replace('</p>', '');
+                let parts = passage.text.split('<p class="classic-translation-text">【譯文】');
+                let classicPart = parts[0];
                 let modernPart = parts[1] ? '【譯文】' + parts[1].replace('</p>', '') : '';
                 textHtml = `
-                    <p class="classic-text">${classicPart}</p>
-                    <p class="mt-4 leading-relaxed text-slate-600 text-sm md:text-base">${modernPart}</p>
+                    <div class="classic-content-area">
+                        ${classicPart}
+                    </div>
+                    <div class="mt-6 border-t border-dashed border-purple-200 pt-6 text-center">
+                        <button onclick="toggleTranslation()" id="btn-toggle-translation" class="bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold px-5 py-3 rounded-xl text-base transition active:scale-95 shadow-sm border border-purple-300">
+                            🔍 查看白話文對照譯文
+                        </button>
+                    </div>
+                    <div id="classic-translation-container" class="hidden mt-4 bg-slate-50 p-6 rounded-xl border border-slate-200 text-base md:text-lg text-slate-700 leading-relaxed text-justify">
+                        <p class="classic-translation-text text-indent-0">${modernPart}</p>
+                    </div>
                 `;
             } else {
                 textHtml = passage.text;
             }
 
-            html += `
-                <div class="w-full flex flex-col lg:flex-row gap-6">
-                    <div class="lg:w-1/2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-                        <div class="p-3 bg-purple-50 border-b border-purple-100 flex justify-between items-center flex-shrink-0">
-                            <span class="font-bold text-purple-800">📖 閱讀文本</span>
-                            <button onclick="speakPassage()" id="btn-read-all" class="bg-white text-purple-600 px-3 py-1 rounded-lg text-sm font-bold shadow-sm border border-purple-200 hover:bg-purple-100 transition">▶️ 全文朗讀</button>
-                        </div>
-                        <div class="p-4 md:p-6 overflow-y-auto flex-1 no-scrollbar max-h-[40vh] lg:max-h-[60vh] text-justify" id="passage-content">
-                            ${parseAndWrapSentences(textHtml)}
-                        </div>
-                    </div>
-
-                    <div class="lg:w-1/2 flex flex-col gap-4">
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                            <span id="sub-question-type" class="bg-fuchsia-100 text-fuchsia-800 px-2 py-1 rounded text-xs font-bold mb-2 inline-block"></span>
-                            <div class="flex gap-2">
-                                <button onclick="speakQuestion()" class="tts-btn flex-shrink-0 bg-white text-purple-500 w-8 h-8 rounded-full flex items-center justify-center shadow-sm border border-purple-200">🔊</button>
-                                <h3 class="text-base md:text-lg font-bold text-slate-800" id="current-question-text"></h3>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-col gap-3" id="options-container">
-                        </div>
-
-                        <div id="dynamic-hint-box" class="hidden w-full mt-2 bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r-xl shadow-sm text-yellow-800 font-bold text-sm flex items-start gap-2 slide-up">
-                            <div class="flex-1" id="hint-text"></div>
-                        </div>
-                        
-                        <div class="mt-auto flex justify-between items-center border-t border-slate-100 pt-3">
-                            <span class="text-sm font-bold text-slate-400" id="question-progress-indicator"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-
-            questPlay.innerHTML = html;
+            document.getElementById('passage-content').innerHTML = parseAndWrapSentences(textHtml);
+            
+            stopAllSpeechAndHighlights();
             window.currentSubQuestionIdx = 0;
             renderSubQuestion(idx, 0);
         }
@@ -936,14 +770,13 @@
             let html = '';
             options.forEach((opt, oIdx) => {
                 const letter = ['A','B','C','D'][oIdx];
-                const safeOpt = opt.text.replace(/'/g, "\\'");
                 html += `
                 <div class="flex items-stretch gap-2 w-full">
-                    <button onclick="checkAnswer(this, ${opt.isCorrect}, '${safeOpt}')" class="option-btn flex-1 bg-white border-2 border-slate-200 text-slate-700 text-base md:text-lg font-bold py-3 px-4 rounded-xl hover:bg-purple-50 hover:border-purple-300 transition text-left flex items-center gap-3">
-                        <span class="bg-slate-100 text-slate-500 w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0">${letter}</span> 
-                        <span>${opt.text}</span>
+                    <button onclick="checkAnswer(this, ${opt.isCorrect})" class="option-btn flex-1 bg-white border-2 border-slate-200 text-slate-700 text-lg md:text-xl font-bold py-4 px-5 rounded-2xl hover:bg-purple-50 hover:border-purple-300 transition text-left flex items-start gap-4">
+                        <span class="bg-slate-100 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5">${letter}</span> 
+                        <span class="leading-relaxed break-words option-text-span">${opt.text}</span>
                     </button>
-                    <button onclick="speakText('${safeOpt}', 0.95)" class="tts-btn flex-shrink-0 bg-purple-50 text-purple-500 w-12 rounded-xl flex items-center justify-center shadow-sm border border-purple-200 hover:bg-purple-100 transition" title="朗讀此選項">🔊</button>
+                    <button onclick="speakText(this.previousElementSibling.querySelector('.option-text-span').innerText, 0.95)" class="tts-btn flex-shrink-0 bg-purple-50 text-purple-500 w-14 rounded-2xl flex items-center justify-center shadow-sm border border-purple-200 hover:bg-purple-100 transition" title="朗讀此選項">🔊</button>
                 </div>`;
             });
             document.getElementById('options-container').innerHTML = html;
@@ -956,7 +789,7 @@
             speakText(sqData.q);
         }
 
-        function checkAnswer(btnElement, isCorrect, clickedOptText) {
+        function checkAnswer(btnElement, isCorrect) {
             if (btnElement.style.pointerEvents === 'none') return;
             
             const qData = rawQuestDataObj[currentPassageIdx]; 
@@ -978,10 +811,10 @@
 
                 let expText = sqData.exp;
                 let combinedDesc = `
-                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 text-left text-indigo-900 rounded-r-lg font-bold">
-                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-indigo-200">
+                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-5 text-left text-indigo-900 rounded-r-xl font-bold">
+                        <div class="flex justify-between items-center mb-4 pb-3 border-b border-indigo-200">
                             <span class="text-xl">📚 深度解析</span>
-                            <button onclick="speakText('${expText}')" class="bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm hover:bg-indigo-100 text-xl transition active:scale-95">🔊</button>
+                            <button onclick="speakText(this.parentElement.nextElementSibling.innerText)" class="bg-white rounded-full w-12 h-12 flex items-center justify-center shadow-sm hover:bg-indigo-100 text-xl transition active:scale-95">🔊</button>
                         </div>
                         <div class="space-y-3 text-base leading-relaxed">${expText}</div>
                     </div>`;
@@ -1061,7 +894,7 @@
 
             if (finalStatus === 1 || previousStatus !== 1) {
                 userProgress[currentPassageIdx] = finalStatus;
-                localStorage.setItem('advQuestProgress', JSON.stringify(userProgress));
+                localStorage.setItem('readAdvProgress', JSON.stringify(userProgress));
             }
 
             let expMsg = expGained > 0 
@@ -1089,9 +922,11 @@
             let hintBox = document.getElementById('dynamic-hint-box');
             if(hintBox) hintBox.classList.add('hidden');
             
-            document.getElementById('quest-play').style.display = 'none';
-            document.getElementById('tips-hub-mode').style.display = 'none';
-            document.getElementById('quest-mode').style.display = 'flex';
+            document.getElementById('quest-play').classList.remove('flex');
+            document.getElementById('quest-play').classList.add('hidden');
+            
+            document.getElementById('quest-mode').classList.remove('hidden');
+            
             renderDirectory();
         }
 
@@ -1102,6 +937,17 @@
             finishContent.classList.add('scale-90');
             setTimeout(() => {
                 finishModal.classList.add('hidden');
+                backToDirectory();
+            }, 300);
+        }
+
+        function backToDirectoryFromModal() {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
                 backToDirectory();
             }, 300);
         }
