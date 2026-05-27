@@ -30,7 +30,7 @@
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* 🌟 積木與槽位樣式 (支援局部遣返) */
+        /* 🌟 積木與槽位樣式 (支援局部遣返與紅色錯誤提示) */
         .tile-btn { transition: all 0.2s; box-shadow: 0 4px 0 #059669; cursor: pointer; user-select: none; }
         .tile-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
         
@@ -39,6 +39,9 @@
         .slot-box.filled:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
         .slot-box.locked { border-style: solid; border-color: #047857; background-color: #059669; color: white; cursor: not-allowed; box-shadow: none; transform: translateY(4px); }
         
+        /* 🚨 強制錯誤紅標樣式 (!important 確保覆蓋原本的顏色) */
+        .wrong-slot { background-color: #ef4444 !important; border-color: #b91c1c !important; color: white !important; box-shadow: 0 4px 0 #991b1b !important; }
+
         /* 擴寫專用行內槽位 */
         .inline-slot { border: 2px dashed #8b5cf6; background-color: #f3e8ff; color: #7e22ce; padding: 2px 16px; border-radius: 6px; cursor: pointer; display: inline-block; margin: 0 4px; transition: all 0.2s; min-width: 80px; text-align: center; }
         .inline-slot.filled { border-style: solid; border-color: #7e22ce; background-color: #9333ea; color: white; box-shadow: 0 3px 0 #6b21a8; }
@@ -111,7 +114,7 @@
         <div id="seq-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
             <div id="seq-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
                 <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">🕵️‍♂️ 看圖小偵探 (序列與邏輯)</h2>
-                <p class="text-slate-600 font-bold mb-4">根據四格漫畫的線索，運用「起初 👉 接著 👉 然後 👉 最後」排順序吧！</p>
+                <p class="text-slate-600 font-bold mb-4">根據四格漫畫的線索，運用「起初 👉 接著 👉 然後 👉 最後」排順序吧！錯了只會退回那一句喔！</p>
                 <div id="seq-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
             <div id="seq-play" class="w-full hidden flex-col items-center"></div>
@@ -120,8 +123,8 @@
         <!-- ================= 模式 2：寫作框架建構 ================= -->
         <div id="framework-mode" class="w-full max-w-5xl mx-auto hidden flex-col gap-4 lg:gap-6">
             <div id="framework-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
-                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">🏗️ 寫作積木 (三階魔法)</h2>
-                <p class="text-slate-600 font-bold mb-4">挑戰「排詞成句 👉 排句成段 👉 排段成文」，有框格提示，錯了只會退回錯的那一塊喔！</p>
+                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">🏗️ 寫作積木 (小步子三階魔法)</h2>
+                <p class="text-slate-600 font-bold mb-4">挑戰「排詞成句 👉 排句成段 👉 排段成文」，看著文章一句一句長出來！</p>
                 <div id="framework-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
             <div id="framework-play" class="w-full hidden flex-col items-center"></div>
@@ -209,12 +212,18 @@
             return text.replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】_]/g, '').replace(/&nbsp;/g, ' ').replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, ''); 
         }
 
+        // 強制選擇廣東話語音 (zh-HK)
         function speakText(text, rate = 0.9) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 let msg = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
                 msg.lang = 'zh-HK'; 
                 msg.rate = rate; 
+                
+                let voices = window.speechSynthesis.getVoices();
+                let hkVoice = voices.find(v => v.lang === 'zh-HK' || v.lang === 'yue-HK');
+                if (hkVoice) msg.voice = hkVoice;
+
                 window.speechSynthesis.speak(msg);
             }
         }
@@ -327,57 +336,77 @@
             { title: "互助的友誼", emoji: ['🚴‍♂️🏞️', '🪨💥', '🤕🩹', '🤝😊'], trans: ['起初', '接著', '然後', '最後'], ans: ['大雄和胖虎一起去公園騎單車。', '大雄不小心撞到石頭跌倒了。', '胖虎立刻停下來幫他包紮傷口。', '他們握手言和，友誼更深厚了。'], hint: "先騎單車，撞石跌倒，幫忙包紮，最後友誼加深。" }
         ];
 
-        // --- 模組 2：寫作積木 (10篇, 三階) ---
+        // --- 模組 2：寫作積木 (10篇, 完美三階拆分) ---
         const fwData = [
             {
                 title: "難忘的野餐", emoji: "🧺🌳", tut: "t-three-stage",
+                introChunks: ["星期天早上，", "天氣", "非常晴朗。", "我們一家人", "開開心心地", "去公園野餐。"],
                 sents: [ ["媽媽", "在草地上", "鋪好了", "野餐墊。"], ["爸爸", "拿出", "美味的", "三文治。"], ["我和弟弟", "在旁邊", "開心地", "放風箏。"] ],
-                intro: "星期天早上，天氣非常晴朗。我們一家人開開心心地去維多利亞公園野餐。", conclusion: "到了傍晚，我們才依依不捨地回家。這真是快樂的一天！", hint: "按動作發生的合理順序排列。"
+                conclChunks: ["到了傍晚，", "我們才", "依依不捨地回家。", "這真是", "快樂的一天！"],
+                hint: "請按事情發生的時間與動作順序排列。"
             },
             {
                 title: "學校大掃除", emoji: "🧹✨", tut: "t-three-stage",
+                introChunks: ["快要", "放新年假了，", "學校舉行了", "全校大掃除。", "同學們", "都非常落力。"],
                 sents: [ ["班長", "認真地", "擦拭", "黑板。"], ["小明", "用力地", "把地板", "掃乾淨。"], ["我", "幫忙", "排列", "桌椅。"] ],
-                intro: "快要放新年假了，學校舉行了全校大掃除。我們班的同學都非常落力。", conclusion: "看著煥然一新的課室，大家都露出了滿足的笑容。團結的力量真大！", hint: "人物和動作要配對好。"
+                conclChunks: ["看著", "煥然一新的", "課室，", "大家都露出了", "滿足的笑容。"],
+                hint: "人物和動作要配對好，先寫主語再寫動作。"
             },
             {
                 title: "參觀動物園", emoji: "🐘🦒", tut: "t-three-stage",
-                sents: [ ["我們先去", "看了", "調皮的", "猴子。"], ["接著", "去看", "鼻子長長的", "大象。"], ["最後", "觀賞了", "脖子很長的", "長頸鹿。"] ],
-                intro: "學校假期，老師帶我們去參觀動物園。一走進大門，我們就興奮極了！", conclusion: "這次參觀讓我認識了許多奇妙的動物，真是大開眼界啊！", hint: "注意「先、接著、最後」的時間詞。"
+                introChunks: ["學校假期，", "老師帶我們", "去參觀", "動物園。", "我們", "興奮極了！"],
+                sents: [ ["我們先去", "看了", "調皮的", "猴子。"], ["接著", "去看", "鼻子長長的", "大象。"], ["最後", "觀賞了", "脖子很高的", "長頸鹿。"] ],
+                conclChunks: ["這次參觀", "讓我認識了", "許多動物，", "真是", "大開眼界啊！"],
+                hint: "注意「先、接著、最後」的時間詞順序。"
             },
             {
                 title: "第一次騎單車", emoji: "🚴‍♂️🤕", tut: "t-three-stage",
+                introChunks: ["星期六的", "黃昏，", "爸爸帶我", "到公園，", "教我學騎", "單車。"],
                 sents: [ ["我一坐上車", "就因為不平衡", "摔了一跤。"], ["膝蓋", "擦破了皮，", "痛得我", "想放棄。"], ["爸爸", "鼓勵我站起來", "繼續", "練習。"] ],
-                intro: "星期六的黃昏，爸爸帶我到公園的單車徑，教我學騎兩輪單車。", conclusion: "經過多次失敗，我終於學會了。這次經歷讓我明白，只要不放棄就一定能成功！", hint: "先摔倒，然後覺得痛，最後爸爸鼓勵。"
+                conclChunks: ["經過", "多次失敗，", "我終於學會了。", "只要不放棄", "就能成功！"],
+                hint: "先摔倒，然後覺得痛，最後爸爸鼓勵。"
             },
             {
                 title: "迷路驚魂", emoji: "😭👮", tut: "t-three-stage",
+                introChunks: ["上個週末，", "我和媽媽", "去超級市場", "買東西。", "結果發生了", "可怕的事。"],
                 sents: [ ["因為我看玩具", "看得太入迷，", "和媽媽", "走散了。"], ["我", "嚇得大哭，", "眼淚", "不停地流。"], ["警察叔叔", "走過來，", "溫柔地", "幫助我。"] ],
-                intro: "上個週末，我和媽媽去人山人海的超級市場買東西。結果發生了一件可怕的事。", conclusion: "最後，警察叔叔幫我找到了媽媽。我緊緊抱住媽媽，以後再也不敢亂跑了。", hint: "先走散，然後害怕大哭，最後警察幫忙。"
+                conclChunks: ["最後，", "警察", "幫我找到了媽媽。", "我以後", "不敢亂跑了。"],
+                hint: "先走散，然後害怕大哭，最後警察幫忙。"
             },
             {
                 title: "我的小狗", emoji: "🐕🦴", tut: "t-three-stage",
+                introChunks: ["我家", "有一隻", "可愛的", "小狗，", "是我最要好的", "動物朋友。"],
                 sents: [ ["牠", "全身長滿了", "棕色的", "捲毛。"], ["有一雙", "水汪汪的", "大眼睛", "看著我。"], ["每天", "吃飽後", "就喜歡", "咬骨頭。"] ],
-                intro: "我家有一隻可愛的小狗，牠的名字叫「波波」，是我最要好的動物朋友。", conclusion: "波波真是太可愛了，牠給我的生活帶來了很多歡樂，我會永遠好好照顧牠。", hint: "先寫毛髮，再寫眼睛，最後寫習慣。"
+                conclChunks: ["波波", "真是太可愛了，", "給我的生活", "帶來歡樂，", "我會永遠照顧牠。"],
+                hint: "先寫毛髮，再寫眼睛，最後寫習慣。"
             },
             {
                 title: "美味的西瓜", emoji: "🍉😋", tut: "t-three-stage",
+                introChunks: ["夏天到了，", "天氣", "非常炎熱。", "這時候我最喜歡的", "就是西瓜了。"],
                 sents: [ ["它", "穿著一件", "綠色帶黑條紋的", "外衣。"], ["切開一看，", "裡面是", "紅通通的", "果肉。"], ["咬下一口，", "甜甜的汁液", "充滿了", "嘴巴。"] ],
-                intro: "夏天到了，天氣非常炎熱。這時候我最喜歡吃的水果就是清涼解渴的西瓜了。", conclusion: "西瓜真是夏天的最佳解暑聖品，吃完後整個人都覺得涼快極了！", hint: "從外表看到裡面，最後是吃下去的味道。"
+                conclChunks: ["西瓜", "真是夏天的", "解暑聖品，", "吃完後", "覺得涼快極了！"],
+                hint: "從外表看到裡面，最後是吃下去的味道。"
             },
             {
                 title: "大雨中的溫暖", emoji: "☔🤝", tut: "t-three-stage",
+                introChunks: ["昨天", "放學時，", "天空", "突然下起了", "傾盆大雨。"],
                 sents: [ ["我", "忘了帶雨傘，", "焦急地", "站在校門口。"], ["小明", "走過來，", "主動為我", "撐開了傘。"], ["他", "把傘傾向我，", "自己的肩膀", "卻淋濕了。"] ],
-                intro: "昨天放學時，天空突然下起了傾盆大雨。這場大雨讓我經歷了一件難忘的事。", conclusion: "雖然雨水很冷，但小明的熱心卻讓我心裡感到無比溫暖。我以後也要幫助別人。", hint: "先沒傘，然後同學幫忙，最後發現同學淋濕了。"
+                conclChunks: ["雖然雨水很冷，", "但小明的熱心", "卻讓我感到", "無比的", "溫暖。"],
+                hint: "先沒傘，然後同學幫忙，最後發現同學淋濕了。"
             },
             {
                 title: "美麗的彩虹", emoji: "🌈✨", tut: "t-three-stage",
+                introChunks: ["夏天午後的", "天氣", "變化很快。", "大雨停了之後，", "天空重新放晴。"],
                 sents: [ ["雷陣雨過後，", "天邊", "出現了", "一道彩虹。"], ["它", "像一座", "七彩的拱橋", "橫跨半空。"], ["散發著", "柔和的光芒，", "真是", "美麗極了。"] ],
-                intro: "夏天午後的天氣變化很快。大雨停了之後，天空重新放晴。", conclusion: "彩虹真是大自然最神奇的魔術！看著這景色，我的心情也變得燦爛起來。", hint: "先出現彩虹，再寫形狀，最後寫光芒。"
+                conclChunks: ["彩虹", "真是大自然", "最神奇的魔術！", "我的心情也", "變得燦爛起來。"],
+                hint: "先出現彩虹，再寫形狀，最後寫光芒。"
             },
             {
                 title: "精彩的運動會", emoji: "🏃‍♀️🥇", tut: "t-three-stage",
+                introChunks: ["秋高氣爽的", "星期五，", "我們學校", "舉行了", "一年一度的", "陸運會。"],
                 sents: [ ["聽到槍聲，", "我立刻", "像箭一樣", "向前衝。"], ["旁邊的同學們", "大聲地", "為我", "喊加油。"], ["我", "拼盡全力，", "第一個", "衝過終點。"] ],
-                intro: "秋高氣爽的星期五，我們學校舉行了一年一度的陸運會。我參加了六十米短跑。", conclusion: "雖然跑得滿頭大汗，但拿到金牌的那一刻，我心裡感到無比的自豪和快樂！", hint: "聽到槍聲衝出去，同學加油，最後衝線。"
+                conclChunks: ["拿到金牌的", "那一刻，", "我心裡感到", "無比的自豪", "和快樂！"],
+                hint: "聽到槍聲衝出去，同學加油，最後衝線。"
             }
         ];
 
@@ -387,7 +416,7 @@
                 title: "熱鬧的公園", emoji: "⛲🌳", tut: "t-five-senses",
                 base: "公園很熱鬧。陽光照在草地上。小鳥在唱歌。我們在玩耍，流下了汗水。",
                 template: "週末的公園真熱鬧！{0} 的陽光照在草地上。樹上的小鳥唱著 {1} 的歌。孩子們在草地上 {2} 奔跑，每個人都流下了 {3} 的汗水。",
-                bank: ["溫暖", "清脆", "開心地", "大滴大滴", "寒冷", "難聽", "生氣地", "五顏六色"],
+                bank: ["溫暖", "清脆", "開心地", "大滴大滴", "寒冷", "難聽", "生氣地", "五顏色色"],
                 ans: ["溫暖", "清脆", "開心地", "大滴大滴"],
                 hint: "根據五感：陽光是「溫暖」的，鳥聲是「清脆」的，奔跑是「開心」的，汗水是「大滴」的。"
             },
@@ -469,7 +498,7 @@
         let fwProgress = JSON.parse(localStorage.getItem('fwBasicProgress')) || new Array(fwData.length).fill(0);
         let exProgress = JSON.parse(localStorage.getItem('exBasicProgress')) || new Array(exData.length).fill(0);
 
-        // ================= 4. 通用：重組與拖拉邏輯 (局部遣返核心) =================
+        // ================= 4. 通用：重組與拖拉邏輯 (局部遣返核心 + 專屬動態提示) =================
         
         function initReorderState(correctArr) {
             reorderCorrect = [...correctArr];
@@ -503,6 +532,7 @@
             renderCurrentPlayUI();
         }
 
+        // 🌟 核心升級：因應學生答錯給予「特定的提示」，並延長閱讀時間至 3.5秒
         function checkReorderLogic(onComplete) {
             let isAllFilled = !targetSlots.includes(null);
             if (!isAllFilled) return;
@@ -531,33 +561,57 @@
                     exProgress[currentIdx] = -1; localStorage.setItem('exBasicProgress', JSON.stringify(exProgress));
                 }
 
+                // 將錯的標為紅色並震動
                 wrongIndices.forEach(idx => {
                     let slotElem = document.getElementById(`target-slot-${idx}`);
-                    if (slotElem) slotElem.classList.add('bg-rose-100', 'border-rose-400', 'text-rose-700', 'shake');
+                    if (slotElem) {
+                        slotElem.classList.remove('bg-emerald-500', 'bg-emerald-600', 'bg-sky-500', 'bg-sky-600', 'bg-purple-500', 'bg-purple-600', 'bg-sky-50', 'bg-emerald-50', 'bg-purple-50', 'border-emerald-700', 'border-sky-600', 'border-purple-700', 'border-dashed', 'text-slate-400', 'text-sky-800', 'text-emerald-800', 'text-purple-800');
+                        slotElem.classList.add('wrong-slot', 'shake');
+                    }
                 });
                 
-                speakText("排錯了喔，我幫你退回去了，請看提示再試一次！");
-                
-                const hintBox = document.getElementById('dynamic-hint-box');
+                // 動態構建特定錯誤的提示
+                let firstWrongIdx = wrongIndices[0];
+                let wrongText = targetSlots[firstWrongIdx];
                 let hintText = "";
-                if (currentMode === 'seq') hintText = seqData[currentIdx].hint;
-                else if (currentMode === 'framework') hintText = fwData[currentIdx].hint;
-                else hintText = exData[currentIdx].hint;
+                let specificHint = "";
 
-                document.getElementById('hint-text').innerText = "💡 提示：" + hintText;
-                document.getElementById('hint-tts-btn').onclick = () => speakText("提示：" + hintText);
+                if (currentMode === 'seq') {
+                    let timeWord = seqData[currentIdx].trans[firstWrongIdx];
+                    specificHint = `「<span class="text-rose-600">${wrongText}</span>」不應該放在「${timeWord}」喔！<br>`;
+                    hintText = specificHint + seqData[currentIdx].hint;
+                } else if (currentMode === 'framework') {
+                    specificHint = `「<span class="text-rose-600">${wrongText}</span>」放錯位置囉！<br>`;
+                    hintText = specificHint + fwData[currentIdx].hint;
+                } else {
+                    specificHint = `「<span class="text-rose-600">${wrongText}</span>」放在這裡不太通順喔！<br>`;
+                    hintText = specificHint + exData[currentIdx].hint;
+                }
+
+                const hintBox = document.getElementById('dynamic-hint-box');
+                document.getElementById('hint-text').innerHTML = "💡 提示：" + hintText;
+                document.getElementById('hint-tts-btn').onclick = () => speakText("提示：" + hintText.replace(/<[^>]*>?/gm, ''));
                 hintBox.classList.remove('hidden');
 
+                speakText("排錯了喔，請看提示再試一次！");
+
+                // 🌟 延長提示時間至 3500ms，讓學生有足夠時間閱讀提示與紅色標記
                 setTimeout(() => {
                     wrongIndices.forEach(idx => {
                         let chunk = targetSlots[idx];
                         targetSlots[idx] = null;
+                        
+                        let slotElem = document.getElementById(`target-slot-${idx}`);
+                        if (slotElem) {
+                            slotElem.classList.remove('wrong-slot', 'shake');
+                        }
+
                         let emptySourceIdx = reorderSource.indexOf(null);
                         if(emptySourceIdx !== -1) reorderSource[emptySourceIdx] = chunk;
                         else reorderSource.push(chunk);
                     });
                     renderCurrentPlayUI();
-                }, 1000);
+                }, 3500);
             }
         }
 
@@ -689,7 +743,7 @@
             });
         }
 
-        // --- 模組 2：寫作積木 (三階) ---
+        // --- 模組 2：寫作積木 (三階 小步子) ---
         function renderFrameworkDirectory() {
             const dirContainer = document.getElementById('framework-content');
             let html = '';
@@ -732,11 +786,19 @@
 
         function setupFwPhase() {
             const data = fwData[currentIdx];
-            if (currentPhase === 1) initReorderState(data.sents[currentSubTask]);
-            else if (currentPhase === 2) initReorderState(data.sents.map(s => s.join('')));
+            if (currentPhase === 1) {
+                if (currentSubTask === 0) initReorderState(data.introChunks);
+                else if (currentSubTask >= 1 && currentSubTask <= 3) initReorderState(data.sents[currentSubTask - 1]);
+                else if (currentSubTask === 4) initReorderState(data.conclChunks);
+            }
+            else if (currentPhase === 2) {
+                initReorderState(data.sents.map(s => s.join('')));
+            }
             else if (currentPhase === 3) {
-                let bodyPara = data.sents.map(s => s.join('')).join('');
-                initReorderState([data.intro, bodyPara, data.conclusion]);
+                let introStr = data.introChunks.join('');
+                let bodyStr = data.sents.map(s => s.join('')).join('');
+                let conclStr = data.conclChunks.join('');
+                initReorderState([introStr, bodyStr, conclStr]);
             }
             renderFrameworkUI();
         }
@@ -744,7 +806,17 @@
         function renderFrameworkUI() {
             const data = fwData[currentIdx];
             let phaseTitle = currentPhase === 1 ? "第一階：排詞成句" : (currentPhase === 2 ? "第二階：排句成段" : "第三階：拼成文章");
-            let taskDesc = currentPhase === 1 ? `第 ${currentSubTask + 1} 句 / 共 3 句` : (currentPhase === 2 ? "將剛才的三個句子排成一段" : "加上開頭和結尾，拼出完整文章");
+            
+            let taskDesc = "";
+            if (currentPhase === 1) {
+                if (currentSubTask === 0) taskDesc = "第 1 句 / 共 5 句 (文章開頭)";
+                else if (currentSubTask >= 1 && currentSubTask <= 3) taskDesc = `第 ${currentSubTask} 句 / 共 5 句 (事情經過)`;
+                else taskDesc = "第 5 句 / 共 5 句 (文章結尾)";
+            } else if (currentPhase === 2) {
+                taskDesc = "將剛才的三個經過句子，排成一段通順的段落";
+            } else {
+                taskDesc = "加上開頭和結尾，拼出完整的文章";
+            }
 
             let html = `
                 <div class="w-full max-w-4xl flex justify-between items-center mb-4">
@@ -759,38 +831,29 @@
                     <div class="text-emerald-600 font-bold mb-6 bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-200">${phaseTitle} - ${taskDesc}</div>
             `;
 
+            // 🌟 漸進式顯示已完成的句子 (小步子鷹架)
+            if (currentPhase === 1 && currentSubTask > 0) {
+                html += `<div class="w-full bg-emerald-50 p-4 rounded-xl border border-emerald-200 mb-4 text-emerald-800 font-bold leading-loose text-lg">`;
+                html += `<p class="mb-2 text-sm text-emerald-600 border-b border-emerald-200 pb-1">✅ 已完成的部分：</p>`;
+                if (currentSubTask > 0) html += `<p>${data.introChunks.join('')}</p>`;
+                if (currentSubTask > 1) html += `<p class="text-slate-600">${data.sents[0].join('')}</p>`;
+                if (currentSubTask > 2) html += `<p class="text-slate-600">${data.sents[1].join('')}</p>`;
+                if (currentSubTask > 3) html += `<p class="text-slate-600">${data.sents[2].join('')}</p>`;
+                html += `</div>`;
+            }
+
             let isRow = currentPhase === 1;
             let wrapperClass = isRow ? "flex flex-wrap gap-2 justify-start" : "flex flex-col gap-3";
             let slotClassBase = isRow ? "flex-1 min-w-[80px]" : "w-full";
             let btnClassBase = isRow ? "text-xl px-4 py-3" : "text-lg text-left px-5 py-4 w-full";
 
-            html += `<div class="w-full bg-slate-50 p-4 md:p-6 rounded-2xl border-2 border-slate-200 min-h-[120px] mb-4 ${wrapperClass}">`;
-            for (let i = 0; i < targetSlots.length; i++) {
-                let chunk = targetSlots[i];
-                let isLocked = lockedSlots[i];
-                let prefix = currentPhase === 1 ? '' : `<span class="bg-white text-emerald-600 px-2 py-0.5 rounded text-sm mr-2">${i+1}</span>`;
-                if (chunk === null) {
-                    html += `<div id="target-slot-${i}" class="slot-box ${slotClassBase} border-dashed border-emerald-300 bg-emerald-50 h-[56px] rounded-xl text-slate-400 text-sm md:text-base justify-center">[ 框格 ${i+1} ]</div>`;
-                } else {
-                    let sClass = isLocked ? 'locked bg-emerald-600 border-emerald-700' : 'filled bg-emerald-500 border-emerald-600 hover:bg-emerald-600';
-                    html += `<div id="target-slot-${i}" onclick="removeFromTarget(${i})" class="slot-box ${sClass} ${slotClassBase} text-white font-bold h-[auto] min-h-[56px] shadow pop">${prefix}${chunk}</div>`;
-                }
-            }
-            html += `</div>`;
+            html += `<div class="w-full bg-slate-50 p-4 md:p-6 rounded-2xl border-2 border-slate-200 min-h-[120px] mb-4 ${wrapperClass}" id="reorder-target-area"></div>`;
 
             html += `<div class="w-full border-t-2 border-dashed border-slate-200 my-4"></div>
                      <div class="text-center text-slate-500 font-bold mb-3 text-sm">👇 點擊下方積木，依順序放入框格中</div>
-                     <div class="w-full ${wrapperClass}">`;
+                     <div class="w-full ${wrapperClass}" id="reorder-source-area"></div>`;
             
-            reorderSource.forEach((chunk, idx) => {
-                if (chunk === null) {
-                    html += `<div class="h-[56px] border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 opacity-50 ${slotClassBase}"></div>`; 
-                } else {
-                    html += `<button onclick="moveToTarget(${idx})" class="tile-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-emerald-400 hover:bg-emerald-50 font-bold ${btnClassBase} rounded-xl shadow active:scale-95 transition">${chunk}</button>`;
-                }
-            });
-
-            html += `</div>
+            html += `
                 <div id="dynamic-hint-box" class="hidden w-full mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3 slide-up">
                     <div class="flex-1 space-y-2" id="hint-text"></div>
                     <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
@@ -798,30 +861,78 @@
             </div>`;
             
             document.getElementById('framework-play').innerHTML = html;
-            checkReorderLogic(advanceFwPhase);
+            
+            // 延遲渲染以確保 DOM 已存在
+            setTimeout(() => {
+                let btnClassB = isRow ? "tile-btn bg-emerald-500 text-white font-black text-xl py-3 px-4 rounded-xl shadow-md pop m-1" : "tile-btn bg-emerald-600 text-white font-bold text-lg py-4 px-5 rounded-xl shadow-md pop w-full text-left mb-2 leading-relaxed";
+                let sourceBtnClassB = isRow ? "tile-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-emerald-400 hover:bg-emerald-50 font-black text-xl py-3 px-4 rounded-xl shadow m-1" : "tile-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-emerald-400 hover:bg-emerald-50 font-bold text-lg py-4 px-5 rounded-xl shadow w-full text-left mb-2 leading-relaxed";
+                let slotClassB = isRow ? "slot-box min-w-[80px] h-[52px] m-1 flex-1" : "slot-box w-full min-h-[60px] mb-2";
+                
+                renderReorderTiles(btnClassB, sourceBtnClassB, slotClassB);
+            }, 0);
+        }
+
+        function renderReorderTiles(btnClassBase, sourceBtnClassBase, slotClassBase) {
+            const tArea = document.getElementById('reorder-target-area');
+            const sArea = document.getElementById('reorder-source-area');
+            if(!tArea || !sArea) return;
+
+            let tHtml = '';
+            targetSlots.forEach((chunk, idx) => {
+                let isLocked = lockedSlots[idx];
+                let prefix = currentPhase === 1 ? '' : `<span class="bg-white text-emerald-600 px-2 py-0.5 rounded text-sm mr-2">${idx+1}</span>`;
+                if (chunk === null) {
+                    tHtml += `<div id="target-slot-${idx}" class="${slotClassBase} border-dashed border-emerald-300 bg-emerald-50 text-slate-400 text-sm md:text-base flex items-center justify-center">[ 框格 ${idx+1} ]</div>`;
+                } else {
+                    let sClass = isLocked ? 'locked bg-emerald-600 border-emerald-700 cursor-not-allowed' : 'filled bg-emerald-500 border-emerald-600 hover:bg-emerald-600 cursor-pointer';
+                    tHtml += `<div id="target-slot-${idx}" onclick="removeFromTarget(${idx})" class="${slotClassBase} ${sClass} text-white font-bold shadow pop flex items-center">${prefix}${chunk}</div>`;
+                }
+            });
+            tArea.innerHTML = tHtml;
+
+            let sHtml = '';
+            reorderSource.forEach((chunk, idx) => {
+                if (chunk === null) {
+                    sHtml += `<div class="${slotClassBase} border-2 border-dashed border-slate-200 bg-slate-50 opacity-50"></div>`; 
+                } else {
+                    sHtml += `<button onclick="moveToTarget(${idx})" class="${sourceBtnClassBase}">${chunk}</button>`;
+                }
+            });
+            sArea.innerHTML = sHtml;
+
+            if (!targetSlots.includes(null)) {
+                checkReorderLogic(advanceFwPhase);
+            }
         }
 
         function advanceFwPhase() {
             speakText("拼得太好了！");
             setTimeout(() => {
                 if (currentPhase === 1) {
-                    currentSubTask++;
-                    if (currentSubTask < 3) setupFwPhase();
-                    else { currentPhase = 2; setupFwPhase(); }
+                    if (currentSubTask < 4) {
+                        currentSubTask++;
+                        setupFwPhase();
+                    } else {
+                        currentPhase = 2; 
+                        currentSubTask = 0;
+                        setupFwPhase(); 
+                    }
                 } else if (currentPhase === 2) {
-                    currentPhase = 3; setupFwPhase();
+                    currentPhase = 3; 
+                    currentSubTask = 0;
+                    setupFwPhase();
                 } else {
                     finishFwLevel();
                 }
-            }, 800);
+            }, 1000);
         }
 
         function finishFwLevel() {
             const data = fwData[currentIdx];
             let finalStory = `<p class="essay-paragraph font-black text-xl text-center text-slate-800 mb-4">${data.title}</p>`;
-            finalStory += `<p class="essay-paragraph mb-2">${data.intro}</p>`;
+            finalStory += `<p class="essay-paragraph mb-2">${data.introChunks.join('')}</p>`;
             finalStory += `<p class="essay-paragraph mb-2">${data.sents.map(s => s.join('')).join('')}</p>`;
-            finalStory += `<p class="essay-paragraph mb-2">${data.conclusion}</p>`;
+            finalStory += `<p class="essay-paragraph mb-2">${data.conclChunks.join('')}</p>`;
 
             let finalStatus = currentMistakes === 0 ? 1 : 2;
             let expGained = calcExp(finalStatus, fwProgress, currentIdx, 40, 20);
@@ -944,7 +1055,19 @@
             </div>`;
             
             document.getElementById('expand-play').innerHTML = html;
-            checkReorderLogic(finishExpandLevel);
+            
+            if (!targetSlots.includes(null)) {
+                checkReorderLogic(finishExpandLevel);
+            }
+        }
+
+        function moveToExpand(sourceIdx) {
+            let emptySlotIdx = targetSlots.indexOf(null);
+            if (emptySlotIdx !== -1) {
+                targetSlots[emptySlotIdx] = reorderSource[sourceIdx];
+                speakText(reorderSource[sourceIdx]);
+                renderExpandUI();
+            }
         }
 
         function finishExpandLevel() {
