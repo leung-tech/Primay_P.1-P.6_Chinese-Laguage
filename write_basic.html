@@ -205,8 +205,10 @@
         // 通用拖拉/點擊入槽狀態 (支援局部鎖定)
         let sourceItems = []; 
         let targetSlots = []; 
-        let correctTarget = []; 
+        let reorderCorrect = []; 
+        let reorderSource = [];
         let lockedSlots = []; 
+        let wrongSlots = []; // 新增：用於記錄哪些槽位是錯的
 
         function cleanTextForSpeech(text) {
             return text.replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】_]/g, '').replace(/&nbsp;/g, ' ').replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, ''); 
@@ -410,13 +412,13 @@
             }
         ];
 
-        // --- 模組 3：五感擴寫段落 (10篇) ---
+        // --- 模組 3：五感擴寫段落 (10篇) - 修正「地」字重疊 ---
         const exData = [
             {
                 title: "熱鬧的公園", emoji: "⛲🌳", tut: "t-five-senses",
                 base: "公園很熱鬧。陽光照在草地上。小鳥在唱歌。我們在玩耍，流下了汗水。",
                 template: "週末的公園真熱鬧！{0} 的陽光照在草地上。樹上的小鳥唱著 {1} 的歌。孩子們在草地上 {2} 奔跑，每個人都流下了 {3} 的汗水。",
-                bank: ["溫暖", "清脆", "開心地", "大滴大滴", "寒冷", "難聽", "生氣地", "五顏色色"],
+                bank: ["溫暖", "清脆", "開心地", "大滴大滴", "寒冷", "難聽", "生氣地", "五顏六色"],
                 ans: ["溫暖", "清脆", "開心地", "大滴大滴"],
                 hint: "根據五感：陽光是「溫暖」的，鳥聲是「清脆」的，奔跑是「開心」的，汗水是「大滴」的。"
             },
@@ -505,6 +507,8 @@
             reorderSource = [...reorderCorrect].sort(() => Math.random() - 0.5);
             targetSlots = new Array(correctArr.length).fill(null);
             lockedSlots = new Array(correctArr.length).fill(false);
+            wrongSlots = []; // 初始化時清空錯誤記錄
+            window.currentHints = []; // 清空提示
         }
 
         function getFirstEmptySlot() {
@@ -519,20 +523,42 @@
                 targetSlots[emptyIdx] = chunk;
                 speakText(chunk);
                 renderCurrentPlayUI();
+                
+                // 檢查是否填滿，如果填滿才執行 checkReorderLogic
+                if (!targetSlots.includes(null)) {
+                    if (currentMode === 'seq') checkReorderLogic(finishSeqLevel);
+                    else if (currentMode === 'framework') checkReorderLogic(advanceFwPhase);
+                    else if (currentMode === 'expand') checkReorderLogic(finishExpandLevel);
+                }
             }
         }
 
         function removeFromTarget(targetIdx) {
             if (lockedSlots[targetIdx]) return; 
             let chunk = targetSlots[targetIdx];
-            if (chunk) speakText(chunk + " 已移出");
-            targetSlots[targetIdx] = null;
-            let emptySourceIdx = reorderSource.indexOf(null);
-            if(emptySourceIdx !== -1) reorderSource[emptySourceIdx] = chunk;
-            renderCurrentPlayUI();
+            if (chunk) {
+                speakText(chunk + " 已移出");
+                targetSlots[targetIdx] = null;
+                wrongSlots = wrongSlots.filter(idx => idx !== targetIdx); // 移除錯誤標記
+                let emptySourceIdx = reorderSource.indexOf(null);
+                if(emptySourceIdx !== -1) reorderSource[emptySourceIdx] = chunk;
+                else reorderSource.push(chunk);
+                renderCurrentPlayUI();
+            }
+        }
+        
+        function removeFromExpand(targetIdx) {
+            if (lockedSlots[targetIdx]) return;
+            let word = targetSlots[targetIdx];
+            if (word) {
+                speakText(word + " 已移出");
+                targetSlots[targetIdx] = null;
+                wrongSlots = wrongSlots.filter(idx => idx !== targetIdx); 
+                renderCurrentPlayUI();
+            }
         }
 
-        // 🌟 核心升級：因應學生答錯給予「特定的提示」，並延長閱讀時間至 3.5秒
+        // 🌟 核心升級：因應學生答錯給予「特定的提示」，持續顯示，並標為紅色
         function checkReorderLogic(onComplete) {
             let isAllFilled = !targetSlots.includes(null);
             if (!isAllFilled) return;
@@ -550,6 +576,8 @@
             }
 
             if (isAllCorrect) {
+                window.currentHints = []; // 答對時清空提示
+                wrongSlots = [];
                 onComplete();
             } else {
                 currentMistakes++;
@@ -561,15 +589,8 @@
                     exProgress[currentIdx] = -1; localStorage.setItem('exBasicProgress', JSON.stringify(exProgress));
                 }
 
-                // 將錯的標為紅色並震動
-                wrongIndices.forEach(idx => {
-                    let slotElem = document.getElementById(`target-slot-${idx}`);
-                    if (slotElem) {
-                        slotElem.classList.remove('bg-emerald-500', 'bg-emerald-600', 'bg-sky-500', 'bg-sky-600', 'bg-purple-500', 'bg-purple-600', 'bg-sky-50', 'bg-emerald-50', 'bg-purple-50', 'border-emerald-700', 'border-sky-600', 'border-purple-700', 'border-dashed', 'text-slate-400', 'text-sky-800', 'text-emerald-800', 'text-purple-800');
-                        slotElem.classList.add('wrong-slot', 'shake');
-                    }
-                });
-                
+                wrongSlots = wrongIndices; // 記錄錯的槽位，讓 render 時標成紅色
+
                 // 動態構建特定錯誤的提示
                 let firstWrongIdx = wrongIndices[0];
                 let wrongText = targetSlots[firstWrongIdx];
@@ -579,38 +600,51 @@
                 if (currentMode === 'seq') {
                     let timeWord = seqData[currentIdx].trans[firstWrongIdx];
                     specificHint = `「<span class="text-rose-600">${wrongText}</span>」不應該放在「${timeWord}」喔！<br>`;
-                    hintText = specificHint + seqData[currentIdx].hint;
+                    hintText = seqData[currentIdx].hint;
                 } else if (currentMode === 'framework') {
                     specificHint = `「<span class="text-rose-600">${wrongText}</span>」放錯位置囉！<br>`;
-                    hintText = specificHint + fwData[currentIdx].hint;
+                    hintText = fwData[currentIdx].hint;
                 } else {
                     specificHint = `「<span class="text-rose-600">${wrongText}</span>」放在這裡不太通順喔！<br>`;
-                    hintText = specificHint + exData[currentIdx].hint;
+                    hintText = exData[currentIdx].hint;
                 }
 
-                const hintBox = document.getElementById('dynamic-hint-box');
-                document.getElementById('hint-text').innerHTML = "💡 提示：" + hintText;
-                document.getElementById('hint-tts-btn').onclick = () => speakText("提示：" + hintText.replace(/<[^>]*>?/gm, ''));
-                hintBox.classList.remove('hidden');
+                let combinedHint = specificHint + " 💡 技巧：" + hintText;
+                
+                // 累積提示，如果第二次錯別的地方，提示會增加
+                if (!window.currentHints) window.currentHints = [];
+                if (!window.currentHints.includes(combinedHint)) {
+                    window.currentHints.push(combinedHint);
+                }
 
-                speakText("排錯了喔，請看提示再試一次！");
+                speakText("排錯了喔，請點擊紅色的積木移出，並查看提示！");
+                
+                // 重新渲染畫面（此時紅色錯誤積木會持續停留在上方，提示框也會顯示）
+                renderCurrentPlayUI();
 
-                // 🌟 延長提示時間至 3500ms，讓學生有足夠時間閱讀提示與紅色標記
+                // 3.5秒後自動退回
                 setTimeout(() => {
+                    let changed = false;
                     wrongIndices.forEach(idx => {
                         let chunk = targetSlots[idx];
-                        targetSlots[idx] = null;
-                        
-                        let slotElem = document.getElementById(`target-slot-${idx}`);
-                        if (slotElem) {
-                            slotElem.classList.remove('wrong-slot', 'shake');
-                        }
+                        if (chunk !== null && wrongSlots.includes(idx)) {
+                            targetSlots[idx] = null;
+                            
+                            let slotElem = document.getElementById(`target-slot-${idx}`);
+                            if (slotElem) {
+                                slotElem.classList.remove('wrong-slot', 'shake');
+                            }
 
-                        let emptySourceIdx = reorderSource.indexOf(null);
-                        if(emptySourceIdx !== -1) reorderSource[emptySourceIdx] = chunk;
-                        else reorderSource.push(chunk);
+                            if (currentMode !== 'expand') {
+                                let emptySourceIdx = reorderSource.indexOf(null);
+                                if(emptySourceIdx !== -1) reorderSource[emptySourceIdx] = chunk;
+                                else reorderSource.push(chunk);
+                            }
+                            changed = true;
+                        }
                     });
-                    renderCurrentPlayUI();
+                    wrongSlots = [];
+                    if (changed) renderCurrentPlayUI();
                 }, 3500);
             }
         }
@@ -669,8 +703,15 @@
                 
                 <div class="slide-up w-full max-w-4xl bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center relative transition-all duration-500">
                     <span class="absolute -top-4 bg-sky-500 text-white px-5 py-1.5 rounded-full font-bold shadow-md text-sm md:text-base">${data.title}</span>
-                    <div class="text-5xl md:text-6xl mb-6 text-center drop-shadow-md mt-2 flex gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                        ${data.emoji.map(e => `<span>${e}</span>`).join('<span class="text-3xl text-slate-300">➡️</span>')}
+                    
+                    <div class="w-full flex items-start gap-3 mt-2 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <button onclick="speakText('${data.title}。請根據四格漫畫與時間提示詞，排好故事順序。')" class="tts-btn flex-shrink-0 bg-white text-sky-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-sky-200 mt-1">🔊</button>
+                        <div class="w-full">
+                            <h2 class="text-xl md:text-2xl font-bold text-slate-800 leading-relaxed mb-4">請根據四格漫畫與時間提示詞，排好故事順序：</h2>
+                            <div class="text-5xl md:text-6xl text-center drop-shadow-md flex gap-4 bg-white p-4 rounded-xl border border-slate-200 justify-center">
+                                ${data.emoji.map(e => `<span>${e}</span>`).join('<span class="text-3xl text-slate-300 flex items-center">➡️</span>')}
+                            </div>
+                        </div>
                     </div>
             `;
 
@@ -678,6 +719,7 @@
             for (let i = 0; i < 4; i++) {
                 let chunk = targetSlots[i];
                 let isLocked = lockedSlots[i];
+                let isWrong = wrongSlots.includes(i);
                 let transWord = data.trans[i];
                 
                 html += `<div class="flex items-center gap-3 w-full">`;
@@ -686,7 +728,8 @@
                 if (chunk === null) {
                     html += `<div id="target-slot-${i}" class="slot-box flex-1 border-dashed border-sky-300 bg-sky-50 h-[56px] rounded-xl text-slate-400">點擊下方句子填入...</div>`;
                 } else {
-                    let btnClass = isLocked ? 'slot-box locked flex-1 bg-emerald-500 border-emerald-600' : 'slot-box filled flex-1 bg-sky-500 border-sky-600 hover:bg-sky-600';
+                    let btnClass = isLocked ? 'slot-box locked flex-1 bg-emerald-500 border-emerald-600 cursor-not-allowed' : 
+                                 (isWrong ? 'slot-box wrong-slot shake cursor-pointer flex-1' : 'slot-box filled flex-1 bg-sky-500 border-sky-600 hover:bg-sky-600 cursor-pointer');
                     html += `<div id="target-slot-${i}" onclick="removeFromTarget(${i})" class="${btnClass} text-white font-bold px-4 py-3 h-[56px] flex items-center shadow pop">${chunk}</div>`;
                 }
                 html += `</div>`;
@@ -699,21 +742,32 @@
             
             reorderSource.forEach((chunk, idx) => {
                 if (chunk === null) {
-                    html += `<div class="h-[56px] border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 opacity-50"></div>`; 
+                    html += `<div class="h-[60px] border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 opacity-50"></div>`; 
                 } else {
-                    html += `<button onclick="moveToTarget(${idx})" class="text-left w-full bg-white border-2 border-slate-300 text-slate-700 hover:border-sky-400 hover:bg-sky-50 font-bold text-lg md:text-xl py-3 px-5 rounded-xl shadow active:scale-95 transition">${chunk}</button>`;
+                    html += `
+                        <div class="flex items-center gap-2 w-full">
+                            <button onclick="moveToTarget(${idx})" class="text-left flex-1 bg-white border-2 border-slate-300 text-slate-700 hover:border-sky-400 hover:bg-sky-50 font-bold text-lg md:text-xl py-3 px-5 rounded-xl shadow active:scale-95 transition">${chunk}</button>
+                            <button onclick="speakText('${chunk.replace(/'/g, "\\'")}')" class="tts-btn flex-shrink-0 bg-sky-50 text-sky-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-sm border border-sky-200 hover:bg-sky-100 transition" title="朗讀此句">🔊</button>
+                        </div>
+                    `;
                 }
             });
 
-            html += `</div>
-                <div id="dynamic-hint-box" class="hidden w-full mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3 slide-up">
-                    <div class="flex-1 space-y-2" id="hint-text"></div>
-                    <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
-                </div>
-            </div>`;
+            html += `</div>`;
+
+            if (window.currentHints && window.currentHints.length > 0) {
+                let combinedHintsHtml = window.currentHints.map(h => `<div class="border-b border-yellow-200 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0">💡 ${h}</div>`).join('');
+                html += `
+                    <div id="dynamic-hint-box" class="w-full mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3 slide-up">
+                        <div class="flex-1" id="hint-text">${combinedHintsHtml}</div>
+                        <button onclick="speakText('${window.currentHints.join('。').replace(/'/g, "\\'").replace(/<[^>]*>?/gm, '')}')" class="text-2xl hover:scale-110 transition bg-white rounded-full w-12 h-12 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
             
             document.getElementById('seq-play').innerHTML = html;
-            checkReorderLogic(finishSeqLevel);
         }
 
         function finishSeqLevel() {
@@ -800,6 +854,7 @@
                 let conclStr = data.conclChunks.join('');
                 initReorderState([introStr, bodyStr, conclStr]);
             }
+            window.currentHints = []; // 清空提示
             renderFrameworkUI();
         }
 
@@ -810,7 +865,7 @@
             let taskDesc = "";
             if (currentPhase === 1) {
                 if (currentSubTask === 0) taskDesc = "第 1 句 / 共 5 句 (文章開頭)";
-                else if (currentSubTask >= 1 && currentSubTask <= 3) taskDesc = `第 ${currentSubTask} 句 / 共 5 句 (事情經過)`;
+                else if (currentSubTask >= 1 && currentSubTask <= 3) taskDesc = `第 ${currentSubTask + 1} 句 / 共 5 句 (事情經過)`;
                 else taskDesc = "第 5 句 / 共 5 句 (文章結尾)";
             } else if (currentPhase === 2) {
                 taskDesc = "將剛才的三個經過句子，排成一段通順的段落";
@@ -828,17 +883,24 @@
                     <div class="text-3xl md:text-4xl font-black text-slate-800 mb-2 flex items-center gap-3">
                         <span class="text-5xl drop-shadow-md">${data.emoji}</span> 《${data.title}》
                     </div>
-                    <div class="text-emerald-600 font-bold mb-6 bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-200">${phaseTitle} - ${taskDesc}</div>
+                    
+                    <div class="w-full flex items-start gap-3 mt-4 mb-4 bg-emerald-50 p-4 rounded-xl border border-emerald-100 shadow-inner">
+                        <button onclick="speakText('${phaseTitle}。${taskDesc}。請依順序，將下方積木填入框格中。')" class="tts-btn flex-shrink-0 bg-white text-emerald-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-emerald-200 mt-1">🔊</button>
+                        <div>
+                            <span class="text-emerald-600 font-bold mb-1 bg-white px-3 py-1 rounded-full shadow-sm text-sm inline-block">${phaseTitle}</span>
+                            <h2 class="text-xl md:text-2xl font-bold text-slate-800 leading-relaxed mt-2">${taskDesc}</h2>
+                        </div>
+                    </div>
             `;
 
             // 🌟 漸進式顯示已完成的句子 (小步子鷹架)
             if (currentPhase === 1 && currentSubTask > 0) {
-                html += `<div class="w-full bg-emerald-50 p-4 rounded-xl border border-emerald-200 mb-4 text-emerald-800 font-bold leading-loose text-lg">`;
-                html += `<p class="mb-2 text-sm text-emerald-600 border-b border-emerald-200 pb-1">✅ 已完成的部分：</p>`;
+                html += `<div class="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 text-slate-700 font-bold leading-loose text-lg shadow-inner">`;
+                html += `<p class="mb-2 text-sm text-emerald-600 border-b border-slate-200 pb-1 font-black">✅ 已完成的部分：</p>`;
                 if (currentSubTask > 0) html += `<p>${data.introChunks.join('')}</p>`;
-                if (currentSubTask > 1) html += `<p class="text-slate-600">${data.sents[0].join('')}</p>`;
-                if (currentSubTask > 2) html += `<p class="text-slate-600">${data.sents[1].join('')}</p>`;
-                if (currentSubTask > 3) html += `<p class="text-slate-600">${data.sents[2].join('')}</p>`;
+                if (currentSubTask > 1) html += `<p>${data.sents[0].join('')}</p>`;
+                if (currentSubTask > 2) html += `<p>${data.sents[1].join('')}</p>`;
+                if (currentSubTask > 3) html += `<p>${data.sents[2].join('')}</p>`;
                 html += `</div>`;
             }
 
@@ -853,16 +915,20 @@
                      <div class="text-center text-slate-500 font-bold mb-3 text-sm">👇 點擊下方積木，依順序放入框格中</div>
                      <div class="w-full ${wrapperClass}" id="reorder-source-area"></div>`;
             
-            html += `
-                <div id="dynamic-hint-box" class="hidden w-full mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3 slide-up">
-                    <div class="flex-1 space-y-2" id="hint-text"></div>
-                    <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
-                </div>
-            </div>`;
+            if (window.currentHints && window.currentHints.length > 0) {
+                let combinedHintsHtml = window.currentHints.map(h => `<div class="border-b border-yellow-200 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0">💡 ${h}</div>`).join('');
+                html += `
+                    <div id="dynamic-hint-box" class="w-full mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3 slide-up">
+                        <div class="flex-1" id="hint-text">${combinedHintsHtml}</div>
+                        <button onclick="speakText('${window.currentHints.join('。').replace(/'/g, "\\'").replace(/<[^>]*>?/gm, '')}')" class="text-2xl hover:scale-110 transition bg-white rounded-full w-12 h-12 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
             
             document.getElementById('framework-play').innerHTML = html;
             
-            // 延遲渲染以確保 DOM 已存在
             setTimeout(() => {
                 let btnClassB = isRow ? "tile-btn bg-emerald-500 text-white font-black text-xl py-3 px-4 rounded-xl shadow-md pop m-1" : "tile-btn bg-emerald-600 text-white font-bold text-lg py-4 px-5 rounded-xl shadow-md pop w-full text-left mb-2 leading-relaxed";
                 let sourceBtnClassB = isRow ? "tile-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-emerald-400 hover:bg-emerald-50 font-black text-xl py-3 px-4 rounded-xl shadow m-1" : "tile-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-emerald-400 hover:bg-emerald-50 font-bold text-lg py-4 px-5 rounded-xl shadow w-full text-left mb-2 leading-relaxed";
@@ -880,29 +946,33 @@
             let tHtml = '';
             targetSlots.forEach((chunk, idx) => {
                 let isLocked = lockedSlots[idx];
+                let isWrong = wrongSlots.includes(idx);
                 let prefix = currentPhase === 1 ? '' : `<span class="bg-white text-emerald-600 px-2 py-0.5 rounded text-sm mr-2">${idx+1}</span>`;
                 if (chunk === null) {
                     tHtml += `<div id="target-slot-${idx}" class="${slotClassBase} border-dashed border-emerald-300 bg-emerald-50 text-slate-400 text-sm md:text-base flex items-center justify-center">[ 框格 ${idx+1} ]</div>`;
                 } else {
-                    let sClass = isLocked ? 'locked bg-emerald-600 border-emerald-700 cursor-not-allowed' : 'filled bg-emerald-500 border-emerald-600 hover:bg-emerald-600 cursor-pointer';
+                    let sClass = isLocked ? 'locked bg-emerald-600 border-emerald-700 cursor-not-allowed' : 
+                                 (isWrong ? 'wrong-slot shake cursor-pointer' : 'filled bg-emerald-500 border-emerald-600 hover:bg-emerald-600 cursor-pointer');
                     tHtml += `<div id="target-slot-${idx}" onclick="removeFromTarget(${idx})" class="${slotClassBase} ${sClass} text-white font-bold shadow pop flex items-center">${prefix}${chunk}</div>`;
                 }
             });
             tArea.innerHTML = tHtml;
 
             let sHtml = '';
+            let isRow = currentPhase === 1;
             reorderSource.forEach((chunk, idx) => {
                 if (chunk === null) {
                     sHtml += `<div class="${slotClassBase} border-2 border-dashed border-slate-200 bg-slate-50 opacity-50"></div>`; 
                 } else {
-                    sHtml += `<button onclick="moveToTarget(${idx})" class="${sourceBtnClassBase}">${chunk}</button>`;
+                    sHtml += `
+                        <div class="flex items-center gap-2 ${isRow ? 'w-auto' : 'w-full'}">
+                            <button onclick="moveToTarget(${idx})" class="${sourceBtnClassBase} flex-1">${chunk}</button>
+                            <button onclick="speakText('${chunk.replace(/'/g, "\\'")}')" class="tts-btn flex-shrink-0 bg-emerald-50 text-emerald-600 ${isRow ? 'w-12 h-12 rounded-full self-center' : 'w-14 rounded-2xl'} text-2xl flex items-center justify-center shadow-sm border border-emerald-200 hover:bg-emerald-100 transition" title="朗讀此積木">🔊</button>
+                        </div>
+                    `;
                 }
             });
             sArea.innerHTML = sHtml;
-
-            if (!targetSlots.includes(null)) {
-                checkReorderLogic(advanceFwPhase);
-            }
         }
 
         function advanceFwPhase() {
@@ -1007,8 +1077,12 @@
                     <span class="absolute -top-4 bg-purple-500 text-white px-5 py-1.5 rounded-full font-bold shadow-md text-sm md:text-base">${data.title}</span>
                     <div class="text-5xl md:text-6xl mb-4 text-center animate-bounce drop-shadow-md mt-2">${data.emoji}</div>
                     
-                    <div class="w-full bg-purple-50 p-6 rounded-2xl border-2 border-purple-200 mb-8 shadow-inner mt-2">
-                        <div class="text-sm font-bold text-purple-700 mb-3 border-b-2 border-purple-200 pb-2">🪄 點擊下方詞語，放入段落空格中：</div>
+                    <div class="w-full flex items-start gap-4 mb-4 mt-2 bg-purple-50 p-6 rounded-2xl border border-purple-100 shadow-inner">
+                        <button onclick="speakText('請點擊下方詞庫的詞語，放入段落空格中，讓句子變生動。')" class="tts-btn flex-shrink-0 bg-white text-purple-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-purple-200 mt-1">🔊</button>
+                        <div class="text-xl md:text-2xl font-bold text-slate-800 leading-loose">🪄 請點擊下方詞語，放入段落空格中：</div>
+                    </div>
+
+                    <div class="w-full bg-white p-6 rounded-2xl border-2 border-slate-200 mb-8 shadow-sm">
                         <div class="text-xl md:text-2xl font-bold text-slate-800 leading-loose flex flex-wrap items-center justify-start gap-y-3" id="expand-target-area">
             `;
 
@@ -1016,12 +1090,14 @@
             for (let i = 0; i < targetSlots.length; i++) {
                 let chunk = targetSlots[i];
                 let isLocked = lockedSlots[i];
+                let isWrong = wrongSlots.includes(i);
                 let slotHtml = "";
                 if (chunk === null) {
                     slotHtml = `<span id="target-slot-${i}" class="inline-slot empty border-dashed border-purple-400 bg-purple-50 text-slate-400 font-normal">填入詞語</span>`;
                 } else {
-                    let sClass = isLocked ? 'locked bg-purple-600 border-purple-700' : 'filled bg-purple-500 border-purple-600 hover:bg-purple-600';
-                    slotHtml = `<span id="target-slot-${i}" onclick="removeFromTarget(${i})" class="inline-slot ${sClass} text-white font-bold pop shadow">${chunk}</span>`;
+                    let sClass = isLocked ? 'locked bg-purple-600 border-purple-700 cursor-not-allowed' : 
+                                 (isWrong ? 'wrong-slot shake cursor-pointer' : 'filled bg-purple-500 border-purple-600 hover:bg-purple-600 cursor-pointer');
+                    slotHtml = `<span id="target-slot-${i}" onclick="removeFromExpand(${i})" class="inline-slot ${sClass} text-white font-bold pop shadow">${chunk}</span>`;
                 }
                 templateStr = templateStr.replace(`{${i}}`, slotHtml);
             }
@@ -1040,25 +1116,33 @@
                     html += `<div class="h-[52px] w-[100px] border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 opacity-50 m-1"></div>`;
                 } else {
                     let isHidden = targetSlots.includes(word);
-                    let btnClass = "tile-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-purple-400 hover:bg-purple-50 font-black text-lg py-2.5 px-4 rounded-xl shadow m-1 active:scale-95 transition";
-                    if (isHidden) btnClass += " hidden-tile";
-                    html += `<button onclick="moveToTarget(${idx})" class="${btnClass}">${word}</button>`;
+                    let btnClass = "tile-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-purple-400 hover:bg-purple-50 font-black text-lg py-2.5 px-4 rounded-xl shadow m-1 active:scale-95 transition flex-1 text-center";
+                    let wrapperClass = isHidden ? "hidden-tile" : "flex items-center gap-1 m-1";
+                    html += `
+                        <div class="${wrapperClass}">
+                            <button onclick="moveToExpand(${idx})" class="${btnClass}">${word}</button>
+                            <button onclick="speakText('${word.replace(/'/g, "\\'")}')" class="tts-btn bg-purple-50 text-purple-600 w-10 h-10 rounded-full text-xl flex items-center justify-center shadow-sm border border-purple-200 hover:bg-purple-100 transition">🔊</button>
+                        </div>
+                    `;
                 }
             });
 
-            html += `
+            html += `</div>`;
+
+            if (window.currentHints && window.currentHints.length > 0) {
+                let combinedHintsHtml = window.currentHints.map(h => `<div class="border-b border-yellow-200 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0">💡 ${h}</div>`).join('');
+                html += `
+                    <div id="dynamic-hint-box" class="w-full mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3 slide-up">
+                        <div class="flex-1" id="hint-text">${combinedHintsHtml}</div>
+                        <button onclick="speakText('${window.currentHints.join('。').replace(/'/g, "\\'").replace(/<[^>]*>?/gm, '')}')" class="text-2xl hover:scale-110 transition bg-white rounded-full w-12 h-12 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
                     </div>
-                <div id="dynamic-hint-box" class="hidden w-full mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3 slide-up">
-                    <div class="flex-1 space-y-2" id="hint-text"></div>
-                    <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
-                </div>
-            </div>`;
+                `;
+            }
+
+            html += `</div>`;
             
             document.getElementById('expand-play').innerHTML = html;
             
-            if (!targetSlots.includes(null)) {
-                checkReorderLogic(finishExpandLevel);
-            }
         }
 
         function moveToExpand(sourceIdx) {
@@ -1067,6 +1151,9 @@
                 targetSlots[emptySlotIdx] = reorderSource[sourceIdx];
                 speakText(reorderSource[sourceIdx]);
                 renderExpandUI();
+                if (!targetSlots.includes(null)) {
+                    checkReorderLogic(finishExpandLevel);
+                }
             }
         }
 
