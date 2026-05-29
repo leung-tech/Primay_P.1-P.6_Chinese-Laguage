@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif;
-            background-color: #eff6ff; /* 淺藍色背景 */
+            background-color: #eff6ff; 
             -webkit-tap-highlight-color: transparent;
         }
         
@@ -27,24 +27,23 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
         /* 🌟 積木與槽位樣式 */
-        .tile-btn { transition: all 0.2s; box-shadow: 0 4px 0 #2563eb; cursor: pointer; user-select: none; }
-        .tile-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .chunk-btn { transition: all 0.2s; cursor: pointer; user-select: none; }
+        .chunk-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent !important; }
         
-        .slot-box { border: 2px dashed #93c5fd; background-color: #f0f7ff; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: flex-start; padding: 10px 14px; border-radius: 8px; cursor: pointer; color: #3b82f6; font-weight: bold; width: 100%; min-height: 60px; margin-bottom: 8px; }
-        .slot-box.filled { border-style: solid; border-color: #2563eb; background-color: #3b82f6; color: white; box-shadow: 0 4px 0 #1d4ed8; }
-        .slot-box.filled:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
-        .slot-box.locked { border-style: solid; border-color: #1e40af; background-color: #2563eb; color: white; cursor: not-allowed; box-shadow: none; transform: translateY(4px); }
+        /* 句子碎片專用 (行內彈性排列) */
+        .inline-slot { border: 2px dashed #93c5fd; background-color: #f0f7ff; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; padding: 10px 16px; border-radius: 8px; color: #3b82f6; font-weight: bold; min-height: 56px; margin: 4px; }
+        .inline-slot.filled { border-style: solid; border-color: #2563eb; background-color: #3b82f6; color: white; box-shadow: 0 3px 0 #1d4ed8; }
+        .inline-slot.filled:active { transform: translateY(3px); box-shadow: 0 0 0 transparent; }
+        .inline-slot.locked { border-style: solid; border-color: #1e40af; background-color: #2563eb; color: white; cursor: not-allowed; box-shadow: none; transform: translateY(3px); }
+        
+        /* 段落整句專用 (垂直排列) */
+        .block-slot { border: 2px dashed #93c5fd; background-color: #f0f7ff; transition: all 0.2s; display: flex; align-items: center; justify-content: flex-start; padding: 12px 16px; border-radius: 8px; color: #3b82f6; font-weight: bold; width: 100%; min-height: 64px; margin-bottom: 8px; line-height: 1.6; text-align: left; }
+        .block-slot.filled { border-style: solid; border-color: #2563eb; background-color: #3b82f6; color: white; box-shadow: 0 4px 0 #1d4ed8; }
+        .block-slot.filled:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .block-slot.locked { border-style: solid; border-color: #1e40af; background-color: #2563eb; color: white; cursor: not-allowed; box-shadow: none; transform: translateY(4px); }
         
         /* 🚨 強制錯誤紅標樣式 */
         .wrong-slot { background-color: #ef4444 !important; border-color: #b91c1c !important; color: white !important; box-shadow: 0 4px 0 #991b1b !important; }
-
-        /* 擴寫專用行內槽位 */
-        .inline-slot { border: 2px dashed #8b5cf6; background-color: #f3e8ff; color: #7e22ce; padding: 2px 16px; border-radius: 6px; cursor: pointer; display: inline-block; margin: 0 4px; transition: all 0.2s; min-width: 80px; text-align: center; }
-        .inline-slot.filled { border-style: solid; border-color: #7e22ce; background-color: #9333ea; color: white; box-shadow: 0 3px 0 #6b21a8; }
-        .inline-slot.filled:active { transform: translateY(3px); box-shadow: 0 0 0 transparent; }
-        .inline-slot.locked { border-style: solid; border-color: #581c87; background-color: #7e22ce; color: white; cursor: not-allowed; box-shadow: none; transform: translateY(3px); }
-
-        .hidden-tile { visibility: hidden; pointer-events: none; }
 
         /* 稿紙設計 */
         .essay-pad {
@@ -62,8 +61,7 @@
         .essay-pad p { margin-bottom: 0; text-indent: 2em; }
         
         .hl-boring { color: #94a3b8; text-decoration: line-through; margin: 0 4px; }
-        .hl-magic { color: #2563eb; font-weight: 900; border-bottom: 3px solid #3b82f6; margin: 0 4px; padding-bottom: 2px; }
-
+        
         .tts-btn { transition: transform 0.2s; }
         .tts-btn:active { transform: scale(0.9); }
         .tab-btn { transition: all 0.3s; }
@@ -81,7 +79,7 @@
 </head>
 <body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden bg-grid-pattern">
 
-    <!-- 頂部導覽列 (Blue 配色) -->
+    <!-- 頂部導覽列 -->
     <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
         <div class="p-3 lg:p-4 bg-blue-600 text-white flex justify-between items-center w-full">
             <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
@@ -95,9 +93,9 @@
         </div>
         
         <div class="flex w-full bg-slate-100 border-b border-slate-300 overflow-x-auto no-scrollbar">
-            <button onclick="switchMode('expand')" id="tab-expand" class="tab-btn tab-active flex-1 py-3 px-2 font-bold text-sm md:text-base border-b-4 border-blue-600 whitespace-nowrap">📝 記敘六要素擴寫</button>
+            <button onclick="switchMode('expand')" id="tab-expand" class="tab-btn tab-active flex-1 py-3 px-2 font-bold text-sm md:text-base border-b-4 border-blue-600 whitespace-nowrap">📝 記敘與修辭擴寫</button>
             <button onclick="switchMode('expo')" id="tab-expo" class="tab-btn tab-inactive flex-1 py-3 px-2 font-bold text-sm md:text-base border-b-4 border-transparent hover:bg-slate-200 whitespace-nowrap">🔬 小小說明家結構</button>
-            <button onclick="switchMode('trans')" id="tab-trans" class="tab-btn tab-inactive flex-1 py-3 px-2 font-bold text-sm md:text-base border-b-4 border-transparent hover:bg-slate-200 whitespace-nowrap">🔗 段落黏著劑過渡句</button>
+            <button onclick="switchMode('trans')" id="tab-trans" class="tab-btn tab-inactive flex-1 py-3 px-2 font-bold text-sm md:text-base border-b-4 border-transparent hover:bg-slate-200 whitespace-nowrap">🔗 段落黏著過渡句</button>
             <button onclick="switchMode('tips')" id="tab-tips" class="tab-btn tab-inactive flex-1 py-3 px-2 font-bold text-sm md:text-base border-b-4 border-transparent hover:bg-slate-200 whitespace-nowrap">💡 寫作錦囊</button>
         </div>
 
@@ -107,18 +105,19 @@
     </div>
 
     <!-- 主畫面區 -->
-    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth" id="main-scroll-area">
+    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
         
-        <!-- ================= 模式 1：記敘六要素擴寫 ================= -->
+        <!-- ================= 模式 1：記敘與修辭擴寫 ================= -->
         <div id="expand-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
             <div id="expand-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
-                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">📝 記敘文細節放大鏡</h2>
-                <p class="text-slate-600 font-bold mb-4">告別「流水帳」！請從選項中挑選使用了「修辭」或「生動細節」的高級句子，來替換原本枯燥的草稿吧！</p>
+                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">📝 漸進式場景擴寫 (10大場景)</h2>
+                <p class="text-slate-600 font-bold mb-4">告別流水帳！每個場景包含 5 個擴寫任務，請親手拼出高級的句子，看著文章一句一句變漂亮！</p>
                 <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
                     <div class="text-blue-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
                     <div class="flex flex-wrap gap-4 flex-1">
-                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-lg shadow-sm">🌟</span> 完美寫作 (+20)</div>
-                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 順利過關 (+10)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-lg shadow-sm">🌟</span> 場景完美 (+20)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 經提示過關 (+10)</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-slate-100 border-2 border-slate-300 flex items-center justify-center text-lg shadow-sm text-slate-400">#</span> 尚未挑戰</div>
                     </div>
                 </div>
                 <div id="expand-content" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
@@ -129,8 +128,8 @@
         <!-- ================= 模式 2：說明文結構工程師 ================= -->
         <div id="expo-mode" class="w-full max-w-5xl mx-auto hidden flex-col gap-4 lg:gap-6">
             <div id="expo-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
-                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">🔬 小小說明家結構重組</h2>
-                <p class="text-slate-600 font-bold mb-4">說明文講求邏輯！請將打亂的句子，按「總起 👉 數據/例子 👉 總結」的嚴謹順序重新排好。排錯的會被退回喔！</p>
+                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">🔬 小小說明家：雙階結構魔法</h2>
+                <p class="text-slate-600 font-bold mb-4">說明文講求邏輯！請挑戰【第一階：排句成段】再邁入【第二階：排段成文】，拼出完美的總分總結構。</p>
                 <div id="expo-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
             <div id="expo-play" class="w-full hidden flex-col items-center"></div>
@@ -140,7 +139,7 @@
         <div id="trans-mode" class="w-full max-w-5xl mx-auto hidden flex-col gap-4 lg:gap-6">
             <div id="trans-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
                 <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">🔗 段落過渡句黏合特訓</h2>
-                <p class="text-slate-600 font-bold mb-4">文章段落之間需要「過渡句」來當萬能膠。請根據上下段落語境，挑選最適合的過渡句黏在中間吧！</p>
+                <p class="text-slate-600 font-bold mb-4">文章段落之間需要「過渡句」來當萬能膠。請將碎片拼成一句邏輯嚴密的過渡句，把兩段完美黏合起來！</p>
                 <div id="trans-content" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
             <div id="trans-play" class="w-full hidden flex-col items-center"></div>
@@ -170,9 +169,9 @@
         </div>
     </div>
 
-    <!-- 反饋 Modal -->
-    <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 pointer-events-none">
-        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl text-center transform scale-90 transition-transform duration-300 flex flex-col max-h-[90vh] pointer-events-auto" id="feedback-content">
+    <!-- 答對全解析 Modal -->
+    <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 pointer-events-none">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-xl text-center transform scale-90 transition-transform duration-300 flex flex-col max-h-[90vh] pointer-events-auto" id="feedback-content">
             <div id="feedback-icon" class="text-6xl mb-4">🎉</div>
             <h2 id="feedback-title" class="text-2xl md:text-3xl font-black text-slate-800 mb-4">太棒了！</h2>
             
@@ -197,27 +196,29 @@
 
     <script>
         // ================= 1. 核心狀態 =================
-        let writeExp = parseInt(localStorage.getItem('writeStdExp')) || 0;
+        let writeExp = parseInt(localStorage.getItem('writeStdExp_v4')) || 0;
         document.getElementById('exp-display').innerText = writeExp;
         
         let currentMode = 'expand'; 
         let currentIdx = -1;
+        let currentSubTask = 0; 
         let currentMistakes = 0; 
         let pendingIdx = -1;
         let pendingType = '';
 
-        // 重組題型專用 (僅 expo 會用到 slot logic)
-        let reorderSource = []; 
+        // 全局拖拉/點擊入槽狀態
+        let sourceItems = []; 
         let targetSlots = []; 
         let reorderCorrect = []; 
+        let reorderSource = [];
         let lockedSlots = []; 
         let wrongSlots = []; 
 
         function cleanTextForSpeech(text) {
-            return text.replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】_]/g, '').replace(/&nbsp;/g, ' ').replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, ''); 
+            return text.replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】_]/g, '').replace(/&nbsp;/g, ' '); 
         }
 
-        function speakText(text, rate = 0.95) {
+        function speakText(text, rate = 0.9) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 let msg = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
@@ -236,8 +237,8 @@
 
         // ================= 2. 學習錦囊 (標準版) =================
         const allTips = [
-            { id: 't-expand-std', title: "📝 告別流水帳", content: "記敘文最怕寫成「我去了公園。我玩了滑梯。我回家了。」<br><br>💡 <span class='font-bold text-blue-600'>如何變高級？</span><br>1. 加上<span class='text-rose-500 font-bold'>心理描寫</span> (我的心像小鹿亂撞)。<br>2. 加上<span class='text-purple-500 font-bold'>修辭手法</span> (汗水像斷了線的珍珠)。<br>3. 加上<span class='text-emerald-500 font-bold'>動作細節</span> (他咬緊牙關，用力一蹬)。", color: "blue" },
-            { id: 't-expo-std', title: "🔬 說明文結構", content: "說明文必須要有嚴謹的邏輯順序！<br><br>🧱 <span class='font-bold text-teal-600 bg-teal-50 px-2 rounded'>總起句</span> 👉 開頭先介紹主角是誰。<br>📊 <span class='font-bold text-teal-600 bg-teal-50 px-2 rounded'>說明特徵</span> 👉 接著用「列數字」或「舉例子」說明細節。<br>🏁 <span class='font-bold text-teal-600 bg-teal-50 px-2 rounded'>總結句</span> 👉 最後一句總結它的功用或好處。<br><br>💡 <span class='text-rose-500 font-bold'>注意「首先、其次、此外」等順序詞！</span>", color: "teal" },
+            { id: 't-expand-std', title: "📝 漸進式場景擴寫", content: "寫文章就像蓋房子，要一句一句來！<br><br>💡 <span class='font-bold text-blue-600'>擴寫技巧：</span><br>1. 加入<span class='text-rose-500 font-bold'>心理與生理描寫</span> (手心直冒冷汗、心跳加速)。<br>2. 運用<span class='text-purple-500 font-bold'>修辭手法</span> (汗水像斷了線的珍珠)。<br>3. 在這個模式中，你會親眼看著原本無聊的段落，經過你的重組，慢慢變成一篇文采飛揚的好文章！", color: "blue" },
+            { id: 't-expo-std', title: "🔬 說明文雙階結構", content: "說明文必須要有嚴謹的邏輯順序！<br><br>🧱 <span class='font-bold text-teal-600 bg-teal-50 px-2 rounded'>總起句</span> 👉 開頭先介紹主角是誰。<br>📊 <span class='font-bold text-teal-600 bg-teal-50 px-2 rounded'>說明特徵</span> 👉 接著用「列數字」或「舉例子」說明細節。<br>🏁 <span class='font-bold text-teal-600 bg-teal-50 px-2 rounded'>總結句</span> 👉 最後一句總結它的功用或好處。<br><br>💡 <span class='text-rose-500 font-bold'>第一階：先將特徵排成一段。<br>第二階：將三段排成一篇大文章！</span>", color: "teal" },
             { id: 't-trans-std', title: "🔗 承上啟下過渡句", content: "文章段落之間需要「過渡句」來當萬能膠，才不會顯得斷層。<br><br>🪄 <span class='font-bold text-amber-600'>過渡句的作用：</span><br>前半句總結<span class='text-slate-500'>上一段</span>，後半句引出<span class='text-slate-500'>下一段</span>。<br>例：<span class='bg-amber-100 px-1 rounded'>雖然</span>早上的參觀很累，<span class='bg-amber-100 px-1 rounded'>但</span>下午的遊戲卻讓我們精神百倍。", color: "amber" }
         ];
 
@@ -319,383 +320,378 @@
             updateTotalProgress();
         }
 
-        // ================= 3. 題庫資料 (擴充至 60 題) =================
+        // ================= 3. 題庫資料 =================
         
-        // --- 模組 1：記敘文細節放大鏡 (20題) ---
+        // --- 模組 1：漸進式場景擴寫 (10大場景，每場景5句 = 50題) ---
         const expandData = [
             {
                 title: "考試派卷", emoji: "📝😨", tut: "t-expand-std",
-                base: "今天派測驗卷。<span class='hl-boring'>我很緊張。</span>當老師唸到我的名字時，我深吸了一口氣。",
-                opts: ["我心裡覺得非常非常的緊張和害怕。", "我的心像十五個吊桶打水——七上八下，手心直冒冷汗。", "我緊張得快要哭了出來。"], ans: 1,
-                hint: "想想人在緊張時，手心和心跳會有什麼具體反應？有沒有什麼歇後語可以形容？",
-                exp: "使用了歇後語「十五個吊桶打水」和具體的生理反應「直冒冷汗」來生動刻畫緊張的心理。"
+                questions: [
+                    { base: "今天派測驗卷。<span class='hl-boring'>我很緊張。</span>", chunks: ['我的心像', '十五個吊桶打水', '——七上八下，', '手心', '直冒冷汗。'], hint: "先寫心裡像什麼，再寫手心的反應。", exp: "使用了歇後語「十五個吊桶打水」和生理反應「直冒冷汗」生動刻畫緊張心理。" },
+                    { base: "老師拿著試卷走進來。<span class='hl-boring'>老師表情嚴肅。</span>", chunks: ['老師', '板著臉，', '神情', '像冰山一樣', '嚴肅。'], hint: "先寫老師的動作，再寫神情像什麼。", exp: "用「冰山」作比喻，生動地表現出老師表情的冰冷與嚴肅。" },
+                    { base: "當老師唸到我的名字時，<span class='hl-boring'>我走過去。</span>", chunks: ['我', '雙腿發軟，', '像灌了鉛一樣', '沉重地', '挪動腳步。'], hint: "先寫雙腿的感覺，再比喻像什麼，最後寫動作。", exp: "把沉重的雙腿比喻為「灌了鉛」，誇張地表現出內心的恐懼。" },
+                    { base: "我接過試卷，<span class='hl-boring'>分數很差。</span>", chunks: ['上面', '那鮮紅的', '「45分」', '顯得', '格外刺眼。'], hint: "先寫什麼顏色的分數，再寫這個分數給人的感覺。", exp: "用「鮮紅」和「刺眼」突顯了低分帶來的視覺和心理衝擊。" },
+                    { base: "回到座位上，<span class='hl-boring'>我想哭。</span>", chunks: ['委屈的淚水', '像斷了線的珍珠', '在眼眶裡', '不停地', '打轉。'], hint: "眼淚像什麼？在哪裡打轉？", exp: "將淚水比喻為「斷了線的珍珠」，生動描繪出快要哭出來的委屈模樣。" }
+                ]
             },
             {
                 title: "暴雨來襲", emoji: "⛈️🏃", tut: "t-expand-std",
-                base: "放學時，天空烏雲密佈。<span class='hl-boring'>雨下得很大。</span>同學們都急忙撐開雨傘往家裡跑。",
-                opts: ["傾盆大雨像瀑布般從天而降，狠狠地砸在窗玻璃上。", "雨水下得非常大，大家都淋濕了。", "外面下著好大好大的雨。"], ans: 0,
-                hint: "大雨落下的形狀像什麼？打在玻璃上的動作可以用什麼擬人詞？",
-                exp: "運用了明喻「像瀑布般」和擬人「狠狠地砸」，讓大雨的氣勢躍然紙上。"
+                questions: [
+                    { base: "放學時，<span class='hl-boring'>天黑了。</span>", chunks: ['天空', '烏雲密佈，', '像打翻了墨水般', '黑了', '下來。'], hint: "先寫烏雲，再比喻黑得像什麼。", exp: "用「打翻了墨水」作明喻，渲染了暴雨將至的可怕氣氛。" },
+                    { base: "突然，<span class='hl-boring'>颳起大風。</span>", chunks: ['狂風', '像咆哮的野獸，', '猛烈地', '搖晃著', '路邊的樹木。'], hint: "狂風像什麼？對樹木做了什麼動作？", exp: "將狂風比作野獸，並賦予「咆哮」的動作，寫出風勢的猛烈。" },
+                    { base: "接著，<span class='hl-boring'>下大雨了。</span>", chunks: ['傾盆大雨', '像瀑布般', '從天而降，', '狠狠地砸在', '窗玻璃上。'], hint: "大雨像什麼？落在玻璃上是怎樣的？", exp: "運用了明喻「像瀑布般」和擬人「狠狠地砸」，讓大雨的氣勢躍然紙上。" },
+                    { base: "街上的行人<span class='hl-boring'>跑去避雨。</span>", chunks: ['紛紛', '撐開雨傘，', '急急忙忙地', '尋找', '避雨的地方。'], hint: "行人先做什麼動作，然後急忙去做什麼？", exp: "加入了行人的具體動作和「急急忙忙」的狀態描寫。" },
+                    { base: "沒帶傘的我，<span class='hl-boring'>衣服濕了。</span>", chunks: ['瞬間', '被淋成了', '一隻', '可憐的', '「落湯雞」。'], hint: "被雨淋濕後，自己像什麼動物？", exp: "用「落湯雞」這個生動的借喻，刻畫出自己狼狽可憐的模樣。" }
+                ]
             },
             {
-                title: "憤怒的哥哥", emoji: "😡💥", tut: "t-expand-std",
-                base: "我看見哥哥的玩具模型被弟弟弄壞了。<span class='hl-boring'>哥哥很生氣。</span>他大步走到弟弟面前質問他。",
-                opts: ["哥哥生氣地罵了弟弟一頓。", "哥哥氣得雙眼發紅，雙手緊握成拳，像一頭即將發怒的獅子。", "哥哥非常生氣，覺得很不開心。"], ans: 1,
-                hint: "生氣時眼睛和手會有什麼動作？生氣的人像哪種兇猛的動物？",
-                exp: "透過動作細節「雙眼發紅、緊握成拳」及比喻「像一頭獅子」，具體展現了憤怒的程度。"
+                title: "美味的晚餐", emoji: "🍜😋", tut: "t-expand-std",
+                questions: [
+                    { base: "午餐時間到了，<span class='hl-boring'>廚房傳來香味。</span>", chunks: ['廚房裡', '飄出', '陣陣誘人的香氣，', '讓人', '食指大動。'], hint: "香氣是怎樣的？讓人產生什麼反應？", exp: "用「誘人」和成語「食指大動」表現出食物的吸引力。" },
+                    { base: "媽媽端出了一盤炒飯。<span class='hl-boring'>飯很好看。</span>", chunks: ['金黃色的飯粒', '配上翠綠的蔥花，', '就像', '一幅美麗的', '圖畫。'], hint: "先寫飯和蔥的顏色，再比喻像什麼。", exp: "運用了豐富的色彩詞（金黃、翠綠）並比喻為圖畫，增加視覺美感。" },
+                    { base: "旁邊還有一碗雞湯。<span class='hl-boring'>湯很熱。</span>", chunks: ['熱騰騰的雞湯', '冒著白煙，', '散發出', '濃郁的', '鮮味。'], hint: "雞湯是什麼狀態？散發出什麼味道？", exp: "加入了「冒著白煙」的視覺和「濃郁」的味覺描寫。" },
+                    { base: "我迫不及待地拿起湯匙，<span class='hl-boring'>吃了一口。</span>", chunks: ['大口大口地', '吃了起來，', '味道', '真是', '鮮甜無比。'], hint: "怎麼吃？吃起來味道如何？", exp: "用疊字「大口大口」寫出吃的急切，並具體形容味道。" },
+                    { base: "不一會兒，<span class='hl-boring'>我吃光了。</span>", chunks: ['我', '狼吞虎嚥地', '把整盤炒飯', '吃了個', '底朝天。'], hint: "用什麼成語形容吃得快？最後盤子變成怎樣？", exp: "使用了「狼吞虎嚥」和「底朝天」等誇張生動的詞語。" }
+                ]
             },
             {
-                title: "美味的午餐", emoji: "🍜😋", tut: "t-expand-std",
-                base: "午餐時間到了，媽媽端出了一盤炒飯。<span class='hl-boring'>飯很香。</span>我迫不及待地拿起湯匙大口吃了起來。",
-                opts: ["飯非常香，我好想吃。", "炒飯散發出陣陣誘人的香氣，金黃色的飯粒讓人垂涎三尺。", "那盤炒飯很香很好吃。"], ans: 1,
-                hint: "用視覺形容飯粒的顏色，再用成語形容你想吃的程度！",
-                exp: "加入了視覺「金黃色的飯粒」和嗅覺「誘人的香氣」，並用成語「垂涎三尺」表達渴望。"
-            },
-            {
-                title: "攀岩挑戰", emoji: "🧗‍♂️💦", tut: "t-expand-std",
-                base: "我努力向上爬。<span class='hl-boring'>我流了很多汗。</span>但我還是咬緊牙關，繼續尋找下一個落腳點。",
-                opts: ["我流了非常非常多的汗水。", "汗水像斷了線的珍珠般不斷滑落，模糊了我的雙眼。", "我一直流汗，覺得很累。"], ans: 1,
-                hint: "汗水一滴一滴掉下來，形狀像什麼首飾？",
-                exp: "用「斷了線的珍珠」作比喻，生動描寫了汗如雨下的辛苦狀態。"
-            },
-            {
-                title: "秋天的落葉", emoji: "🍂🍁", tut: "t-expand-std",
-                base: "秋天到了，風一吹，<span class='hl-boring'>樹葉掉下來。</span>地上鋪滿了金黃色的地毯。",
-                opts: ["枯黃的落葉宛如靈動的蝴蝶，在空中盤旋飛舞後輕輕落下。", "很多黃色的樹葉從樹上掉到地上。", "樹葉被風吹得掉下來了。"], ans: 0,
-                hint: "樹葉在空中飛舞的樣子，像哪一種昆蟲？",
-                exp: "將落葉比作「靈動的蝴蝶」，並加上「盤旋飛舞」的動態描寫，畫面感極強。"
-            },
-            {
-                title: "賽跑衝線", emoji: "🏃‍♀️🥇", tut: "t-expand-std",
-                base: "距離終點只剩下十米了。<span class='hl-boring'>他跑得很快。</span>最後他成功奪得了冠軍。",
-                opts: ["他跑得非常快，沒有人能追上。", "他咬緊牙關，像一支離弦的箭般向前狂奔。", "他很快地跑過去。"], ans: 1,
-                hint: "衝刺時的速度，像什麼武器一樣快？",
-                exp: "加入「咬緊牙關」的細節與「離弦的箭」的比喻，突顯了衝刺時的速度與爆發力。"
-            },
-            {
-                title: "美麗的星空", emoji: "🌃✨", tut: "t-expand-std",
-                base: "我們一家人在山上露營。<span class='hl-boring'>星星很漂亮。</span>周圍非常寧靜，只有蟲鳴聲。",
-                opts: ["天上的星星很多很漂亮。", "夜空中無數顆星星閃爍著，像灑落在黑絲絨上的璀璨鑽石。", "晚上的星星又亮又美。"], ans: 1,
-                hint: "黑色的夜空像什麼布料？發亮的星星像什麼珠寶？",
-                exp: "運用了暗喻「黑絲絨」和明喻「璀璨鑽石」，將星空寫得極具美感。"
-            },
-            {
-                title: "委屈的眼淚", emoji: "😢💔", tut: "t-expand-std",
-                base: "被朋友誤會後，我獨自跑回房間。<span class='hl-boring'>我很傷心。</span>我決定明天再向他解釋清楚。",
-                opts: ["委屈的淚水像決堤的洪水般奪眶而出，沾濕了我的衣襟。", "我感到非常傷心和難過。", "我傷心地哭了好久。"], ans: 0,
-                hint: "大量的眼淚湧出來，可以誇張地比喻成什麼自然現象？",
-                exp: "用「決堤的洪水」誇張地形容淚水，深刻表達了內心的極度委屈。"
-            },
-            {
-                title: "熱鬧的街市", emoji: "🏮🐟", tut: "t-expand-std",
-                base: "快到新年了，我們去逛街市。<span class='hl-boring'>街市很熱鬧。</span>大家都在忙著採購年貨。",
-                opts: ["街市裡有很多人，非常熱鬧。", "街市裡人聲鼎沸，商販的叫賣聲和顧客的討價還價聲交織成一首熱鬧的交響樂。", "街市裡很吵鬧，大家都在說話。"], ans: 1,
-                hint: "街市裡各種聲音混在一起，像是在演奏什麼？",
-                exp: "使用了「人聲鼎沸」的成語，並將嘈雜聲比喻為「交響樂」，生動描繪了熱鬧的氣氛。"
-            },
-            {
-                title: "冬日的寒風", emoji: "🥶🌪️", tut: "t-expand-std",
-                base: "走在回家的路上，<span class='hl-boring'>風吹得很冷。</span>我只好把雙手插進口袋裡加快腳步。",
-                opts: ["凜冽的寒風像一把把鋒利的刀子，無情地刮在我的臉上。", "外面的風很大，我覺得非常冷。", "風吹過來冷冰冰的。"], ans: 0,
-                hint: "冷風吹在臉上刺痛的感覺，像什麼利器？",
-                exp: "將寒風比喻為「鋒利的刀子」，將冰冷刺骨的觸覺具象化。"
-            },
-            {
-                title: "快樂的笑聲", emoji: "😆🎉", tut: "t-expand-std",
-                base: "聽到這個好消息，全班同學都高興極了。<span class='hl-boring'>大家都在笑。</span>課室裡充滿了歡樂的氣氛。",
-                opts: ["同學們開心地笑了起來。", "大家高興得手舞足蹈，歡快的笑聲快要把課室的屋頂都掀翻了。", "大家笑得很大聲。"], ans: 1,
-                hint: "開心的動作是什麼？笑聲大到可以把建築物怎樣？",
-                exp: "加入了「手舞足蹈」的動作，並用「掀翻屋頂」的誇張手法突顯了極度的快樂。"
-            },
-            {
-                title: "小狗的迎接", emoji: "🐶🏡", tut: "t-expand-std",
-                base: "我一打開家門，<span class='hl-boring'>小狗跑過來。</span>牠用舌頭舔著我的手，十分親熱。",
-                opts: ["小狗很快地跑到我面前。", "小狗搖著尾巴，像一陣風似的朝我飛奔過來。", "小狗開心地跑向我。"], ans: 1,
-                hint: "小狗開心時尾巴會怎樣？牠跑過來的速度像什麼？",
-                exp: "加入了「搖著尾巴」的細節和「像一陣風」的比喻，寫出了小狗迎接主人的熱情。"
-            },
-            {
-                title: "清澈的小溪", emoji: "🏞️💧", tut: "t-expand-std",
-                base: "我們來到山谷裡。<span class='hl-boring'>小溪很清。</span>水裡還有幾條小魚在游來游去。",
-                opts: ["清澈見底的溪水宛如一條透明的玻璃絲帶，緩緩流淌。", "小溪的水非常乾淨，能看到底。", "小溪的水很清澈。"], ans: 0,
-                hint: "又長又清澈的水流，形狀像什麼布料？",
-                exp: "使用了「透明的玻璃絲帶」作比喻，生動地展現了溪水的清澈與動態美。"
-            },
-            {
-                title: "驚訝的表情", emoji: "😲❗", tut: "t-expand-std",
-                base: "當魔術師從空帽子裡變出鴿子時，<span class='hl-boring'>他很驚訝。</span>全場觀眾也隨即爆發出掌聲。",
-                opts: ["他驚訝得瞪大了眼睛，嘴巴張得幾乎能塞下一個蘋果。", "他覺得非常驚訝和神奇。", "他驚訝地看著魔術師。"], ans: 0,
-                hint: "人極度驚訝時，眼睛和嘴巴會出現什麼誇張的表情？",
-                exp: "透過描寫「瞪大眼睛、嘴巴張大」的誇張面部表情，把驚訝寫得栩栩如生。"
-            },
-            {
-                title: "遺失錢包", emoji: "👛😰", tut: "t-expand-std",
-                base: "下車後，我發現錢包不見了。<span class='hl-boring'>我很著急。</span>我立刻沿著原路折返，四處張望。",
-                opts: ["我急得像熱鍋上的螞蟻，心臟砰砰直跳，眼淚在眼眶裡打轉。", "我覺得非常著急，不知該如何是好。", "我著急地哭了出來，心裡很害怕。"], ans: 0,
-                hint: "焦急時可以用哪一個跟螞蟻有關的歇後語？",
-                exp: "聚焦心理經過，運用比喻「熱鍋上的螞蟻」與身體反應，將記敘文的「著急」刻畫得無比具體。"
-            },
-            {
-                title: "接力棒交接", emoji: "🏃‍♂️🤝", tut: "t-expand-std",
-                base: "眼看著隊友飛奔而來，<span class='hl-boring'>我接過接力棒。</span>我使出全身力氣，向著終點衝刺。",
-                opts: ["我很快地拿到了那一根木棒。", "我屏息凝神，右手向後一伸，穩穩地抓住了那根承載著全隊希望的木棒。", "我順利地接過接力棒，繼續往前跑。"], ans: 1,
-                hint: "接棒前呼吸會怎樣？手部動作要怎麼精確描述？",
-                exp: "透過「屏息凝神」、「右手向後一伸」等慢動作細節，成功打破了流水帳。"
-            },
-            {
-                title: "第一次下廚", emoji: "🍳🔥", tut: "t-expand-std",
-                base: "我把切好的雞蛋倒進熱鍋裡。<span class='hl-boring'>鍋子發出聲音。</span>香氣隨即在廚房裡瀰漫開來。",
-                opts: ["鍋子裡發出了劈里啪啦的響聲，蛋液在金黃的油花中歡快地跳起舞來。", "鍋子發出了好大好吵的聲音。", "雞蛋在鍋子裡發出聲音，很快就熟了。"], ans: 0,
-                hint: "熱油會發出什麼擬聲詞？蛋液熟透時翻滾的樣子像做什麼動作？",
-                exp: "同時調動聽覺擬聲詞「劈里啪啦」與擬人手法「歡快地跳起舞來」，將下廚過程寫得繪聲繪色。"
-            },
-            {
-                title: "慈祥的外婆", emoji: "👵❤️", tut: "t-expand-std",
-                base: "兩年沒見，外婆在大門口等著我。<span class='hl-boring'>外婆變老了。</span>她一把將我摟進懷裡，嘴裡不停唸著我的名字。",
-                opts: ["外婆看起來比以前老了很多。", "歲月在她的臉上刻下了深深刻痕，原本黑亮的頭髮如今已染上了嚴冬的霜雪。", "外婆的頭髮變白了，臉上也有了皺紋。"], ans: 1,
-                hint: "臉上的皺紋像被什麼刻出來的？白頭髮像冬天裡的什麼？",
-                exp: "將皺紋比作「歲月的刻痕」，將白髮比作「嚴冬的霜雪」，具體且充滿深厚情感。"
+                title: "運動會賽跑", emoji: "🏃‍♀️🥇", tut: "t-expand-std",
+                questions: [
+                    { base: "操場上正在舉行六十米短跑比賽。<span class='hl-boring'>很多人在看。</span>", chunks: ['跑道兩旁', '人山人海，', '擠滿了', '熱情打氣的', '觀眾。'], hint: "跑道旁邊有多少人？他們在做什麼？", exp: "用成語「人山人海」誇張地描寫觀眾的人數和熱情。" },
+                    { base: "裁判舉起發令槍，<span class='hl-boring'>比賽開始了。</span>", chunks: ['「砰」的一聲巨響，', '激烈的比賽', '正式', '拉開了', '帷幕。'], hint: "槍聲是怎樣的？比賽開始可以用什麼詞語代替？", exp: "加入了擬聲詞，並用「拉開帷幕」增加文學色彩。" },
+                    { base: "選手們<span class='hl-boring'>跑得很快。</span>", chunks: ['像一支支', '離弦的箭般', '奮力地', '向前', '狂奔。'], hint: "選手像什麼武器？他們的動作是怎樣的？", exp: "用「離弦的箭」作明喻，突顯了起跑瞬間的速度與爆發力。" },
+                    { base: "距離終點只剩下十米了，小明<span class='hl-boring'>努力衝刺。</span>", chunks: ['咬緊牙關，', '使出', '吃奶的力氣，', '拼命地', '邁開雙腿。'], hint: "小明面部有什麼動作？用了多大的力氣？", exp: "加入了「咬緊牙關」等細緻的動作描寫，表現出極力拚搏的狀態。" },
+                    { base: "最後，<span class='hl-boring'>他贏了。</span>", chunks: ['他', '第一個', '衝過終點線，', '成功', '奪得了', '閃閃發光的金牌。'], hint: "他第幾個過線？拿到了什麼樣的獎勵？", exp: "把「贏了」具體化為衝過終點和奪得金牌的畫面。" }
+                ]
             },
             {
                 title: "深夜停電", emoji: "🌑🕯️", tut: "t-expand-std",
-                base: "一聲雷響後，家裡突然停電了。<span class='hl-boring'>四周變得很黑。</span>我只能摸索著尋找手電筒。",
-                opts: ["屋子裡黑得伸手不見五指，無邊的黑暗彷彿一頭巨獸，瞬間將我吞沒。", "客室裡變得非常黑暗，什麼都看不到。", "四周黑漆漆的，讓我感到很害怕。"], ans: 0,
-                hint: "黑暗可以用哪句成語形容？恐怖的黑暗像什麼可怕的生物？",
-                exp: "運用成語「伸手不見五指」並將黑暗比作「巨獸」，極具視覺與氛圍張力。"
+                questions: [
+                    { base: "一聲雷響後，家裡突然停電了。<span class='hl-boring'>很黑。</span>", chunks: ['屋子裡', '黑得', '伸手不見五指，', '什麼也', '看不見。'], hint: "屋子裡有多黑？用什麼成語形容？", exp: "使用了成語「伸手不見五指」來誇張地描寫黑暗的程度。" },
+                    { base: "妹妹嚇得大叫起來。<span class='hl-boring'>我很怕。</span>", chunks: ['無邊的黑暗', '彷彿一頭巨獸，', '瞬間', '將我', '吞沒。'], hint: "黑暗像什麼可怕的生物？對你做了什麼？", exp: "將黑暗比作「巨獸」，極具視覺與氛圍張力，烘托出恐懼感。" },
+                    { base: "爸爸摸索著找出手電筒。<span class='hl-boring'>燈亮了。</span>", chunks: ['一道', '微弱的光芒', '刺破了', '客廳的', '黑暗。'], hint: "光芒是怎樣的？它對黑暗做了什麼動作？", exp: "用「刺破」這個動詞，將靜態的光線動態化，非常傳神。" },
+                    { base: "外面的風雨聲<span class='hl-boring'>很大聲。</span>", chunks: ['依然', '不絕於耳，', '像魔鬼般', '在窗外', '呼嘯著。'], hint: "聲音像什麼怪物？在窗外發出什麼聲音？", exp: "將風雨聲比作「魔鬼呼嘯」，進一步渲染了可怕的環境氣氛。" },
+                    { base: "過了半小時，<span class='hl-boring'>有電了。</span>", chunks: ['頭頂上的', '日光燈', '重新', '亮了起來，', '大家終於', '鬆了一口氣。'], hint: "什麼東西亮了？大家心裡有什麼感覺？", exp: "具體寫出燈光亮起，並加入了人物「鬆了一口氣」的心理描寫。" }
+                ]
+            },
+            {
+                title: "逛熱鬧花市", emoji: "🏮🌸", tut: "t-expand-std",
+                questions: [
+                    { base: "臨近新年，我和家人去逛花市。<span class='hl-boring'>很多人。</span>", chunks: ['花市裡', '人聲鼎沸，', '到處都', '擠得', '水泄不通。'], hint: "聲音怎樣？擁擠到什麼程度？", exp: "使用了「人聲鼎沸」和「水泄不通」這兩個成語，生動表現了花市的熱鬧擁擠。" },
+                    { base: "到處都是漂亮的年花。<span class='hl-boring'>花很美。</span>", chunks: ['五彩繽紛的', '花朵', '爭相綻放，', '就像一片', '美麗的花海。'], hint: "花朵的顏色怎樣？像什麼景象？", exp: "加入色彩詞「五彩繽紛」，並把密集的年花比喻為「花海」。" },
+                    { base: "桃花的枝頭上<span class='hl-boring'>開了花。</span>", chunks: ['掛滿了', '粉紅色的小花，', '彷彿在', '向我們', '點頭微笑。'], hint: "什麼顏色的花？花在風中像在做什麼？", exp: "賦予桃花人類「點頭微笑」的動作，是極為生動的擬人修辭。" },
+                    { base: "商販們在賣力地推銷。<span class='hl-boring'>聲音很吵。</span>", chunks: ['商販的叫賣聲和', '顧客的討價還價聲', '交織成一首', '熱鬧的', '交響樂。'], hint: "這兩種聲音混在一起，像什麼樂曲？", exp: "將吵雜的人聲比喻為「交響樂」，化吵鬧為歡樂的節日氣氛。" },
+                    { base: "我們買了一大盆桔子，<span class='hl-boring'>開心地回家。</span>", chunks: ['每個人', '臉上都', '掛著燦爛的笑容，', '滿載而', '歸。'], hint: "大家的表情怎樣？帶著很多東西回家叫什麼？", exp: "具體描寫了「燦爛的笑容」並使用了成語「滿載而歸」。" }
+                ]
+            },
+            {
+                title: "美麗的星空", emoji: "🌃✨", tut: "t-expand-std",
+                questions: [
+                    { base: "我們一家人在山上露營。<span class='hl-boring'>天黑了。</span>", chunks: ['深藍色的', '夜幕', '悄悄地', '降臨了', '大地。'], hint: "天空的顏色是什麼？像一塊什麼布蓋下來？", exp: "將黑夜降臨比作「夜幕」拉下，並加入了顏色的描寫。" },
+                    { base: "我抬頭望向天空，<span class='hl-boring'>星星很多。</span>", chunks: ['夜空中', '無數顆星星', '一閃一閃地', '眨著', '眼睛。'], hint: "有多少星星？它們閃爍的樣子像在做什麼？", exp: "賦予星星「眨眼睛」的動作，是常見且生動的擬人修辭。" },
+                    { base: "這些星星<span class='hl-boring'>很亮。</span>", chunks: ['像灑落在', '黑絲絨上的', '璀璨鑽石，', '散發著', '耀眼的光芒。'], hint: "天空像什麼布料？星星像什麼寶石？", exp: "運用了暗喻「黑絲絨」和明喻「璀璨鑽石」，將星空寫得極具美感。" },
+                    { base: "月亮也升起來了。<span class='hl-boring'>月亮很圓。</span>", chunks: ['一輪', '皎潔的明月', '宛如', '一個巨大的', '白玉盤。'], hint: "月亮的光芒怎樣？形狀像什麼精緻的物品？", exp: "加入了「皎潔」的形容詞，並把圓月比喻為「白玉盤」。" },
+                    { base: "周圍非常寧靜，<span class='hl-boring'>有蟲叫聲。</span>", chunks: ['只有', '草叢裡的秋蟲', '唱著', '優美動聽的', '搖籃曲。'], hint: "蟲的叫聲像在唱什麼歌？", exp: "把蟲鳴比喻為「搖籃曲」，烘托了夜晚寧靜祥和的氣氛。" }
+                ]
+            },
+            {
+                title: "小狗的迎接", emoji: "🐶🏡", tut: "t-expand-std",
+                questions: [
+                    { base: "我一打開家門，<span class='hl-boring'>小狗跑過來。</span>", chunks: ['小狗', '像一陣風似的', '朝我', '飛奔', '過來。'], hint: "小狗跑的速度像什麼一樣快？", exp: "用「像一陣風」作比喻，生動地表現出小狗飛快的速度和急切。" },
+                    { base: "牠看到我回來，<span class='hl-boring'>很開心。</span>", chunks: ['開心地', '搖著毛茸茸的尾巴，', '彷彿在', '歡迎我', '回家。'], hint: "小狗開心時的身體特徵和動作是什麼？", exp: "加入了「毛茸茸的尾巴」這個具體的細節描寫。" },
+                    { base: "牠撲到我身上，<span class='hl-boring'>舔我的手。</span>", chunks: ['伸出', '溫熱的舌頭，', '不停地', '舔著', '我的手心。'], hint: "舌頭的感覺是怎樣的？舔的頻率如何？", exp: "加入了「溫熱」的觸覺描寫，讓畫面更加真實親切。" },
+                    { base: "牠的眼睛<span class='hl-boring'>很亮。</span>", chunks: ['那雙', '圓溜溜的大眼睛，', '像兩顆', '發光的', '黑寶石。'], hint: "眼睛的形狀是怎樣的？像什麼寶石？", exp: "詳細描寫了形狀「圓溜溜」，並將眼睛比作「發光的黑寶石」。" },
+                    { base: "我摸摸牠的頭，<span class='hl-boring'>牠叫了。</span>", chunks: ['牠', '舒服地', '瞇起眼睛，', '發出', '滿足的「汪汪」聲。'], hint: "被摸頭時眼睛會怎樣？發出什麼樣的叫聲？", exp: "捕捉了小狗享受撫摸時「瞇起眼睛」的可愛細節和「滿足」的心理。" }
+                ]
+            },
+            {
+                title: "第一次下廚", emoji: "🍳🔥", tut: "t-expand-std",
+                questions: [
+                    { base: "星期六早上，我決定學煎雞蛋。<span class='hl-boring'>我準備好。</span>", chunks: ['我', '繫上圍裙，', '把平底鍋', '穩穩地放在', '爐灶上。'], hint: "做飯前穿上什麼？把什麼東西放在爐灶上？", exp: "用「繫上圍裙」和「穩穩地放」等具體動作替代了籠統的「準備」。" },
+                    { base: "我倒了一點油，<span class='hl-boring'>把雞蛋打進去。</span>", chunks: ['小心翼翼地', '敲破蛋殼，', '把蛋液', '倒進了', '熱鍋裡。'], hint: "打蛋時的動作態度是怎樣的？", exp: "加入了「小心翼翼」的心理與動作描寫，符合第一次下廚的生疏感。" },
+                    { base: "雞蛋在鍋裡<span class='hl-boring'>發出聲音。</span>", chunks: ['發出了', '劈里啪啦的響聲，', '像在', '開心地', '唱歌。'], hint: "熱油發出什麼聲音？像在做什麼？", exp: "同時運用了聽覺的擬聲詞「劈里啪啦」與擬人手法「唱歌」。" },
+                    { base: "不一會兒，<span class='hl-boring'>雞蛋熟了。</span>", chunks: ['蛋液在', '金黃的油花中', '跳起舞來，', '散發出', '陣陣蛋香。'], hint: "蛋在油裡的狀態像什麼？散發出什麼味道？", exp: "把蛋液煎熟翻滾的過程擬人化為「跳舞」，並加入了嗅覺描寫。" },
+                    { base: "我把煎好的蛋裝進碟子裡，<span class='hl-boring'>很滿意。</span>", chunks: ['看著', '自己的傑作，', '心裡充滿了', '無比的', '成就感。'], hint: "把蛋稱呼為什麼？心裡有什麼感覺？", exp: "將食物稱為「傑作」，並精準地點出了「成就感」這個深層的心理感受。" }
+                ]
+            },
+            {
+                title: "攀岩挑戰", emoji: "🧗‍♂️💦", tut: "t-expand-std",
+                questions: [
+                    { base: "週末，爸爸帶我去室內攀岩。<span class='hl-boring'>牆很高。</span>", chunks: ['我看著', '那面', '高聳入雲的', '攀岩牆，', '心裡有點發毛。'], hint: "牆壁高到像插入哪裡？心裡有什麼感覺？", exp: "用誇張的成語「高聳入雲」形容牆壁，並寫出害怕的心理「發毛」。" },
+                    { base: "我努力向上爬了一半，<span class='hl-boring'>流了很多汗。</span>", chunks: ['汗水', '像斷了線的珍珠般', '不斷滑落，', '模糊了', '我的雙眼。'], hint: "汗水一滴滴掉下來像什麼首飾？對眼睛造成什麼影響？", exp: "用「斷了線的珍珠」生動描寫汗如雨下的狀態，並寫出視線被模糊的細節。" },
+                    { base: "我的體力快用完了，<span class='hl-boring'>很想放棄。</span>", chunks: ['雙手', '不停地發抖，', '心裡萌生了', '退縮的', '念頭。'], hint: "體力耗盡時手會怎樣？心裡產生了什麼想法？", exp: "透過「雙手發抖」的生理反應，自然地帶出想放棄的心理活動。" },
+                    { base: "爸爸在下面鼓勵我，<span class='hl-boring'>我繼續爬。</span>", chunks: ['我', '咬緊牙關，', '強迫自己', '尋找下一個', '落腳點。'], hint: "堅持時面部有什麼動作？逼自己去找什麼？", exp: "「咬緊牙關」和「強迫自己」完美刻畫了克服恐懼、堅持不懈的過程。" },
+                    { base: "最後我用力一蹬，<span class='hl-boring'>成功了。</span>", chunks: ['終於', '抓住了頂端的石頭，', '成功征服了', '這座', '「高山」。'], hint: "抓住了哪裡的石頭？把攀岩牆當作什麼征服了？", exp: "把攀岩牆借喻為「高山」，並用「征服」一詞突顯了挑戰成功的自豪感。" }
+                ]
             }
         ];
 
-        // --- 模組 2：小小說明家結構重組 (20題) ---
+        // --- 模組 2：小小說明家雙階結構重組 (15題) ---
         const expoData = [
             {
                 title: "世界之最：藍鯨", emoji: "🐋🌊", tut: "t-expo-std",
-                sents: [
-                    "藍鯨是目前地球上已知體型最巨大的動物。",
-                    "成年藍鯨的身長可達30米，體重超過150噸，光是牠的舌頭上就能站立50個人！",
-                    "雖然體型龐大，但牠們性情溫和，主要以海洋中微小的磷蝦為食。",
-                    "藍鯨真是一種令人驚嘆的海洋生物。"
-                ],
-                hint: "總起介紹藍鯨 👉 運用「數字說明」體型 👉 說明飲食習慣 👉 最後一句總結讚嘆。",
-                exp: "標準說明文總分總結構：先定義藍鯨體型最大，再用數據(30米,150噸)佐證，接著補充其飲食習性，最後以讚嘆作結。"
+                stages: [
+                    {
+                        taskDesc: "第一階：排句成段 (特徵說明)",
+                        chunks: ["成年藍鯨的身長可達30米，體重超過150噸。", "光是牠的舌頭上就能站立50個人！", "雖然體型龐大，但牠們性情溫和，", "主要以海洋中微小的磷蝦為食。"],
+                        hint: "先用數字說明體型，再舉舌頭的例子，最後說明飲食習慣。",
+                        exp: "運用數字和例子具體說明了藍鯨的特徵。"
+                    },
+                    {
+                        taskDesc: "第二階：排段成文 (完整結構)",
+                        chunks: ["【總起】藍鯨是目前地球上已知體型最巨大的動物。", "【特徵】成年藍鯨的身長可達30米，體重超過150噸。光是牠的舌頭上就能站立50個人！雖然體型龐大，但牠們性情溫和，主要以海洋中微小的磷蝦為食。", "【總結】藍鯨真是一種令人驚嘆的海洋生物。"],
+                        hint: "說明文結構：總起介紹 👉 特徵與習性 👉 總結讚嘆。",
+                        exp: "標準的「總—分—總」結構，邏輯嚴密清晰。"
+                    }
+                ]
             },
             {
                 title: "神奇的太陽能", emoji: "☀️🔋", tut: "t-expo-std",
-                sents: [
-                    "太陽能是一種極具發展潛力的清潔能源。",
-                    "它是透過太陽能板吸收陽光，然後轉化為我們可以使用的電力。",
-                    "例如，現在許多路燈和計算機都已經使用了太陽能電池，既環保又節能。",
-                    "因此，大力發展太陽能是保護地球環境的重要方法。"
-                ],
-                hint: "總起介紹太陽能 👉 解釋運作原理 👉 運用「舉例說明」日常應用 👉 結論(因此)。",
-                exp: "首句總起點明主題，第二句解釋物理原理，第三句舉例說明實際應用，末句以「因此」總結其環保意義。"
+                stages: [
+                    {
+                        taskDesc: "第一階：排句成段 (運作與應用)",
+                        chunks: ["它是透過太陽能板吸收陽光，", "然後轉化為我們可以使用的電力。", "例如，現在許多路燈和計算機", "都已經使用了太陽能電池。"],
+                        hint: "先說明運作原理（吸收轉化），再舉實際應用的例子。",
+                        exp: "清楚解釋了太陽能的運作原理並舉出實例。"
+                    },
+                    {
+                        taskDesc: "第二階：排段成文 (完整結構)",
+                        chunks: ["【總起】太陽能是一種極具發展潛力的清潔能源。", "【運作與應用】它是透過太陽能板吸收陽光，然後轉化為我們可以使用的電力。例如，現在許多路燈和計算機都已經使用了太陽能電池。", "【總結】因此，大力發展太陽能是保護地球環境的重要方法。"],
+                        hint: "說明文結構：總起介紹 👉 運作原理與應用 👉 總結重要性。",
+                        exp: "首段點明清潔能源，中段解釋，末段總結環保意義。"
+                    }
+                ]
             },
             {
                 title: "沙漠之舟：駱駝", emoji: "🐪🏜️", tut: "t-expo-std",
-                sents: [
-                    "駱駝被稱為「沙漠之舟」，擁有極強的適應能力。",
-                    "牠們背上的駝峰儲存了大量脂肪，能在找不到食物時轉化為能量。",
-                    "此外，駱駝寬大的腳掌能防止牠們陷入鬆軟的沙子裡。",
-                    "正因為有這些獨特的構造，駱駝才能在惡劣的沙漠中生存。"
-                ],
-                hint: "總起稱號 👉 「分類說明」身體特徵一 👉 分類特徵二(此外...) 👉 總結適應力。",
-                exp: "首句總起交代稱號與能力，接著分兩點（駝峰、腳掌）說明其身體構造，最後總結其在沙漠生存的原因。"
+                stages: [
+                    {
+                        taskDesc: "第一階：排句成段 (身體構造)",
+                        chunks: ["牠們背上的駝峰儲存了大量脂肪，", "能在找不到食物時轉化為能量。", "此外，駱駝寬大的腳掌", "能防止牠們陷入鬆軟的沙子裡。"],
+                        hint: "先說駝峰的作用，再用「此外」帶出腳掌的作用。",
+                        exp: "分類別說明了駝峰和腳掌適應沙漠的特殊構造。"
+                    },
+                    {
+                        taskDesc: "第二階：排段成文 (完整結構)",
+                        chunks: ["【總起】駱駝被稱為「沙漠之舟」，擁有極強的適應能力。", "【構造】牠們背上的駝峰儲存了大量脂肪，能在找不到食物時轉化為能量。此外，駱駝寬大的腳掌能防止牠們陷入鬆軟的沙子裡。", "【總結】正因為有這些獨特的構造，駱駝才能在惡劣的沙漠中生存。"],
+                        hint: "說明文結構：總起稱號 👉 身體構造特徵 👉 總結適應力。",
+                        exp: "總起交代稱號，接著分兩點說明構造，最後總結生存原因。"
+                    }
+                ]
             },
             {
                 title: "萬物之源：水", emoji: "💧🌍", tut: "t-expo-std",
-                sents: [
-                    "水是地球上一切生命賴以生存的基礎。",
-                    "人體內大約有百分之七十是由水分組成的，沒有水，人類只能存活幾天。",
-                    "除了人類，所有的植物和動物也都需要水分來維持生命運作。",
-                    "所以，我們每個人都應該養成節約用水的好習慣。"
-                ],
-                hint: "總起重要性 👉 運用「數字說明」人體含水量 👉 擴展到動植物 👉 總結呼籲(所以)。",
-                exp: "從宏觀的重要性開始，用數據說明對人類的影響，再推及所有動植物，最後得出必須節約用水的結論。"
+                stages: [
+                    {
+                        taskDesc: "第一階：排句成段 (重要性說明)",
+                        chunks: ["人體內大約有百分之七十是由水分組成的，", "沒有水，人類只能存活幾天。", "除了人類，所有的植物和動物", "也都需要水分來維持生命運作。"],
+                        hint: "先用數字說明水對人類的重要，再擴展到動植物。",
+                        exp: "運用數據和邏輯遞進，說明水對所有生命的重要性。"
+                    },
+                    {
+                        taskDesc: "第二階：排段成文 (完整結構)",
+                        chunks: ["【總起】水是地球上一切生命賴以生存的基礎。", "【重要性】人體內大約有百分之七十是由水分組成的，沒有水，人類只能存活幾天。除了人類，所有的植物和動物也都需要水分來維持生命運作。", "【總結】所以，我們每個人都應該養成節約用水的好習慣。"],
+                        hint: "說明文結構：總起基礎 👉 具體重要性 👉 總結呼籲。",
+                        exp: "宏觀開頭，具體數據支撐，結尾呼籲節約。"
+                    }
+                ]
             },
             {
                 title: "便利的高鐵", emoji: "🚄🛤️", tut: "t-expo-std",
-                sents: [
-                    "高速鐵路（高鐵）極大地改變了現代人的出行方式。",
-                    "它的行駛速度非常快，時速通常可以達到每小時三百公里以上。",
-                    "這意味著，原本需要一整天車程的距離，現在只需要幾個小時就能到達。",
-                    "高鐵不僅節省了時間，也促進了城市之間的經濟發展。"
-                ],
-                hint: "總起影響 👉 「數字說明」速度 👉 說明帶來的改變與對比 👉 總結兩大好處。",
-                exp: "總起高鐵的影響，接著用數字說明其速度，再比較過去與現在的車程差異，最後總結其雙重好處。"
+                stages: [
+                    {
+                        taskDesc: "第一階：排句成段 (速度與優勢)",
+                        chunks: ["它的行駛速度非常快，", "時速通常可以達到每小時三百公里以上。", "這意味著，原本需要一整天車程的距離，", "現在只需要幾個小時就能到達。"],
+                        hint: "先用數字說明速度，再說明這速度帶來的時間節省對比。",
+                        exp: "利用具體數據和作比較的方法，清晰展現高鐵的效率。"
+                    },
+                    {
+                        taskDesc: "第二階：排段成文 (完整結構)",
+                        chunks: ["【總起】高速鐵路（高鐵）極大地改變了現代人的出行方式。", "【優勢】它的行駛速度非常快，時速通常可以達到每小時三百公里以上。這意味著，原本需要一整天車程的距離，現在只需要幾個小時就能到達。", "【總結】高鐵不僅節省了時間，也促進了城市之間的經濟發展。"],
+                        hint: "說明文結構：總起改變出行 👉 速度與對比 👉 總結雙重好處。",
+                        exp: "總起影響，分述速度，最後總結時間與經濟效益。"
+                    }
+                ]
             },
             {
                 title: "奇妙的指紋", emoji: "👆🔍", tut: "t-expo-std",
-                sents: [
-                    "每個人的手指上都有獨一無二的指紋。",
-                    "科學研究表明，即使是雙胞胎，他們的指紋形狀也不會完全相同。",
-                    "正因為指紋具有唯一性，警察經常利用它來追查犯罪嫌疑人。",
-                    "此外，現在的手機也廣泛使用了指紋解鎖功能，既方便又安全。"
-                ],
-                hint: "總起指紋特性 👉 舉例雙胞胎證明唯一性 👉 「分類說明」應用一（破案） 👉 應用二（手機）。",
-                exp: "首句點出指紋獨一無二的特性，以雙胞胎為極端例子作證明，隨後分點列舉其在刑偵與科技上的應用。"
+                stages: [
+                    {
+                        taskDesc: "第一階：排句成段 (特性與應用)",
+                        chunks: ["科學研究表明，", "即使是雙胞胎，他們的指紋形狀也不會完全相同。", "正因為指紋具有唯一性，", "警察經常利用它來追查犯罪嫌疑人。"],
+                        hint: "先用雙胞胎舉例證明指紋不相同，再說因為唯一性所以警察可用。",
+                        exp: "以極端例子(雙胞胎)論證唯一性，再帶出實際應用。"
+                    },
+                    {
+                        taskDesc: "第二階：排段成文 (完整結構)",
+                        chunks: ["【總起】每個人的手指上都有獨一無二的指紋。", "【特徵與應用】科學研究表明，即使是雙胞胎，他們的指紋形狀也不會完全相同。正因為指紋具有唯一性，警察經常利用它來追查犯罪嫌疑人。", "【總結】此外，現在的手機也廣泛使用了指紋解鎖功能，既方便又安全。"],
+                        hint: "說明文結構：總起獨特性 👉 舉例證明與破案應用 👉 總結日常應用。",
+                        exp: "首句定調唯一性，中間講刑偵應用，結尾帶入生活科技。"
+                    }
+                ]
             },
             {
                 title: "護眼小貼士", emoji: "👁️📱", tut: "t-expo-std",
-                sents: [
-                    "在電子產品普及的今天，保護視力變得尤為重要。",
-                    "首先，我們應該控制使用手機的時間，每看屏幕二十分鐘就要休息。",
-                    "其次，保持良好的閱讀姿勢，眼睛與書本距離約三十厘米。",
-                    "只要養成良好的用眼習慣，我們就能遠離近視的煩惱。"
-                ],
-                hint: "總起重要性 👉 「分類說明」方法一（首先+數字） 👉 方法二（其次+數字） 👉 總結。",
-                exp: "首句帶出保護視力的重要性，隨後運用表示順序的關聯詞「首先、其次」提供兩項具體方法，末句總結防護效果。"
+                stages: [
+                    {
+                        taskDesc: "第一階：排句成段 (具體方法)",
+                        chunks: ["首先，我們應該控制使用手機的時間，", "每看屏幕二十分鐘就要休息。", "其次，保持良好的閱讀姿勢，", "眼睛與書本距離約三十厘米。"],
+                        hint: "利用「首先」和「其次」將兩個方法依序排好。",
+                        exp: "使用順序詞和數字精確說明了護眼的方法。"
+                    },
+                    {
+                        taskDesc: "第二階：排段成文 (完整結構)",
+                        chunks: ["【總起】在電子產品普及的今天，保護視力變得尤為重要。", "【方法】首先，我們應該控制使用手機的時間，每看屏幕二十分鐘就要休息。其次，保持良好的閱讀姿勢，眼睛與書本距離約三十厘米。", "【總結】只要養成良好的用眼習慣，我們就能遠離近視的煩惱。"],
+                        hint: "說明文結構：總起重要性 👉 兩個具體方法 👉 總結成效。",
+                        exp: "帶出問題重要性，分述解決方案，總結美好結果。"
+                    }
+                ]
             },
             {
                 title: "多用途的竹子", emoji: "🎋🥢", tut: "t-expo-std",
-                sents: [
-                    "竹子是一種生長迅速且用途廣泛的植物。",
-                    "在建築方面，竹子因為堅韌輕巧，常被用來搭建棚架。",
-                    "在日常生活中，我們使用的筷子、涼蓆等也多是由竹子製成的。",
-                    "可以說，竹子是人類生活中不可或缺的好幫手。"
-                ],
-                hint: "總起特點 👉 「分類說明」建築用途 👉 「舉例說明」日常用品 👉 總結(可以說)。",
-                exp: "開首先概括竹子的特點，接著從「建築」與「日常生活」兩個不同層面舉例說明，最後一句作出評價性總結。"
+                stages: [
+                    {
+                        taskDesc: "第一階：排句成段 (用途說明)",
+                        chunks: ["在建築方面，竹子因為堅韌輕巧，", "常被用來搭建棚架。", "在日常生活中，我們使用的筷子、涼蓆等", "也多是由竹子製成的。"],
+                        hint: "先說建築方面，再說日常生活中，並列出物品例子。",
+                        exp: "運用分類和舉例，詳細說明了竹子在不同領域的用途。"
+                    },
+                    {
+                        taskDesc: "第二階：排段成文 (完整結構)",
+                        chunks: ["【總起】竹子是一種生長迅速且用途廣泛的植物。", "【用途】在建築方面，竹子因為堅韌輕巧，常被用來搭建棚架。在日常生活中，我們使用的筷子、涼蓆等也多是由竹子製成的。", "【總結】可以說，竹子是人類生活中不可或缺的好幫手。"],
+                        hint: "說明文結構：總起特點 👉 分類建築與日常用途 👉 總結評價。",
+                        exp: "開篇概括特點，分層舉例說明，結語作出極高評價。"
+                    }
+                ]
             },
             {
                 title: "神奇的黑洞", emoji: "🌌🕳️", tut: "t-expo-std",
-                sents: [
-                    "黑洞是宇宙中最神祕的天體之一。",
-                    "它的引力極其強大，任何靠近它的物質都會被吸進去。",
-                    "甚至連宇宙中跑得最快的光，也無法逃脫黑洞的吸引。",
-                    "因此，科學家至今仍在使用各種先進儀器，努力探索黑洞的奧秘。"
-                ],
-                hint: "總起神秘性 👉 說明核心原理（引力） 👉 運用「舉例說明」光的極端情況 👉 結論(因此)。",
-                exp: "第一句總起，第二句解釋其強大引力，第三句以「光」為極端例子進一步論證，第四句以「因此」作結。"
+                stages: [
+                    {
+                        taskDesc: "第一階：排句成段 (原理說明)",
+                        chunks: ["它的引力極其強大，", "任何靠近它的物質都會被吸進去。", "甚至連宇宙中跑得最快的光，", "也無法逃脫黑洞的吸引。"],
+                        hint: "先說引力強大會吸東西，再用「甚至連光」作極端例子補充。",
+                        exp: "解釋核心原理，並用光來作極致的舉例說明。"
+                    },
+                    {
+                        taskDesc: "第二階：排段成文 (完整結構)",
+                        chunks: ["【總起】黑洞是宇宙中最神祕的天體之一。", "【特徵】它的引力極其強大，任何靠近它的物質都會被吸進去。甚至連宇宙中跑得最快的光，也無法逃脫黑洞的吸引。", "【總結】因此，科學家至今仍在使用各種先進儀器，努力探索黑洞的奧秘。"],
+                        hint: "說明文結構：總起神祕性 👉 引力原理解釋 👉 總結科學探索。",
+                        exp: "首句總起，次句解釋強大引力，末句以「因此」作科學展望。"
+                    }
+                ]
             },
             {
                 title: "健康的早餐", emoji: "🥪🥛", tut: "t-expo-std",
-                sents: [
-                    "早餐是一天中最重要的一餐。",
-                    "經過一整晚的消化，人體急需補充新的能量來應付早上的學習或工作。",
-                    "一份健康的早餐應該包含豐富的蛋白質和碳水化合物，例如雞蛋和全麥麵包。",
-                    "不吃早餐不僅會導致注意力不集中，長期下來還會損害胃部健康。"
-                ],
-                hint: "總起重要性 👉 解釋生理原因 👉 「舉例說明」健康搭配 👉 反面論證不吃早餐的後果。",
-                exp: "首句點明早餐重要性，次句解釋原因，第三句舉例何謂健康早餐，末句則從反面說明不吃早餐的壞處。"
+                stages: [
+                    {
+                        taskDesc: "第一階：排句成段 (生理與搭配)",
+                        chunks: ["經過一整晚的消化，", "人體急需補充新的能量來應付早上的學習。", "一份健康的早餐應該包含豐富的蛋白質和碳水化合物，", "例如雞蛋和全麥麵包。"],
+                        hint: "先說身體為何需要能量(原因)，再舉例健康早餐的內容。",
+                        exp: "先解釋生理需求，再提出具體飲食建議與例子。"
+                    },
+                    {
+                        taskDesc: "第二階：排段成文 (完整結構)",
+                        chunks: ["【總起】早餐是一天中最重要的一餐。", "【原因與建議】經過一整晚的消化，人體急需補充新的能量來應付早上的學習。一份健康的早餐應該包含豐富的蛋白質和碳水化合物，例如雞蛋和全麥麵包。", "【總結】不吃早餐不僅會導致注意力不集中，長期下來還會損害胃部健康。"],
+                        hint: "說明文結構：總起重要性 👉 生理原因與健康搭配 👉 不吃的反面後果。",
+                        exp: "點明重要性，解釋原因並舉例，最後反面論證不吃的壞處。"
+                    }
+                ]
             },
             {
                 title: "活化石：大熊貓", emoji: "🐼🎋", tut: "t-expo-std",
-                sents: [
-                    "大熊貓是中國特有的珍稀動物，被科學家譽為生物界的「活化石」。",
-                    "牠們的外形特徵非常明顯，圓滾滾的身體配上標誌性的「黑眼圈」，十分逗人喜愛。",
-                    "在食物分類上，大熊貓雖然屬於食肉目，但牠們百分之九十九的食物都是竹子。",
-                    "這隻可愛的動物不僅是中國的國寶，也深受全世界人民的喜愛。"
-                ],
-                hint: "【動物類】總起稱號 👉 描寫外形特徵 👉 運用「數字說明」其獨特的飲食習性 👉 總結其珍貴地位。",
-                exp: "先介紹其珍貴身分，接著描述外形特徵，再用數據說明其特殊的飲食習慣，最後總結其在全世界的受歡迎程度。"
+                stages: [
+                    {
+                        taskDesc: "第一階：排句成段 (外貌與食性)",
+                        chunks: ["牠們的外形特徵非常明顯，", "圓滾滾的身體配上標誌性的「黑眼圈」。", "在食物分類上，大熊貓雖然屬於食肉目，", "但牠們百分之九十九的食物都是竹子。"],
+                        hint: "先描寫外貌(黑眼圈)，再說明奇特的飲食習慣(食肉目卻吃竹子)。",
+                        exp: "對比說明了大熊貓獨特的生物分類與實際飲食的差異。"
+                    },
+                    {
+                        taskDesc: "第二階：排段成文 (完整結構)",
+                        chunks: ["【總起】大熊貓是中國特有的珍稀動物，被譽為生物界的「活化石」。", "【外貌與食性】牠們的外形特徵非常明顯，圓滾滾的身體配上標誌性的「黑眼圈」。在食物分類上，大熊貓雖然屬於食肉目，但牠們百分之九十九的食物都是竹子。", "【總結】這隻可愛的動物不僅是中國的國寶，也深受全世界人民的喜愛。"],
+                        hint: "說明文結構：總起珍貴地位 👉 外貌特徵與飲食數據 👉 總結受歡迎度。",
+                        exp: "介紹身分，描述外貌，用數據說明食性，最後總結其國寶地位。"
+                    }
+                ]
             },
             {
                 title: "多功能智慧手錶", emoji: "⌚💡", tut: "t-expo-std",
-                sents: [
-                    "智慧手錶是近年來非常普及的一種智能穿戴裝置。",
-                    "它主要分為三大功能模組：健康監測、運動記錄以及日常通訊。",
-                    "例如，它可以24小時測量心率，還能像手機一樣接收簡訊和接聽電話。",
-                    "總括而言，智慧手錶科技感十足，為我們的生活帶來了極大的便利。"
-                ],
-                hint: "【物品類】總起裝置介紹 👉 運用「分類說明」三大模組 👉 「舉例與數字說明」細節 👉 總結(總括而言)。",
-                exp: "從裝置的普及性切入，宏觀列出三大功能，再針對功能舉出具體實例，末句用「總括而言」作結語。"
+                stages: [
+                    {
+                        taskDesc: "第一階：排句成段 (功能模組)",
+                        chunks: ["它主要分為三大功能模組：", "健康監測、運動記錄以及日常通訊。", "例如，它可以24小時測量心率，", "還能像手機一樣接收簡訊和接聽電話。"],
+                        hint: "先總說三大模組，再用「例如」舉出具體的功能操作。",
+                        exp: "先分類別，再運用舉例子詳細說明功能。"
+                    },
+                    {
+                        taskDesc: "第二階：排段成文 (完整結構)",
+                        chunks: ["【總起】智慧手錶是近年來非常普及的一種智能穿戴裝置。", "【功能與例子】它主要分為三大功能模組：健康監測、運動記錄以及日常通訊。例如，它可以24小時測量心率，還能像手機一樣接收簡訊和接聽電話。", "【總結】總括而言，智慧手錶科技感十足，為我們的生活帶來了極大的便利。"],
+                        hint: "說明文結構：總起裝置介紹 👉 功能分類與實例 👉 總結便利性。",
+                        exp: "宏觀介紹，微觀舉例，末句「總括而言」作結語。"
+                    }
+                ]
             },
             {
                 title: "我們的美麗校園", emoji: "🏫🌳", tut: "t-expo-std",
-                sents: [
-                    "我們學校的校園環境優美，空間規劃十分合理。",
-                    "校園空間主要由教學大樓、運動場和生態花園三個部分組成。",
-                    "其中，生態花園裡種植了超過五十種不同的植物，是同學們課餘放鬆的好去處。",
-                    "這個美麗的校園，不僅是我們學習的樂園，也是我們成長的溫床。"
-                ],
-                hint: "【地方類】總起環境印象 👉 運用「分類說明」空間結構 👉 運用「數字說明」生態花園細節 👉 情感總結。",
-                exp: "先總述校園環境，接著分類說明三大空間，並以生態花園的植物數量為具體例子，最後以並列句型作情感昇華。"
+                stages: [
+                    {
+                        taskDesc: "第一階：排句成段 (空間規劃)",
+                        chunks: ["校園空間主要由教學大樓、", "運動場和生態花園三個部分組成。", "其中，生態花園裡種植了超過五十種不同的植物，", "是同學們課餘放鬆的好去處。"],
+                        hint: "先分類介紹三大空間，再挑選其中一個（生態花園）詳細說明。",
+                        exp: "運用了分類說明，並以具體數據(五十種)介紹特色區域。"
+                    },
+                    {
+                        taskDesc: "第二階：排段成文 (完整結構)",
+                        chunks: ["【總起】我們學校的校園環境優美，空間規劃十分合理。", "【佈局與細節】校園空間主要由教學大樓、運動場和生態花園三個部分組成。其中，生態花園裡種植了超過五十種不同的植物，是同學們課餘放鬆的好去處。", "【總結】這個美麗的校園，不僅是我們學習的樂園，也是我們成長的溫床。"],
+                        hint: "說明文結構：總述環境 👉 空間分類與細節 👉 情感昇華總結。",
+                        exp: "先總述，接著分類，最後以並列句型作情感昇華。"
+                    }
+                ]
             },
             {
                 title: "省時微波爐", emoji: "🎛️🍲", tut: "t-expo-std",
-                sents: [
-                    "微波爐是現代家庭廚房中不可或缺的快捷加熱工具。",
-                    "它是利用微波帶動食物內的水分子高速振動，從而產生熱量來加熱食物。",
-                    "相比傳統明火，微波爐只需短短兩三分鐘就能加熱好一盤菜，能節省一半以上的時間。",
-                    "只要正確並安全地使用，微波爐絕對是省時節能的「廚房好幫手」。"
-                ],
-                hint: "【物品類】總起工具定義 👉 科學原理解釋 👉 運用「數字與作比較說明」其優勢 👉 總結安全建議。",
-                exp: "首句點明微波爐的功能，次句說明其科學原理，第三句透過與明火比較及數據突顯其省時優勢，結尾給出安全建議。"
+                stages: [
+                    {
+                        taskDesc: "第一階：排句成段 (原理與優勢)",
+                        chunks: ["它是利用微波帶動食物內的水分子高速振動，", "從而產生熱量來加熱食物。", "相比傳統明火，微波爐只需短短兩三分鐘就能加熱好一盤菜，", "能節省一半以上的時間。"],
+                        hint: "先解釋科學原理(水分子振動)，再與明火「作比較」說明省時優勢。",
+                        exp: "科學原理解釋結合「作比較」與「列數字」，極具說服力。"
+                    },
+                    {
+                        taskDesc: "第二階：排段成文 (完整結構)",
+                        chunks: ["【總起】微波爐是現代家庭廚房中不可或缺的快捷加熱工具。", "【原理與對比】它是利用微波帶動食物內的水分子高速振動，從而產生熱量來加熱食物。相比傳統明火，微波爐只需短短兩三分鐘就能加熱好一盤菜，能節省一半以上的時間。", "【總結】只要正確並安全地使用，微波爐絕對是省時節能的「廚房好幫手」。"],
+                        hint: "說明文結構：總起工具定義 👉 原理解釋與作比較 👉 總結安全建議。",
+                        exp: "點明功能，解釋原理並對比優勢，結尾給出安全建議。"
+                    }
+                ]
             },
             {
                 title: "百鳥之王：孔雀", emoji: "🦚✨", tut: "t-expo-std",
-                sents: [
-                    "孔雀被公認為世界上最美麗的鳥類之一。",
-                    "按照品種分類，牠們主要有藍孔雀、綠孔雀以及極為罕見的白孔雀。",
-                    "雄孔雀羽毛色彩斑斕，當牠展開巨大的尾屏時，就像一把鑲滿寶石的羽扇。",
-                    "正因為牠們擁有如此高貴迷人的姿態，常常在動物園中吸引無數遊客驻足。"
-                ],
-                hint: "【動物類】總起美譽 👉 運用「分類說明」三大品種 👉 運用比喻生動說明雄孔雀開屏特徵 👉 總結吸引力。",
-                exp: "先點出孔雀「最美麗」的美譽，接著按品種分類，再具體描寫雄孔雀開屏的驚艷姿態，最後總結其受歡迎的原因。"
-            },
-            {
-                title: "萬能智能手機", emoji: "📱🌐", tut: "t-expo-std",
-                sents: [
-                    "智能手機已經成為現代人生活中不可分割的一部分。",
-                    "它集合了通訊、娛樂、學習等多種強大功能於一身。",
-                    "根據統計，全球有超過五十億人每天使用智能手機上網或聯絡親友。",
-                    "然而，我們也應注意適度使用，避免過度沉迷而影響視力與健康。"
-                ],
-                hint: "總起普及性 👉 概括功能分類 👉 運用「數字說明」使用人數 👉 轉折提醒(然而)。",
-                exp: "先總述其普及性，列舉其三大核心功能，再用龐大數據證明其影響力，最後以轉折語氣提出健康警告。"
-            },
-            {
-                title: "繁忙的香港地鐵", emoji: "🚇🏙️", tut: "t-expo-std",
-                sents: [
-                    "香港地鐵（港鐵）是全球最繁忙且效率最高的鐵路系統之一。",
-                    "它擁有數十條路線，每天的載客量高達五百萬人次。",
-                    "港鐵以其極高的準時率聞名，即使在繁忙時間，列車班次依然頻密而穩定。",
-                    "正是這種高效便捷的服務，讓港鐵成為香港市民出行的首選交通工具。"
-                ],
-                hint: "總起重要地位 👉 運用「數字說明」路線與載客量 👉 說明其「準時」特點 👉 總結其成為首選的原因。",
-                exp: "首句確立其國際地位，次句用龐大數據支撐，第三句點出其最核心的「準時」優勢，末句總結市民的依賴。"
-            },
-            {
-                title: "美麗的蝴蝶", emoji: "🦋🌸", tut: "t-expo-std",
-                sents: [
-                    "蝴蝶被譽為「會飛的花朵」，是自然界中最美麗的昆蟲之一。",
-                    "牠們的翅膀上佈滿了微小的鱗片，在陽光下會折射出五彩斑斕的圖案。",
-                    "令人驚奇的是，這些美麗的蝴蝶都是由毫不起眼的毛毛蟲經過結蛹蛻變而來的。",
-                    "這種從醜陋到美麗的奇妙轉變，常常讓人讚嘆大自然的鬼斧神工。"
-                ],
-                hint: "總起稱號 👉 描述翅膀特徵 👉 說明其成長過程(蛻變) 👉 總結讚嘆大自然。",
-                exp: "開首先用美譽帶出主題，接著細緻描寫翅膀的物理特徵，再點出其蛻變的生物學奇觀，最後昇華為對大自然的讚美。"
-            },
-            {
-                title: "垃圾分類的好處", emoji: "♻️🗑️", tut: "t-expo-std",
-                sents: [
-                    "垃圾分類是保護地球環境、實踐可持續發展的重要措施。",
-                    "我們通常將回收物分為三類：藍色廢紙、黃色鋁罐以及啡色膠樽。",
-                    "例如，回收一噸廢紙可以拯救十七棵大樹免被砍伐。",
-                    "只要每個人都在日常生活中做好分類，就能大幅減少堆填區的壓力。"
-                ],
-                hint: "總起環保意義 👉 「分類說明」藍黃啡三色筒 👉 運用「數字與舉例」說明回收廢紙的好處 👉 結論與呼籲。",
-                exp: "首句定調其環保價值，次句具體介紹三色回收分類，第三句用精確數據說明回收效益，末句呼籲大眾共同參與。"
-            },
-            {
-                title: "運動的益處", emoji: "🏃‍♀️💪", tut: "t-expo-std",
-                sents: [
-                    "規律的運動對我們的身體和心理健康都有著極大的好處。",
-                    "在生理上，運動能增強心肺功能，促進新陳代謝，讓我們擁有強健的體魄。",
-                    "在心理上，運動時大腦會分泌「快樂荷爾蒙」，有效幫助我們減輕壓力，放鬆心情。",
-                    "因此，無論學習多麼繁忙，我們都應該每天抽出時間來進行體育鍛鍊。"
-                ],
-                hint: "總起雙重好處 👉 分類說明生理好處 👉 分類說明心理好處 👉 總結(因此)。",
-                exp: "總起句明確指出運動對身心的雙重益處，接著分別從「生理」和「心理」兩個層面詳細闡述，最後以「因此」作結提出建議。"
+                stages: [
+                    {
+                        taskDesc: "第一階：排句成段 (品種與特徵)",
+                        chunks: ["按照品種分類，", "牠們主要有藍孔雀、綠孔雀以及極為罕見的白孔雀。", "雄孔雀當展開巨大的尾屏時，", "就像一把鑲滿寶石的羽扇。"],
+                        hint: "先按品種分類說明，再用比喻描寫雄孔雀開屏的特徵。",
+                        exp: "運用了「分類別」與「打比方」(像羽扇)，生動呈現孔雀之美。"
+                    },
+                    {
+                        taskDesc: "第二階：排段成文 (完整結構)",
+                        chunks: ["【總起】孔雀被公認為世界上最美麗的鳥類之一。", "【分類與特徵】按照品種分類，牠們主要有藍孔雀、綠孔雀以及極為罕見的白孔雀。雄孔雀當展開巨大的尾屏時，就像一把鑲滿寶石的羽扇。", "【總結】正因為牠們擁有如此高貴迷人的姿態，常常在動物園中吸引無數遊客駐足。"],
+                        hint: "說明文結構：總起美譽 👉 分類品種與開屏比喻 👉 總結吸引力。",
+                        exp: "先點出「最美」稱號，按品種分類，描寫姿態，最後總結受歡迎原因。"
+                    }
+                ]
             }
         ];
 
-        // --- 模組 3：段落黏著劑過渡句 (20題) ---
+        // --- 模組 3：段落黏著劑過渡句 (15題) (重組句子碎片) ---
         const transData = [
             {
                 title: "從缺點到優點", emoji: "🔄😊", tut: "t-trans-std",
                 p1: "小明平時總是很粗心，經常忘記帶功課，有時甚至會穿錯不同顏色的襪子上學，讓老師和媽媽十分頭痛。",
                 p2: "他非常熱心助人。每次看到同學拿著重物，他總會第一個跑過去幫忙，因此他在班上的人緣極好。",
-                opts: ["雖然小明有這些小毛病，但他卻有一顆善良的心。", "小明就是這樣一個糟糕的人。", "大家都覺得小明無藥可救了。", "小明的優點比缺點多很多。"], ans: 0,
+                chunks: ['雖然', '小明', '有這些小毛病，', '但他卻', '有一顆', '善良的心。'],
                 hint: "過渡句需要先承接上一段的「缺點（小毛病）」，然後語氣轉折引出下一段的「優點（善良熱心）」。",
                 exp: "過渡句需要承接上一段的「缺點（小毛病）」，並引出下一段的「優點（善良熱心）」。"
             },
@@ -703,7 +699,7 @@
                 title: "從勞累到快樂", emoji: "🧗‍♂️😆", tut: "t-trans-std",
                 p1: "我們沿著陡峭的山路爬了三個小時，每個人都汗流浹背，雙腿發軟，好幾次我都想放棄不爬了。",
                 p2: "當我們終於到達山頂，看到一望無際的美麗雲海時，大家都忍不住高聲歡呼起來。",
-                opts: ["然而，所有的疲憊在登頂的那一刻都煙消雲散了。", "於是，我們決定馬上下山回家。", "爬山真是一件浪費時間的苦差事。", "天氣突然變得非常惡劣。"], ans: 0,
+                chunks: ['然而，', '所有的疲憊', '在登頂的', '那一刻', '都煙消雲散了。'],
                 hint: "上一段很累，下一段很開心，中間需要什麼詞語來轉折？",
                 exp: "過渡句需要承接上文的「疲憊」，並轉折引出下文登頂後的「歡呼與快樂」。"
             },
@@ -711,7 +707,7 @@
                 title: "從外表到功能", emoji: "🚗🔋", tut: "t-trans-std",
                 p1: "這款新型的電動車外觀流線型十足，車身塗上了耀眼的珍珠白，看起來非常時尚且充滿科技感。",
                 p2: "它配備了最新的環保電池，充電一次可以行駛超過五百公里，而且完全不會排放廢氣。",
-                opts: ["這款車不僅外表出眾，其內在性能也令人驚嘆。", "不過，這款車的價格實在太昂貴了。", "它的車廂內部空間其實非常狹窄。", "這款車是昨天才剛剛發佈的。"], ans: 0,
+                chunks: ['這款車', '不僅', '外表出眾，', '其內在性能', '也令人驚嘆。'],
                 hint: "上一段寫「外觀」，下一段寫「性能」，過渡句必須包含這兩個元素。",
                 exp: "上一段寫「外觀」，下一段寫「性能（電池/續航）」，所以過渡句必須是「不僅外表...內在也...」。"
             },
@@ -719,7 +715,7 @@
                 title: "從室內到室外", emoji: "🏫⚽", tut: "t-trans-std",
                 p1: "上午，我們在課室裡專心致志地聽老師講解有趣的科學實驗，大家還親自動手製作了小火山。",
                 p2: "同學們在綠茵場上盡情奔跑，有的踢足球，有的跳繩，充滿了歡聲笑語。",
-                opts: ["下午的戶外活動，更是讓大家樂而忘返。", "接下來我們又上了一堂沉悶的數學課。", "科學實驗其實非常危險。", "大家都覺得肚子餓了準備吃午餐。"], ans: 0,
+                chunks: ['下午的', '戶外活動，', '更是讓大家', '樂而忘返。'],
                 hint: "注意時間和空間的轉換：上午 👉 下午，課室 👉 戶外。",
                 exp: "時間由「上午」轉到「下午」，空間由「課室」轉到「綠茵場（戶外）」。"
             },
@@ -727,7 +723,7 @@
                 title: "從失敗到振作", emoji: "📉💪", tut: "t-trans-std",
                 p1: "看著試卷上不及格的分數，小華難過地流下了眼淚。他覺得自己明明已經溫習了很久，為什麼還是考得這麼差。",
                 p2: "他擦乾眼淚，拿出筆記本，開始認真地分析自己做錯的每一道題，決定下次一定要考好。",
-                opts: ["但是，他並沒有讓自己一直沉浸在悲傷之中。", "於是，他生氣地把試卷撕成了碎片。", "他決定以後再也不讀書了。", "老師走過來嚴厲地責罵了他。"], ans: 0,
+                chunks: ['但是，', '他並沒有', '讓自己', '一直沉浸在', '悲傷之中。'],
                 hint: "他沒有繼續哭，而是拿出了筆記本，這代表他改變了什麼態度？",
                 exp: "上文是「難過流淚（失敗）」，下文是「分析錯題（振作）」，需要一個轉折的過渡句。"
             },
@@ -735,7 +731,7 @@
                 title: "從問題到解決", emoji: "🗑️💡", tut: "t-trans-std",
                 p1: "近年來，海洋裡的塑膠垃圾越來越多。許多海龜和海鳥因為誤食了塑膠袋而死亡，海洋生態面臨嚴峻的危機。",
                 p2: "我們應該減少使用即棄餐具，外出時自備環保袋，從日常生活中減少塑膠垃圾的產生。",
-                opts: ["為了拯救我們的海洋，每個人都必須採取實際行動。", "海洋生物的死活其實與我們無關。", "科學家目前對此束手無策。", "海洋的面積真的非常廣大。"], ans: 0,
+                chunks: ['為了', '拯救', '我們的海洋，', '每個人', '都必須', '採取實際行動。'],
                 hint: "上一段提出危機，下一段提出我們應該怎麼做。中間需要一句呼籲大家行動的話。",
                 exp: "上文提出「海洋危機的問題」，下文提出「日常環保的解決方法」，需要承上啟下引出行動呼籲。"
             },
@@ -743,7 +739,7 @@
                 title: "從平靜到突變", emoji: "🌤️⛈️", tut: "t-trans-std",
                 p1: "星期天早上，陽光明媚，微風輕拂。我們一家人在公園的草地上開心地野餐，有說有笑。",
                 p2: "天空突然烏雲密佈，狂風大作，緊接著下起了傾盆大雨，我們只好狼狽地收拾東西跑回家。",
-                opts: ["就在大家玩得正高興時，天氣卻發生了突變。", "下午的太陽變得更加猛烈了。", "我們在公園裡一直玩到了晚上。", "旁邊突然傳來了美妙的音樂聲。"], ans: 0,
+                chunks: ['就在', '大家', '玩得正高興時，', '天氣', '卻發生了', '突變。'],
                 hint: "本來是好天氣，下一段卻變成了大雨，需要一句話來交代這個突然的改變。",
                 exp: "上文是「晴天野餐」，下文是「狂風大雨」，需要一個表示天氣突變的轉折過渡句。"
             },
@@ -751,7 +747,7 @@
                 title: "從理論到實例", emoji: "📖🔬", tut: "t-trans-std",
                 p1: "植物的生長離不開陽光、空氣和水。如果長期處於缺乏陽光的黑暗環境中，植物的葉子就會發黃並最終枯萎。",
                 p2: "如果我們把一盆原本生長茂盛的向日葵放在黑暗的地下室裡，不出一個星期，它就會變得奄奄一息。",
-                opts: ["為了證明這個道理，我們可以看一個真實的例子。", "植物的種類其實非常繁多。", "所以我們不應該種向日葵。", "黑暗的地下室裡通常有很多蟲子。"], ans: 0,
+                chunks: ['為了證明', '這個道理，', '我們可以看', '一個', '真實的例子。'],
                 hint: "上一段講植物生長的科學道理，下一段拿「向日葵」來做實驗。",
                 exp: "上文是「植物生長的理論」，下文是「向日葵在黑暗中實驗的具體例子」，屬於由理論過渡到實例。"
             },
@@ -759,7 +755,7 @@
                 title: "從現象到原因", emoji: "🐧❄️", tut: "t-trans-std",
                 p1: "企鵝生活在冰天雪地的南極，那裡的溫度常常低至零下幾十度，但企鵝卻能在那裡自由自在地游泳和生活，完全不怕冷。",
                 p2: "牠們的皮下有一層厚厚的脂肪，而且羽毛非常密集且防水，就像穿了一件天然的保暖大衣。",
-                opts: ["企鵝為什麼能在如此嚴寒的環境中生存呢？", "企鵝走起路來搖搖晃晃的非常可愛。", "南極除了企鵝還有海豹。", "企鵝每天都要吃很多魚。"], ans: 0,
+                chunks: ['企鵝', '為什麼', '能在如此', '嚴寒的環境中', '生存呢？'],
                 hint: "上一段說企鵝不怕冷，下一段解釋牠們身體有脂肪和羽毛。中間用一個問題來連接最合適。",
                 exp: "上文提出「企鵝不怕冷」的現象，下文解釋「脂肪和羽毛」的原因，中間需要一個設問句進行過渡銜接。"
             },
@@ -767,7 +763,7 @@
                 title: "從過去到現在", emoji: "⏳🏙️", tut: "t-trans-std",
                 p1: "十年前，這裡還只是一片長滿雜草的荒地，周圍只有幾間破舊的平房，交通非常不方便。",
                 p2: "一座座高樓大廈拔地而起，寬闊的馬路上車水馬龍，大型商場裡人山人海，充滿了繁華的氣息。",
-                opts: ["時光飛逝，如今這個地方已經發生了翻天覆地的變化。", "以前的人生活非常辛苦。", "荒地裡通常藏著很多小動物。", "高樓大廈的建設需要很多資金。"], ans: 0,
+                chunks: ['時光飛逝，', '如今', '這個地方', '已經發生了', '翻天覆地的變化。'],
                 hint: "從「十年前的荒地」跳到「現在的高樓大廈」，需要感嘆時間流逝的句子。",
                 exp: "上文描寫「十年前的荒地」，下文描寫「如今的繁華城市」，需要一個交代時間流逝與滄桑巨變的過渡句。"
             },
@@ -775,7 +771,7 @@
                 title: "從開頭到正文", emoji: "📝✍️", tut: "t-trans-std",
                 p1: "【排比開頭】有人說，母愛是一把傘，為我們遮擋風雨；有人說，母愛是一盞燈，為我們照亮前路。而在我的記憶中，母愛是一碗熱騰騰的雞湯。",
                 p2: "那天下午放學，天空突然下起了暴雨，沒帶傘的我被淋成了「落湯雞」。回到家時，我臉色蒼白，冷得瑟瑟發抖，隨後就病倒了。",
-                opts: ["每當我想起那碗雞湯，就會憶起那個令我難忘的雨天。", "媽媽平時煮的菜都非常好吃。", "生病的感覺真的非常痛苦。", "下雨天總是讓人心情變得很糟糕。"], ans: 0,
+                chunks: ['每當', '我想起', '那碗雞湯，', '就會憶起', '那個令我', '難忘的雨天。'],
                 hint: "開頭提到了「雞湯」，而下一段開始講述一個「雨天」發生的事。你需要把這兩者連起來。",
                 exp: "上文用排比法引出「雞湯」的母愛主題，下文開始記敘六要素（生病的起因與經過），過渡句必須完美把「開頭的雞湯」與「故事的起因」黏合起來。"
             },
@@ -783,7 +779,7 @@
                 title: "從正文到結尾", emoji: "🏁❤️", tut: "t-trans-std",
                 p1: "經過這次長途跋涉的遠足，我雖然雙腳磨出了水泡，一路上也抱怨了無數次，但我最終還是靠著意志力跟著隊伍走到了終點。",
                 p2: "這次經歷讓我明白：困難就像彈簧，你弱牠就強。只要我們堅持不懈，就沒有跨不過去的山峰，這真是一堂寶貴的人生課。",
-                opts: ["看著胸前的紀念章，我深深體會到「不經一番寒徹骨，焉得梅花撲鼻香」的道理。", "回家的路上下了很大的雨。", "我的雙腳足足痛了三天三夜。", "這是我第一次參加遠足活動。"], ans: 0,
+                chunks: ['看著', '胸前的紀念章，', '我深深體會到', '「不經一番寒徹骨，', '焉得梅花撲鼻香」', '的道理。'],
                 hint: "經歷了辛苦到達終點後，通常會有一句名言或深刻的感悟來帶出結尾的道理。",
                 exp: "上文是正文的「結果」，下文是結尾的「感悟」。過渡句使用引用修辭呼應前文的艱辛，最適合引出下文的哲理總結。"
             },
@@ -791,7 +787,7 @@
                 title: "季節的變幻", emoji: "🌸🍂", tut: "t-trans-std",
                 p1: "春天姑娘悄悄完成了她的使命，樹木吐出了翠綠的新芽，百花在和煦的陽光下盡情綻放，為大地披上了一件彩色的衣裳。",
                 p2: "知了在樹頭不厭其煩地叫著「熱死了，熱死了」，熾熱的太陽炙烤著大地，大街上的人們紛紛換上了短袖短褲。",
-                opts: ["不經意間，夏天的腳步已經悄然臨近。", "秋天也是一個非常美麗的季節。", "春天很快就過去了，大家都很想念它。", "天氣變得越來越奇怪了。"], ans: 0,
+                chunks: ['不經意間，', '夏天的腳步', '已經', '悄然', '臨近。'],
                 hint: "上一段描寫春天，下一段描寫夏天，需要一個擬人化的季節交替句。",
                 exp: "上文寫「春景」，下文寫「夏日擬人景象（知了叫熱）」。過渡句需要以擬人手法（夏天的腳步悄然臨近）進行起承轉合的自然交替。"
             },
@@ -799,7 +795,7 @@
                 title: "外形到習性", emoji: "🐰🥕", tut: "t-trans-std",
                 p1: "【說明文過渡】小兔子全身長著雪白柔軟的毛，遠看就像一個棉花球。牠那雙紅寶石般的眼睛一閃一閃的，配上兩隻長長的耳朵，顯得格外可愛。",
                 p2: "只要你把新鮮的胡蘿蔔或生菜遞到牠嘴邊，牠的三瓣嘴就會迅速地動起來，發出「吧唧吧唧」的聲音，一會兒就把食物吃光了。",
-                opts: ["除了擁有精緻的外表，小兔子的飲食習性也十分有趣。", "小兔子跑得非常快，真厲害。", "市場上賣的胡蘿蔔非常便宜。", "這隻小兔子是媽媽上個月買給我的。"], ans: 0,
+                chunks: ['除了', '擁有', '精緻的外表，', '小兔子的', '飲食習性', '也十分有趣。'],
                 hint: "上一段寫「外表」，下一段寫「吃東西（飲食）」。",
                 exp: "說明文結構講求清晰。上段說明兔子的「外形特徵」，下段說明「生活習性」。過渡句必須要能同時「承上（外表）」並「啟下（習性）」！"
             },
@@ -807,58 +803,17 @@
                 title: "從爭吵到和好", emoji: "😡🤝", tut: "t-trans-std",
                 p1: "我和小明因為一件小事在課室裡吵得不可開交，放學時各走各的路，誰也不理誰，我們多年的友情彷彿瞬間陷入了冰河期。",
                 p2: "第二天早上一回校，我發現桌上放著一張小明親手寫的道歉卡，上面還畫著我們踢球的卡通畫，我心中的冰山瞬間融化了。",
-                opts: ["然而，冷戰的局面並沒有持續太久。", "小明平時的書法寫得很好看。", "踢足球是我們最喜歡的運動。", "我覺得小明這一次真的太過分了。"], ans: 0,
+                chunks: ['然而，', '冷戰的', '局面', '並沒有', '持續太久。'],
                 hint: "前一段是「冰河期的冷戰」，後一段是「道歉和好」。",
                 exp: "上一段是吵架後的「冰河期（冷戰）」，下一段是看到道歉卡後的「和好」。過渡句使用轉折關聯詞「然而」並點出「冷戰」，心境轉折極為精準。"
-            },
-            {
-                title: "從嘈雜到安靜", emoji: "📢🤫", tut: "t-trans-std",
-                p1: "小息時的操場簡直是一片沸騰的海洋。低年級的同學在追逐嬉戲，高年級的同學在激烈地打籃球，到處都是震耳欲聾的歡笑聲和吶喊聲。",
-                p2: "圖書館裡靜得連一根針掉在地上的聲音都能聽見，同學們都埋首於書堆中，生怕發出一點聲響打擾了別人。",
-                opts: ["然而，當我們踏入圖書館的大門，氣氛便截然不同了。", "操場上的遊戲真的非常好玩。", "我也很想去圖書館看書。", "老師突然出現在操場上。"], ans: 0,
-                hint: "上一段寫操場的「吵鬧」，下一段寫圖書館的「安靜」。這是一個極端的對比轉換。",
-                exp: "空間從操場轉換到圖書館，氣氛從極度嘈雜轉向絕對安靜，需要一句點明空間轉換與氣氛「截然不同」的過渡句。"
-            },
-            {
-                title: "從努力到收穫", emoji: "💦🍅", tut: "t-trans-std",
-                p1: "春天時，我們在校園的角落開闢了一塊小農田。為了讓番茄苗茁壯成長，我們每天輪流去澆水、除草，甚至在烈日下幫它們捉害蟲，辛苦極了。",
-                p2: "藤蔓上掛滿了紅通通的番茄，就像一個個喜氣洋洋的小燈籠。大家摘下自己親手種植的果實，吃在嘴裡，甜在心頭。",
-                opts: ["皇天不負有心人，到了豐收的秋天，我們的汗水終於得到了回報。", "番茄是一種非常有營養的蔬菜。", "我們種的番茄品種非常特別。", "除草是一件非常費力氣的工作。"], ans: 0,
-                hint: "前一段寫了春天的辛勤付出（汗水），後一段寫了秋天結滿番茄。中間需要點出「付出得到回報」。",
-                exp: "上文是「辛勤耕耘的經過」，下文是「豐收的喜悅結果」。過渡句需承上啟下，點出「汗水得到回報」。"
-            },
-            {
-                title: "從外觀到內部", emoji: "🏛️🛋️", tut: "t-trans-std",
-                p1: "這座新建的博物館外觀設計十分獨特，它採用了大量的玻璃幕牆，遠看就像一顆鑲嵌在城市中心的巨大水晶，在陽光下閃閃發光。",
-                p2: "一樓是遠古恐龍化石展區，二樓則展示了現代科技的發展歷程，每一個展廳都佈置得極具教育意義。",
-                opts: ["走進博物館的內部，裡面的展品更是令人目不暇給。", "這座博物館的建造費用非常昂貴。", "每天都有很多遊客在外面拍照。", "玻璃幕牆需要定期進行清潔。"], ans: 0,
-                hint: "上一段看完「外觀」，下一段開始講一樓、二樓的展區。視線從外面移動到了哪裡？",
-                exp: "這是一篇說明文的空間順序轉換。由描寫「外部建築」過渡到介紹「內部展區佈局」，必須使用「走進內部」的引導句。"
-            },
-            {
-                title: "從過去到未來", emoji: "☎️🚀", tut: "t-trans-std",
-                p1: "在幾十年前，人們如果想與遠方的親友聯絡，只能依靠寫信。一封信往往要在路上顛簸十幾天甚至幾個月才能送達，溝通非常緩慢且不便。",
-                p2: "我們可以透過智能手機的視像通話，與地球另一端的朋友進行即時面對面的交流，距離再也不是溝通的障礙。",
-                opts: ["隨著科技的飛速發展，如今的通訊方式已經發生了革命性的改變。", "以前的郵差工作非常辛苦。", "寫信可以鍛鍊我們的中文字體。", "智能手機的屏幕越來越大了。"], ans: 0,
-                hint: "上一段是「幾十年前」的舊方法，下一段是「如今智能手機」的新科技。這中間發生了什麼？",
-                exp: "上段描述過去通訊的不便，下段展示現代科技的高效。過渡句需交代時間的推進與科技帶來的「革命性改變」。"
-            },
-            {
-                title: "從疑惑到明白", emoji: "🤔💡", tut: "t-trans-std",
-                p1: "看著這道複雜的數學幾何題，我抓破了頭皮也想不出解題的方法。圖形上的輔助線密密麻麻，讓我感到十分氣餒，甚至覺得老師出錯了題目。",
-                p2: "只要在中間畫一條垂直線，原本複雜的圖形立刻變成了兩個簡單的三角形，答案頓時呼之欲出。我不禁為自己的恍然大悟感到興奮。",
-                opts: ["直到老師走過來輕輕點撥了一句，我才茅塞頓開。", "我生氣地把數學作業本合了起來。", "這道題目在考試中佔了很大的分數。", "我覺得幾何圖形真的很難畫。"], ans: 0,
-                hint: "上一段是「完全不懂」，下一段是「突然知道了怎麼解」。這中間一定有個人或某個提示讓他開竅了！",
-                exp: "上文處於「氣餒與疑惑」的困境，下文進入「恍然大悟」的解決狀態。過渡句需引入「老師點撥」這個轉折契機。"
             }
         ];
 
-        let fwProgress = JSON.parse(localStorage.getItem('fwStdProgress')) || new Array(expandData.length).fill(0);
-        let exProgress = JSON.parse(localStorage.getItem('exStdProgress')) || new Array(expoData.length).fill(0);
-        let trProgress = JSON.parse(localStorage.getItem('trStdProgress')) || new Array(transData.length).fill(0);
+        let fwProgress = JSON.parse(localStorage.getItem('fwStdProgress_v6')) || new Array(expandData.length).fill(0);
+        let exProgress = JSON.parse(localStorage.getItem('exStdProgress_v6')) || new Array(expoData.length).fill(0);
+        let trProgress = JSON.parse(localStorage.getItem('trStdProgress_v6')) || new Array(transData.length).fill(0);
 
-        // ================= 4. 通用：重組與拖拉邏輯 (局部遣返核心 + 專屬動態提示) =================
-        
+        // ================= 4. 全局核心：碎片重組引擎 =================
         function initReorderState(correctArr) {
             reorderCorrect = [...correctArr];
             reorderSource = [...reorderCorrect].sort(() => Math.random() - 0.5);
@@ -868,9 +823,7 @@
             window.currentHints = []; 
         }
 
-        function getFirstEmptySlot() {
-            return targetSlots.indexOf(null);
-        }
+        function getFirstEmptySlot() { return targetSlots.indexOf(null); }
 
         function moveToTarget(sourceIdx) {
             let emptyIdx = getFirstEmptySlot();
@@ -878,11 +831,14 @@
                 let chunk = reorderSource[sourceIdx];
                 reorderSource[sourceIdx] = null; 
                 targetSlots[emptyIdx] = chunk;
-                speakText(chunk);
+                speakText(chunk.replace(/【.*?】/, ''));
+                
                 renderCurrentPlayUI();
                 
                 if (!targetSlots.includes(null)) {
-                    if (currentMode === 'expo') checkReorderLogic(finishExpoLevel);
+                    if (currentMode === 'expand') setTimeout(() => checkReorderLogic(advanceExpandPhase), 50);
+                    else if (currentMode === 'expo') setTimeout(() => checkReorderLogic(advanceExpoPhase), 50);
+                    else if (currentMode === 'trans') setTimeout(() => checkReorderLogic(finishTransLevel), 50);
                 }
             }
         }
@@ -923,16 +879,28 @@
                 onComplete();
             } else {
                 currentMistakes++;
-                if (currentMode === 'expo') {
-                    exProgress[currentIdx] = -1; localStorage.setItem('exStdProgress', JSON.stringify(exProgress));
+                let hintText = "";
+
+                if (currentMode === 'expand') { 
+                    fwProgress[currentIdx] = -1; localStorage.setItem('fwStdProgress_v6', JSON.stringify(fwProgress)); 
+                    hintText = expandData[currentIdx].questions[currentSubTask].hint;
+                }
+                else if (currentMode === 'expo') { 
+                    exProgress[currentIdx] = -1; localStorage.setItem('exStdProgress_v6', JSON.stringify(exProgress)); 
+                    hintText = expoData[currentIdx].stages[currentSubTask].hint;
+                }
+                else if (currentMode === 'trans') { 
+                    trProgress[currentIdx] = -1; localStorage.setItem('trStdProgress_v6', JSON.stringify(trProgress)); 
+                    hintText = transData[currentIdx].exp;
                 }
 
                 wrongSlots = wrongIndices; 
 
                 wrongIndices.forEach(idx => {
-                    let slotElem = document.getElementById(`target-slot-${idx}`);
+                    let slotId = currentMode === 'expand' ? `expand-slot-${idx}` : (currentMode === 'expo' ? `expo-slot-${idx}` : `trans-slot-${idx}`);
+                    let slotElem = document.getElementById(slotId);
                     if (slotElem) {
-                        slotElem.classList.remove('bg-teal-500', 'bg-teal-600', 'border-teal-700', 'border-teal-600', 'text-white');
+                        slotElem.classList.remove('bg-blue-500', 'bg-blue-600', 'bg-teal-500', 'bg-teal-600', 'bg-amber-500', 'bg-amber-600', 'border-blue-600', 'border-teal-600', 'border-amber-600', 'text-white', 'text-slate-400');
                         slotElem.classList.add('wrong-slot', 'shake');
                     }
                 });
@@ -940,13 +908,11 @@
                 speakText("排錯了喔，請看提示再試一次！");
                 
                 const hintBox = document.getElementById('dynamic-hint-box');
-                let hintText = expoData[currentIdx].hint;
-
                 document.getElementById('hint-text').innerHTML = "💡 提示：" + hintText;
                 document.getElementById('hint-tts-btn').onclick = () => speakText("提示：" + hintText);
                 hintBox.classList.remove('hidden');
 
-                // 3.5秒後自動退回
+                // 3.5秒後自動退回錯的積木
                 setTimeout(() => {
                     let changed = false;
                     wrongIndices.forEach(idx => {
@@ -954,10 +920,9 @@
                         if (chunk !== null && wrongSlots.includes(idx)) {
                             targetSlots[idx] = null;
                             
-                            let slotElem = document.getElementById(`target-slot-${idx}`);
-                            if (slotElem) {
-                                slotElem.classList.remove('wrong-slot', 'shake');
-                            }
+                            let slotId = currentMode === 'expand' ? `expand-slot-${idx}` : (currentMode === 'expo' ? `expo-slot-${idx}` : `trans-slot-${idx}`);
+                            let slotElem = document.getElementById(slotId);
+                            if (slotElem) slotElem.classList.remove('wrong-slot', 'shake');
 
                             let emptySourceIdx = reorderSource.indexOf(null);
                             if(emptySourceIdx !== -1) reorderSource[emptySourceIdx] = chunk;
@@ -972,7 +937,7 @@
             }
         }
 
-        // ================= 5. 各模式的 UI 渲染與過關邏輯 =================
+        // ================= 5. UI 渲染與過關邏輯 =================
 
         function renderCurrentPlayUI() {
             if (currentMode === 'expand') renderExpandUI();
@@ -980,18 +945,16 @@
             else if (currentMode === 'trans') renderTransUI();
         }
 
-        // --- 模組 1：記敘文細節放大鏡 (MC) ---
+        // --- 模組 1：漸進式場景擴寫 ---
         function renderExpandDirectory() {
             const dirContainer = document.getElementById('expand-content');
             let html = '';
             expandData.forEach((item, idx) => {
                 let status = fwProgress[idx];
-                let bgClass = 'bg-white';
-                let borderClass = 'border-slate-200';
-                let icon = ' <span class="text-slate-400 font-bold ml-2"># 未挑戰</span>';
-                if (status === 1) { bgClass = 'bg-yellow-50'; borderClass = 'border-yellow-400'; icon = ' <span class="text-yellow-600 font-bold ml-2">🌟</span>'; }
-                else if (status === 2) { bgClass = 'bg-emerald-50'; borderClass = 'border-emerald-400'; icon = ' <span class="text-emerald-600 font-bold ml-2">✅</span>'; }
-                else if (status === -1) { bgClass = 'bg-rose-50'; borderClass = 'border-rose-400'; icon = ' <span class="text-rose-600 font-bold ml-2">❌</span>'; }
+                let bgClass = 'bg-white', borderClass = 'border-slate-200', icon = ' <span class="text-slate-400 font-bold ml-2"># 未挑戰</span>';
+                if (status === 1) { bgClass = 'bg-yellow-50'; borderClass = 'border-yellow-400'; icon = ' <span class="text-yellow-600 font-bold ml-2">🌟 完美</span>'; }
+                else if (status === 2) { bgClass = 'bg-emerald-50'; borderClass = 'border-emerald-400'; icon = ' <span class="text-emerald-600 font-bold ml-2">✅ 過關</span>'; }
+                else if (status === -1) { bgClass = 'bg-rose-50'; borderClass = 'border-rose-400'; icon = ' <span class="text-rose-600 font-bold ml-2">❌ 錯誤</span>'; }
 
                 html += `
                     <button onclick="startExpand(${idx})" class="w-full text-left p-5 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition group active:scale-95 flex flex-col items-start gap-2">
@@ -999,7 +962,7 @@
                             <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-bold">${item.emoji} ${item.title}</span>
                             ${icon}
                         </div>
-                        <h3 class="text-base font-bold text-slate-500 truncate w-full">草稿：${item.base.replace(/<[^>]*>?/gm, '').substring(0,15)}...</h3>
+                        <h3 class="text-base font-bold text-slate-500 truncate w-full">包含 5 個漸進式擴寫挑戰</h3>
                     </button>
                 `;
             });
@@ -1008,134 +971,135 @@
 
         function startExpand(idx, forceStart = false) {
             const data = expandData[idx];
-            if (!forceStart && !localStorage.getItem('tut_seen_' + data.tut)) {
-                pendingIdx = idx; pendingType = 'expand'; showTutorial(data.tut); return;
+            if (!forceStart && !localStorage.getItem('tut_seen_t-expand-std')) {
+                pendingIdx = idx; pendingType = 'expand'; showTutorial('t-expand-std'); return;
             }
-            currentIdx = idx; currentMistakes = 0;
-            
+            currentIdx = idx; currentSubTask = 0; currentMistakes = 0;
             document.getElementById('expand-directory').style.display = 'none';
             document.getElementById('expand-play').style.display = 'flex';
             document.getElementById('main-scroll-area').scrollTop = 0;
+            setupExpandPhase();
+        }
+
+        function setupExpandPhase() {
+            const qData = expandData[currentIdx].questions[currentSubTask];
+            initReorderState(qData.chunks);
             renderExpandUI();
         }
 
         function renderExpandUI() {
-            const data = expandData[currentIdx];
+            const sceneData = expandData[currentIdx];
+            const qData = sceneData.questions[currentSubTask];
+            
             let html = `
                 <div class="w-full max-w-4xl flex justify-between items-center mb-4">
-                    <button onclick="backToDirectory('expand')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
-                    <span class="bg-blue-100 text-blue-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">擴寫 ${currentIdx + 1} / 20</span>
+                    <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
+                    <span class="bg-blue-100 text-blue-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">擴寫 ${currentIdx + 1} / 10 (第 ${currentSubTask + 1} / 5 句)</span>
                 </div>
                 
                 <div class="slide-up w-full max-w-4xl bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center relative transition-all duration-500">
-                    <span class="absolute -top-4 bg-blue-600 text-white px-5 py-1.5 rounded-full font-bold shadow-md text-sm md:text-base">${data.title}</span>
+                    <span class="absolute -top-4 bg-blue-600 text-white px-5 py-1.5 rounded-full font-bold shadow-md text-sm md:text-base">${sceneData.title}</span>
+                    <div class="text-5xl md:text-6xl mb-4 text-center animate-bounce drop-shadow-md mt-2">${sceneData.emoji}</div>
                     
-                    <div class="w-full bg-slate-50 p-6 rounded-2xl border-2 border-slate-200 mb-6 shadow-inner mt-4">
-                        <div class="text-sm font-bold text-slate-500 mb-3 border-b-2 border-slate-200 pb-2">📝 原始流水帳草稿：</div>
-                        <div class="text-xl md:text-2xl font-bold text-slate-700 leading-loose">${data.base}</div>
+                    <div class="w-full bg-slate-50 p-6 rounded-2xl border-2 border-slate-200 mb-6 shadow-inner mt-2">
+                        <div class="text-sm font-bold text-slate-500 mb-3 border-b-2 border-slate-200 pb-2">📝 原始枯燥草稿：</div>
+                        <div class="text-xl md:text-2xl font-bold text-slate-700 leading-loose">${qData.base}</div>
                     </div>
 
-                    <div class="w-full flex items-center gap-3 mb-4">
-                        <button onclick="speakText('請選出最生動的句子，替換掉草稿中劃線的部分。')" class="tts-btn flex-shrink-0 bg-white text-blue-600 w-10 h-10 rounded-full text-xl flex items-center justify-center shadow-md border border-blue-200">🔊</button>
-                        <h2 class="text-lg md:text-xl font-black text-blue-800">請選出最生動的句子，替換掉草稿中劃線的部分：</h2>
+                    <div class="w-full bg-blue-50 p-6 rounded-2xl border-2 border-blue-200 mb-6 shadow-inner">
+                        <div class="text-sm font-bold text-blue-700 mb-3 border-b-2 border-blue-200 pb-2">🪄 你的擴寫魔法區 (請把詞語排成通順的句子)：</div>
+                        <div class="text-xl md:text-2xl font-bold text-slate-800 leading-loose flex flex-wrap items-center justify-start gap-y-3" id="expand-target-area"></div>
                     </div>
+                    
+                    <div class="text-center text-slate-500 font-bold mb-3 text-sm">👇 詞語魔法庫 (點擊放入上方)</div>
+                    <div class="w-full flex flex-wrap justify-center gap-3" id="expand-source-area"></div>
 
-                    <div class="flex flex-col gap-3 w-full" id="options-container">
-            `;
-
-            let optsWithIdx = data.opts.map((opt, i) => ({ text: opt, isCorr: i === data.ans }));
-            optsWithIdx.sort(() => Math.random() - 0.5);
-
-            optsWithIdx.forEach((opt, oIdx) => {
-                const safeOpt = opt.text.replace(/'/g, "\\'");
-                const letter = ['A','B','C'][oIdx];
-                html += `
-                    <div class="flex gap-2 w-full">
-                        <button onclick="checkExpandAnswer(this, ${opt.isCorr}, '${safeOpt}')" class="option-btn flex-1 bg-white border-2 border-slate-200 text-slate-700 text-lg font-bold py-5 px-5 rounded-2xl hover:bg-blue-50 transition text-left flex items-start gap-4">
-                            <span class="bg-slate-100 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5">${letter}</span> 
-                            <span class="leading-relaxed break-words">${opt.text}</span>
-                        </button>
-                        <button onclick="speakText('${safeOpt}')" class="tts-btn flex-shrink-0 bg-blue-50 text-blue-600 w-14 rounded-2xl text-2xl flex items-center justify-center shadow-sm border border-blue-200 hover:bg-blue-100 transition">🔊</button>
+                    <div id="dynamic-hint-box" class="hidden w-full max-w-3xl mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3 slide-up">
+                        <div class="flex-1 space-y-2" id="hint-text"></div>
+                        <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
                     </div>
-                `;
-            });
-
-            html += `</div>
-                <div id="dynamic-hint-box" class="hidden w-full mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3 slide-up">
-                    <div class="flex-1 space-y-2" id="hint-text"></div>
-                    <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
-                </div>
-            </div>`;
-            
+                </div>`;
             document.getElementById('expand-play').innerHTML = html;
+
+            let tHtml = '';
+            targetSlots.forEach((chunk, idx) => {
+                let isLocked = lockedSlots[idx];
+                let isWrong = wrongSlots.includes(idx);
+                if (chunk === null) {
+                    tHtml += `<span id="expand-slot-${idx}" class="inline-slot empty border-dashed border-blue-400 bg-blue-50 text-slate-400 font-normal">片段 ${idx+1}</span>`;
+                } else {
+                    let sClass = isLocked ? 'locked bg-blue-600 border-blue-700 cursor-not-allowed' : 
+                                 (isWrong ? 'wrong-slot shake cursor-pointer' : 'filled bg-blue-500 border-blue-600 hover:bg-blue-600 cursor-pointer');
+                    tHtml += `<span id="expand-slot-${idx}" onclick="removeFromTarget(${idx})" class="inline-slot ${sClass} text-white font-bold pop shadow">${chunk}</span>`;
+                }
+            });
+            document.getElementById('expand-target-area').innerHTML = tHtml;
+
+            let sHtml = '';
+            reorderSource.forEach((chunk, idx) => {
+                if (chunk === null) {
+                    sHtml += `<div class="h-[52px] w-[100px] border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 opacity-50 m-1"></div>`;
+                } else {
+                    let btnClass = "chunk-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-blue-400 hover:bg-blue-50 font-black text-lg py-2.5 px-4 rounded-xl shadow m-1 active:scale-95 transition flex-1 text-center";
+                    sHtml += `<button onclick="moveToTarget(${idx})" class="${btnClass}">${chunk}</button>`;
+                }
+            });
+            document.getElementById('expand-source-area').innerHTML = sHtml;
         }
 
-        function checkExpandAnswer(btnElement, isCorrect, optText) {
-            const allBtns = document.querySelectorAll('.option-btn');
-            allBtns.forEach(b => b.style.pointerEvents = 'none');
-            const data = expandData[currentIdx];
+        function advanceExpandPhase() {
+            const sceneData = expandData[currentIdx];
+            const qData = sceneData.questions[currentSubTask];
+            speakText("重組正確！");
+            
+            let completedSentence = qData.chunks.join('');
+            let finalHtml = qData.base.replace(/<span class='hl-boring'>.*?<\/span>/, `<span class="text-blue-600 font-bold">${completedSentence}</span>`);
+            
+            let expGained = 4; 
+            writeExp += expGained;
+            localStorage.setItem('writeStdExp_v4', writeExp);
+            document.getElementById('exp-display').innerText = writeExp;
+            document.getElementById('exp-display').classList.add('pop');
+            setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
 
-            if (isCorrect) {
-                btnElement.classList.add('correct');
-                speakText("選得好！句子變得生動多了！");
-                
-                let finalStory = data.base.replace(/<span class='hl-boring'>.*?<\/span>/, `<span class='hl-magic'>${optText}</span>`);
-                
-                let finalStatus = currentMistakes === 0 ? 1 : 2;
-                let expGained = calcExp(finalStatus, fwProgress, currentIdx, 20, 10);
-
-                if (expGained > 0) {
-                    writeExp += expGained;
-                    localStorage.setItem('writeStdExp', writeExp);
-                    updateExpDisplay();
+            let expMsg = `獲得 ${expGained} 點經驗值 ✨`;
+            document.getElementById('feedback-desc').innerHTML = `${expMsg}<br><br><div class="bg-blue-50 p-4 rounded-xl border border-blue-200 text-blue-900 text-left text-base leading-loose">💡 解析：${qData.exp}</div>`;
+            document.getElementById('feedback-story').innerHTML = `<p class="essay-paragraph leading-loose">${finalHtml}</p>`;
+            
+            showFeedbackModal(expGained, () => {
+                currentSubTask++;
+                currentMistakes = 0; 
+                if (currentSubTask < sceneData.questions.length) {
+                    setupExpandPhase();
+                } else {
+                    showToast("恭喜完成該場景擴寫！"); 
+                    backToDirectory();
                 }
+            });
 
-                let expMsg = expGained > 0 ? `獲得 ${expGained} 點經驗值 ✨` : `這題已經成功過關囉！`;
-                document.getElementById('feedback-desc').innerHTML = `${expMsg}<br><br><div class="bg-blue-50 p-4 rounded-xl border border-blue-200 text-blue-900 text-left text-base leading-loose">💡 解析：${data.exp}</div>`;
-                document.getElementById('feedback-story').innerHTML = `<p class="essay-paragraph font-black text-xl text-center text-slate-800 mb-4">${data.title}</p><p class="essay-paragraph leading-loose">${finalStory}</p>`;
-                
-                showFeedbackModal(expGained, () => {
-                    let nextIdx = currentIdx + 1;
-                    if (nextIdx < expandData.length) startExpand(nextIdx);
-                    else { showToast("恭喜完成擴寫挑戰！"); backToDirectory('expand'); }
-                });
-            } else {
-                btnElement.classList.add('wrong', 'shake');
-                currentMistakes++;
-                fwProgress[currentIdx] = -1;
-                localStorage.setItem('fwStdProgress', JSON.stringify(fwProgress));
-
-                const hintBox = document.getElementById('dynamic-hint-box');
-                let newHint = data.hint || "這個選項不夠生動喔！再看看有沒有用修辭的選項。";
-                document.getElementById('hint-text').innerText = "💡 提示：" + newHint;
-                document.getElementById('hint-tts-btn').onclick = () => speakText(newHint);
-                hintBox.classList.remove('hidden');
-                
-                speakText("不對喔，請再想想看！");
-                setTimeout(() => {
-                    btnElement.classList.remove('shake');
-                    allBtns.forEach(b => { if (!b.classList.contains('correct')) b.style.pointerEvents = 'auto'; });
-                }, 1500);
+            if (currentSubTask === sceneData.questions.length - 1) {
+                if (fwProgress[currentIdx] !== 1 && fwProgress[currentIdx] !== 2) {
+                    fwProgress[currentIdx] = currentMistakes === 0 ? 1 : 2;
+                    localStorage.setItem('fwStdProgress_v6', JSON.stringify(fwProgress));
+                }
             }
         }
 
-        // --- 模組 2：說明文結構工程師 (重組) ---
+        // --- 模組 2：說明文雙階結構重組 ---
         function renderExpoDirectory() {
             const dirContainer = document.getElementById('expo-content');
             let html = '';
             expoData.forEach((item, idx) => {
                 let status = exProgress[idx];
-                let bgClass = 'bg-white';
-                let borderClass = 'border-slate-200';
-                let icon = ' <span class="text-slate-400 font-bold ml-2"># 未挑戰</span>';
-                if (status === 1) { bgClass = 'bg-yellow-50'; borderClass = 'border-yellow-400'; icon = ' <span class="text-yellow-600 font-bold ml-2">🌟</span>'; }
-                else if (status === 2) { bgClass = 'bg-emerald-50'; borderClass = 'border-emerald-400'; icon = ' <span class="text-emerald-600 font-bold ml-2">✅</span>'; }
-                else if (status === -1) { bgClass = 'bg-rose-50'; borderClass = 'border-rose-400'; icon = ' <span class="text-rose-600 font-bold ml-2">❌</span>'; }
+                let bgClass = 'bg-white', borderClass = 'border-slate-200', icon = ' <span class="text-slate-400 font-bold ml-2"># 未挑戰</span>';
+                if (status === 1) { bgClass = 'bg-yellow-50'; borderClass = 'border-yellow-400'; icon = ' <span class="text-yellow-600 font-bold ml-2">🌟 完美</span>'; }
+                else if (status === 2) { bgClass = 'bg-emerald-50'; borderClass = 'border-emerald-400'; icon = ' <span class="text-emerald-600 font-bold ml-2">✅ 過關</span>'; }
+                else if (status === -1) { bgClass = 'bg-rose-50'; borderClass = 'border-rose-400'; icon = ' <span class="text-rose-600 font-bold ml-2">❌ 錯誤</span>'; }
 
                 html += `
                     <button onclick="startExpo(${idx})" class="w-full text-left p-5 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition group active:scale-95 flex flex-col justify-between h-[120px]">
                         <div class="flex justify-between items-center mb-2 w-full">
-                            <span class="bg-teal-100 text-teal-800 text-xs font-bold px-2 py-1 rounded">結構重組</span>
+                            <span class="bg-teal-100 text-teal-800 text-xs font-bold px-2 py-1 rounded">雙階結構重組</span>
                             ${icon}
                         </div>
                         <h3 class="text-lg font-black text-slate-800 group-hover:text-teal-600 transition flex items-center gap-2">${item.emoji} ${item.title}</h3>
@@ -1147,129 +1111,151 @@
 
         function startExpo(idx, forceStart = false) {
             const data = expoData[idx];
-            if (!forceStart && !localStorage.getItem('tut_seen_' + data.tut)) {
-                pendingIdx = idx; pendingType = 'expo'; showTutorial(data.tut); return;
+            if (!forceStart && !localStorage.getItem('tut_seen_t-expo-std')) {
+                pendingIdx = idx; pendingType = 'expo'; showTutorial('t-expo-std'); return;
             }
-
-            currentIdx = idx; currentMistakes = 0;
-            initReorderState(data.sents);
-            
+            currentIdx = idx; currentSubTask = 0; currentMistakes = 0;
             document.getElementById('expo-directory').style.display = 'none';
             document.getElementById('expo-play').style.display = 'flex';
             document.getElementById('main-scroll-area').scrollTop = 0;
+            setupExpoPhase();
+        }
 
+        function setupExpoPhase() {
+            const data = expoData[currentIdx];
+            const stage = data.stages[currentSubTask];
+            initReorderState(stage.chunks);
             renderExpoUI();
         }
 
         function renderExpoUI() {
             const data = expoData[currentIdx];
+            const stage = data.stages[currentSubTask];
             let html = `
                 <div class="w-full max-w-4xl flex justify-between items-center mb-4">
-                    <button onclick="backToDirectory('expo')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
-                    <span class="bg-teal-100 text-teal-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">結構重組 ${currentIdx + 1} / 20</span>
+                    <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
+                    <span class="bg-teal-100 text-teal-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">結構重組 ${currentIdx + 1} / 15</span>
                 </div>
                 
                 <div class="slide-up w-full max-w-4xl bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center relative transition-all duration-500">
                     <span class="absolute -top-4 bg-teal-600 text-white px-5 py-1.5 rounded-full font-bold shadow-md text-sm md:text-base">${data.title}</span>
                     <div class="text-5xl md:text-6xl mb-2 text-center drop-shadow-md mt-2">${data.emoji}</div>
                     
-                    <div class="w-full flex items-start gap-3 mt-4 mb-4 bg-teal-50 p-4 rounded-xl border border-teal-100 shadow-inner">
-                        <button onclick="speakText('請點擊下方句子，按照說明文邏輯排成通順的段落。')" class="tts-btn flex-shrink-0 bg-white text-teal-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-teal-200 mt-1">🔊</button>
-                        <div>
-                            <h2 class="text-lg md:text-xl font-bold text-slate-800 leading-relaxed mt-2">請點擊下方句子，按照說明文邏輯排成通順的段落：</h2>
-                        </div>
+                    <div class="w-full bg-teal-50 p-4 rounded-xl border border-teal-200 mb-6 text-teal-800 font-bold text-base md:text-lg text-center flex flex-col gap-2">
+                        <span class="bg-white px-3 py-1 rounded text-teal-600 inline-block self-center shadow-sm">${stage.taskDesc}</span>
                     </div>
 
-                    <div class="w-full bg-slate-50 p-4 md:p-6 rounded-2xl border-2 border-slate-200 min-h-[120px] flex flex-col gap-3 mb-4" id="reorder-target-area"></div>
+                    <div class="w-full bg-slate-50 p-4 md:p-6 rounded-2xl border-2 border-slate-200 min-h-[120px] flex flex-col gap-3 mb-4" id="expo-target-area"></div>
                     <div class="w-full border-t-2 border-dashed border-slate-200 my-4"></div>
-                    <div class="w-full flex flex-col gap-3" id="reorder-source-area"></div>
-            `;
+                    <div class="text-center text-slate-500 font-bold mb-2 text-sm">👇 點擊下方區塊依序排好</div>
+                    <div class="w-full flex flex-col gap-3" id="expo-source-area"></div>
 
-            if (window.currentHints && window.currentHints.length > 0) {
-                let combinedHintsHtml = window.currentHints.map(h => `<div class="border-b border-yellow-200 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0">${h}</div>`).join('');
-                html += `
-                    <div id="dynamic-hint-box" class="w-full mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3 slide-up">
-                        <div class="flex-1" id="hint-text">${combinedHintsHtml}</div>
-                        <button onclick="speakText('${window.currentHints.join('。').replace(/'/g, "\\'").replace(/<[^>]*>?/gm, '')}')" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
+                    <!-- 動態提示框 -->
+                    <div id="dynamic-hint-box" class="hidden w-full mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3 slide-up">
+                        <div class="flex-1 space-y-2" id="hint-text"></div>
+                        <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
                     </div>
-                `;
-            }
-
-            html += `</div>`;
+                </div>
+            `;
             document.getElementById('expo-play').innerHTML = html;
             
             setTimeout(() => {
-                let sHtml = '';
-                let tHtml = '';
+                let sHtml = '', tHtml = '';
+                const tArea = document.getElementById('expo-target-area');
+                const sArea = document.getElementById('expo-source-area');
+                if(!tArea || !sArea) return;
                 
                 targetSlots.forEach((chunk, idx) => {
                     let isLocked = lockedSlots[idx];
                     let isWrong = wrongSlots.includes(idx);
+                    let label = currentSubTask === 0 ? `句子 ${idx+1}` : `段落 ${idx+1}`;
                     if (chunk === null) {
-                        tHtml += `<div id="target-slot-${idx}" class="chunk-slot w-full h-16 rounded-xl border-dashed border-teal-300 bg-teal-50 text-slate-400 text-sm md:text-base flex items-center justify-center">[ 框格 ${idx+1} ]</div>`;
+                        tHtml += `<div id="expo-slot-${idx}" class="block-slot border-dashed border-teal-300 bg-teal-50 text-slate-400 text-sm md:text-base flex items-center justify-center">[ ${label} ]</div>`;
                     } else {
                         let sClass = isLocked ? 'locked bg-teal-600 border-teal-700 cursor-not-allowed' : 
                                      (isWrong ? 'wrong-slot shake cursor-pointer' : 'filled bg-teal-500 border-teal-600 hover:bg-teal-600 cursor-pointer');
-                        tHtml += `<div id="target-slot-${idx}" onclick="removeFromTarget(${idx})" class="chunk-slot w-full min-h-[64px] rounded-xl text-white font-bold shadow pop flex items-center px-4 ${sClass}">${chunk}</div>`;
+                        let displayChunk = chunk.replace(/【.*?】/, ''); 
+                        tHtml += `<div id="expo-slot-${idx}" onclick="removeFromTarget(${idx})" class="block-slot text-white font-bold shadow pop px-4 ${sClass}">${displayChunk}</div>`;
                     }
                 });
-                
-                document.getElementById('reorder-target-area').innerHTML = tHtml;
+                tArea.innerHTML = tHtml;
 
                 reorderSource.forEach((chunk, idx) => {
                     if (chunk === null) {
-                        sHtml += `<div class="w-full h-[64px] border-2 border-dashed border-slate-200 bg-slate-50 opacity-50 rounded-xl"></div>`; 
+                        sHtml += `<div class="block-slot border-dashed border-slate-200 bg-slate-50 opacity-50 rounded-xl"></div>`; 
                     } else {
+                        let displayChunk = currentSubTask === 1 ? chunk.replace(/(【.*?】)/, '<span class="bg-teal-100 text-teal-800 px-2 rounded mr-2">$1</span>') : chunk;
                         sHtml += `
                             <div class="flex items-center gap-2 w-full">
-                                <button onclick="moveToTarget(${idx})" class="chunk-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-teal-400 hover:bg-teal-50 font-bold text-lg md:text-xl py-4 px-5 rounded-xl shadow flex-1 text-left leading-relaxed active:scale-95 transition">${chunk}</button>
-                                <button onclick="speakText('${chunk.replace(/'/g, "\\'")}')" class="tts-btn flex-shrink-0 bg-teal-50 text-teal-600 w-14 rounded-2xl text-2xl flex items-center justify-center shadow-sm border border-teal-200 hover:bg-teal-100 transition" title="朗讀此句">🔊</button>
+                                <button onclick="moveToTarget(${idx})" class="chunk-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-teal-400 hover:bg-teal-50 font-bold text-lg md:text-xl py-4 px-5 rounded-xl shadow flex-1 text-left leading-relaxed active:scale-95 transition">${displayChunk}</button>
+                                <button onclick="speakText('${chunk.replace(/【.*?】/g, '').replace(/'/g, "\\'")}')" class="tts-btn flex-shrink-0 bg-teal-50 text-teal-600 w-14 rounded-2xl text-2xl flex items-center justify-center shadow-sm border border-teal-200 hover:bg-teal-100 transition" title="朗讀此句">🔊</button>
                             </div>
                         `;
                     }
                 });
-                document.getElementById('reorder-source-area').innerHTML = sHtml;
+                sArea.innerHTML = sHtml;
             }, 0);
         }
 
-        function finishExpoLevel() {
+        function advanceExpoPhase() {
             const data = expoData[currentIdx];
-            speakText("邏輯非常清晰！");
-            
+            const stage = data.stages[currentSubTask];
+
             let finalStory = `<p class="essay-paragraph font-black text-xl text-center text-slate-800 mb-4">${data.title}</p>`;
-            finalStory += `<p class="essay-paragraph leading-loose">${data.sents.join('')}</p>`;
-
-            let finalStatus = currentMistakes === 0 ? 1 : 2;
-            let expGained = calcExp(finalStatus, exProgress, currentIdx, 20, 10);
-
-            if (expGained > 0) {
-                writeExp += expGained;
-                localStorage.setItem('writeStdExp', writeExp);
-                updateExpDisplay();
+            
+            if (currentSubTask === 0) {
+                finalStory += `<p class="essay-paragraph leading-loose">${reorderCorrect.join('')}</p>`;
+            } else {
+                reorderCorrect.forEach(p => {
+                    finalStory += `<p class="essay-paragraph leading-loose mb-3">${p.replace(/【.*?】/, '')}</p>`;
+                });
             }
 
-            document.getElementById('feedback-desc').innerHTML = `獲得 ${expGained} 點經驗值 ✨<br><br><div class="bg-teal-50 p-4 rounded-xl border border-teal-200 text-teal-900 text-left text-base leading-loose">💡 解析：${data.exp}</div>`;
+            let expGained = currentMistakes === 0 ? 10 : 5; 
+            writeExp += expGained;
+            localStorage.setItem('writeStdExp_v4', writeExp);
+            updateExpDisplay();
+
+            let expMsg = `獲得 ${expGained} 點經驗值 ✨`;
+            document.getElementById('feedback-desc').innerHTML = `${expMsg}<br><br><div class="bg-teal-50 p-4 rounded-xl border border-teal-200 text-teal-900 text-left text-base leading-loose">💡 解析：${stage.exp}</div>`;
             document.getElementById('feedback-story').innerHTML = finalStory;
-            
-            showFeedbackModal(expGained, () => {
-                let nextIdx = currentIdx + 1;
-                if (nextIdx < expoData.length) startExpo(nextIdx);
-                else { showToast("恭喜完成說明文挑戰！"); backToDirectory('expo'); }
-            });
+
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+
+            document.getElementById('next-btn').innerHTML = currentSubTask === 0 ? "下一階：排段成文 ➡️" : "下一題 ➡️";
+            document.getElementById('next-btn').onclick = () => {
+                modal.classList.add('opacity-0'); content.classList.add('scale-90');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    currentSubTask++;
+                    currentMistakes = 0;
+                    if (currentSubTask < data.stages.length) {
+                        setupExpoPhase();
+                    } else {
+                        if (exProgress[currentIdx] !== 1 && exProgress[currentIdx] !== 2) {
+                            exProgress[currentIdx] = 1; // Simplify logic for now, just mark done
+                            localStorage.setItem('exStdProgress_v6', JSON.stringify(exProgress));
+                        }
+                        showToast("恭喜完成雙階說明文挑戰！");
+                        backToDirectory();
+                    }
+                }, 300);
+            };
         }
 
-        // --- 模組 3：承上啟下過渡句 (MC) ---
+        // --- 模組 3：段落黏著劑過渡句 ---
         function renderTransDirectory() {
             const dirContainer = document.getElementById('trans-content');
             let html = '';
             transData.forEach((item, idx) => {
                 let status = trProgress[idx];
-                let bgClass = 'bg-white';
-                let borderClass = 'border-slate-200';
-                let icon = ' <span class="text-slate-400 font-bold ml-2"># 未挑戰</span>';
-                if (status === 1) { bgClass = 'bg-yellow-50'; borderClass = 'border-yellow-400'; icon = ' <span class="text-yellow-600 font-bold ml-2">🌟</span>'; }
-                else if (status === 2) { bgClass = 'bg-emerald-50'; borderClass = 'border-emerald-400'; icon = ' <span class="text-emerald-600 font-bold ml-2">✅</span>'; }
-                else if (status === -1) { bgClass = 'bg-rose-50'; borderClass = 'border-rose-400'; icon = ' <span class="text-rose-600 font-bold ml-2">❌</span>'; }
+                let bgClass = 'bg-white', borderClass = 'border-slate-200', icon = ' <span class="text-slate-400 font-bold ml-2"># 未挑戰</span>';
+                if (status === 1) { bgClass = 'bg-amber-50'; borderClass = 'border-amber-400'; icon = ' <span class="text-amber-600 font-bold ml-2">🌟 完美</span>'; }
+                else if (status === 2) { bgClass = 'bg-emerald-50'; borderClass = 'border-emerald-400'; icon = ' <span class="text-emerald-600 font-bold ml-2">✅ 過關</span>'; }
+                else if (status === -1) { bgClass = 'bg-rose-50'; borderClass = 'border-rose-400'; icon = ' <span class="text-rose-600 font-bold ml-2">❌ 錯誤</span>'; }
 
                 html += `
                     <button onclick="startTrans(${idx})" class="w-full text-left p-5 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition group active:scale-95 flex flex-col items-start gap-2">
@@ -1286,11 +1272,11 @@
 
         function startTrans(idx, forceStart = false) {
             const data = transData[idx];
-            if (!forceStart && !localStorage.getItem('tut_seen_' + data.tut)) {
-                pendingIdx = idx; pendingType = 'trans'; showTutorial(data.tut); return;
+            if (!forceStart && !localStorage.getItem('tut_seen_t-trans-std')) {
+                pendingIdx = idx; pendingType = 'trans'; showTutorial('t-trans-std'); return;
             }
             currentIdx = idx; currentMistakes = 0;
-            
+            initReorderState(data.chunks);
             document.getElementById('trans-directory').style.display = 'none';
             document.getElementById('trans-play').style.display = 'flex';
             document.getElementById('main-scroll-area').scrollTop = 0;
@@ -1301,8 +1287,8 @@
             const data = transData[currentIdx];
             let html = `
                 <div class="w-full max-w-4xl flex justify-between items-center mb-4">
-                    <button onclick="backToDirectory('trans')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
-                    <span class="bg-amber-100 text-amber-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">過渡句 ${currentIdx + 1} / 20</span>
+                    <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
+                    <span class="bg-amber-100 text-amber-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">過渡句 ${currentIdx + 1} / 15</span>
                 </div>
                 
                 <div class="slide-up w-full max-w-4xl bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center relative transition-all duration-500">
@@ -1310,94 +1296,85 @@
                     
                     <div class="w-full bg-slate-50 p-6 rounded-2xl border-2 border-slate-200 mb-6 shadow-inner mt-4 flex flex-col gap-4 text-xl md:text-2xl font-bold text-slate-700 leading-loose">
                         <p class="essay-paragraph">${data.p1}</p>
-                        <p class="essay-paragraph text-amber-600 bg-amber-100 border-2 border-dashed border-amber-400 px-4 py-2 rounded-xl text-center animate-pulse">👉 [請選出最適合的過渡句黏接在這裡] 👈</p>
+                        
+                        <div class="w-full bg-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-inner my-2">
+                            <div class="text-sm font-bold text-amber-700 mb-3 border-b-2 border-amber-200 pb-2">🪄 你的過渡句拼接區：</div>
+                            <div class="text-xl md:text-2xl font-bold text-slate-800 leading-loose flex flex-wrap items-center justify-center gap-y-3" id="trans-target-area"></div>
+                        </div>
+
                         <p class="essay-paragraph">${data.p2}</p>
                     </div>
 
-                    <div class="w-full flex items-center gap-3 mb-4">
-                        <button onclick="speakText('請選出最能承上啟下的過渡句。')" class="tts-btn flex-shrink-0 bg-white text-amber-600 w-10 h-10 rounded-full text-xl flex items-center justify-center shadow-md border border-amber-200">🔊</button>
-                        <h2 class="text-lg md:text-xl font-black text-amber-800">請選出最能承上啟下的過渡句：</h2>
+                    <div class="text-center text-slate-500 font-bold mb-3 text-sm">👇 選擇正確的過渡句碎片拼合起來</div>
+                    <div class="w-full flex flex-wrap justify-center gap-3" id="trans-source-area"></div>
+
+                    <div id="dynamic-hint-box" class="hidden w-full max-w-3xl mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3 slide-up">
+                        <div class="flex-1 space-y-2" id="hint-text"></div>
+                        <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
                     </div>
-
-                    <div class="flex flex-col gap-3 w-full" id="options-container">
-            `;
-
-            let optsWithIdx = data.opts.map((opt, i) => ({ text: opt, isCorr: i === data.ans }));
-            optsWithIdx.sort(() => Math.random() - 0.5);
-
-            optsWithIdx.forEach((opt, oIdx) => {
-                const safeOpt = opt.text.replace(/'/g, "\\'");
-                const letter = ['A','B','C','D'][oIdx];
-                html += `
-                    <div class="flex gap-2 w-full">
-                        <button onclick="checkTransAnswer(this, ${opt.isCorr}, '${safeOpt}')" class="option-btn flex-1 bg-white border-2 border-slate-200 text-slate-700 text-lg font-bold py-5 px-5 rounded-2xl hover:bg-amber-50 transition text-left flex items-start gap-4">
-                            <span class="bg-slate-100 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5">${letter}</span> 
-                            <span class="leading-relaxed break-words">${opt.text}</span>
-                        </button>
-                        <button onclick="speakText('${safeOpt}')" class="tts-btn flex-shrink-0 bg-amber-50 text-amber-600 w-14 rounded-2xl text-2xl flex items-center justify-center shadow-sm border border-amber-200 hover:bg-amber-100 transition">🔊</button>
-                    </div>
-                `;
-            });
-
-            html += `</div>
-                <div id="dynamic-hint-box" class="hidden w-full mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3 slide-up">
-                    <div class="flex-1 space-y-2" id="hint-text"></div>
-                    <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
                 </div>
-            </div>`;
-            
+            `;
             document.getElementById('trans-play').innerHTML = html;
-        }
 
-        function checkTransAnswer(btnElement, isCorrect, optText) {
-            const allBtns = document.querySelectorAll('.option-btn');
-            allBtns.forEach(b => b.style.pointerEvents = 'none');
-            const data = transData[currentIdx];
+            const tArea = document.getElementById('trans-target-area');
+            const sArea = document.getElementById('trans-source-area');
 
-            if (isCorrect) {
-                btnElement.classList.add('correct');
-                speakText("銜接得非常完美！");
-                
-                let finalStory = `<p class="essay-paragraph leading-loose">${data.p1}</p><p class="essay-paragraph font-black text-amber-700 leading-loose">${optText}</p><p class="essay-paragraph leading-loose">${data.p2}</p>`;
-                
-                let finalStatus = currentMistakes === 0 ? 1 : 2;
-                let expGained = calcExp(finalStatus, trProgress, currentIdx, 20, 10);
-
-                if (expGained > 0) {
-                    writeExp += expGained;
-                    localStorage.setItem('writeStdExp', writeExp);
-                    updateExpDisplay();
+            let tHtml = '';
+            targetSlots.forEach((chunk, idx) => {
+                let isLocked = lockedSlots[idx];
+                let isWrong = wrongSlots.includes(idx);
+                if (chunk === null) {
+                    tHtml += `<span id="trans-slot-${idx}" class="inline-slot empty border-dashed border-amber-400 bg-amber-50 text-slate-400 font-normal">碎片 ${idx+1}</span>`;
+                } else {
+                    let sClass = isLocked ? 'locked bg-amber-600 border-amber-700 cursor-not-allowed' : 
+                                 (isWrong ? 'wrong-slot shake cursor-pointer' : 'filled bg-amber-500 border-amber-600 hover:bg-amber-600 cursor-pointer');
+                    tHtml += `<span id="trans-slot-${idx}" onclick="removeFromTarget(${idx})" class="inline-slot ${sClass} text-white font-bold pop shadow">${chunk}</span>`;
                 }
+            });
+            tArea.innerHTML = tHtml;
 
-                let expMsg = expGained > 0 ? `獲得 ${expGained} 點經驗值 ✨` : `這題已經成功過關囉！`;
-                document.getElementById('feedback-desc').innerHTML = `${expMsg}<br><br><div class="bg-amber-50 p-4 rounded-xl border border-amber-200 text-amber-900 text-left text-base leading-loose">💡 解析：${data.exp}</div>`;
-                document.getElementById('feedback-story').innerHTML = finalStory;
-                
-                showFeedbackModal(expGained, () => {
-                    let nextIdx = currentIdx + 1;
-                    if (nextIdx < transData.length) startTrans(nextIdx);
-                    else { showToast("恭喜完成過渡句挑戰！"); backToDirectory('trans'); }
-                });
-            } else {
-                btnElement.classList.add('wrong', 'shake');
-                currentMistakes++;
-                trProgress[currentIdx] = -1;
-                localStorage.setItem('trStdProgress', JSON.stringify(trProgress));
-
-                const hintBox = document.getElementById('dynamic-hint-box');
-                document.getElementById('hint-text').innerText = "💡 提示：" + data.hint;
-                document.getElementById('hint-tts-btn').onclick = () => speakText(data.hint);
-                hintBox.classList.remove('hidden');
-                
-                speakText("這句放這裡不太通順喔！");
-                setTimeout(() => {
-                    btnElement.classList.remove('shake');
-                    allBtns.forEach(b => { if (!b.classList.contains('correct')) b.style.pointerEvents = 'auto'; });
-                }, 1500);
-            }
+            let sHtml = '';
+            reorderSource.forEach((chunk, idx) => {
+                if (chunk === null) {
+                    sHtml += `<div class="h-[52px] w-[100px] border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 opacity-50 m-1"></div>`;
+                } else {
+                    let btnClass = "chunk-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-amber-400 hover:bg-amber-50 font-black text-lg py-2.5 px-4 rounded-xl shadow m-1 active:scale-95 transition flex-1 text-center";
+                    sHtml += `<button onclick="moveToTarget(${idx})" class="${btnClass}">${chunk}</button>`;
+                }
+            });
+            sArea.innerHTML = sHtml;
         }
 
-        // ================= 5. 通用輔助與結構 =================
+        function finishTransLevel() {
+            const data = transData[currentIdx];
+            speakText("銜接得非常完美！");
+            
+            let finalStory = `<p class="essay-paragraph leading-loose">${data.p1}</p>`;
+            let transSentence = targetSlots.map(c => `<span class="text-amber-600 font-bold">${c}</span>`).join('');
+            finalStory += `<p class="essay-paragraph font-black leading-loose text-center my-4">${transSentence}</p>`;
+            finalStory += `<p class="essay-paragraph leading-loose">${data.p2}</p>`;
+            
+            let finalStatus = currentMistakes === 0 ? 1 : 2;
+            let expGained = calcExp(finalStatus, trProgress, currentIdx, 20, 10);
+
+            if (expGained > 0) {
+                writeExp += expGained;
+                localStorage.setItem('writeStdExp_v4', writeExp);
+                updateExpDisplay();
+            }
+
+            let expMsg = expGained > 0 ? `獲得 ${expGained} 點經驗值 ✨` : `這題已經成功過關囉！`;
+            document.getElementById('feedback-desc').innerHTML = `${expMsg}<br><br><div class="bg-amber-50 p-4 rounded-xl border border-amber-200 text-amber-900 text-left text-base leading-loose">💡 解析：${data.exp}</div>`;
+            document.getElementById('feedback-story').innerHTML = finalStory;
+            
+            showFeedbackModal(expGained, finalStory, () => {
+                let nextIdx = currentIdx + 1;
+                if (nextIdx < transData.length) startTrans(nextIdx);
+                else { showToast("恭喜完成過渡句挑戰！"); backToDirectory(); }
+            });
+        }
+
+        // ================= 通用輔助與結構 =================
         function calcExp(finalStatus, progArr, idx, perfectExp, passExp) {
             let previousStatus = progArr[idx];
             let expGained = 0;
@@ -1417,7 +1394,7 @@
             if(expDisp) expDisp.innerText = writeExp;
         }
 
-        function showFeedbackModal(expGained, nextAction) {
+        function showFeedbackModal(expGained, finalStoryHTML, nextAction) {
             const modal = document.getElementById('feedback-modal');
             const content = document.getElementById('feedback-content');
             
@@ -1431,7 +1408,6 @@
                 setTimeout(() => { modal.classList.add('hidden'); nextAction(); }, 300);
             };
             
-            // Check master completion
             if(fwProgress.filter(p=>p>0).length===expandData.length && exProgress.filter(p=>p>0).length===expoData.length && trProgress.filter(p=>p>0).length===transData.length) {
                 localStorage.setItem('t_write_2', 'true');
             }
@@ -1442,7 +1418,7 @@
             speakText(text, 0.85); 
         }
 
-        function backToDirectory(forceMode) {
+        function backToDirectory() {
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
             document.getElementById('expand-play').style.display = 'none';
             document.getElementById('expo-play').style.display = 'none';
@@ -1452,8 +1428,7 @@
             document.getElementById('expo-directory').style.display = 'block';
             document.getElementById('trans-directory').style.display = 'block';
             
-            if (forceMode) switchMode(forceMode);
-            else switchMode(currentMode);
+            switchMode(currentMode);
         }
 
         function backToDirectoryFromModal() {
