@@ -2,266 +2,384 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小學中國語文學習網 - 全港最完善平台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>小學中國語文學習網 - 終極特訓平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; color: #333; }
+        body { font-family: 'PingFang HK', 'Microsoft JhengHei', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         
-        /* 全新：頂部學生檔案與經驗值系統 */
-        .user-profile { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .user-info { display: flex; align-items: center; gap: 15px; }
-        .avatar { font-size: 40px; background: white; border-radius: 50%; padding: 5px; height: 50px; width: 50px; display: flex; align-items: center; justify-content: center; }
-        .level-badge { background: #f1c40f; color: #d35400; padding: 3px 10px; border-radius: 12px; font-weight: bold; font-size: 14px; }
-        .exp-bar-container { background: rgba(255,255,255,0.3); width: 150px; height: 10px; border-radius: 5px; margin-top: 5px; overflow: hidden; }
-        .exp-bar { background: #2ecc71; width: 20%; height: 100%; transition: width 0.5s; }
+        .bg-grid-pattern {
+            background-image: linear-gradient(to right, #e2e8f0 1px, transparent 1px), linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .pop { animation: pop 0.3s ease-out; }
         
-        .header { text-align: center; margin: 30px 0; padding: 0 20px; }
-        .header h1 { color: #2c3e50; font-size: 32px; margin-bottom: 5px; }
-        .header p { color: #555; font-size: 16px; margin-top: 0; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        .float-anim { animation: float 3s ease-in-out infinite; }
         
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; max-width: 1200px; margin: 0 auto; padding: 0 20px 40px 20px; }
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 6px solid #4a90e2; display: flex; flex-direction: column; }
-        .card h2 { margin-top: 0; color: #2c3e50; font-size: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .card p.desc { font-size: 14px; color: #666; flex-grow: 1; margin-bottom: 20px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        .module-card { transition: all 0.3s ease; }
+        .module-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+
+        .lvl-btn { transition: all 0.2s; }
+        .lvl-btn:active { transform: scale(0.95); }
         
-        .level-container { display: flex; flex-direction: column; gap: 10px; }
-        .level-row { display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 10px 15px; border-radius: 8px; transition: 0.2s; border-left: 4px solid transparent; }
-        .level-row:hover { background: #e8f4fd; }
-        
-        .row-basic { border-left-color: #8bc34a; }
-        .row-standard { border-left-color: #ff9800; }
-        .row-advance { border-left-color: #f44336; }
-        
-        .level-btn { border: none; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; width: 85%; text-align: left; }
-        .btn-basic { background-color: #e8f5e9; color: #2e7d32; }
-        .btn-standard { background-color: #fff3e0; color: #e65100; }
-        .btn-advance { background-color: #ffebee; color: #c62828; }
-        .level-btn:hover { filter: brightness(0.95); transform: translateX(5px); }
-        
-        .status { font-size: 20px; color: #ccc; cursor: pointer; user-select: none; }
-        .status.done { color: #4CAF50; }
+        /* 徽章樣式 */
+        .badge-locked { background-color: #f1f5f9; color: #94a3b8; border: 2px dashed #cbd5e1; }
+        .badge-unlocked { background-color: #fef08a; color: #854d0e; border: 2px solid #facc15; box-shadow: 0 0 10px rgba(250, 204, 21, 0.5); }
     </style>
 </head>
-<body>
+<body class="text-slate-800 flex flex-col min-h-[100dvh] bg-grid-pattern">
 
-    <div class="user-profile">
-        <div class="user-info">
-            <div class="avatar">👦🏻</div>
-            <div>
-                <div style="font-weight: bold; font-size: 18px;">語文小學士 <span class="level-badge">Lv. 1</span></div>
-                <div class="exp-bar-container"><div class="exp-bar" id="exp-bar-fill"></div></div>
-                <div style="font-size: 12px; margin-top: 3px;">EXP: <span id="exp-text">0</span> / 100</div>
+    <!-- 🌟 全局 Dashboard 頂部 -->
+    <div class="bg-gradient-to-br from-slate-800 to-indigo-900 text-white pb-10 pt-6 px-4 md:px-8 shadow-2xl relative overflow-hidden">
+        <!-- 裝飾性背景 -->
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl"></div>
+        <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-blue-400 opacity-10 rounded-full blur-2xl"></div>
+
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center relative z-10 gap-6">
+            
+            <!-- 學生檔案與動態稱號 -->
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center text-5xl shadow-lg border-4 border-indigo-400 flex-shrink-0 float-anim">👦🏻</div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-black mb-1 tracking-wider flex items-center flex-wrap gap-2">
+                        <span id="user-title" class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500">語文見習生</span>
+                        <span class="bg-indigo-600/80 text-white text-sm px-3 py-1 rounded-full border border-indigo-400 shadow-sm" id="user-level">Lv. 1</span>
+                    </h1>
+                    <p class="text-indigo-200 font-bold text-sm md:text-base">歡迎回到總部！準備好今天的特訓了嗎？</p>
+                </div>
             </div>
+            
+            <!-- 經驗值與進度統計區 -->
+            <div class="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-2xl w-full md:w-96 shadow-xl">
+                <div class="flex justify-between items-end mb-2">
+                    <span class="font-bold text-indigo-100 flex items-center gap-2"><span>📊</span> 學習總進度</span>
+                    <span class="font-black text-3xl text-yellow-400 drop-shadow-md" id="exp-text">0 <span class="text-sm text-indigo-200 font-bold">EXP</span></span>
+                </div>
+                <div class="w-full bg-slate-700/50 rounded-full h-4 mb-3 overflow-hidden border border-slate-600 shadow-inner">
+                    <div id="total-progress-bar" class="bg-gradient-to-r from-emerald-400 to-yellow-300 h-full rounded-full transition-all duration-1000 w-0 relative">
+                        <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+                    </div>
+                </div>
+                <div class="flex justify-between text-sm font-bold text-indigo-200 mb-4">
+                    <span>已精通模組：<span id="progress-text" class="text-white text-base">0 / 24</span></span>
+                    <span>🏆 收集徽章：<span id="badge-count" class="text-white text-base">0</span></span>
+                </div>
+                <!-- 智能推薦按鈕 -->
+                <button onclick="quickStart()" class="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-bold py-2 rounded-xl shadow transition active:scale-95 flex justify-center items-center gap-2">
+                    <span>🚀 智能推薦：繼續學習</span>
+                </button>
+            </div>
+
         </div>
-        <div>🏆 收集徽章: 0</div>
     </div>
 
-    <div class="header">
-        <h1>🎒 終極小學中國語文學習網</h1>
-        <p>全港最完善學習資源：請選擇單元與難度。完成後點擊灰色圈圈打卡賺取 EXP！</p>
-    </div>
+    <!-- 🌟 8 大分類卡片網格 -->
+    <div class="max-w-7xl mx-auto w-full p-4 md:p-6 lg:p-8 -mt-6 relative z-20 flex-1">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
-    <div class="grid">
-        <div class="card" style="border-top-color: #3498db;">
-            <h2>1️⃣ 字詞基礎</h2>
-            <p class="desc">部首部件、形近/同音字辨析、錯別字修正、詞義、成語。</p>
-            <div class="level-container">
-                <div class="level-row row-basic">
-                    <button class="level-btn btn-basic" onclick="window.location.href='word_basic.html'">🌱 補底 (部首小遊戲)</button>
-                    <span class="status" id="t_word_1" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-standard">
-                    <button class="level-btn btn-standard" onclick="window.location.href='word_standard.html'">⭐ 標準 (常規題型訓練)</button>
-                    <span class="status" id="t_word_2" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-advance">
-                    <!-- 修復了這裡原本多出來的右括號 -->
-                    <button class="level-btn btn-advance" onclick="window.location.href='word_advanced.html'">🚀 拔尖 (詞彙擴充挑戰)</button>
-                    <span class="status" id="t_word_3" onclick="toggleStatus(this.id)">⭕</span>
+            <!-- 1. 字詞基礎 -->
+            <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-emerald-500 flex flex-col h-full">
+                <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>1️⃣</span> 字詞基礎</h2>
+                <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">部首部件、量詞、形近字防錯、錯別字修正、近反義詞與成語。</p>
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='word_basic.html'" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
+                        <div id="t_word_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none" title="完成補底版即可解鎖">🔒</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='word_standard.html'" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
+                        <div id="t_word_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none" title="完成標準版即可解鎖">🔒</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='word_advanced.html'" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
+                        <div id="t_word_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none" title="完成拔尖版即可解鎖">🔒</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card" style="border-top-color: #9b59b6;">
-            <h2>2️⃣ 句子與語法</h2>
-            <p class="desc">擴充/填充句子、重組句子、把/被字句、反問/陳述句轉換。</p>
-            <div class="level-container">
-                <div class="level-row row-basic">
-                    <button class="level-btn btn-basic" onclick="window.location.href='sentence_basic.html'">🌱 補底 (提供填空/首字)</button>
-                    <span class="status" id="t_sent_1" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-standard">
-                    <button class="level-btn btn-standard" onclick="window.location.href='sentence_standard.html'">⭐ 標準 (獨立造句與重組)</button>
-                    <span class="status" id="t_sent_2" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-advance">
-                    <button class="level-btn btn-advance" onclick="window.location.href='sentence_advanced.html'">🚀 拔尖 (複雜句型轉換)</button><span class="status" id="t_sent_3" onclick="toggleStatus(this.id)">⭕</span>
+            <!-- 2. 句子與語法 -->
+            <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-teal-500 flex flex-col h-full">
+                <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>2️⃣</span> 句子與語法</h2>
+                <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">二至四素句重組、擴充句子、關聯詞邏輯、把被字句與句型轉換。</p>
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='sentence_basic.html'" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
+                        <div id="t_sent_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='sentence_standard.html'" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
+                        <div id="t_sent_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='sentence_advanced.html'" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
+                        <div id="t_sent_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card" style="border-top-color: #e67e22;">
-            <h2>3️⃣ 修辭與標點</h2>
-            <p class="desc">基本修辭 (比喻、擬人、排比)、基本與進階標點符號應用。</p>
-            <div class="level-container">
-                <div class="level-row row-basic">
-                    <button class="level-btn btn-basic" onclick="window.location.href='rhetoric_basic.html'">🌱 補底 (圖文配對)</button>
-                    <span class="status" id="t_rhet_1" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-standard">
-                    <button class="level-btn btn-basic" onclick="window.location.href='rhetoric_standard.html'">⭐ 標準 (修辭辨析運用)</button>
-                    <span class="status" id="t_rhet_2" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-advance">
-                    <button class="level-btn btn-basic" onclick="window.location.href='rhetoric_advanced.html'">🚀 拔尖 (綜合修辭寫作)</button>
-                    <span class="status" id="t_rhet_3" onclick="toggleStatus(this.id)">⭕</span>
+            <!-- 3. 修辭與標點 -->
+            <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-cyan-500 flex flex-col h-full">
+                <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>3️⃣</span> 修辭與標點</h2>
+                <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">基礎標點至引號破折號、明暗借喻辨析、擬人、排比與反問設問。</p>
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='rhetoric_basic.html'" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
+                        <div id="t_rhet_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='rhetoric_standard.html'" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
+                        <div id="t_rhet_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='rhetoric_advanced.html'" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
+                        <div id="t_rhet_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card" style="border-top-color: #1abc9c;">
-            <h2>4️⃣ 段落與實用文</h2>
-            <p class="desc">排句成段、歸納段落中心訊息、實用文格式 (書信、日記)。</p>
-            <div class="level-container">
-                <div class="level-row row-basic">
-                    <button class="level-btn btn-basic" onclick="window.location.href='paragraph_basic.html'">🌱 補底 (格式框架填寫)</button>
-                    <span class="status" id="t_para_1" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-standard">
-                    <button class="level-btn btn-standard" onclick="window.location.href='paragraph_standard.html'">⭐ 標準 (排句成段)</button>
-                    <span class="status" id="t_para_2" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-advance">
-                    <button class="level-btn btn-advance" onclick="window.location.href='paragraph_advanced.html'">🚀 拔尖 (獨立撰寫)</button>
-                    <span class="status" id="t_para_3" onclick="toggleStatus(this.id)">⭕</span>
+            <!-- 4. 段落與實用文 -->
+            <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-indigo-500 flex flex-col h-full">
+                <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>4️⃣</span> 段落與實用文</h2>
+                <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">排句成段邏輯、書信/日記/通告/建議書格式重組與沙盒模擬。</p>
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='paragraph_basic.html'" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
+                        <div id="t_para_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='paragraph_standard.html'" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
+                        <div id="t_para_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='paragraph_advanced.html'" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
+                        <div id="t_para_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card" style="border-top-color: #34495e;">
-            <h2>5️⃣ 閱讀理解</h2>
-            <p class="desc">提取文本資訊、推斷寓意、三層次閱讀理解訓練。</p>
-            <div class="level-container">
-                <div class="level-row row-basic">
-                    <button class="level-btn btn-basic" onclick="window.location.href='read_basic.html'">🌱 補底 (拆段小步子提問)</button>
-                    <span class="status" id="t_read_1" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-standard">
-                    <button class="level-btn btn-standard" onclick="window.location.href='read_standard.html'">⭐ 標準 (常規篇章短答)</button>
-                    <span class="status" id="t_read_2" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-advance">
-                    <button class="level-btn btn-advance" onclick="window.location.href='read_advanced.html'">🚀 拔尖 (深層次寓意推斷)</button>
-                    <span class="status" id="t_read_3" onclick="toggleStatus(this.id)">⭕</span>
+            <!-- 5. 閱讀理解 -->
+            <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-sky-500 flex flex-col h-full">
+                <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>5️⃣</span> 閱讀理解</h2>
+                <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">提取資訊、三層次推論、主旨歸納、寫作手法與深層次評價。</p>
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='read_basic.html'" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
+                        <div id="t_read_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='read_standard.html'" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
+                        <div id="t_read_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='read_advanced.html'" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
+                        <div id="t_read_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card" style="border-top-color: #e74c3c;">
-            <h2>6️⃣ 聆聽與說話</h2>
-            <p class="desc">看圖說話/說故事、聆聽基礎故事並抓取六要素。</p>
-            <div class="level-container">
-                <div class="level-row row-basic">
-                    <button class="level-btn btn-basic" onclick="window.location.href='listen_basic.html'">🌱 補底 (六要素視覺提示)</button>
-                    <span class="status" id="t_listen_1" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-standard">
-                    <button class="level-btn btn-standard" onclick="window.location.href='listen_standard.html'">⭐ 標準 (看圖順序說話)</button>
-                    <span class="status" id="t_listen_2" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-advance">
-                    <button class="level-btn btn-advance" onclick="window.location.href='listen_advanced.html'">🚀 拔尖 (故事改編延展)</button>
-                    <span class="status" id="t_listen_3" onclick="toggleStatus(this.id)">⭕</span>
+            <!-- 6. 聆聽與說話 -->
+            <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-rose-500 flex flex-col h-full">
+                <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>6️⃣</span> 聆聽與說話</h2>
+                <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">語音故事盲聽、六要素提取、弦外之音推論與看圖說話改編。</p>
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='listen_basic.html'" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
+                        <div id="t_listen_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='listen_standard.html'" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
+                        <div id="t_listen_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='listen_advanced.html'" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
+                        <div id="t_listen_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card" style="border-top-color: #d35400;">
-            <h2>7️⃣ 中華文化與古詩</h2>
-            <p class="desc">經典古詩背誦與賞析、傳統節日、中國歷史人物故事。</p>
-            <div class="level-container">
-                <div class="level-row row-basic">
-                    <button class="level-btn btn-basic" onclick="window.location.href='culture_basic.html'">🌱 補底 (語音帶讀與配對)</button>
-                    <span class="status" id="t_culture_1" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-standard">
-                    <button class="level-btn btn-standard" onclick="window.location.href='culture_standard.html'">⭐ 標準 (詩意理解與默書)</button>
-                    <span class="status" id="t_culture_2" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-advance">
-                    <button class="level-btn btn-advance" onclick="window.location.href='culture_advanced.html'">🚀 拔尖 (文言文先導啟蒙)</button>
-                    <span class="status" id="t_culture_3" onclick="toggleStatus(this.id)">⭕</span>
+            <!-- 7. 中華文化與古詩 -->
+            <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-orange-500 flex flex-col h-full">
+                <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>7️⃣</span> 中華文化與古詩</h2>
+                <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">古詩卡拉OK帶讀、神話節日、歷史典故謀略與文言文啟蒙。</p>
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='culture_basic.html'" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
+                        <div id="t_culture_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='culture_standard.html'" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
+                        <div id="t_culture_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='culture_advanced.html'" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
+                        <div id="t_culture_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card" style="border-top-color: #27ae60;">
-            <h2>8️⃣ 綜合寫作專區</h2>
-            <p class="desc">看圖作文、記敘文、描寫文、擴寫縮寫技巧與寫作框架。</p>
-            <div class="level-container">
-                <div class="level-row row-basic">
-                    <button class="level-btn btn-basic" onclick="window.location.href='write_basic.html'">🌱 補底 (思維導圖填充)</button>
-                    <span class="status" id="t_write_1" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-standard">
-                    <button class="level-btn btn-standard" onclick="window.location.href='write_standard.html'">⭐ 標準 (引導式段落擴寫)</button>
-                    <span class="status" id="t_write_2" onclick="toggleStatus(this.id)">⭕</span>
-                </div>
-                <div class="level-row row-advance">
-                    <button class="level-btn btn-advance" onclick="window.location.href='write_advanced.html'">🚀 拔尖 (無提示命題寫作)</button>
-                    <span class="status" id="t_write_3" onclick="toggleStatus(this.id)">⭕</span>
+            <!-- 8. 綜合寫作專區 -->
+            <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-purple-500 flex flex-col h-full">
+                <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>8️⃣</span> 綜合寫作專區</h2>
+                <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">看圖故事拼湊、五感擴寫、段落框架建構與寫作小錦囊。</p>
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='write_basic.html'" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
+                        <div id="t_write_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='write_standard.html'" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
+                        <div id="t_write_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.location.href='write_advanced.html'" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
+                        <div id="t_write_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                    </div>
                 </div>
             </div>
+
         </div>
+
+        <!-- 重新開始按鈕 -->
+        <div class="mt-12 text-center w-full pb-8">
+            <button onclick="resetAllProgress()" class="text-slate-400 hover:text-rose-500 font-bold text-sm underline transition">⚠️ 重新開始 (清除所有存檔紀錄)</button>
+        </div>
+
     </div>
 
     <script>
-        // 帶有經驗值計算的打卡魔法
-        function toggleStatus(taskId) {
-            let element = document.getElementById(taskId);
-            let isDone = element.classList.contains('done');
-            
-            if (isDone) {
-                element.classList.remove('done');
-                element.innerText = '⭕';
-                localStorage.setItem(taskId, 'false');
-            } else {
-                element.classList.add('done');
-                element.innerText = '✅';
-                localStorage.setItem(taskId, 'true');
+        // 定義所有 localStorage 中的經驗值 Keys (精準對齊各子頁面最新變數名稱)
+        const expKeys = [
+            'userExp', 'stdExp', 'advExp', 
+            'sentBasicExp', 'sentStandardExp', 'sentAdvExp', 
+            'rhetBasicExp', 'rhetStdExp', 'rhetAdvExp', 
+            'paraBasicExp', 'paraStdExp', 'paraAdvExp', 
+            'readBasicExp', 'readStandardExp', 'readAdvExp', 
+            'listenBasicExp', 'listenStandardExp', 'listenAdvExp', 
+            'cultureBasicExp', 'cultureStandardExp', 'cultureAdvancedExp', 
+            'writeBasicExp_v2', 'writeStdExp_v9', 'writeAdvExp_v11'
+        ];
+
+        // 將 8 大模組名稱映射為打卡 ID 前綴
+        const catMap = {1:'word', 2:'sent', 3:'rhet', 4:'para', 5:'read', 6:'listen', 7:'culture', 8:'write'};
+
+        const pagesMap = {
+            't_word_1': 'word_basic.html', 't_word_2': 'word_standard.html', 't_word_3': 'word_advanced.html',
+            't_sent_1': 'sentence_basic.html', 't_sent_2': 'sentence_standard.html', 't_sent_3': 'sentence_advanced.html',
+            't_rhet_1': 'rhetoric_basic.html', 't_rhet_2': 'rhetoric_standard.html', 't_rhet_3': 'rhetoric_advanced.html',
+            't_para_1': 'paragraph_basic.html', 't_para_2': 'paragraph_standard.html', 't_para_3': 'paragraph_advanced.html',
+            't_read_1': 'read_basic.html', 't_read_2': 'read_standard.html', 't_read_3': 'read_advanced.html',
+            't_listen_1': 'listen_basic.html', 't_listen_2': 'listen_standard.html', 't_listen_3': 'listen_advanced.html',
+            't_culture_1': 'culture_basic.html', 't_culture_2': 'culture_standard.html', 't_culture_3': 'culture_advanced.html',
+            't_write_1': 'write_basic.html', 't_write_2': 'write_standard.html', 't_write_3': 'write_advanced.html'
+        };
+
+        // 智能推薦：找出第一個未完成的模組跳轉
+        function quickStart() {
+            for(let i=1; i<=8; i++){
+                for(let j=1; j<=3; j++){
+                    let id = 't_' + catMap[i] + '_' + j;
+                    if(localStorage.getItem(id) !== 'true') {
+                        window.location.href = pagesMap[id];
+                        return;
+                    }
+                }
             }
-            updateEXP(); // 每次點擊後重新計算經驗值
+            alert("太厲害了！你已經完成了所有模組的挑戰！");
         }
 
-        // 計算經驗值 (每個剔號算 10 分)
-        function updateEXP() {
-            let allStatuses = document.querySelectorAll('.status');
-            let exp = 0;
-            allStatuses.forEach(function(element) {
-                if (localStorage.getItem(element.id) === 'true') {
-                    exp += 10;
-                }
+        // 計算總經驗值與更新 UI
+        function updateTotalExp() {
+            let total = 0;
+            expKeys.forEach(key => {
+                total += parseInt(localStorage.getItem(key)) || 0;
             });
+
+            // 數值增長動畫
+            animateValue("exp-text", parseInt(document.getElementById('exp-text').innerText.replace(/[^0-9]/g, '')) || 0, total, 1000);
+
+            // 計算等級 (每 500 EXP 升一級)
+            let level = Math.floor(total / 500) + 1;
+            document.getElementById('user-level').innerText = 'Lv. ' + level;
+
+            // 動態稱號系統
+            let title = "語文見習生";
+            if (level >= 4) title = "語文探索者";
+            if (level >= 7) title = "語文小達人";
+            if (level >= 10) title = "語文大師";
+            if (level >= 15) title = "語文大宗師";
+            if (level >= 20) title = "傳說級文豪";
+            document.getElementById('user-title').innerText = title;
+
+            // 計算通關進度
+            let completed = 0;
+            for(let i=1; i<=8; i++){
+                for(let j=1; j<=3; j++){
+                    let id = 't_' + catMap[i] + '_' + j;
+                    let el = document.getElementById(id);
+                    if(localStorage.getItem(id) === 'true') {
+                        completed++;
+                        if(el) {
+                            el.className = 'badge-unlocked w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl select-none';
+                            el.innerText = '🏅';
+                            el.title = "已精通";
+                        }
+                    } else {
+                        if(el) {
+                            el.className = 'badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none';
+                            el.innerText = '🔒';
+                        }
+                    }
+                }
+            }
             
-            // 更新畫面上的數字和進度條
-            document.getElementById('exp-text').innerText = exp;
-            let percentage = (exp / 100) * 100;
-            if (percentage > 100) percentage = 100; // 最高先設 100% (升級系統後續開發)
-            document.getElementById('exp-bar-fill').style.width = percentage + '%';
+            document.getElementById('badge-count').innerText = completed;
+            document.getElementById('progress-text').innerText = `${completed} / 24`;
+            
+            // 進度條動畫
+            let pct = (completed / 24) * 100;
+            document.getElementById('total-progress-bar').style.width = pct + '%';
         }
 
-        // 網頁載入時還原狀態
-        window.onload = function() {
-            let allStatuses = document.querySelectorAll('.status');
-            allStatuses.forEach(function(element) {
-                if (localStorage.getItem(element.id) === 'true') {
-                    element.classList.add('done');
-                    element.innerText = '✅';
+        // 數字跳動特效
+        function animateValue(id, start, end, duration) {
+            if (start === end) {
+                document.getElementById(id).innerHTML = `${end} <span class="text-sm text-indigo-200 font-bold">EXP</span>`;
+                return;
+            }
+            let range = end - start;
+            let current = start;
+            let increment = end > start ? Math.ceil(range / (duration/30)) : -1;
+            let stepTime = Math.abs(Math.floor(duration / range));
+            let obj = document.getElementById(id);
+            
+            let timer = setInterval(function() {
+                current += increment;
+                if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                    current = end;
+                    clearInterval(timer);
                 }
-            });
-            updateEXP(); // 載入時也要算一次分數
+                obj.innerHTML = `${current} <span class="text-sm text-indigo-200 font-bold">EXP</span>`;
+            }, stepTime);
         }
-    </script>
 
+        // 清除所有紀錄
+        function resetAllProgress() {
+            if(confirm('警告：確定要清除所有學習紀錄與經驗值嗎？此操作無法復原。')) {
+                localStorage.clear();
+                alert('所有紀錄已成功清除！');
+                location.reload();
+            }
+        }
+
+        // 載入時初始化
+        window.onload = function() {
+            updateTotalExp();
+        };
+    </script>
 </body>
 </html>
