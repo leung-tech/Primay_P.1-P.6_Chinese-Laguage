@@ -27,232 +27,395 @@
         .lvl-btn { transition: all 0.2s; }
         .lvl-btn:active { transform: scale(0.95); }
         
-        /* 徽章樣式 */
         .badge-locked { background-color: #f1f5f9; color: #94a3b8; border: 2px dashed #cbd5e1; }
         .badge-unlocked { background-color: #fef08a; color: #854d0e; border: 2px solid #facc15; box-shadow: 0 0 10px rgba(250, 204, 21, 0.5); }
+
+        /* 認證表單切換動畫 */
+        .auth-tab-active { color: #4f46e5; border-bottom: 3px solid #4f46e5; font-weight: 900; }
+        .auth-tab-inactive { color: #94a3b8; border-bottom: 3px solid transparent; font-weight: bold; }
+        .auth-tab-inactive:hover { color: #64748b; }
+        
+        /* 載入動畫 */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="text-slate-800 flex flex-col min-h-[100dvh] bg-grid-pattern">
 
-    <!-- 🌟 全局 Dashboard 頂部 -->
-    <div class="bg-gradient-to-br from-slate-800 to-indigo-900 text-white pb-10 pt-6 px-4 md:px-8 shadow-2xl relative overflow-hidden">
-        <!-- 裝飾性背景 -->
-        <div class="absolute -right-20 -top-20 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl"></div>
-        <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-blue-400 opacity-10 rounded-full blur-2xl"></div>
+    <!-- 全局 Loading 遮罩 -->
+    <div id="global-loader" class="fixed inset-0 z-[200] bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center text-white">
+        <span class="loader mb-4" style="width: 50px; height: 50px; border-width: 6px;"></span>
+        <h2 class="text-2xl font-bold" id="loader-text">系統連線中...</h2>
+    </div>
 
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center relative z-10 gap-6">
+    <!-- ================= 1. 登入 / 註冊 獨立大廳 ================= -->
+    <div id="login-screen" class="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md hidden">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full transform transition-all slide-up overflow-hidden">
             
-            <!-- 學生檔案與動態稱號 -->
-            <div class="flex items-center gap-4 w-full md:w-auto">
-                <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center text-5xl shadow-lg border-4 border-indigo-400 flex-shrink-0 float-anim">👦🏻</div>
+            <!-- 大廳頂部 -->
+            <div class="bg-indigo-50 p-6 text-center border-b border-indigo-100">
+                <div class="text-6xl mb-3 float-anim">🎓</div>
+                <h2 class="text-2xl font-black text-indigo-700">終極語文特訓總部</h2>
+                <p class="text-indigo-500 font-bold text-sm mt-1">✨ 雲端同步版 ✨</p>
+            </div>
+            
+            <!-- 登入與註冊切換選單 -->
+            <div class="flex w-full">
+                <button id="tab-login" onclick="switchAuthView('login')" class="flex-1 py-4 text-lg auth-tab-active transition">學生登入</button>
+                <button id="tab-register" onclick="switchAuthView('register')" class="flex-1 py-4 text-lg auth-tab-inactive transition">註冊新帳戶</button>
+            </div>
+
+            <!-- 登入表單 (Login View) -->
+            <div id="view-login" class="p-6 md:p-8 space-y-4">
                 <div>
-                    <h1 class="text-2xl md:text-3xl font-black mb-1 tracking-wider flex items-center flex-wrap gap-2">
-                        <span id="user-title" class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500">語文見習生</span>
-                        <span class="bg-indigo-600/80 text-white text-sm px-3 py-1 rounded-full border border-indigo-400 shadow-sm" id="user-level">Lv. 1</span>
-                    </h1>
-                    <p class="text-indigo-200 font-bold text-sm md:text-base">歡迎回到總部！準備好今天的特訓了嗎？</p>
+                    <label class="block text-slate-500 font-bold text-sm mb-2">登入帳號</label>
+                    <input type="text" id="login-username" maxlength="15" placeholder="輸入你的登入帳號" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
                 </div>
+                <div>
+                    <label class="block text-slate-500 font-bold text-sm mb-2">登入密碼</label>
+                    <input type="password" id="login-password" maxlength="15" placeholder="輸入密碼" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
+                </div>
+                <button onclick="attemptLogin()" class="w-full bg-indigo-600 text-white font-black px-6 py-4 rounded-xl shadow-md hover:bg-indigo-700 transition active:scale-95 border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1 mt-4 text-lg">登入系統 🚀</button>
+            </div>
+
+            <!-- 註冊表單 (Register View) -->
+            <div id="view-register" class="p-6 md:p-8 space-y-4 hidden">
+                <div class="bg-amber-50 border border-amber-200 text-amber-800 text-sm font-bold p-3 rounded-lg mb-2">
+                    💡 請務必填寫「真實姓名」，方便老師在後台查看你的成績喔！
+                </div>
+                <div>
+                    <label class="block text-slate-500 font-bold text-sm mb-2">真實姓名 (Real Name) ⭐必填</label>
+                    <input type="text" id="register-realname" maxlength="15" placeholder="例如：陳大文" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
+                </div>
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="block text-slate-500 font-bold text-sm mb-2">自訂登入帳號</label>
+                        <input type="text" id="register-username" maxlength="15" placeholder="如: taiman123" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-slate-500 font-bold text-sm mb-2">自訂登入密碼</label>
+                        <input type="password" id="register-password" maxlength="15" placeholder="設定密碼" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
+                    </div>
+                </div>
+                <button onclick="createProfile()" class="w-full bg-emerald-500 text-white font-black px-6 py-4 rounded-xl shadow-md hover:bg-emerald-600 transition active:scale-95 border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1 mt-4 text-lg">創建並登入 ✨</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================= 2. 老師專屬後台 (隱藏入口，學生不可見) ================= -->
+    <div id="teacher-dashboard" class="absolute inset-0 z-40 bg-slate-100 hidden flex-col overflow-y-auto">
+        <div class="bg-slate-800 text-white p-6 shadow-md flex justify-between items-center flex-shrink-0">
+            <h1 class="text-2xl font-black flex items-center gap-2">👨‍🏫 老師雲端管理後台 <span class="bg-rose-500 text-xs px-2 py-1 rounded">最高權限</span></h1>
+            <div class="flex gap-4">
+                <button onclick="fetchCloudDataForTeacher()" class="bg-indigo-500 hover:bg-indigo-600 font-bold py-2 px-4 rounded-lg transition flex items-center gap-2">🔄 更新雲端數據</button>
+                <button onclick="logoutProfile()" class="bg-white/20 hover:bg-rose-500 font-bold py-2 px-4 rounded-lg transition">安全退出 🚪</button>
+            </div>
+        </div>
+        
+        <div class="max-w-7xl mx-auto w-full p-4 md:p-6 space-y-6">
+            
+            <!-- 班級能力雷達分析 -->
+            <div id="analysis-section" class="grid grid-cols-1 lg:grid-cols-3 gap-6 hidden">
+                <!-- 班級八大能力雷達統計 -->
+                <div class="bg-white rounded-3xl p-6 shadow-md border border-slate-200 lg:col-span-2">
+                    <h3 class="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">📊 班級語文能力掌握度分析</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" id="class-skills-container">
+                        <!-- 動態渲染全班平均分比例 -->
+                    </div>
+                </div>
+
+                <!-- 關卡通過率預警 -->
+                <div class="bg-white rounded-3xl p-6 shadow-md border border-slate-200">
+                    <h3 class="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">⚠️ 學生易錯關卡預警</h3>
+                    <p class="text-xs text-slate-500 mb-3">統計全班通關率最低的模組，方便老師課堂重點講授。</p>
+                    <div class="flex flex-col gap-3" id="warning-stages-container">
+                        <!-- 動態渲染通過率低的關卡 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 學生英雄排行榜 -->
+            <div class="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                    <h2 class="text-xl font-black text-slate-800">🏆 班級學習排行榜 (自動雲端同步)</h2>
+                    <p class="text-sm font-bold text-slate-500" id="total-students-count">註冊人數：0 人</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-indigo-50 text-indigo-800 text-sm uppercase">
+                                <th class="p-4 font-black border-b-2 border-indigo-100 text-center">排名</th>
+                                <th class="p-4 font-black border-b-2 border-indigo-100">學生姓名 (帳號)</th>
+                                <th class="p-4 font-black border-b-2 border-indigo-100 text-center">總 EXP</th>
+                                <th class="p-4 font-black border-b-2 border-indigo-100 text-center">精通徽章 (滿分24)</th>
+                                <th class="p-4 font-black border-b-2 border-indigo-100 text-center">最高稱號</th>
+                                <th class="p-4 font-black border-b-2 border-indigo-100 text-center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacher-table-body" class="text-slate-700 font-bold">
+                            <tr><td colspan="6" class="p-6 text-center text-slate-400 font-bold">正在從雲端載入資料...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 3. 學生全局 Dashboard 頂部 ================= -->
+    <div id="dashboard-screen" class="hidden flex-col flex-1">
+        <div class="bg-gradient-to-br from-slate-800 to-indigo-900 text-white pb-10 pt-4 px-4 md:px-8 shadow-2xl relative overflow-hidden flex-shrink-0">
+            <div class="absolute -right-20 -top-20 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl"></div>
+            <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-blue-400 opacity-10 rounded-full blur-2xl"></div>
+
+            <div class="max-w-7xl mx-auto flex justify-between items-center relative z-10 mb-4 pb-4 border-b border-white/10">
+                <div class="font-black text-indigo-200 tracking-wider flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 雲端資料已同步
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="manualSyncToCloud()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-1.5 px-3 rounded-lg text-sm transition">☁️ 手動備份</button>
+                    <button onclick="logoutProfile()" class="bg-white/10 hover:bg-rose-500 text-white font-bold py-1.5 px-4 rounded-lg text-sm transition border border-white/20 hover:border-rose-400">安全登出 🚪</button>
+                </div>
+            </div>
+
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center relative z-10 gap-6">
+                <!-- 學生檔案與動態稱號 -->
+                <div class="flex items-center gap-4 w-full md:w-auto">
+                    <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center text-5xl shadow-lg border-4 border-indigo-400 flex-shrink-0 float-anim">👦🏻</div>
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-black mb-1 tracking-wider flex items-center flex-wrap gap-2">
+                            <span id="profile-display-name" class="text-white">載入中...</span>
+                            <span class="text-indigo-300 mx-1">|</span>
+                            <span id="user-title" class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500">語文見習生</span>
+                            <span class="bg-indigo-600/80 text-white text-sm px-3 py-1 rounded-full border border-indigo-400 shadow-sm" id="user-level">Lv. 1</span>
+                        </h1>
+                        <p class="text-indigo-200 font-bold text-sm md:text-base">歡迎回到總部！準備好今天的特訓了嗎？</p>
+                    </div>
+                </div>
+                
+                <!-- 經驗值與進度統計區 -->
+                <div class="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-2xl w-full md:w-96 shadow-xl">
+                    <div class="flex justify-between items-end mb-2">
+                        <span class="font-bold text-indigo-100 flex items-center gap-2"><span>📊</span> 學習總進度</span>
+                        <span class="font-black text-3xl text-yellow-400 drop-shadow-md" id="exp-text">0 <span class="text-sm text-indigo-200 font-bold">EXP</span></span>
+                    </div>
+                    <div class="w-full bg-slate-700/50 rounded-full h-4 mb-3 overflow-hidden border border-slate-600 shadow-inner">
+                        <div id="total-progress-bar" class="bg-gradient-to-r from-emerald-400 to-yellow-300 h-full rounded-full transition-all duration-1000 w-0 relative">
+                            <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-sm font-bold text-indigo-200 mb-4">
+                        <span>已精通模組：<span id="progress-text" class="text-white text-base">0 / 24</span></span>
+                        <span>🏆 收集徽章：<span id="badge-count" class="text-white text-base">0</span></span>
+                    </div>
+                    <button onclick="quickStart()" class="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-bold py-2 rounded-xl shadow transition active:scale-95 flex justify-center items-center gap-2 border-b-4 border-blue-700 active:border-b-0 active:translate-y-1">
+                        <span>🚀 智能推薦：繼續學習</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 8 大分類卡片網格 ================= -->
+        <div class="max-w-7xl mx-auto w-full p-4 md:p-6 lg:p-8 -mt-6 relative z-20 flex-1">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+
+                <!-- 1. 字詞基礎 -->
+                <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-emerald-500 flex flex-col h-full">
+                    <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>1️⃣</span> 字詞基礎</h2>
+                    <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">部首部件、量詞、形近字防錯、錯別字修正、近反義詞與成語。</p>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('word_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
+                            <div id="t_word_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none" title="完成補底版即可解鎖">🔒</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('word_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
+                            <div id="t_word_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none" title="完成標準版即可解鎖">🔒</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('word_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
+                            <div id="t_word_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none" title="完成拔尖版即可解鎖">🔒</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. 句子與語法 -->
+                <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-teal-500 flex flex-col h-full">
+                    <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>2️⃣</span> 句子與語法</h2>
+                    <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">二至四素句重組、擴充句子、關聯詞邏輯、把被字句與句型轉換。</p>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('sentence_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
+                            <div id="t_sent_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('sentence_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
+                            <div id="t_sent_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('sentence_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
+                            <div id="t_sent_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. 修辭與標點 -->
+                <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-cyan-500 flex flex-col h-full">
+                    <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>3️⃣</span> 修辭與標點</h2>
+                    <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">基礎標點至引號破折號、明暗借喻辨析、擬人、排比與反問設問。</p>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('rhetoric_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
+                            <div id="t_rhet_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('rhetoric_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
+                            <div id="t_rhet_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('rhetoric_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
+                            <div id="t_rhet_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. 段落與實用文 -->
+                <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-indigo-500 flex flex-col h-full">
+                    <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>4️⃣</span> 段落與實用文</h2>
+                    <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">排句成段邏輯、書信/日記/通告/建議書格式重組與沙盒模擬。</p>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('paragraph_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
+                            <div id="t_para_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('paragraph_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
+                            <div id="t_para_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('paragraph_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
+                            <div id="t_para_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. 閱讀理解 -->
+                <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-sky-500 flex flex-col h-full">
+                    <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>5️⃣</span> 閱讀理解</h2>
+                    <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">提取資訊、三層次推論、主旨歸納、寫作手法與深層次評價。</p>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('read_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
+                            <div id="t_read_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('read_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
+                            <div id="t_read_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('read_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
+                            <div id="t_read_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. 聆聽與說話 -->
+                <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-rose-500 flex flex-col h-full">
+                    <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>6️⃣</span> 聆聽與說話</h2>
+                    <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">語音故事盲聽、六要素提取、弦外之音推論與看圖說話改編。</p>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('listen_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
+                            <div id="t_listen_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('listen_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
+                            <div id="t_listen_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('listen_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
+                            <div id="t_listen_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. 中華文化與古詩 -->
+                <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-orange-500 flex flex-col h-full">
+                    <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>7️⃣</span> 中華文化與古詩</h2>
+                    <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">古詩卡拉OK帶讀、神話節日、歷史典故謀略與文言文啟蒙。</p>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('culture_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
+                            <div id="t_culture_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('culture_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
+                            <div id="t_culture_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('culture_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
+                            <div id="t_culture_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 8. 綜合寫作專區 -->
+                <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-purple-500 flex flex-col h-full">
+                    <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>8️⃣</span> 綜合寫作專區</h2>
+                    <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">看圖故事拼湊、五感擴寫、段落框架建構與寫作小錦囊。</p>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('write_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
+                            <div id="t_write_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('write_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
+                            <div id="t_write_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="saveAndGo('write_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
+                            <div id="t_write_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
             
-            <!-- 經驗值與進度統計區 -->
-            <div class="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-2xl w-full md:w-96 shadow-xl">
-                <div class="flex justify-between items-end mb-2">
-                    <span class="font-bold text-indigo-100 flex items-center gap-2"><span>📊</span> 學習總進度</span>
-                    <span class="font-black text-3xl text-yellow-400 drop-shadow-md" id="exp-text">0 <span class="text-sm text-indigo-200 font-bold">EXP</span></span>
-                </div>
-                <div class="w-full bg-slate-700/50 rounded-full h-4 mb-3 overflow-hidden border border-slate-600 shadow-inner">
-                    <div id="total-progress-bar" class="bg-gradient-to-r from-emerald-400 to-yellow-300 h-full rounded-full transition-all duration-1000 w-0 relative">
-                        <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
-                    </div>
-                </div>
-                <div class="flex justify-between text-sm font-bold text-indigo-200 mb-4">
-                    <span>已精通模組：<span id="progress-text" class="text-white text-base">0 / 24</span></span>
-                    <span>🏆 收集徽章：<span id="badge-count" class="text-white text-base">0</span></span>
-                </div>
-                <!-- 智能推薦按鈕 -->
-                <button onclick="quickStart()" class="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-bold py-2 rounded-xl shadow transition active:scale-95 flex justify-center items-center gap-2">
-                    <span>🚀 智能推薦：繼續學習</span>
-                </button>
+            <div class="mt-8 text-center w-full pb-8">
+                <button onclick="window.resetAllProgress()" class="text-slate-400 hover:text-rose-500 font-bold text-sm underline transition">⚠️ 清除「當前帳戶」的所有紀錄 (無法復原)</button>
             </div>
-
         </div>
     </div>
 
-    <!-- 🌟 8 大分類卡片網格 -->
-    <div class="max-w-7xl mx-auto w-full p-4 md:p-6 lg:p-8 -mt-6 relative z-20 flex-1">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-
-            <!-- 1. 字詞基礎 -->
-            <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-emerald-500 flex flex-col h-full">
-                <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>1️⃣</span> 字詞基礎</h2>
-                <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">部首部件、量詞、形近字防錯、錯別字修正、近反義詞與成語。</p>
-                <div class="flex flex-col gap-3">
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='word_basic.html'" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
-                        <div id="t_word_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none" title="完成補底版即可解鎖">🔒</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='word_standard.html'" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
-                        <div id="t_word_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none" title="完成標準版即可解鎖">🔒</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='word_advanced.html'" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
-                        <div id="t_word_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none" title="完成拔尖版即可解鎖">🔒</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2. 句子與語法 -->
-            <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-teal-500 flex flex-col h-full">
-                <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>2️⃣</span> 句子與語法</h2>
-                <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">二至四素句重組、擴充句子、關聯詞邏輯、把被字句與句型轉換。</p>
-                <div class="flex flex-col gap-3">
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='sentence_basic.html'" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
-                        <div id="t_sent_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='sentence_standard.html'" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
-                        <div id="t_sent_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='sentence_advanced.html'" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
-                        <div id="t_sent_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 3. 修辭與標點 -->
-            <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-cyan-500 flex flex-col h-full">
-                <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>3️⃣</span> 修辭與標點</h2>
-                <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">基礎標點至引號破折號、明暗借喻辨析、擬人、排比與反問設問。</p>
-                <div class="flex flex-col gap-3">
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='rhetoric_basic.html'" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
-                        <div id="t_rhet_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='rhetoric_standard.html'" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
-                        <div id="t_rhet_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='rhetoric_advanced.html'" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
-                        <div id="t_rhet_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 4. 段落與實用文 -->
-            <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-indigo-500 flex flex-col h-full">
-                <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>4️⃣</span> 段落與實用文</h2>
-                <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">排句成段邏輯、書信/日記/通告/建議書格式重組與沙盒模擬。</p>
-                <div class="flex flex-col gap-3">
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='paragraph_basic.html'" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
-                        <div id="t_para_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='paragraph_standard.html'" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
-                        <div id="t_para_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='paragraph_advanced.html'" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
-                        <div id="t_para_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 5. 閱讀理解 -->
-            <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-sky-500 flex flex-col h-full">
-                <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>5️⃣</span> 閱讀理解</h2>
-                <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">提取資訊、三層次推論、主旨歸納、寫作手法與深層次評價。</p>
-                <div class="flex flex-col gap-3">
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='read_basic.html'" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
-                        <div id="t_read_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='read_standard.html'" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
-                        <div id="t_read_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='read_advanced.html'" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
-                        <div id="t_read_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 6. 聆聽與說話 -->
-            <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-rose-500 flex flex-col h-full">
-                <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>6️⃣</span> 聆聽與說話</h2>
-                <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">語音故事盲聽、六要素提取、弦外之音推論與看圖說話改編。</p>
-                <div class="flex flex-col gap-3">
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='listen_basic.html'" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
-                        <div id="t_listen_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='listen_standard.html'" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
-                        <div id="t_listen_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='listen_advanced.html'" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
-                        <div id="t_listen_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 7. 中華文化與古詩 -->
-            <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-orange-500 flex flex-col h-full">
-                <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>7️⃣</span> 中華文化與古詩</h2>
-                <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">古詩卡拉OK帶讀、神話節日、歷史典故謀略與文言文啟蒙。</p>
-                <div class="flex flex-col gap-3">
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='culture_basic.html'" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
-                        <div id="t_culture_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='culture_standard.html'" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
-                        <div id="t_culture_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='culture_advanced.html'" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
-                        <div id="t_culture_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 8. 綜合寫作專區 -->
-            <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-purple-500 flex flex-col h-full">
-                <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>8️⃣</span> 綜合寫作專區</h2>
-                <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">看圖故事拼湊、五感擴寫、段落框架建構與寫作小錦囊。</p>
-                <div class="flex flex-col gap-3">
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='write_basic.html'" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
-                        <div id="t_write_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='write_standard.html'" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
-                        <div id="t_write_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="window.location.href='write_advanced.html'" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
-                        <div id="t_write_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
-                    </div>
-                </div>
-            </div>
-
+    <!-- 每日登入獎勵 Modal -->
+    <div id="daily-login-modal" class="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/80 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform duration-300">
+            <div class="text-7xl mb-4 animate-bounce">🎁</div>
+            <h2 class="text-3xl font-black text-indigo-600 mb-2">每日簽到成功！</h2>
+            <p class="text-slate-600 font-bold mb-6 text-xl">堅持學習，太棒了！<br><span class="text-amber-500 text-2xl mt-2 inline-block">+10 EXP</span></p>
+            <button onclick="closeDailyLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 rounded-xl shadow-lg transition text-xl border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1">收下獎勵！</button>
         </div>
-
-        <!-- 重新開始按鈕 -->
-        <div class="mt-12 text-center w-full pb-8">
-            <button onclick="resetAllProgress()" class="text-slate-400 hover:text-rose-500 font-bold text-sm underline transition">⚠️ 重新開始 (清除所有存檔紀錄)</button>
-        </div>
-
     </div>
 
-    <script>
-        // 定義所有 localStorage 中的經驗值 Keys (精準對齊各子頁面最新變數名稱)
+    <!-- Firebase SDK (必須使用 module 匯入) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 從環境注入的全域變數
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        let app, auth, db;
+        let currentUserId = null; 
+
+        // 隱藏 Loader
+        function hideLoader() {
+            document.getElementById('global-loader').classList.add('hidden');
+        }
+
+        // 需要計算總經驗值的所有本地 Key
         const expKeys = [
             'userExp', 'stdExp', 'advExp', 
             'sentBasicExp', 'sentStandardExp', 'sentAdvExp', 
@@ -261,12 +424,12 @@
             'readBasicExp', 'readStandardExp', 'readAdvExp', 
             'listenBasicExp', 'listenStandardExp', 'listenAdvExp', 
             'cultureBasicExp', 'cultureStandardExp', 'cultureAdvancedExp', 
-            'writeBasicExp_v2', 'writeStdExp_v9', 'writeAdvExp_v11'
+            'writeBasicExp_v2', 'writeStdExp_v9', 'writeAdvExp_v11',
+            'loginBonusExp' 
         ];
 
-        // 將 8 大模組名稱映射為打卡 ID 前綴
+        // 8大模組對應打卡前綴
         const catMap = {1:'word', 2:'sent', 3:'rhet', 4:'para', 5:'read', 6:'listen', 7:'culture', 8:'write'};
-
         const pagesMap = {
             't_word_1': 'word_basic.html', 't_word_2': 'word_standard.html', 't_word_3': 'word_advanced.html',
             't_sent_1': 'sentence_basic.html', 't_sent_2': 'sentence_standard.html', 't_sent_3': 'sentence_advanced.html',
@@ -278,35 +441,356 @@
             't_write_1': 'write_basic.html', 't_write_2': 'write_standard.html', 't_write_3': 'write_advanced.html'
         };
 
-        // 智能推薦：找出第一個未完成的模組跳轉
-        function quickStart() {
-            for(let i=1; i<=8; i++){
-                for(let j=1; j<=3; j++){
-                    let id = 't_' + catMap[i] + '_' + j;
-                    if(localStorage.getItem(id) !== 'true') {
-                        window.location.href = pagesMap[id];
-                        return;
-                    }
-                }
+        // 1. 初始化 Firebase 系統
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                if (Object.keys(firebaseConfig).length === 0) throw new Error("無 Firebase 設定");
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                await initAuthFlow();
+            } catch (error) {
+                console.error("Firebase 初始化失敗：", error);
+                hideLoader();
+                // 離線降級：直接顯示原版 Dashboard (訪客模式)
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('dashboard-screen').classList.remove('hidden');
+                document.getElementById('dashboard-screen').classList.add('flex');
+                updateDashboardUI();
             }
-            alert("太厲害了！你已經完成了所有模組的挑戰！");
+        });
+
+        // 2. 身份驗證流程
+        async function initAuthFlow() {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUserId = user.uid;
+                    await checkUserSession();
+                } else {
+                    hideLoader();
+                }
+            });
         }
 
-        // 計算總經驗值與更新 UI
-        function updateTotalExp() {
+        // 3. 檢查本地是否存在活躍帳戶 (Session)
+        async function checkUserSession() {
+            const activeProfile = sessionStorage.getItem('activeProfile');
+            
+            if (activeProfile) {
+                if (activeProfile === 'admin') {
+                    hideLoader();
+                    showTeacherDashboard();
+                } else {
+                    await saveLocalToCloud(activeProfile);
+                    hideLoader();
+                    showDashboard(activeProfile);
+                    checkDailyLogin(); 
+                }
+            } else {
+                hideLoader();
+                document.getElementById('dashboard-screen').classList.add('hidden');
+                document.getElementById('dashboard-screen').classList.remove('flex');
+                document.getElementById('teacher-dashboard').classList.add('hidden');
+                document.getElementById('login-screen').classList.remove('hidden');
+            }
+        }
+
+        // ==========================================
+        // 登入與註冊全互動邏輯 (無顯示版老師通道)
+        // ==========================================
+
+        window.switchAuthView = function(view) {
+            const btnLogin = document.getElementById('tab-login');
+            const btnReg = document.getElementById('tab-register');
+            const vLogin = document.getElementById('view-login');
+            const vReg = document.getElementById('view-register');
+
+            if (view === 'login') {
+                btnLogin.className = "flex-1 py-4 text-lg auth-tab-active transition";
+                btnReg.className = "flex-1 py-4 text-lg auth-tab-inactive transition";
+                vLogin.classList.remove('hidden');
+                vReg.classList.add('hidden');
+            } else {
+                btnReg.className = "flex-1 py-4 text-lg auth-tab-active transition";
+                btnLogin.className = "flex-1 py-4 text-lg auth-tab-inactive transition";
+                vReg.classList.remove('hidden');
+                vLogin.classList.add('hidden');
+            }
+        };
+
+        // 登入
+        window.attemptLogin = async function() {
+            const username = document.getElementById('login-username').value.trim();
+            const pwdInput = document.getElementById('login-password').value.trim();
+
+            if (!username) return alert("請輸入你的登入帳號！");
+            if (!pwdInput) return alert("請輸入登入密碼！");
+
+            // --- 秘密隱藏通道：老師後台 ---
+            if (username === 'admin' && pwdInput === '1234') {
+                document.getElementById('login-password').value = '';
+                sessionStorage.setItem('activeProfile', 'admin');
+                showTeacherDashboard();
+                return;
+            }
+
+            if (!currentUserId) return alert("系統未連線，請稍後重試！");
+
+            const btn = document.querySelector('#view-login button');
+            btn.innerText = "驗證中...";
+            btn.disabled = true;
+
+            try {
+                // 從 Firebase 讀取此帳號
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', username);
+                const docSnap = await getDoc(docRef);
+                
+                if (!docSnap.exists()) {
+                    alert("找不到這個帳號！請確認是否輸入正確，或前往「註冊新帳戶」。");
+                    return;
+                }
+
+                const studentData = docSnap.data();
+                if (studentData.password !== pwdInput) {
+                    alert("❌ 密碼錯誤，請再試一次！");
+                    return;
+                }
+
+                // 登入成功：清空當前瀏覽器遊戲進度，並將雲端進度覆寫至本地
+                localStorage.clear();
+                
+                if (studentData.raw) {
+                    for (let key in studentData.raw) {
+                        localStorage.setItem(key, studentData.raw[key]);
+                    }
+                }
+                
+                // 記錄 Session，代表該學生正在遊玩
+                sessionStorage.setItem('activeProfile', username);
+                localStorage.setItem('__active_realname', studentData.realName);
+                
+                document.getElementById('login-password').value = '';
+                showDashboard(studentData.realName || username);
+                checkDailyLogin();
+
+            } catch (e) {
+                console.error("登入失敗：", e);
+                alert("連接雲端失敗，請檢查網路！");
+            } finally {
+                btn.innerText = "登入系統 🚀";
+                btn.disabled = false;
+            }
+        };
+
+        // 註冊
+        window.createProfile = async function() {
+            const realName = document.getElementById('register-realname').value.trim();
+            const username = document.getElementById('register-username').value.trim();
+            const pwdInput = document.getElementById('register-password').value.trim();
+            
+            if (!realName) return alert("請務必填寫真實姓名喔！");
+            if (!username) return alert("請設定一組登入帳號！");
+            if (!pwdInput) return alert("請設定一組登入密碼！");
+            if (username.length > 15 || username.includes('/')) return alert("帳號格式不正確，請保持在15個字元以內且勿包含特殊符號。");
+            if (pwdInput.length > 15) return alert("密碼不能超過15個字元喔！");
+            if (username.toLowerCase() === 'admin') return alert("不能使用此保留名稱喔！");
+
+            if (!currentUserId) return alert("系統未連線，請稍後重試！");
+
+            const btn = document.querySelector('#view-register button');
+            btn.innerText = "創建中...";
+            btn.disabled = true;
+
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', username);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    alert("這個登入帳號已經有人使用了！請換一個帳號名稱。");
+                    return;
+                }
+
+                const exportObj = {
+                    username: username,
+                    realName: realName,
+                    password: pwdInput,
+                    totalExp: 0,
+                    badges: 0,
+                    cats: { word:0, sent:0, rhet:0, para:0, read:0, listen:0, culture:0, write:0 },
+                    raw: {}, // 空進度
+                    lastUpdated: new Date().toISOString()
+                };
+
+                await setDoc(docRef, exportObj);
+                
+                localStorage.clear();
+                sessionStorage.setItem('activeProfile', username);
+                localStorage.setItem('__active_realname', realName);
+                
+                document.getElementById('register-realname').value = '';
+                document.getElementById('register-username').value = '';
+                document.getElementById('register-password').value = '';
+
+                showDashboard(realName);
+                checkDailyLogin();
+
+            } catch (e) {
+                console.error(e);
+                alert("創建帳戶失敗，請稍後再試。");
+            } finally {
+                btn.innerText = "創建並登入 ✨";
+                btn.disabled = false;
+            }
+        };
+
+        // 登出與切換帳戶
+        window.logoutProfile = async function() {
+            const activeProfile = sessionStorage.getItem('activeProfile');
+            let confirmMsg = activeProfile === 'admin' ? "確定要退出老師後台嗎？" : `確定要登出並切換帳戶嗎？`;
+            
+            if (confirm(confirmMsg)) {
+                if (activeProfile && activeProfile !== 'admin') {
+                    await saveLocalToCloud(activeProfile);
+                }
+                
+                sessionStorage.removeItem('activeProfile');
+                localStorage.clear();
+                
+                document.getElementById('dashboard-screen').classList.add('hidden');
+                document.getElementById('dashboard-screen').classList.remove('flex');
+                document.getElementById('teacher-dashboard').classList.add('hidden');
+                document.getElementById('teacher-dashboard').classList.remove('flex');
+                document.getElementById('login-screen').classList.remove('hidden');
+            }
+        };
+
+        // ==========================================
+        // 核心同步引擎：本地 localStorage <=> 雲端 Firestore
+        // ==========================================
+
+        window.manualSyncToCloud = async function() {
+            const activeUser = sessionStorage.getItem('activeProfile');
+            if (activeUser && activeUser !== 'admin') {
+                await saveLocalToCloud(activeUser);
+                alert("✅ 雲端備份成功！你的進度已安全儲存。");
+            }
+        };
+
+        // 將當前 localStorage 備份到雲端
+        async function saveLocalToCloud(username) {
+            if (!currentUserId || !username || username === 'admin') return;
+            
+            try {
+                let rawData = {};
+                for (let i = 0; i < localStorage.length; i++) {
+                    let k = localStorage.key(i);
+                    if (k !== '__active_realname') {
+                        rawData[k] = localStorage.getItem(k);
+                    }
+                }
+
+                let totalExp = 0;
+                expKeys.forEach(k => {
+                    totalExp += parseInt(rawData[k]) || 0;
+                });
+
+                let badges = 0;
+                for(let i = 1; i <= 8; i++) {
+                    for(let j = 1; j <= 3; j++) {
+                        let id = 't_' + catMap[i] + '_' + j;
+                        if(rawData[id] === 'true') badges++;
+                    }
+                }
+
+                let catsExp = {
+                    word: (parseInt(rawData['userExp']) || 0) + (parseInt(rawData['stdExp']) || 0) + (parseInt(rawData['advExp']) || 0),
+                    sent: (parseInt(rawData['sentBasicExp']) || 0) + (parseInt(rawData['sentStandardExp']) || 0) + (parseInt(rawData['sentAdvExp']) || 0),
+                    rhet: (parseInt(rawData['rhetBasicExp']) || 0) + (parseInt(rawData['rhetStdExp']) || 0) + (parseInt(rawData['rhetAdvExp']) || 0),
+                    para: (parseInt(rawData['paraBasicExp']) || 0) + (parseInt(rawData['paraStdExp']) || 0) + (parseInt(rawData['paraAdvExp']) || 0),
+                    read: (parseInt(rawData['readBasicExp']) || 0) + (parseInt(rawData['readStandardExp']) || 0) + (parseInt(rawData['readAdvExp']) || 0),
+                    listen: (parseInt(rawData['listenBasicExp']) || 0) + (parseInt(rawData['listenStandardExp']) || 0) + (parseInt(rawData['listenAdvExp']) || 0),
+                    culture: (parseInt(rawData['cultureBasicExp']) || 0) + (parseInt(rawData['cultureStandardExp']) || 0) + (parseInt(rawData['cultureAdvancedExp']) || 0),
+                    write: (parseInt(rawData['writeBasicExp_v2']) || 0) + (parseInt(rawData['writeStdExp_v9']) || 0) + (parseInt(rawData['writeAdvExp_v11']) || 0)
+                };
+
+                let exportObj = {
+                    totalExp: totalExp,
+                    badges: badges,
+                    cats: catsExp,
+                    raw: rawData,
+                    lastUpdated: new Date().toISOString()
+                };
+
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', username);
+                await setDoc(docRef, exportObj, { merge: true });
+                console.log(`[Cloud Sync] 成功將 ${username} 的進度備份至雲端。`);
+
+            } catch (e) {
+                console.error("[Cloud Sync] 備份失敗：", e);
+            }
+        }
+
+        // ==========================================
+        // 每日登入獎勵系統
+        // ==========================================
+        function checkDailyLogin() {
+            const today = new Date().toLocaleDateString(); 
+            const lastLogin = localStorage.getItem('lastLoginDate');
+
+            if (lastLogin !== today) {
+                let currentBonusExp = parseInt(localStorage.getItem('loginBonusExp')) || 0;
+                localStorage.setItem('loginBonusExp', currentBonusExp + 10);
+                localStorage.setItem('lastLoginDate', today);
+                
+                updateDashboardUI();
+                
+                const modal = document.getElementById('daily-login-modal');
+                modal.classList.remove('hidden');
+                setTimeout(() => { modal.classList.remove('opacity-0'); }, 10);
+                
+                const activeUser = sessionStorage.getItem('activeProfile');
+                if (activeUser && activeUser !== 'admin') saveLocalToCloud(activeUser);
+            }
+        }
+
+        window.closeDailyLogin = function() {
+            const modal = document.getElementById('daily-login-modal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        // ==========================================
+        // 顯示學生主控台與 UI 更新
+        // ==========================================
+        function showDashboard(profileName) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('teacher-dashboard').classList.add('hidden');
+            document.getElementById('teacher-dashboard').classList.remove('flex');
+            
+            document.getElementById('dashboard-screen').classList.remove('hidden');
+            document.getElementById('dashboard-screen').classList.add('flex');
+            
+            document.getElementById('profile-display-name').innerText = profileName;
+            updateDashboardUI();
+        }
+
+        function updateDashboardUI() {
             let total = 0;
             expKeys.forEach(key => {
                 total += parseInt(localStorage.getItem(key)) || 0;
             });
 
-            // 數值增長動畫
             animateValue("exp-text", parseInt(document.getElementById('exp-text').innerText.replace(/[^0-9]/g, '')) || 0, total, 1000);
 
-            // 計算等級 (每 500 EXP 升一級)
             let level = Math.floor(total / 500) + 1;
             document.getElementById('user-level').innerText = 'Lv. ' + level;
 
-            // 動態稱號系統
             let title = "語文見習生";
             if (level >= 4) title = "語文探索者";
             if (level >= 7) title = "語文小達人";
@@ -315,16 +799,15 @@
             if (level >= 20) title = "傳說級文豪";
             document.getElementById('user-title').innerText = title;
 
-            // 計算通關進度
             let completed = 0;
-            for(let i=1; i<=8; i++){
-                for(let j=1; j<=3; j++){
+            for(let i = 1; i <= 8; i++) {
+                for(let j = 1; j <= 3; j++) {
                     let id = 't_' + catMap[i] + '_' + j;
                     let el = document.getElementById(id);
                     if(localStorage.getItem(id) === 'true') {
                         completed++;
                         if(el) {
-                            el.className = 'badge-unlocked w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl select-none';
+                            el.className = 'badge-unlocked w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl select-none transition-all transform pop';
                             el.innerText = '🏅';
                             el.title = "已精通";
                         }
@@ -340,12 +823,10 @@
             document.getElementById('badge-count').innerText = completed;
             document.getElementById('progress-text').innerText = `${completed} / 24`;
             
-            // 進度條動畫
             let pct = (completed / 24) * 100;
             document.getElementById('total-progress-bar').style.width = pct + '%';
         }
 
-        // 數字跳動特效
         function animateValue(id, start, end, duration) {
             if (start === end) {
                 document.getElementById(id).innerHTML = `${end} <span class="text-sm text-indigo-200 font-bold">EXP</span>`;
@@ -367,19 +848,237 @@
             }, stepTime);
         }
 
-        // 清除所有紀錄
-        function resetAllProgress() {
-            if(confirm('警告：確定要清除所有學習紀錄與經驗值嗎？此操作無法復原。')) {
-                localStorage.clear();
-                alert('所有紀錄已成功清除！');
+        window.quickStart = function() {
+            for(let i = 1; i <= 8; i++) {
+                for(let j = 1; j <= 3; j++) {
+                    let id = 't_' + catMap[i] + '_' + j;
+                    if(localStorage.getItem(id) !== 'true') {
+                        saveAndGo(pagesMap[id]);
+                        return;
+                    }
+                }
+            }
+            alert("太強大了！你已經把所有 24 個模組都打通關了！🏆");
+        };
+
+        window.saveAndGo = async function(url) {
+            const activeUser = sessionStorage.getItem('activeProfile');
+            if (activeUser && activeUser !== 'admin') {
+                await saveLocalToCloud(activeUser);
+            }
+            window.location.href = url;
+        };
+
+        window.resetAllProgress = async function() {
+            const activeUser = sessionStorage.getItem('activeProfile');
+            if(confirm(`【警告】確定要將帳戶的所有進度清零嗎？此操作將覆蓋雲端資料且無法復原！`)) {
+                localStorage.clear(); 
+                if (activeUser && activeUser !== 'admin') {
+                    // 同步一個空的 localStorage 上去達到雲端清零效果
+                    await saveLocalToCloud(activeUser); 
+                }
+                alert('當前帳戶紀錄已成功清除！');
                 location.reload();
+            }
+        };
+
+        // ==========================================
+        // 🌟 老師專屬管理與班級能力分析後台邏輯
+        // ==========================================
+        function showTeacherDashboard() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('dashboard-screen').classList.add('hidden');
+            
+            const adminMode = document.getElementById('teacher-dashboard');
+            adminMode.classList.remove('hidden');
+            adminMode.classList.add('flex');
+            
+            window.fetchCloudDataForTeacher();
+        }
+
+        window.fetchCloudDataForTeacher = async function() {
+            if (!currentUserId) return alert("系統未連線！");
+            
+            const tbody = document.getElementById('teacher-table-body');
+            tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-indigo-600 font-bold"><span class="loader align-middle mr-2"></span>正在從雲端同步全班數據...</td></tr>';
+            
+            try {
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'students');
+                const snapshot = await getDocs(colRef);
+                
+                let studentsList = [];
+                let classSkillsSum = { word: 0, sent: 0, rhet: 0, para: 0, read: 0, listen: 0, culture: 0, write: 0 };
+                let stagePassCounts = {};
+                for(let i = 1; i <= 8; i++) {
+                    for(let j = 1; j <= 3; j++) {
+                        stagePassCounts['t_' + catMap[i] + '_' + j] = 0;
+                    }
+                }
+
+                let studentCount = 0;
+
+                snapshot.forEach(docSnap => {
+                    if (docSnap.id !== 'admin') {
+                        let st = docSnap.data();
+                        studentsList.push(st);
+                        studentCount++;
+
+                        if (st.cats) {
+                            for (let sKey in classSkillsSum) {
+                                classSkillsSum[sKey] += st.cats[sKey] || 0;
+                            }
+                        }
+
+                        if (st.raw) {
+                            for (let sId in stagePassCounts) {
+                                if (st.raw[sId] === 'true') {
+                                    stagePassCounts[sId]++;
+                                }
+                            }
+                        }
+                    }
+                });
+
+                studentsList.sort((a, b) => (b.totalExp || 0) - (a.totalExp || 0));
+                
+                document.getElementById('total-students-count').innerText = `雲端註冊人數：${studentsList.length} 人`;
+                
+                if (studentsList.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400 font-bold">目前雲端還沒有任何學生註冊喔！</td></tr>';
+                    document.getElementById('analysis-section').classList.add('hidden');
+                    return;
+                }
+
+                document.getElementById('analysis-section').classList.remove('hidden');
+                
+                tbody.innerHTML = '';
+                studentsList.forEach((st, idx) => {
+                    let totalExp = st.totalExp || 0;
+                    let badges = st.badges || 0;
+                    let realName = st.realName || st.username;
+
+                    let level = Math.floor(totalExp / 500) + 1;
+                    let title = "語文見習生";
+                    if (level >= 4) title = "語文探索者";
+                    if (level >= 7) title = "語文小達人";
+                    if (level >= 10) title = "語文大師";
+                    if (level >= 15) title = "語文大宗師";
+                    if (level >= 20) title = "傳說級文豪";
+                    
+                    let rankIcon = idx + 1;
+                    if (idx === 0) rankIcon = '🥇';
+                    else if (idx === 1) rankIcon = '🥈';
+                    else if (idx === 2) rankIcon = '🥉';
+                    
+                    let pct = Math.round((badges / 24) * 100);
+
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50 transition text-center">
+                            <td class="p-4 font-black text-xl">${rankIcon}</td>
+                            <td class="p-4 text-left font-black text-indigo-700">${realName} <span class="text-xs text-slate-400 font-normal">(${st.username})</span></td>
+                            <td class="p-4 text-orange-600 font-bold">${totalExp}</td>
+                            <td class="p-4 flex justify-center items-center gap-2">
+                                <span>${badges}/24</span>
+                                <div class="w-20 bg-slate-200 h-2 rounded-full overflow-hidden">
+                                    <div class="bg-emerald-400 h-full" style="width: ${pct}%"></div>
+                                </div>
+                            </td>
+                            <td class="p-4"><span class="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded font-bold">${title}</span></td>
+                            <td class="p-4">
+                                <button onclick="deleteStudentData('${st.username}')" class="text-rose-500 hover:text-white hover:bg-rose-500 border border-rose-500 px-3 py-1 rounded transition text-sm">刪除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                renderClassSkillsUI(classSkillsSum, studentCount);
+                renderWarningStagesUI(stagePassCounts, studentCount);
+
+            } catch(e) {
+                console.error("讀取雲端失敗：", e);
+                tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-rose-500 font-bold">讀取失敗，請檢查網路連線。</td></tr>';
+            }
+        };
+
+        function renderClassSkillsUI(skillsSum, totalCount) {
+            const container = document.getElementById('class-skills-container');
+            container.innerHTML = '';
+
+            const skillNames = {
+                word: '字詞基礎', sent: '句子語法', rhet: '修辭標點', para: '段落實用',
+                read: '閱讀理解', listen: '聆聽與說', culture: '文化古詩', write: '綜合寫作'
+            };
+
+            for (let key in skillsSum) {
+                let average = Math.round(skillsSum[key] / totalCount);
+                let percent = Math.min(100, Math.round((average / 450) * 100)); 
+                let colorClass = percent >= 80 ? 'bg-emerald-500' : (percent >= 50 ? 'bg-amber-500' : 'bg-rose-500');
+
+                container.innerHTML += `
+                    <div class="flex flex-col items-center p-3 bg-slate-50 border rounded-2xl">
+                        <span class="text-xs font-bold text-slate-500 mb-1">${skillNames[key]}</span>
+                        <span class="text-xl font-black text-slate-800 mb-2">${percent}%</span>
+                        <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
+                            <div class="${colorClass} h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                `;
             }
         }
 
-        // 載入時初始化
-        window.onload = function() {
-            updateTotalExp();
+        function renderWarningStagesUI(passCounts, totalCount) {
+            const container = document.getElementById('warning-stages-container');
+            container.innerHTML = '';
+
+            const stageNamesMap = {
+                't_word_1': '字詞 (補底版)', 't_word_2': '字詞 (標準版)', 't_word_3': '字詞 (拔尖版)',
+                't_sent_1': '句子 (補底版)', 't_sent_2': '句子 (標準版)', 't_sent_3': '句子 (拔尖版)',
+                't_rhet_1': '修辭 (補底版)', 't_rhet_2': '修辭 (標準版)', 't_rhet_3': '修辭 (拔尖版)',
+                't_para_1': '段落 (補底版)', 't_para_2': '段落 (標準版)', 't_para_3': '段落 (拔尖版)',
+                't_read_1': '閱讀 (補底版)', 't_read_2': '閱讀 (標準版)', 't_read_3': '閱讀 (拔尖版)',
+                't_listen_1': '聆聽 (補底版)', 't_listen_2': '聆聽 (標準版)', 't_listen_3': '聆聽 (拔尖版)',
+                't_culture_1': '文化 (補底版)', 't_culture_2': '文化 (標準版)', 't_culture_3': '文化 (拔尖版)',
+                't_write_1': '寫作 (補底版)', 't_write_2': '寫作 (標準版)', 't_write_3': '寫作 (拔尖版)'
+            };
+
+            let list = [];
+            for (let sId in passCounts) {
+                let pct = totalCount === 0 ? 0 : Math.round((passCounts[sId] / totalCount) * 100);
+                list.push({ id: sId, name: stageNamesMap[sId], pct: pct });
+            }
+
+            list.sort((a, b) => a.pct - b.pct);
+            let worstThree = list.slice(0, 3);
+
+            worstThree.forEach(stage => {
+                container.innerHTML += `
+                    <div class="flex flex-col gap-1 p-3 bg-rose-50 border border-rose-100 rounded-2xl">
+                        <div class="flex justify-between text-sm font-bold text-rose-900">
+                            <span>🚨 ${stage.name}</span>
+                            <span>通過率 ${stage.pct}%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                            <div class="bg-rose-500 h-full" style="width: ${stage.pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        window.deleteStudentData = async function(username) {
+            if (confirm(`⚠️ 警告：確定要從雲端徹底刪除學生「${username}」的帳戶和所有進度嗎？此操作無法復原！`)) {
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', username);
+                    await deleteDoc(docRef);
+                    alert("已成功刪除該學生資料！");
+                    window.fetchCloudDataForTeacher();
+                } catch(e) {
+                    console.error("刪除失敗", e);
+                    alert("刪除失敗，請重試！");
+                }
+            }
         };
+
     </script>
 </body>
 </html>
