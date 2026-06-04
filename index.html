@@ -68,11 +68,11 @@
             <!-- 登入表單 (Login View) -->
             <div id="view-login" class="p-6 md:p-8 space-y-4">
                 <div>
-                    <label class="block text-slate-500 font-bold text-sm mb-2">登入帳號</label>
+                    <label class="block text-slate-500 font-bold text-sm mb-2">登入帳號 (Username)</label>
                     <input type="text" id="login-username" maxlength="15" placeholder="輸入你的登入帳號" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
                 </div>
                 <div>
-                    <label class="block text-slate-500 font-bold text-sm mb-2">登入密碼</label>
+                    <label class="block text-slate-500 font-bold text-sm mb-2">登入密碼 (Password)</label>
                     <input type="password" id="login-password" maxlength="15" placeholder="輸入密碼" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
                 </div>
                 <button onclick="attemptLogin()" class="w-full bg-indigo-600 text-white font-black px-6 py-4 rounded-xl shadow-md hover:bg-indigo-700 transition active:scale-95 border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1 mt-4 text-lg">登入系統 🚀</button>
@@ -106,10 +106,10 @@
     <!-- ================= 2. 老師專屬後台 (隱藏入口，學生不可見) ================= -->
     <div id="teacher-dashboard" class="absolute inset-0 z-40 bg-slate-100 hidden flex-col overflow-y-auto">
         <div class="bg-slate-800 text-white p-6 shadow-md flex justify-between items-center flex-shrink-0">
-            <h1 class="text-2xl font-black flex items-center gap-2">👨‍🏫 老師雲端管理後台 <span class="bg-rose-500 text-xs px-2 py-1 rounded">最高權限</span></h1>
-            <div class="flex gap-4">
-                <button onclick="fetchCloudDataForTeacher()" class="bg-indigo-500 hover:bg-indigo-600 font-bold py-2 px-4 rounded-lg transition flex items-center gap-2">🔄 更新雲端數據</button>
-                <button onclick="logoutProfile()" class="bg-white/20 hover:bg-rose-500 font-bold py-2 px-4 rounded-lg transition">安全退出 🚪</button>
+            <h1 class="text-xl md:text-2xl font-black flex items-center gap-2">👨‍🏫 老師雲端管理後台 <span class="bg-rose-500 text-xs px-2 py-1 rounded">最高權限</span></h1>
+            <div class="flex gap-2 md:gap-4">
+                <button onclick="fetchCloudDataForTeacher()" class="bg-indigo-500 hover:bg-indigo-600 font-bold py-2 px-3 md:px-4 rounded-lg transition flex items-center gap-2 text-sm md:text-base">🔄 <span class="hidden md:inline">更新雲端數據</span></button>
+                <button onclick="logoutProfile()" class="bg-white/20 hover:bg-rose-500 font-bold py-2 px-3 md:px-4 rounded-lg transition text-sm md:text-base">安全退出 🚪</button>
             </div>
         </div>
         
@@ -137,12 +137,12 @@
 
             <!-- 學生英雄排行榜 -->
             <div class="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
-                <div class="p-6 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                <div class="p-6 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <h2 class="text-xl font-black text-slate-800">🏆 班級學習排行榜 (自動雲端同步)</h2>
                     <p class="text-sm font-bold text-slate-500" id="total-students-count">註冊人數：0 人</p>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
                         <thead>
                             <tr class="bg-indigo-50 text-indigo-800 text-sm uppercase">
                                 <th class="p-4 font-black border-b-2 border-indigo-100 text-center">排名</th>
@@ -169,44 +169,46 @@
             <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-blue-400 opacity-10 rounded-full blur-2xl"></div>
 
             <div class="max-w-7xl mx-auto flex justify-between items-center relative z-10 mb-4 pb-4 border-b border-white/10">
-                <div class="font-black text-indigo-200 tracking-wider flex items-center gap-2">
+                <div class="font-black text-indigo-200 tracking-wider flex items-center gap-2 text-sm md:text-base">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 雲端資料已同步
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="manualSyncToCloud()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-1.5 px-3 rounded-lg text-sm transition">☁️ 手動備份</button>
-                    <button onclick="logoutProfile()" class="bg-white/10 hover:bg-rose-500 text-white font-bold py-1.5 px-4 rounded-lg text-sm transition border border-white/20 hover:border-rose-400">安全登出 🚪</button>
+                    <button onclick="manualSyncToCloud()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-1.5 px-3 rounded-lg text-xs md:text-sm transition flex items-center gap-1" title="如果您準備關閉瀏覽器，可以點擊此按鈕確保最新進度已上傳">
+                        ☁️ <span class="hidden sm:inline">手動備份</span>
+                    </button>
+                    <button onclick="logoutProfile()" class="bg-white/10 hover:bg-rose-500 text-white font-bold py-1.5 px-3 md:px-4 rounded-lg text-xs md:text-sm transition border border-white/20 hover:border-rose-400">安全登出 🚪</button>
                 </div>
             </div>
 
             <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center relative z-10 gap-6">
                 <!-- 學生檔案與動態稱號 -->
                 <div class="flex items-center gap-4 w-full md:w-auto">
-                    <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center text-5xl shadow-lg border-4 border-indigo-400 flex-shrink-0 float-anim">👦🏻</div>
+                    <div class="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center text-4xl md:text-5xl shadow-lg border-4 border-indigo-400 flex-shrink-0 float-anim">👦🏻</div>
                     <div>
-                        <h1 class="text-2xl md:text-3xl font-black mb-1 tracking-wider flex items-center flex-wrap gap-2">
+                        <h1 class="text-xl md:text-3xl font-black mb-1 tracking-wider flex items-center flex-wrap gap-2">
                             <span id="profile-display-name" class="text-white">載入中...</span>
-                            <span class="text-indigo-300 mx-1">|</span>
+                            <span class="text-indigo-300 mx-1 hidden sm:inline">|</span>
                             <span id="user-title" class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500">語文見習生</span>
-                            <span class="bg-indigo-600/80 text-white text-sm px-3 py-1 rounded-full border border-indigo-400 shadow-sm" id="user-level">Lv. 1</span>
+                            <span class="bg-indigo-600/80 text-white text-xs md:text-sm px-2 md:px-3 py-1 rounded-full border border-indigo-400 shadow-sm" id="user-level">Lv. 1</span>
                         </h1>
-                        <p class="text-indigo-200 font-bold text-sm md:text-base">歡迎回到總部！準備好今天的特訓了嗎？</p>
+                        <p class="text-indigo-200 font-bold text-xs md:text-base">歡迎回到總部！準備好今天的特訓了嗎？</p>
                     </div>
                 </div>
                 
                 <!-- 經驗值與進度統計區 -->
-                <div class="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-2xl w-full md:w-96 shadow-xl">
+                <div class="bg-white/10 backdrop-blur-md border border-white/20 p-4 md:p-5 rounded-2xl w-full md:w-96 shadow-xl">
                     <div class="flex justify-between items-end mb-2">
                         <span class="font-bold text-indigo-100 flex items-center gap-2"><span>📊</span> 學習總進度</span>
-                        <span class="font-black text-3xl text-yellow-400 drop-shadow-md" id="exp-text">0 <span class="text-sm text-indigo-200 font-bold">EXP</span></span>
+                        <span class="font-black text-2xl md:text-3xl text-yellow-400 drop-shadow-md" id="exp-text">0 <span class="text-sm text-indigo-200 font-bold">EXP</span></span>
                     </div>
-                    <div class="w-full bg-slate-700/50 rounded-full h-4 mb-3 overflow-hidden border border-slate-600 shadow-inner">
+                    <div class="w-full bg-slate-700/50 rounded-full h-3 md:h-4 mb-3 overflow-hidden border border-slate-600 shadow-inner">
                         <div id="total-progress-bar" class="bg-gradient-to-r from-emerald-400 to-yellow-300 h-full rounded-full transition-all duration-1000 w-0 relative">
                             <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
                         </div>
                     </div>
-                    <div class="flex justify-between text-sm font-bold text-indigo-200 mb-4">
-                        <span>已精通模組：<span id="progress-text" class="text-white text-base">0 / 24</span></span>
-                        <span>🏆 收集徽章：<span id="badge-count" class="text-white text-base">0</span></span>
+                    <div class="flex justify-between text-xs md:text-sm font-bold text-indigo-200 mb-4">
+                        <span>已精通模組：<span id="progress-text" class="text-white text-sm md:text-base">0 / 24</span></span>
+                        <span>🏆 收集徽章：<span id="badge-count" class="text-white text-sm md:text-base">0</span></span>
                     </div>
                     <button onclick="quickStart()" class="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-bold py-2 rounded-xl shadow transition active:scale-95 flex justify-center items-center gap-2 border-b-4 border-blue-700 active:border-b-0 active:translate-y-1">
                         <span>🚀 智能推薦：繼續學習</span>
@@ -220,180 +222,181 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
                 <!-- 1. 字詞基礎 -->
-                <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-emerald-500 flex flex-col h-full">
-                    <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>1️⃣</span> 字詞基礎</h2>
-                    <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">部首部件、量詞、形近字防錯、錯別字修正、近反義詞與成語。</p>
-                    <div class="flex flex-col gap-3">
+                <div class="module-card bg-white rounded-3xl p-5 md:p-6 shadow-lg border-t-8 border-emerald-500 flex flex-col h-full">
+                    <h2 class="text-lg md:text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>1️⃣</span> 字詞基礎</h2>
+                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">部首部件、量詞、形近字防錯、錯別字修正、近反義詞與成語。</p>
+                    <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('word_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
-                            <div id="t_word_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none" title="完成補底版即可解鎖">🔒</div>
+                            <button onclick="saveAndGo('word_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
+                            <div id="t_word_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成補底版即可解鎖">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('word_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
-                            <div id="t_word_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none" title="完成標準版即可解鎖">🔒</div>
+                            <button onclick="saveAndGo('word_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
+                            <div id="t_word_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成標準版即可解鎖">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('word_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
-                            <div id="t_word_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none" title="完成拔尖版即可解鎖">🔒</div>
+                            <button onclick="saveAndGo('word_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
+                            <div id="t_word_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成拔尖版即可解鎖">🔒</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 2. 句子與語法 -->
-                <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-teal-500 flex flex-col h-full">
-                    <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>2️⃣</span> 句子與語法</h2>
-                    <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">二至四素句重組、擴充句子、關聯詞邏輯、把被字句與句型轉換。</p>
-                    <div class="flex flex-col gap-3">
+                <div class="module-card bg-white rounded-3xl p-5 md:p-6 shadow-lg border-t-8 border-teal-500 flex flex-col h-full">
+                    <h2 class="text-lg md:text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>2️⃣</span> 句子與語法</h2>
+                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">二至四素句重組、擴充句子、關聯詞邏輯、把被字句與句型轉換。</p>
+                    <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('sentence_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
-                            <div id="t_sent_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('sentence_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
+                            <div id="t_sent_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('sentence_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
-                            <div id="t_sent_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('sentence_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
+                            <div id="t_sent_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('sentence_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
-                            <div id="t_sent_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('sentence_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
+                            <div id="t_sent_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 3. 修辭與標點 -->
-                <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-cyan-500 flex flex-col h-full">
-                    <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>3️⃣</span> 修辭與標點</h2>
-                    <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">基礎標點至引號破折號、明暗借喻辨析、擬人、排比與反問設問。</p>
-                    <div class="flex flex-col gap-3">
+                <div class="module-card bg-white rounded-3xl p-5 md:p-6 shadow-lg border-t-8 border-cyan-500 flex flex-col h-full">
+                    <h2 class="text-lg md:text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>3️⃣</span> 修辭與標點</h2>
+                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">基礎標點至引號破折號、明暗借喻辨析、擬人、排比與反問設問。</p>
+                    <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('rhetoric_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
-                            <div id="t_rhet_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('rhetoric_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
+                            <div id="t_rhet_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('rhetoric_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
-                            <div id="t_rhet_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('rhetoric_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
+                            <div id="t_rhet_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('rhetoric_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
-                            <div id="t_rhet_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('rhetoric_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
+                            <div id="t_rhet_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 4. 段落與實用文 -->
-                <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-indigo-500 flex flex-col h-full">
-                    <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>4️⃣</span> 段落與實用文</h2>
-                    <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">排句成段邏輯、書信/日記/通告/建議書格式重組與沙盒模擬。</p>
-                    <div class="flex flex-col gap-3">
+                <div class="module-card bg-white rounded-3xl p-5 md:p-6 shadow-lg border-t-8 border-indigo-500 flex flex-col h-full">
+                    <h2 class="text-lg md:text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>4️⃣</span> 段落與實用文</h2>
+                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">排句成段邏輯、書信/日記/通告/建議書格式重組與沙盒模擬。</p>
+                    <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('paragraph_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
-                            <div id="t_para_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('paragraph_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
+                            <div id="t_para_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('paragraph_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
-                            <div id="t_para_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('paragraph_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
+                            <div id="t_para_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('paragraph_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
-                            <div id="t_para_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('paragraph_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
+                            <div id="t_para_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 5. 閱讀理解 -->
-                <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-sky-500 flex flex-col h-full">
-                    <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>5️⃣</span> 閱讀理解</h2>
-                    <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">提取資訊、三層次推論、主旨歸納、寫作手法與深層次評價。</p>
-                    <div class="flex flex-col gap-3">
+                <div class="module-card bg-white rounded-3xl p-5 md:p-6 shadow-lg border-t-8 border-sky-500 flex flex-col h-full">
+                    <h2 class="text-lg md:text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>5️⃣</span> 閱讀理解</h2>
+                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">提取資訊、三層次推論、主旨歸納、寫作手法與深層次評價。</p>
+                    <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('read_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
-                            <div id="t_read_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('read_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
+                            <div id="t_read_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('read_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
-                            <div id="t_read_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('read_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
+                            <div id="t_read_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('read_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
-                            <div id="t_read_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('read_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
+                            <div id="t_read_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 6. 聆聽與說話 -->
-                <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-rose-500 flex flex-col h-full">
-                    <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>6️⃣</span> 聆聽與說話</h2>
-                    <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">語音故事盲聽、六要素提取、弦外之音推論與看圖說話改編。</p>
-                    <div class="flex flex-col gap-3">
+                <div class="module-card bg-white rounded-3xl p-5 md:p-6 shadow-lg border-t-8 border-rose-500 flex flex-col h-full">
+                    <h2 class="text-lg md:text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>6️⃣</span> 聆聽與說話</h2>
+                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">語音故事盲聽、六要素提取、弦外之音推論與看圖說話改編。</p>
+                    <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('listen_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
-                            <div id="t_listen_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('listen_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
+                            <div id="t_listen_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('listen_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
-                            <div id="t_listen_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('listen_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
+                            <div id="t_listen_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('listen_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
-                            <div id="t_listen_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('listen_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
+                            <div id="t_listen_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 7. 中華文化與古詩 -->
-                <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-orange-500 flex flex-col h-full">
-                    <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>7️⃣</span> 中華文化與古詩</h2>
-                    <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">古詩卡拉OK帶讀、神話節日、歷史典故謀略與文言文啟蒙。</p>
-                    <div class="flex flex-col gap-3">
+                <div class="module-card bg-white rounded-3xl p-5 md:p-6 shadow-lg border-t-8 border-orange-500 flex flex-col h-full">
+                    <h2 class="text-lg md:text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>7️⃣</span> 中華文化與古詩</h2>
+                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">古詩卡拉OK帶讀、神話節日、歷史典故謀略與文言文啟蒙。</p>
+                    <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('culture_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
-                            <div id="t_culture_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('culture_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
+                            <div id="t_culture_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('culture_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
-                            <div id="t_culture_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('culture_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
+                            <div id="t_culture_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('culture_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
-                            <div id="t_culture_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('culture_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
+                            <div id="t_culture_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 8. 綜合寫作專區 -->
-                <div class="module-card bg-white rounded-3xl p-6 shadow-lg border-t-8 border-purple-500 flex flex-col h-full">
-                    <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>8️⃣</span> 綜合寫作專區</h2>
-                    <p class="text-slate-500 font-bold mb-5 text-sm flex-grow">看圖故事拼湊、五感擴寫、段落框架建構與寫作小錦囊。</p>
-                    <div class="flex flex-col gap-3">
+                <div class="module-card bg-white rounded-3xl p-5 md:p-6 shadow-lg border-t-8 border-purple-500 flex flex-col h-full">
+                    <h2 class="text-lg md:text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>8️⃣</span> 綜合寫作專區</h2>
+                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">看圖故事拼湊、五感擴寫、段落框架建構與寫作小錦囊。</p>
+                    <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('write_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm">🌱 補底版</button>
-                            <div id="t_write_1" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('write_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
+                            <div id="t_write_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('write_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm">⭐ 標準版</button>
-                            <div id="t_write_2" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('write_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
+                            <div id="t_write_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('write_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm">🚀 拔尖版</button>
-                            <div id="t_write_3" class="badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none">🔒</div>
+                            <button onclick="saveAndGo('write_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
+                            <div id="t_write_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                     </div>
                 </div>
 
             </div>
             
+            <!-- 🌟 移除原本放在底部的清除按鈕，改為放置一個無效的提示 -->
             <div class="mt-8 text-center w-full pb-8">
-                <button onclick="window.resetAllProgress()" class="text-slate-400 hover:text-rose-500 font-bold text-sm underline transition">⚠️ 清除「當前帳戶」的所有紀錄 (無法復原)</button>
+                <p class="text-slate-400 font-bold text-xs md:text-sm">系統將自動為您保存所有學習進度</p>
             </div>
         </div>
     </div>
 
     <!-- 每日登入獎勵 Modal -->
     <div id="daily-login-modal" class="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/80 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform duration-300">
-            <div class="text-7xl mb-4 animate-bounce">🎁</div>
-            <h2 class="text-3xl font-black text-indigo-600 mb-2">每日簽到成功！</h2>
-            <p class="text-slate-600 font-bold mb-6 text-xl">堅持學習，太棒了！<br><span class="text-amber-500 text-2xl mt-2 inline-block">+10 EXP</span></p>
-            <button onclick="closeDailyLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 rounded-xl shadow-lg transition text-xl border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1">收下獎勵！</button>
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform duration-300">
+            <div class="text-6xl md:text-7xl mb-4 animate-bounce">🎁</div>
+            <h2 class="text-2xl md:text-3xl font-black text-indigo-600 mb-2">每日簽到成功！</h2>
+            <p class="text-slate-600 font-bold mb-6 text-lg md:text-xl">堅持學習，太棒了！<br><span class="text-amber-500 text-xl md:text-2xl mt-2 inline-block">+10 EXP</span></p>
+            <button onclick="closeDailyLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 rounded-xl shadow-lg transition text-lg md:text-xl border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1">收下獎勵！</button>
         </div>
     </div>
 
@@ -807,13 +810,13 @@
                     if(localStorage.getItem(id) === 'true') {
                         completed++;
                         if(el) {
-                            el.className = 'badge-unlocked w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl select-none transition-all transform pop';
+                            el.className = 'badge-unlocked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-black text-lg md:text-xl select-none transition-all transform pop';
                             el.innerText = '🏅';
                             el.title = "已精通";
                         }
                     } else {
                         if(el) {
-                            el.className = 'badge-locked w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl select-none';
+                            el.className = 'badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none';
                             el.innerText = '🔒';
                         }
                     }
@@ -829,7 +832,7 @@
 
         function animateValue(id, start, end, duration) {
             if (start === end) {
-                document.getElementById(id).innerHTML = `${end} <span class="text-sm text-indigo-200 font-bold">EXP</span>`;
+                document.getElementById(id).innerHTML = `${end} <span class="text-xs md:text-sm text-indigo-200 font-bold">EXP</span>`;
                 return;
             }
             let range = end - start;
@@ -844,7 +847,7 @@
                     current = end;
                     clearInterval(timer);
                 }
-                obj.innerHTML = `${current} <span class="text-sm text-indigo-200 font-bold">EXP</span>`;
+                obj.innerHTML = `${current} <span class="text-xs md:text-sm text-indigo-200 font-bold">EXP</span>`;
             }, stepTime);
         }
 
@@ -867,19 +870,6 @@
                 await saveLocalToCloud(activeUser);
             }
             window.location.href = url;
-        };
-
-        window.resetAllProgress = async function() {
-            const activeUser = sessionStorage.getItem('activeProfile');
-            if(confirm(`【警告】確定要將帳戶的所有進度清零嗎？此操作將覆蓋雲端資料且無法復原！`)) {
-                localStorage.clear(); 
-                if (activeUser && activeUser !== 'admin') {
-                    // 同步一個空的 localStorage 上去達到雲端清零效果
-                    await saveLocalToCloud(activeUser); 
-                }
-                alert('當前帳戶紀錄已成功清除！');
-                location.reload();
-            }
         };
 
         // ==========================================
@@ -974,18 +964,18 @@
 
                     tbody.innerHTML += `
                         <tr class="border-b border-slate-100 hover:bg-slate-50 transition text-center">
-                            <td class="p-4 font-black text-xl">${rankIcon}</td>
-                            <td class="p-4 text-left font-black text-indigo-700">${realName} <span class="text-xs text-slate-400 font-normal">(${st.username})</span></td>
-                            <td class="p-4 text-orange-600 font-bold">${totalExp}</td>
-                            <td class="p-4 flex justify-center items-center gap-2">
-                                <span>${badges}/24</span>
-                                <div class="w-20 bg-slate-200 h-2 rounded-full overflow-hidden">
+                            <td class="p-3 md:p-4 font-black text-lg md:text-xl">${rankIcon}</td>
+                            <td class="p-3 md:p-4 text-left font-black text-indigo-700 text-sm md:text-base">${realName} <br class="md:hidden"><span class="text-xs text-slate-400 font-normal md:ml-1">(${st.username})</span></td>
+                            <td class="p-3 md:p-4 text-orange-600 font-bold text-sm md:text-base">${totalExp}</td>
+                            <td class="p-3 md:p-4 flex flex-col md:flex-row justify-center items-center gap-1 md:gap-2">
+                                <span class="text-sm">${badges}/24</span>
+                                <div class="w-16 md:w-20 bg-slate-200 h-2 rounded-full overflow-hidden hidden sm:block">
                                     <div class="bg-emerald-400 h-full" style="width: ${pct}%"></div>
                                 </div>
                             </td>
-                            <td class="p-4"><span class="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded font-bold">${title}</span></td>
-                            <td class="p-4">
-                                <button onclick="deleteStudentData('${st.username}')" class="text-rose-500 hover:text-white hover:bg-rose-500 border border-rose-500 px-3 py-1 rounded transition text-sm">刪除</button>
+                            <td class="p-3 md:p-4"><span class="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded font-bold whitespace-nowrap">${title}</span></td>
+                            <td class="p-3 md:p-4">
+                                <button onclick="deleteStudentData('${st.username}')" class="text-rose-500 hover:text-white hover:bg-rose-500 border border-rose-500 px-2 md:px-3 py-1 rounded transition text-xs md:text-sm whitespace-nowrap">刪除</button>
                             </td>
                         </tr>
                     `;
@@ -1015,10 +1005,10 @@
                 let colorClass = percent >= 80 ? 'bg-emerald-500' : (percent >= 50 ? 'bg-amber-500' : 'bg-rose-500');
 
                 container.innerHTML += `
-                    <div class="flex flex-col items-center p-3 bg-slate-50 border rounded-2xl">
+                    <div class="flex flex-col items-center p-2 md:p-3 bg-slate-50 border rounded-2xl">
                         <span class="text-xs font-bold text-slate-500 mb-1">${skillNames[key]}</span>
-                        <span class="text-xl font-black text-slate-800 mb-2">${percent}%</span>
-                        <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
+                        <span class="text-lg md:text-xl font-black text-slate-800 mb-2">${percent}%</span>
+                        <div class="w-full bg-slate-200 h-2 md:h-3 rounded-full overflow-hidden">
                             <div class="${colorClass} h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
                         </div>
                     </div>
@@ -1052,12 +1042,12 @@
 
             worstThree.forEach(stage => {
                 container.innerHTML += `
-                    <div class="flex flex-col gap-1 p-3 bg-rose-50 border border-rose-100 rounded-2xl">
-                        <div class="flex justify-between text-sm font-bold text-rose-900">
+                    <div class="flex flex-col gap-1 p-2 md:p-3 bg-rose-50 border border-rose-100 rounded-2xl">
+                        <div class="flex justify-between text-xs md:text-sm font-bold text-rose-900">
                             <span>🚨 ${stage.name}</span>
                             <span>通過率 ${stage.pct}%</span>
                         </div>
-                        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                        <div class="w-full bg-slate-200 h-1.5 md:h-2 rounded-full overflow-hidden mt-1">
                             <div class="bg-rose-500 h-full" style="width: ${stage.pct}%"></div>
                         </div>
                     </div>
