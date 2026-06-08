@@ -383,7 +383,6 @@
 
             </div>
             
-            <!-- 🌟 移除原本放在底部的清除按鈕，改為放置一個無效的提示 -->
             <div class="mt-8 text-center w-full pb-8">
                 <p class="text-slate-400 font-bold text-xs md:text-sm">系統將自動為您保存所有學習進度</p>
             </div>
@@ -406,9 +405,18 @@
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 從環境注入的全域變數
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // ==========================================
+        // 💡 您的專屬 Firebase 金鑰已經為您設定好了！
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_MSMghlz2zo3vMwbbHCGU3acFD6KMyo8",
+            authDomain: "chinese-training-platform.firebaseapp.com",
+            projectId: "chinese-training-platform",
+            storageBucket: "chinese-training-platform.firebasestorage.app",
+            messagingSenderId: "231283500811",
+            appId: "1:231283500811:web:8e85c0ad813f1631f9a40e"
+        };
+        const appId = "chinese-training-platform";
 
         let app, auth, db;
         let currentUserId = null; 
@@ -465,10 +473,20 @@
 
         // 2. 身份驗證流程
         async function initAuthFlow() {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    try {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } catch (tokenErr) {
+                        console.warn("自訂權杖驗證失敗 (可能由於使用了專屬 Firebase 金鑰)，切換至匿名登入...", tokenErr);
+                        await signInAnonymously(auth);
+                    }
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (authErr) {
+                console.error("驗證流程失敗:", authErr);
+                throw authErr;
             }
 
             onAuthStateChanged(auth, async (user) => {
