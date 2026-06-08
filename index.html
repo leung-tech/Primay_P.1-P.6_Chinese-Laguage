@@ -46,6 +46,7 @@
     <div id="global-loader" class="fixed inset-0 z-[200] bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center text-white">
         <span class="loader mb-4" style="width: 50px; height: 50px; border-width: 6px;"></span>
         <h2 class="text-2xl font-bold" id="loader-text">系統連線中...</h2>
+        <p class="text-slate-400 text-sm mt-2 font-bold">若等待過久，將自動為您切換至離線模式</p>
     </div>
 
     <!-- ================= 1. 登入 / 註冊 獨立大廳 ================= -->
@@ -56,16 +57,21 @@
             <div class="bg-indigo-50 p-6 text-center border-b border-indigo-100">
                 <div class="text-6xl mb-3 float-anim">🎓</div>
                 <h2 class="text-2xl font-black text-indigo-700">終極語文特訓總部</h2>
-                <p class="text-indigo-500 font-bold text-sm mt-1">✨ 雲端同步版 ✨</p>
+                <p class="text-indigo-500 font-bold text-sm mt-1">✨ AI 診斷雲端版 ✨</p>
             </div>
             
-            <!-- 登入與註冊切換選單 -->
-            <div class="flex w-full">
+            <!-- 登入與註冊與教師切換 -->
+            <div id="auth-tabs" class="flex w-full">
                 <button id="tab-login" onclick="switchAuthView('login')" class="flex-1 py-4 text-lg auth-tab-active transition">學生登入</button>
                 <button id="tab-register" onclick="switchAuthView('register')" class="flex-1 py-4 text-lg auth-tab-inactive transition">註冊新帳戶</button>
             </div>
 
-            <!-- 登入表單 (Login View) -->
+            <!-- 行內友善錯誤提示區 -->
+            <div id="auth-error-box" class="hidden mx-6 mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 font-bold text-sm text-center flex items-center justify-center gap-2">
+                <span>⚠️</span> <span id="auth-error-text">錯誤訊息</span>
+            </div>
+
+            <!-- A. 學生登入表單 (Login View) -->
             <div id="view-login" class="p-6 md:p-8 space-y-4">
                 <div>
                     <label class="block text-slate-500 font-bold text-sm mb-2">登入帳號 (Username)</label>
@@ -73,19 +79,33 @@
                 </div>
                 <div>
                     <label class="block text-slate-500 font-bold text-sm mb-2">登入密碼 (Password)</label>
-                    <input type="password" id="login-password" maxlength="15" placeholder="輸入密碼" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
+                    <div class="relative">
+                        <input type="password" id="login-password" maxlength="15" placeholder="輸入密碼" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition pr-12">
+                        <button onclick="togglePasswordVisibility('login-password')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 font-bold focus:outline-none text-xl">👁️</button>
+                    </div>
                 </div>
-                <button onclick="attemptLogin()" class="w-full bg-indigo-600 text-white font-black px-6 py-4 rounded-xl shadow-md hover:bg-indigo-700 transition active:scale-95 border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1 mt-4 text-lg">登入系統 🚀</button>
+                <div class="flex items-center justify-between pb-2">
+                    <label class="flex items-center gap-2 cursor-pointer font-bold text-slate-500 text-sm">
+                        <input type="checkbox" id="login-remember-me" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                        記住我的帳號
+                    </label>
+                </div>
+                <button onclick="attemptLogin()" class="w-full bg-indigo-600 text-white font-black px-6 py-4 rounded-xl shadow-md transition active:scale-95 border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1 text-lg">登入系統 🚀</button>
+                
+                <!-- 隱密教職員通道 -->
+                <div class="text-center pt-2">
+                    <button onclick="switchAuthView('teacher-portal')" class="text-slate-400 hover:text-indigo-600 text-xs font-bold transition">💼 教職員專區</button>
+                </div>
             </div>
 
-            <!-- 註冊表單 (Register View) -->
+            <!-- B. 學生註冊表單 (Register View) -->
             <div id="view-register" class="p-6 md:p-8 space-y-4 hidden">
-                <div class="bg-amber-50 border border-amber-200 text-amber-800 text-sm font-bold p-3 rounded-lg mb-2">
+                <div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold p-3 rounded-lg mb-2">
                     💡 請務必填寫「真實姓名」，方便老師在後台查看你的成績喔！
                 </div>
                 <div>
                     <label class="block text-slate-500 font-bold text-sm mb-2">真實姓名 (Real Name) ⭐必填</label>
-                    <input type="text" id="register-realname" maxlength="15" placeholder="例如：陳大文" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
+                    <input type="text" id="register-realname" maxlength="15" placeholder="例如：陳大文" class="w-full px-4 py-3 border-2 border-slate-220 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
                 </div>
                 <div class="flex gap-2">
                     <div class="flex-1">
@@ -93,23 +113,49 @@
                         <input type="text" id="register-username" maxlength="15" placeholder="如: taiman123" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
                     </div>
                     <div class="flex-1">
-                        <label class="block text-slate-500 font-bold text-sm mb-2">自訂登入密碼</label>
-                        <input type="password" id="register-password" maxlength="15" placeholder="設定密碼" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
+                        <label class="block text-slate-500 font-bold text-sm mb-2">自訂密碼(最多15字)</label>
+                        <div class="relative">
+                            <input type="password" id="register-password" maxlength="15" placeholder="設定密碼" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition pr-12">
+                            <button onclick="togglePasswordVisibility('register-password')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 font-bold focus:outline-none text-xl">👁️</button>
+                        </div>
                     </div>
                 </div>
                 <button onclick="createProfile()" class="w-full bg-emerald-500 text-white font-black px-6 py-4 rounded-xl shadow-md hover:bg-emerald-600 transition active:scale-95 border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1 mt-4 text-lg">創建並登入 ✨</button>
             </div>
 
+            <!-- C. 隱藏教職員專用登入區 (Teacher Login View) -->
+            <div id="view-teacher-login" class="p-6 md:p-8 space-y-4 hidden">
+                <div class="bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-bold p-3 rounded-lg mb-2">
+                    🔑 此處為學校管理員/教職員專屬通道。學生請返回「學生登入」畫面。
+                </div>
+                <div>
+                    <label class="block text-slate-500 font-bold text-sm mb-2">管理員帳號</label>
+                    <input type="text" id="teacher-username" placeholder="管理員專屬帳號" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
+                </div>
+                <div>
+                    <label class="block text-slate-500 font-bold text-sm mb-2">管理員密碼</label>
+                    <div class="relative">
+                        <input type="password" id="teacher-password" placeholder="密碼" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition pr-12">
+                        <button onclick="togglePasswordVisibility('teacher-password')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 font-bold focus:outline-none text-xl">👁️</button>
+                    </div>
+                </div>
+                <button onclick="attemptTeacherLogin()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-black px-6 py-4 rounded-xl shadow-md transition active:scale-95 border-b-4 border-slate-950 active:border-b-0 active:translate-y-1 text-lg">管理員登入 🛡️</button>
+                <div class="text-center pt-2">
+                    <button onclick="switchAuthView('login')" class="text-indigo-600 hover:underline text-xs font-bold transition">⬅️ 返回學生登入</button>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <!-- ================= 2. 老師專屬後台 (隱藏入口，學生不可見) ================= -->
+    <!-- ================= 2. 老師專屬後台 ================= -->
     <div id="teacher-dashboard" class="absolute inset-0 z-40 bg-slate-100 hidden flex-col overflow-y-auto">
-        <div class="bg-slate-800 text-white p-6 shadow-md flex justify-between items-center flex-shrink-0">
+        <div class="bg-slate-800 text-white p-4 md:p-6 shadow-md flex justify-between items-center flex-shrink-0">
             <h1 class="text-xl md:text-2xl font-black flex items-center gap-2">👨‍🏫 老師雲端管理後台 <span class="bg-rose-500 text-xs px-2 py-1 rounded">最高權限</span></h1>
             <div class="flex gap-2 md:gap-4">
-                <button onclick="fetchCloudDataForTeacher()" class="bg-indigo-500 hover:bg-indigo-600 font-bold py-2 px-3 md:px-4 rounded-lg transition flex items-center gap-2 text-sm md:text-base">🔄 <span class="hidden md:inline">更新雲端數據</span></button>
-                <button onclick="logoutProfile()" class="bg-white/20 hover:bg-rose-500 font-bold py-2 px-3 md:px-4 rounded-lg transition text-sm md:text-base">安全退出 🚪</button>
+                <button onclick="exportRankingToCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 md:px-4 rounded-lg transition text-xs md:text-sm flex items-center gap-1 shadow">📥 匯出 CSV 報表</button>
+                <button onclick="fetchCloudDataForTeacher()" class="bg-indigo-500 hover:bg-indigo-600 font-bold py-2 px-3 md:px-4 rounded-lg transition flex items-center gap-2 text-xs md:text-sm shadow">🔄 更新數據</button>
+                <button onclick="logoutProfile()" class="bg-white/20 hover:bg-rose-500 font-bold py-2 px-3 md:px-4 rounded-lg transition text-xs md:text-sm">安全退出 🚪</button>
             </div>
         </div>
         
@@ -119,19 +165,14 @@
             <div id="analysis-section" class="grid grid-cols-1 lg:grid-cols-3 gap-6 hidden">
                 <!-- 班級八大能力雷達統計 -->
                 <div class="bg-white rounded-3xl p-6 shadow-md border border-slate-200 lg:col-span-2">
-                    <h3 class="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">📊 班級語文能力掌握度分析</h3>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" id="class-skills-container">
-                        <!-- 動態渲染全班平均分比例 -->
-                    </div>
+                    <h3 class="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">📊 全班八大能力平均掌握度</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" id="class-skills-container"></div>
                 </div>
 
                 <!-- 關卡通過率預警 -->
                 <div class="bg-white rounded-3xl p-6 shadow-md border border-slate-200">
-                    <h3 class="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">⚠️ 學生易錯關卡預警</h3>
-                    <p class="text-xs text-slate-500 mb-3">統計全班通關率最低的模組，方便老師課堂重點講授。</p>
-                    <div class="flex flex-col gap-3" id="warning-stages-container">
-                        <!-- 動態渲染通過率低的關卡 -->
-                    </div>
+                    <h3 class="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">⚠️ 全班最易錯關卡預警</h3>
+                    <div class="flex flex-col gap-3" id="warning-stages-container"></div>
                 </div>
             </div>
 
@@ -142,14 +183,14 @@
                     <p class="text-sm font-bold text-slate-500" id="total-students-count">註冊人數：0 人</p>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[600px]">
+                    <table class="w-full text-left border-collapse min-w-[750px]">
                         <thead>
                             <tr class="bg-indigo-50 text-indigo-800 text-sm uppercase">
                                 <th class="p-4 font-black border-b-2 border-indigo-100 text-center">排名</th>
                                 <th class="p-4 font-black border-b-2 border-indigo-100">學生姓名 (帳號)</th>
                                 <th class="p-4 font-black border-b-2 border-indigo-100 text-center">總 EXP</th>
                                 <th class="p-4 font-black border-b-2 border-indigo-100 text-center">精通徽章 (滿分24)</th>
-                                <th class="p-4 font-black border-b-2 border-indigo-100 text-center">最高稱號</th>
+                                <th class="p-4 font-black border-b-2 border-indigo-100 text-center">最後在線時間</th>
                                 <th class="p-4 font-black border-b-2 border-indigo-100 text-center">操作</th>
                             </tr>
                         </thead>
@@ -158,6 +199,68 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 學生專屬個人詳情鑽取彈窗 (Student Drill-down Modal) ================= -->
+    <div id="student-detail-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl max-w-3xl w-full flex flex-col max-h-[95vh] transition-all transform scale-95 duration-200">
+            <div class="flex justify-between items-start mb-4 border-b pb-4 flex-shrink-0">
+                <div>
+                    <h2 class="text-2xl font-black text-indigo-800 flex items-center gap-2">
+                        <span>📊</span> <span id="sd-realname">學生</span> 的專屬學情報告
+                    </h2>
+                    <p class="text-slate-400 text-sm font-bold mt-1">帳號: <span id="sd-username"></span> | 總經驗: <span id="sd-exp" class="text-orange-500"></span></p>
+                </div>
+                <button onclick="closeStudentDetailModal()" class="text-slate-400 hover:text-rose-500 text-3xl font-bold leading-none">&times;</button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto pr-2 space-y-6 no-scrollbar">
+                
+                <!-- 🤖 智能作答數據與弱項分析 -->
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                    <h3 class="font-black text-slate-800 mb-4 text-base flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> 🤖 智能作答數據與弱項分析
+                    </h3>
+                    
+                    <div class="flex justify-between gap-3 mb-4 text-center">
+                        <div class="flex-1 bg-yellow-50 border border-yellow-200 p-3 rounded-xl shadow-sm">
+                            <div class="text-xs font-bold text-yellow-700 mb-1">🌟 一次答對</div>
+                            <div class="text-3xl font-black text-yellow-600" id="sd-perfect-count">0</div>
+                        </div>
+                        <div class="flex-1 bg-emerald-50 border border-emerald-200 p-3 rounded-xl shadow-sm">
+                            <div class="text-xs font-bold text-emerald-700 mb-1">✅ 補答答對</div>
+                            <div class="text-3xl font-black text-emerald-600" id="sd-hint-count">0</div>
+                        </div>
+                        <div class="flex-1 bg-rose-50 border border-rose-200 p-3 rounded-xl shadow-sm">
+                            <div class="text-xs font-bold text-rose-700 mb-1">❌ 錯誤次數</div>
+                            <div class="text-3xl font-black text-rose-600" id="sd-wrong-count">0</div>
+                        </div>
+                    </div>
+                    
+                    <p id="sd-ai-report" class="text-sm md:text-base text-slate-700 leading-relaxed bg-white p-4 rounded-xl border border-slate-200 shadow-sm"></p>
+                </div>
+
+                <!-- 八大能力分析 -->
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                    <h3 class="font-black text-slate-800 mb-4 text-base flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> 八大語文能力分析
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="sd-skills-container"></div>
+                </div>
+
+                <!-- 24個關卡精通打卡清單 -->
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                    <h3 class="font-black text-slate-800 mb-4 text-base flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 24關卡精通打卡狀態 (🏅表示已精通)
+                    </h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="sd-badges-container"></div>
+                </div>
+            </div>
+
+            <div class="flex-shrink-0 mt-6 pt-4 border-t text-right">
+                <button onclick="closeStudentDetailModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-xl transition shadow active:scale-95">關閉報告</button>
             </div>
         </div>
     </div>
@@ -173,7 +276,7 @@
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 雲端資料已同步
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="manualSyncToCloud()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-1.5 px-3 rounded-lg text-xs md:text-sm transition flex items-center gap-1" title="如果您準備關閉瀏覽器，可以點擊此按鈕確保最新進度已上傳">
+                    <button onclick="manualSyncToCloud()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-1.5 px-3 rounded-lg text-xs md:text-sm transition flex items-center gap-1 shadow" title="如果您準備關閉瀏覽器，可以點擊此按鈕確保最新進度已上傳">
                         ☁️ <span class="hidden sm:inline">手動備份</span>
                     </button>
                     <button onclick="logoutProfile()" class="bg-white/10 hover:bg-rose-500 text-white font-bold py-1.5 px-3 md:px-4 rounded-lg text-xs md:text-sm transition border border-white/20 hover:border-rose-400">安全登出 🚪</button>
@@ -244,7 +347,7 @@
                 <!-- 2. 句子與語法 -->
                 <div class="module-card bg-white rounded-3xl p-5 md:p-6 shadow-lg border-t-8 border-teal-500 flex flex-col h-full">
                     <h2 class="text-lg md:text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>2️⃣</span> 句子與語法</h2>
-                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">二至四素句重組、擴充句子、關聯詞邏輯、把被字句與句型轉換。</p>
+                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">二至四素句重裝、擴充句子、關聯詞邏輯、把被字句與句型轉換。</p>
                     <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
                             <button onclick="saveAndGo('sentence_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
@@ -272,11 +375,11 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <button onclick="saveAndGo('rhetoric_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
-                            <div id="t_rhet_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
+                            <div id="t_rhet_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成標準版即可解鎖">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
                             <button onclick="saveAndGo('rhetoric_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
-                            <div id="t_rhet_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
+                            <div id="t_rhet_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成拔尖版即可解鎖">🔒</div>
                         </div>
                     </div>
                 </div>
@@ -292,11 +395,11 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <button onclick="saveAndGo('paragraph_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
-                            <div id="t_para_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
+                            <div id="t_para_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成標準版即可解鎖">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
                             <button onclick="saveAndGo('paragraph_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
-                            <div id="t_para_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
+                            <div id="t_para_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成拔尖版即可解鎖">🔒</div>
                         </div>
                     </div>
                 </div>
@@ -312,11 +415,11 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <button onclick="saveAndGo('read_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
-                            <div id="t_read_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
+                            <div id="t_read_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成標準版即可解鎖">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
                             <button onclick="saveAndGo('read_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
-                            <div id="t_read_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
+                            <div id="t_read_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成拔尖版即可解鎖">🔒</div>
                         </div>
                     </div>
                 </div>
@@ -368,23 +471,19 @@
                     <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
                             <button onclick="saveAndGo('write_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
-                            <div id="t_write_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
+                            <div id="t_write_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成補底版即可解鎖">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
                             <button onclick="saveAndGo('write_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
-                            <div id="t_write_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
+                            <div id="t_write_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成標準版即可解鎖">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
                             <button onclick="saveAndGo('write_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
-                            <div id="t_write_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
+                            <div id="t_write_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成拔尖版即可解鎖">🔒</div>
                         </div>
                     </div>
                 </div>
 
-            </div>
-            
-            <div class="mt-8 text-center w-full pb-8">
-                <p class="text-slate-400 font-bold text-xs md:text-sm">系統將自動為您保存所有學習進度</p>
             </div>
         </div>
     </div>
@@ -399,10 +498,10 @@
         </div>
     </div>
 
-    <!-- Firebase SDK (必須使用 module 匯入) -->
+    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ==========================================
@@ -421,12 +520,44 @@
         let app, auth, db;
         let currentUserId = null; 
 
-        // 隱藏 Loader
+        // 全球快取，用於後台詳細鑽取與下載
+        window.allStudentsCache = [];
+
+        // 隱藏 Loader 及其定時器
+        let loaderTimeout;
+        
         function hideLoader() {
-            document.getElementById('global-loader').classList.add('hidden');
+            clearTimeout(loaderTimeout);
+            const loader = document.getElementById('global-loader');
+            if (loader) loader.classList.add('hidden');
+        }
+        function showLoader(text) {
+            document.getElementById('loader-text').innerText = text;
+            document.getElementById('global-loader').classList.remove('hidden');
         }
 
-        // 需要計算總經驗值的所有本地 Key
+        // 行內錯誤顯示輔助
+        function showAuthError(message) {
+            const errorBox = document.getElementById('auth-error-box');
+            const errorText = document.getElementById('auth-error-text');
+            errorText.innerText = message;
+            errorBox.classList.remove('hidden');
+            errorBox.classList.add('shake');
+            setTimeout(() => errorBox.classList.remove('shake'), 400);
+        }
+        function hideAuthError() {
+            document.getElementById('auth-error-box').classList.add('hidden');
+        }
+
+        // 密碼顯示/隱藏切換
+        window.togglePasswordVisibility = function(inputId) {
+            const input = document.getElementById(inputId);
+            if(input) {
+                input.type = input.type === 'password' ? 'text' : 'password';
+            }
+        }
+
+        // 經驗值對齊金鑰
         const expKeys = [
             'userExp', 'stdExp', 'advExp', 
             'sentBasicExp', 'sentStandardExp', 'sentAdvExp', 
@@ -439,7 +570,6 @@
             'loginBonusExp' 
         ];
 
-        // 8大模組對應打卡前綴
         const catMap = {1:'word', 2:'sent', 3:'rhet', 4:'para', 5:'read', 6:'listen', 7:'culture', 8:'write'};
         const pagesMap = {
             't_word_1': 'word_basic.html', 't_word_2': 'word_standard.html', 't_word_3': 'word_advanced.html',
@@ -452,8 +582,23 @@
             't_write_1': 'write_basic.html', 't_write_2': 'write_standard.html', 't_write_3': 'write_advanced.html'
         };
 
-        // 1. 初始化 Firebase 系統
+        // 1. 初始化
         document.addEventListener("DOMContentLoaded", async () => {
+            // 安全防卡死逾時設定 (5 秒)
+            loaderTimeout = setTimeout(() => {
+                const loader = document.getElementById('global-loader');
+                if(loader && !loader.classList.contains('hidden')) {
+                    hideLoader();
+                    document.getElementById('dashboard-screen').classList.add('hidden');
+                    document.getElementById('teacher-dashboard').classList.add('hidden');
+                    document.getElementById('login-screen').classList.remove('hidden');
+                    // 顯示離線模式提示
+                    const errorBox = document.getElementById('auth-error-box');
+                    document.getElementById('auth-error-text').innerText = "網路連線較慢，已為您切換至離線本地模式。";
+                    errorBox.classList.remove('hidden');
+                }
+            }, 5000);
+
             try {
                 if (Object.keys(firebaseConfig).length === 0) throw new Error("無 Firebase 設定");
                 app = initializeApp(firebaseConfig);
@@ -463,7 +608,7 @@
             } catch (error) {
                 console.error("Firebase 初始化失敗：", error);
                 hideLoader();
-                // 離線降級：直接顯示原版 Dashboard (訪客模式)
+                // 離線模式
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('dashboard-screen').classList.remove('hidden');
                 document.getElementById('dashboard-screen').classList.add('flex');
@@ -471,27 +616,40 @@
             }
         });
 
-        // 2. 身份驗證流程
+        // 2. 認證流 (Rule 3 - 偵測自訂專案以避免權杖不相符錯誤)
         async function initAuthFlow() {
+            // 偵測是否使用了自訂的 Firebase 專案（如果與預設專案不同代表是自訂的）
+            const isSystemProject = typeof __firebase_config !== 'undefined' && 
+                                    JSON.parse(__firebase_config).projectId === firebaseConfig.projectId;
+            
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    try {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } catch (tokenErr) {
-                        console.warn("自訂權杖驗證失敗 (可能由於使用了專屬 Firebase 金鑰)，切換至匿名登入...", tokenErr);
-                        await signInAnonymously(auth);
-                    }
+                // 如果是自訂專案，必須直接使用匿名登入，跳過系統安全權杖以防 mismatch
+                if (isSystemProject && typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
                 }
             } catch (authErr) {
-                console.error("驗證流程失敗:", authErr);
-                throw authErr;
+                console.error("驗證失敗，嘗試使用匿名登入...", authErr);
+                try {
+                    await signInAnonymously(auth);
+                } catch(e) {
+                    console.error("匿名登入亦失敗，切換為本地降級模式：", e);
+                    hideLoader();
+                }
             }
 
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     currentUserId = user.uid;
+                    // 讀取「記住我」帳號
+                    const rememberedUser = localStorage.getItem('__remembered_username');
+                    if (rememberedUser) {
+                        const userField = document.getElementById('login-username');
+                        if (userField) userField.value = rememberedUser;
+                        const remCheckbox = document.getElementById('login-remember-me');
+                        if (remCheckbox) remCheckbox.checked = true;
+                    }
                     await checkUserSession();
                 } else {
                     hideLoader();
@@ -499,14 +657,13 @@
             });
         }
 
-        // 3. 檢查本地是否存在活躍帳戶 (Session)
+        // 3. 會話控制
         async function checkUserSession() {
             const activeProfile = sessionStorage.getItem('activeProfile');
-            
             if (activeProfile) {
                 if (activeProfile === 'admin') {
                     hideLoader();
-                    showTeacherDashboard();
+                    window.showTeacherDashboard();
                 } else {
                     await saveLocalToCloud(activeProfile);
                     hideLoader();
@@ -522,46 +679,67 @@
             }
         }
 
-        // ==========================================
-        // 登入與註冊全互動邏輯 (無顯示版老師通道)
-        // ==========================================
-
+        // 大廳分頁切換
         window.switchAuthView = function(view) {
+            hideAuthError();
             const btnLogin = document.getElementById('tab-login');
             const btnReg = document.getElementById('tab-register');
             const vLogin = document.getElementById('view-login');
             const vReg = document.getElementById('view-register');
+            const vTeacher = document.getElementById('view-teacher-login');
+            const authTabs = document.getElementById('auth-tabs');
 
             if (view === 'login') {
+                authTabs.classList.remove('hidden');
                 btnLogin.className = "flex-1 py-4 text-lg auth-tab-active transition";
                 btnReg.className = "flex-1 py-4 text-lg auth-tab-inactive transition";
                 vLogin.classList.remove('hidden');
                 vReg.classList.add('hidden');
-            } else {
+                vTeacher.classList.add('hidden');
+            } else if (view === 'register') {
+                authTabs.classList.remove('hidden');
                 btnReg.className = "flex-1 py-4 text-lg auth-tab-active transition";
                 btnLogin.className = "flex-1 py-4 text-lg auth-tab-inactive transition";
                 vReg.classList.remove('hidden');
                 vLogin.classList.add('hidden');
+                vTeacher.classList.add('hidden');
+            } else if (view === 'teacher-portal') {
+                authTabs.classList.add('hidden');
+                vLogin.classList.add('hidden');
+                vReg.classList.add('hidden');
+                vTeacher.classList.remove('hidden');
             }
         };
 
-        // 登入
+        // 學生登入
         window.attemptLogin = async function() {
+            hideAuthError();
             const username = document.getElementById('login-username').value.trim();
             const pwdInput = document.getElementById('login-password').value.trim();
 
-            if (!username) return alert("請輸入你的登入帳號！");
-            if (!pwdInput) return alert("請輸入登入密碼！");
+            if (!username) return showAuthError("請輸入你的登入帳號！");
+            if (!pwdInput) return showAuthError("請輸入登入密碼！");
 
             // --- 秘密隱藏通道：老師後台 ---
             if (username === 'admin' && pwdInput === '1234') {
                 document.getElementById('login-password').value = '';
                 sessionStorage.setItem('activeProfile', 'admin');
-                showTeacherDashboard();
+                window.showTeacherDashboard();
                 return;
             }
 
-            if (!currentUserId) return alert("系統未連線，請稍後重試！");
+            if (!currentUserId) {
+                // 若雲端離線，允許本地驗證
+                const localStr = localStorage.getItem('_profile_' + username);
+                if(localStr) {
+                    const localData = JSON.parse(localStr);
+                    if(localData.password === pwdInput) {
+                        executeLogin(username, localData.data || {});
+                        return;
+                    }
+                }
+                return showAuthError("連線失敗或帳號不存在，請稍後重試！");
+            }
 
             const btn = document.querySelector('#view-login button');
             btn.innerText = "驗證中...";
@@ -573,26 +751,33 @@
                 const docSnap = await getDoc(docRef);
                 
                 if (!docSnap.exists()) {
-                    alert("找不到這個帳號！請確認是否輸入正確，或前往「註冊新帳戶」。");
+                    hideLoader();
+                    showAuthError("找不到此帳號！請檢查拼寫或重新註冊 🕵️‍♂️");
                     return;
                 }
 
                 const studentData = docSnap.data();
                 if (studentData.password !== pwdInput) {
-                    alert("❌ 密碼錯誤，請再試一次！");
+                    hideLoader();
+                    showAuthError("哎呀！密碼好像打錯了，再試一次吧 🕵️‍♂️");
                     return;
                 }
 
-                // 登入成功：清空當前瀏覽器遊戲進度，並將雲端進度覆寫至本地
+                // 「記住我」邏輯
+                const rememberMe = document.getElementById('login-remember-me').checked;
+                if (rememberMe) {
+                    localStorage.setItem('__remembered_username', username);
+                } else {
+                    localStorage.removeItem('__remembered_username');
+                }
+
                 localStorage.clear();
-                
                 if (studentData.raw) {
                     for (let key in studentData.raw) {
                         localStorage.setItem(key, studentData.raw[key]);
                     }
                 }
                 
-                // 記錄 Session，代表該學生正在遊玩
                 sessionStorage.setItem('activeProfile', username);
                 localStorage.setItem('__active_realname', studentData.realName);
                 
@@ -602,27 +787,44 @@
 
             } catch (e) {
                 console.error("登入失敗：", e);
-                alert("連接雲端失敗，請檢查網路！");
+                hideLoader();
+                showAuthError("網路連線失敗，請稍後再試！");
             } finally {
                 btn.innerText = "登入系統 🚀";
                 btn.disabled = false;
             }
         };
 
-        // 註冊
+        // 老師秘密通道登入
+        window.attemptTeacherLogin = function() {
+            hideAuthError();
+            const username = document.getElementById('teacher-username').value.trim();
+            const pwdInput = document.getElementById('teacher-password').value.trim();
+
+            if (username === 'admin' && pwdInput === '1234') {
+                document.getElementById('teacher-password').value = '';
+                sessionStorage.setItem('activeProfile', 'admin');
+                window.showTeacherDashboard();
+            } else {
+                showAuthError("❌ 教職員身份驗證失敗，請檢查帳號密碼！");
+            }
+        };
+
+        // 學生註冊
         window.createProfile = async function() {
+            hideAuthError();
             const realName = document.getElementById('register-realname').value.trim();
             const username = document.getElementById('register-username').value.trim();
             const pwdInput = document.getElementById('register-password').value.trim();
             
-            if (!realName) return alert("請務必填寫真實姓名喔！");
-            if (!username) return alert("請設定一組登入帳號！");
-            if (!pwdInput) return alert("請設定一組登入密碼！");
-            if (username.length > 15 || username.includes('/')) return alert("帳號格式不正確，請保持在15個字元以內且勿包含特殊符號。");
-            if (pwdInput.length > 15) return alert("密碼不能超過15個字元喔！");
-            if (username.toLowerCase() === 'admin') return alert("不能使用此保留名稱喔！");
+            if (!realName) return showAuthError("請填寫你的真實姓名！");
+            if (!username) return showAuthError("請設定你的登入帳號！");
+            if (!pwdInput) return showAuthError("請設定你的登入密碼！");
+            if (username.length > 15 || username.includes('/')) return showAuthError("帳號必須在15字以內且不含斜線。");
+            if (pwdInput.length > 15) return showAuthError("密碼最長15個字。");
+            if (username.toLowerCase() === 'admin') return showAuthError("不能使用此保留名稱喔！");
 
-            if (!currentUserId) return alert("系統未連線，請稍後重試！");
+            if (!currentUserId) return showAuthError("系統未連線，請稍後重試！");
 
             const btn = document.querySelector('#view-register button');
             btn.innerText = "創建中...";
@@ -633,7 +835,8 @@
                 const docSnap = await getDoc(docRef);
                 
                 if (docSnap.exists()) {
-                    alert("這個登入帳號已經有人使用了！請換一個帳號名稱。");
+                    hideLoader();
+                    showAuthError("此帳號已被註冊！請換一個帳號名稱。");
                     return;
                 }
 
@@ -644,7 +847,7 @@
                     totalExp: 0,
                     badges: 0,
                     cats: { word:0, sent:0, rhet:0, para:0, read:0, listen:0, culture:0, write:0 },
-                    raw: {}, // 空進度
+                    raw: {},
                     lastUpdated: new Date().toISOString()
                 };
 
@@ -663,7 +866,8 @@
 
             } catch (e) {
                 console.error(e);
-                alert("創建帳戶失敗，請稍後再試。");
+                hideLoader();
+                showAuthError("創建失敗，請稍後重試！");
             } finally {
                 btn.innerText = "創建並登入 ✨";
                 btn.disabled = false;
@@ -677,6 +881,7 @@
             
             if (confirm(confirmMsg)) {
                 if (activeProfile && activeProfile !== 'admin') {
+                    showLoader("儲存最新進度...");
                     await saveLocalToCloud(activeProfile);
                 }
                 
@@ -688,30 +893,19 @@
                 document.getElementById('teacher-dashboard').classList.add('hidden');
                 document.getElementById('teacher-dashboard').classList.remove('flex');
                 document.getElementById('login-screen').classList.remove('hidden');
+                window.switchAuthView('login');
+                hideLoader();
             }
         };
 
-        // ==========================================
-        // 核心同步引擎：本地 localStorage <=> 雲端 Firestore
-        // ==========================================
-
-        window.manualSyncToCloud = async function() {
-            const activeUser = sessionStorage.getItem('activeProfile');
-            if (activeUser && activeUser !== 'admin') {
-                await saveLocalToCloud(activeUser);
-                alert("✅ 雲端備份成功！你的進度已安全儲存。");
-            }
-        };
-
-        // 將當前 localStorage 備份到雲端
+        // 自動上傳資料
         async function saveLocalToCloud(username) {
             if (!currentUserId || !username || username === 'admin') return;
-            
             try {
                 let rawData = {};
                 for (let i = 0; i < localStorage.length; i++) {
                     let k = localStorage.key(i);
-                    if (k !== '__active_realname') {
+                    if (k !== '__active_realname' && k !== '__remembered_username') {
                         rawData[k] = localStorage.getItem(k);
                     }
                 }
@@ -750,16 +944,22 @@
 
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', username);
                 await setDoc(docRef, exportObj, { merge: true });
-                console.log(`[Cloud Sync] 成功將 ${username} 的進度備份至雲端。`);
-
             } catch (e) {
                 console.error("[Cloud Sync] 備份失敗：", e);
             }
         }
 
-        // ==========================================
-        // 每日登入獎勵系統
-        // ==========================================
+        window.manualSyncToCloud = async function() {
+            const activeUser = sessionStorage.getItem('activeProfile');
+            if (activeUser && activeUser !== 'admin') {
+                showLoader("雲端備份中...");
+                await saveLocalToCloud(activeUser);
+                hideLoader();
+                alert("✅ 雲端備份成功！你的進度已安全儲存。");
+            }
+        };
+
+        // 每日登入
         function checkDailyLogin() {
             const today = new Date().toLocaleDateString(); 
             const lastLogin = localStorage.getItem('lastLoginDate');
@@ -786,9 +986,7 @@
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
 
-        // ==========================================
-        // 顯示學生主控台與 UI 更新
-        // ==========================================
+        // 學生視窗
         function showDashboard(profileName) {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('teacher-dashboard').classList.add('hidden');
@@ -797,7 +995,8 @@
             document.getElementById('dashboard-screen').classList.remove('hidden');
             document.getElementById('dashboard-screen').classList.add('flex');
             
-            document.getElementById('profile-display-name').innerText = profileName;
+            const realName = localStorage.getItem('__active_realname');
+            document.getElementById('profile-display-name').innerText = realName ? realName : profileName;
             updateDashboardUI();
         }
 
@@ -830,7 +1029,6 @@
                         if(el) {
                             el.className = 'badge-unlocked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-black text-lg md:text-xl select-none transition-all transform pop';
                             el.innerText = '🏅';
-                            el.title = "已精通";
                         }
                     } else {
                         if(el) {
@@ -874,7 +1072,7 @@
                 for(let j = 1; j <= 3; j++) {
                     let id = 't_' + catMap[i] + '_' + j;
                     if(localStorage.getItem(id) !== 'true') {
-                        saveAndGo(pagesMap[id]);
+                        window.saveAndGo(pagesMap[id]);
                         return;
                     }
                 }
@@ -890,10 +1088,22 @@
             window.location.href = url;
         };
 
+        window.resetAllProgress = async function() {
+            const activeUser = sessionStorage.getItem('activeProfile');
+            if(confirm(`【警告】確定要將帳戶的所有進度清零嗎？此操作將覆蓋雲端資料且無法復原！`)) {
+                localStorage.clear(); 
+                if (activeUser && activeUser !== 'admin') {
+                    await saveLocalToCloud(activeUser); 
+                }
+                alert('當前帳戶紀錄已成功清除！');
+                location.reload();
+            }
+        };
+
         // ==========================================
         // 🌟 老師專屬管理與班級能力分析後台邏輯
         // ==========================================
-        function showTeacherDashboard() {
+        window.showTeacherDashboard = function() {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.add('hidden');
             
@@ -908,7 +1118,7 @@
             if (!currentUserId) return alert("系統未連線！");
             
             const tbody = document.getElementById('teacher-table-body');
-            tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-indigo-600 font-bold"><span class="loader align-middle mr-2"></span>正在從雲端同步全班數據...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-indigo-600 font-bold"><span class="loader align-middle mr-2"></span>正在同步雲端全班學情數據...</td></tr>';
             
             try {
                 const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'students');
@@ -949,6 +1159,9 @@
 
                 studentsList.sort((a, b) => (b.totalExp || 0) - (a.totalExp || 0));
                 
+                // 排行榜緩存
+                window.allStudentsCache = [...studentsList];
+                
                 document.getElementById('total-students-count').innerText = `雲端註冊人數：${studentsList.length} 人`;
                 
                 if (studentsList.length === 0) {
@@ -964,6 +1177,17 @@
                     let totalExp = st.totalExp || 0;
                     let badges = st.badges || 0;
                     let realName = st.realName || st.username;
+                    
+                    // 最後活躍時間格式化
+                    let lastActiveTime = "無紀錄";
+                    if(st.lastUpdated) {
+                        try {
+                            const dateObj = new Date(st.lastUpdated);
+                            lastActiveTime = dateObj.toLocaleString('zh-HK', { hour12: false });
+                        } catch(e){
+                            lastActiveTime = st.lastUpdated;
+                        }
+                    }
 
                     let level = Math.floor(totalExp / 500) + 1;
                     let title = "語文見習生";
@@ -991,9 +1215,10 @@
                                     <div class="bg-emerald-400 h-full" style="width: ${pct}%"></div>
                                 </div>
                             </td>
-                            <td class="p-3 md:p-4"><span class="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded font-bold whitespace-nowrap">${title}</span></td>
-                            <td class="p-3 md:p-4">
-                                <button onclick="deleteStudentData('${st.username}')" class="text-rose-500 hover:text-white hover:bg-rose-500 border border-rose-500 px-2 md:px-3 py-1 rounded transition text-xs md:text-sm whitespace-nowrap">刪除</button>
+                            <td class="p-3 md:p-4 text-slate-500 text-xs md:text-sm">${lastActiveTime}</td>
+                            <td class="p-3 md:p-4 space-x-1">
+                                <button onclick="drilldownStudentDetail('${st.username}')" class="text-indigo-600 hover:text-white hover:bg-indigo-600 border border-indigo-600 px-2 py-1 rounded transition text-xs font-black shadow-sm">📊 詳情</button>
+                                <button onclick="deleteStudentData('${st.username}')" class="text-rose-500 hover:text-white hover:bg-rose-500 border border-rose-500 px-2 py-1 rounded transition text-xs font-black shadow-sm">❌ 刪除</button>
                             </td>
                         </tr>
                     `;
@@ -1072,6 +1297,225 @@
                 `;
             });
         }
+
+        // ==========================================
+        // 🌟 學生專屬個人詳情鑽取與 AI 分析 (Drill-down)
+        // ==========================================
+        window.drilldownStudentDetail = function(username) {
+            const student = window.allStudentsCache.find(s => s.username === username);
+            if (!student) return alert("找不到學生資料！");
+
+            document.getElementById('sd-realname').innerText = student.realName || student.username;
+            document.getElementById('sd-username').innerText = student.username;
+            document.getElementById('sd-exp').innerText = student.totalExp || 0;
+
+            const rawData = student.raw || {};
+
+            // 🤖 核心升級：AI 智能掃描作答陣列
+            let perfectCount = 0, hintCount = 0, wrongCount = 0;
+            let skillStats = {
+                '字詞基礎': { wrong: 0, total: 0 },
+                '句子語法': { wrong: 0, total: 0 },
+                '修辭標點': { wrong: 0, total: 0 },
+                '段落實用': { wrong: 0, total: 0 },
+                '閱讀理解': { wrong: 0, total: 0 },
+                '聆聽與說': { wrong: 0, total: 0 },
+                '文化古詩': { wrong: 0, total: 0 },
+                '綜合寫作': { wrong: 0, total: 0 }
+            };
+
+            const keyMap = {
+                'quest': '字詞基礎', 'stdQuest': '字詞基礎', 'advQuest': '字詞基礎',
+                'sent': '句子語法',
+                'rhet': '修辭標點',
+                'para': '段落實用',
+                'read': '閱讀理解',
+                'listen': '聆聽與說', 'speak': '聆聽與說',
+                'poem': '文化古詩', 'culture': '文化古詩',
+                'seq': '綜合寫作', 'fw': '綜合寫作', 'ex': '綜合寫作', 'tr': '綜合寫作'
+            };
+
+            for (let key in rawData) {
+                try {
+                    let parsed = JSON.parse(rawData[key]);
+                    if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'number') {
+                        let matchedSkill = null;
+                        for (let prefix in keyMap) {
+                            if (key.toLowerCase().includes(prefix.toLowerCase())) {
+                                matchedSkill = keyMap[prefix];
+                                break;
+                            }
+                        }
+
+                        parsed.forEach(status => {
+                            if (status === 1 || status === 2 || status === -1) {
+                                if (status === 1) perfectCount++;
+                                else if (status === 2) hintCount++;
+                                else if (status === -1) wrongCount++;
+                                
+                                if (matchedSkill) {
+                                    skillStats[matchedSkill].total++;
+                                    if (status === -1) skillStats[matchedSkill].wrong++;
+                                }
+                            }
+                        });
+                    }
+                } catch(e) {}
+            }
+
+            document.getElementById('sd-perfect-count').innerText = perfectCount;
+            document.getElementById('sd-hint-count').innerText = hintCount;
+            document.getElementById('sd-wrong-count').innerText = wrongCount;
+
+            let totalAns = perfectCount + hintCount + wrongCount;
+            let perfectRate = totalAns > 0 ? Math.round((perfectCount / totalAns) * 100) : 0;
+            
+            let weakestSkill = "無";
+            let highestWrongRate = -1;
+            for (let sk in skillStats) {
+                if (skillStats[sk].total >= 3) { 
+                    let rate = skillStats[sk].wrong / skillStats[sk].total;
+                    if (rate > highestWrongRate) {
+                        highestWrongRate = rate;
+                        weakestSkill = sk;
+                    }
+                }
+            }
+
+            let aiReport = "";
+            if (totalAns === 0) {
+                aiReport = "該生目前尚未開始進行任何具體題目的作答，建議提醒學生進入各模組完成任務。";
+            } else {
+                aiReport = `該生共進行了 <strong>${totalAns}</strong> 次有效答題。其中 <strong>一次答對率為 ${perfectRate}%</strong>。`;
+                if (highestWrongRate > 0.15) {
+                    aiReport += `<br><br><span class="text-rose-600">⚠️ <strong>弱項警告：</strong></span> 根據大數據分析，該生在「<strong>${weakestSkill}</strong>」環節的失誤率最高（達 ${Math.round(highestWrongRate * 100)}%）。建議後續針對此範疇進行補底與加強特訓。`;
+                } else {
+                    aiReport += `<br><br><span class="text-emerald-600">✨ <strong>綜合評價：</strong></span> 該生目前表現非常優異，各項能力發展均衡，沒有明顯的弱點，請繼續保持優良的學習狀態！`;
+                }
+            }
+            document.getElementById('sd-ai-report').innerHTML = aiReport;
+
+            // 渲染八大能力分析
+            const skillContainer = document.getElementById('sd-skills-container');
+            skillContainer.innerHTML = '';
+            const skillNames = {
+                word: '字詞基礎', sent: '句子語法', rhet: '修辭標點', para: '段落實用',
+                read: '閱讀理解', listen: '聆聽與說', culture: '文化古詩', write: '綜合寫作'
+            };
+
+            const cats = student.cats || {};
+            for(let key in skillNames) {
+                let score = cats[key] || 0;
+                let percent = Math.min(100, Math.round((score / 450) * 100)); // 假設450為精通標準
+                let colorClass = percent >= 80 ? 'bg-emerald-500' : (percent >= 50 ? 'bg-amber-500' : 'bg-rose-500');
+                
+                skillContainer.innerHTML += `
+                    <div class="flex flex-col p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-center mb-1 text-sm font-bold">
+                            <span class="text-slate-600">${skillNames[key]}</span>
+                            <span class="text-slate-800">${score} EXP (${percent}%)</span>
+                        </div>
+                        <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                            <div class="${colorClass} h-full rounded-full transition-all" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 渲染 24 關卡精通狀態
+            const badgeContainer = document.getElementById('sd-badges-container');
+            badgeContainer.innerHTML = '';
+            
+            const badgeNamesMap = {
+                't_word_1': '字詞 (補底)', 't_word_2': '字詞 (標準)', 't_word_3': '字詞 (拔尖)',
+                't_sent_1': '句子 (補底)', 't_sent_2': '句子 (標準)', 't_sent_3': '句子 (拔尖)',
+                't_rhet_1': '修辭 (補底)', 't_rhet_2': '修辭 (標準)', 't_rhet_3': '修辭 (拔尖)',
+                't_para_1': '段落 (補底)', 't_para_2': '段落 (標準)', 't_para_3': '段落 (拔尖)',
+                't_read_1': '閱讀 (補底)', 't_read_2': '閱讀 (標準)', 't_read_3': '閱讀 (拔尖)',
+                't_listen_1': '聆聽 (補底)', 't_listen_2': '聆聽 (標準)', 't_listen_3': '聆聽 (拔尖)',
+                't_culture_1': '文化 (補底)', 't_culture_2': '文化 (標準)', 't_culture_3': '文化 (拔尖)',
+                't_write_1': '寫作 (補底)', 't_write_2': '寫作 (標準)', 't_write_3': '寫作 (拔尖)'
+            };
+
+            for(let key in badgeNamesMap) {
+                const isPassed = rawData[key] === 'true';
+                const statusIcon = isPassed ? '<span class="text-emerald-500">🏅 已精通</span>' : '<span class="text-slate-300">🔒 未解鎖</span>';
+                const borderClass = isPassed ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200 bg-white';
+                badgeContainer.innerHTML += `
+                    <div class="border rounded-xl p-2.5 flex items-center justify-between text-xs font-bold ${borderClass}">
+                        <span class="text-slate-700">${badgeNamesMap[key]}</span>
+                        <span>${statusIcon}</span>
+                    </div>
+                `;
+            }
+
+            // 開啟 Modal
+            const modal = document.getElementById('student-detail-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.querySelector('.transform').classList.remove('scale-95');
+            }, 10);
+        };
+
+        window.closeStudentDetailModal = function() {
+            const modal = document.getElementById('student-detail-modal');
+            modal.querySelector('.transform').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        };
+
+        // ==========================================
+        // 🌟 新增：一鍵 CSV 數據報表下載
+        // ==========================================
+        window.exportRankingToCSV = function() {
+            if (!window.allStudentsCache || window.allStudentsCache.length === 0) {
+                alert("目前無數據可供匯出，請先點擊更新數據！");
+                return;
+            }
+
+            let csvContent = "\uFEFF"; // 避免 Excel 中文亂碼
+            csvContent += "排名,姓名,登入帳號,總經驗值(EXP),精通關卡數(滿分24),字詞得分,句子得分,修辭得分,段落得分,閱讀得分,聆聽得分,文化古詩得分,綜合寫作得分,最後在線時間\n";
+
+            window.allStudentsCache.forEach((st, idx) => {
+                let realName = st.realName || st.username;
+                let lastActiveTime = "無紀錄";
+                if(st.lastUpdated) {
+                    try {
+                        lastActiveTime = new Date(st.lastUpdated).toLocaleString('zh-HK', { hour12: false });
+                    } catch(e){}
+                }
+                
+                let cats = st.cats || {};
+                let row = [
+                    idx + 1,
+                    `"${realName}"`,
+                    `"${st.username}"`,
+                    st.totalExp || 0,
+                    st.badges || 0,
+                    cats.word || 0,
+                    cats.sent || 0,
+                    cats.rhet || 0,
+                    cats.para || 0,
+                    cats.read || 0,
+                    cats.listen || 0,
+                    cats.culture || 0,
+                    cats.write || 0,
+                    `"${lastActiveTime}"`
+                ];
+                csvContent += row.join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `小學語文特訓平台_班級成績報表_${new Date().toLocaleDateString()}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
 
         window.deleteStudentData = async function(username) {
             if (confirm(`⚠️ 警告：確定要從雲端徹底刪除學生「${username}」的帳戶和所有進度嗎？此操作無法復原！`)) {
