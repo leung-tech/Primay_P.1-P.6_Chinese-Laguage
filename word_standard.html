@@ -144,45 +144,46 @@
         </div>
 
         <!-- ================= 模式 2：常見字寫字板 ================= -->
-        <div id="sandbox-wrapper" class="hidden w-full h-full">
-            <div class="w-full max-w-6xl mx-auto flex flex-col lg:flex-row gap-4 lg:gap-6 h-full min-h-[500px]">
+        <div id="sandbox-wrapper" class="hidden w-full h-full pb-6">
+            <div class="w-full max-w-6xl mx-auto flex flex-col lg:flex-row gap-4 lg:gap-6 h-full min-h-[600px]">
                 
                 <!-- 左側：搜尋列 + 字庫列表 (佈局優化) -->
-                <div class="lg:w-1/3 flex flex-col gap-3 min-h-[300px] lg:h-[600px]">
-                    <div class="bg-white rounded-xl shadow-sm border border-blue-200 p-3 flex flex-col gap-2 relative">
+                <div class="lg:w-1/3 flex flex-col gap-3 h-full lg:max-h-[700px]">
+                    <div class="bg-white rounded-xl shadow-sm border border-blue-200 p-3 flex flex-col gap-2 relative flex-shrink-0">
                         <h3 class="font-bold text-blue-800 text-sm">🔍 搜尋小學習字表：</h3>
                         <div class="flex gap-2">
                             <input type="text" id="custom-char-input" maxlength="1" placeholder="輸入任何中文字..." class="flex-1 px-3 py-2 border-2 border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-lg text-center font-bold">
-                            <button onclick="searchCustomChar()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-sm transition">生成</button>
+                            <button onclick="searchCustomChar()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-sm transition whitespace-nowrap">生成</button>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-2 flex overflow-x-auto no-scrollbar gap-2 flex-shrink-0">
-                        <button onclick="filterWords('all')" id="flt-all" class="filter-btn filter-active px-4 py-2 rounded-lg whitespace-nowrap text-sm border">全部</button>
-                        <button onclick="filterWords('nature')" id="flt-nature" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">自然</button>
-                        <button onclick="filterWords('action')" id="flt-action" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">動作</button>
-                        <button onclick="filterWords('body')" id="flt-body" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">身體</button>
-                        <button onclick="filterWords('object')" id="flt-object" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">物品</button>
-                        <button onclick="filterWords('time')" id="flt-time" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">時間</button>
-                        <button onclick="filterWords('emotion')" id="flt-emotion" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">情感</button>
+                    <!-- 🌟 修正：改為 flex-wrap 自動換行，避免擠壓或隱藏 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-2 flex flex-wrap justify-center gap-2 flex-shrink-0">
+                        <button onclick="filterWords('all')" id="flt-all" class="filter-btn filter-active px-3 py-1.5 rounded-lg text-sm border">全部</button>
+                        <button onclick="filterWords('nature')" id="flt-nature" class="filter-btn bg-slate-50 text-slate-600 px-3 py-1.5 rounded-lg text-sm border">自然</button>
+                        <button onclick="filterWords('action')" id="flt-action" class="filter-btn bg-slate-50 text-slate-600 px-3 py-1.5 rounded-lg text-sm border">動作</button>
+                        <button onclick="filterWords('body')" id="flt-body" class="filter-btn bg-slate-50 text-slate-600 px-3 py-1.5 rounded-lg text-sm border">身體</button>
+                        <button onclick="filterWords('object')" id="flt-object" class="filter-btn bg-slate-50 text-slate-600 px-3 py-1.5 rounded-lg text-sm border">物品</button>
+                        <button onclick="filterWords('time')" id="flt-time" class="filter-btn bg-slate-50 text-slate-600 px-3 py-1.5 rounded-lg text-sm border">時間</button>
+                        <button onclick="filterWords('emotion')" id="flt-emotion" class="filter-btn bg-slate-50 text-slate-600 px-3 py-1.5 rounded-lg text-sm border">情感</button>
                     </div>
                     
-                    <div class="bg-white rounded-xl shadow-md border-2 border-slate-200 p-4 flex-1 overflow-y-auto no-scrollbar min-h-[250px]">
-                        <!-- RWD: grid-cols 改良，讓手機和平台能舒適顯示字格 -->
-                        <div id="word-grid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-3"></div>
+                    <div class="bg-white rounded-xl shadow-md border-2 border-slate-200 p-3 flex-1 overflow-y-auto no-scrollbar min-h-[250px]">
+                        <!-- 🌟 修正：縮小字卡間距並增加列數，提升顯示密度 -->
+                        <div id="word-grid" class="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-4 xl:grid-cols-5 gap-2"></div>
                     </div>
                 </div>
 
-                <!-- 右側：寫字板 -->
-                <div class="lg:w-2/3 bg-white rounded-2xl shadow-xl border-t-8 border-blue-600 p-4 lg:p-6 flex flex-col items-center justify-center relative min-h-[400px]">
+                <!-- 右側：寫字板 (固定高度與置中優化) -->
+                <div class="lg:w-2/3 bg-white rounded-2xl shadow-xl border-t-8 border-blue-600 p-4 lg:p-8 flex flex-col items-center justify-center relative min-h-[450px] h-full lg:max-h-[700px]">
                     <div id="sandbox-placeholder" class="text-slate-400 font-bold text-xl text-center flex flex-col items-center gap-4">
                         <span class="text-6xl animate-bounce">👈</span>請從左側選擇，或直接搜尋中文字
                     </div>
-                    <div id="sandbox-content" class="hidden w-full flex flex-col items-center">
-                        <div class="flex justify-between w-full mb-4 items-end border-b-2 border-slate-100 pb-4">
-                            <div>
-                                <h2 id="sb-char" class="text-5xl lg:text-6xl font-black text-slate-800 mb-3">字</h2>
-                                <div class="flex flex-wrap gap-2">
+                    <div id="sandbox-content" class="hidden w-full flex-col items-center justify-center h-full">
+                        <div class="flex justify-between w-full mb-6 items-center border-b-2 border-slate-100 pb-4">
+                            <div class="flex flex-col md:flex-row items-center md:items-end gap-3 md:gap-4">
+                                <h2 id="sb-char" class="text-5xl lg:text-7xl font-black text-slate-800 leading-none">字</h2>
+                                <div class="flex flex-wrap gap-2 items-center">
                                     <span class="bg-orange-100 text-orange-800 px-3 py-1 rounded-lg border border-orange-200 font-bold text-sm lg:text-base">部首：<span id="sb-radical"></span></span>
                                     <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-lg border border-indigo-200 font-bold text-sm lg:text-base" id="sb-english">English</span>
                                 </div>
@@ -190,13 +191,13 @@
                             <button onclick="speakText(document.getElementById('sb-char').innerText)" class="tts-btn bg-blue-100 text-blue-700 w-14 h-14 rounded-full text-3xl flex items-center justify-center shadow-sm border-2 border-blue-200">🔊</button>
                         </div>
                         
-                        <!-- Canvas 容器加入 RWD 尺寸限制，避免溢出 -->
-                        <div class="relative w-full max-w-[280px] aspect-square md:w-80 md:h-80 md:max-h-[350px] mi-zi-ge mb-6 shadow-inner touch-none" id="sandbox-canvas"></div>
+                        <!-- 🌟 修正：強制固定米字格的長寬，確保完美正方形且不溢出 -->
+                        <div class="relative w-[240px] h-[240px] md:w-[320px] md:h-[320px] mi-zi-ge mb-8 shadow-inner touch-none mx-auto flex-shrink-0" id="sandbox-canvas"></div>
                         
-                        <div class="flex flex-wrap justify-center gap-3 w-full">
-                            <button onclick="sbWriter.animateCharacter()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-xl shadow transition flex items-center gap-2 text-lg">👀 看筆順</button>
-                            <button onclick="startSandboxQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow transition flex items-center gap-2 text-lg">✍️ 試寫</button>
-                            <button onclick="sbWriter.hideCharacter(); sbWriter.showCharacter()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-6 rounded-xl transition text-lg">🔄 重設</button>
+                        <div class="flex flex-wrap justify-center gap-3 w-full mt-auto">
+                            <button onclick="sbWriter.animateCharacter()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-xl shadow transition flex items-center gap-2 text-base md:text-lg">👀 看筆順</button>
+                            <button onclick="startSandboxQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow transition flex items-center gap-2 text-base md:text-lg">✍️ 試寫</button>
+                            <button onclick="sbWriter.hideCharacter(); sbWriter.showCharacter()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-6 rounded-xl transition text-base md:text-lg">🔄 重設</button>
                         </div>
                         <div id="sb-feedback" class="mt-4 text-xl font-bold text-blue-600 h-8 opacity-0 transition-opacity"></div>
                     </div>
@@ -1094,13 +1095,13 @@
 
         function filterWords(category) {
             document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('filter-active', 'bg-blue-500', 'text-white');
+                btn.classList.remove('filter-active', 'bg-blue-500', 'text-white', 'border-blue-600');
                 btn.classList.add('bg-slate-50', 'text-slate-600');
             });
             let activeBtn = document.getElementById('flt-' + category);
             if (activeBtn) {
                 activeBtn.classList.remove('bg-slate-50', 'text-slate-600');
-                activeBtn.classList.add('filter-active');
+                activeBtn.classList.add('filter-active', 'bg-blue-500', 'text-white', 'border-blue-600');
             }
 
             const grid = document.getElementById('word-grid');
@@ -1108,7 +1109,8 @@
             parsedWords.forEach((item) => {
                 if (category === 'all' || item.cat === category) {
                     const itemStr = encodeURIComponent(JSON.stringify(item));
-                    html += `<button onclick="selectSandboxChar('${itemStr}')" class="bg-slate-50 border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-2xl lg:text-3xl font-bold py-3 lg:py-4 rounded-xl transition shadow-sm text-slate-700">${item.char}</button>`;
+                    // 🌟 修正：縮小字卡的 padding 與字體，讓畫面更緊湊精緻
+                    html += `<button onclick="selectSandboxChar('${itemStr}')" class="bg-slate-50 border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-xl md:text-2xl font-bold py-2 rounded-xl transition shadow-sm text-slate-700">${item.char}</button>`;
                 }
             });
             grid.innerHTML = html;
@@ -1130,6 +1132,7 @@
         function selectSandboxChar(itemStr) {
             document.getElementById('sandbox-placeholder').classList.add('hidden');
             document.getElementById('sandbox-content').classList.remove('hidden');
+            document.getElementById('sandbox-content').classList.add('flex');
             
             const data = JSON.parse(decodeURIComponent(itemStr));
             document.getElementById('sb-char').innerText = data.char;
@@ -1141,7 +1144,8 @@
             const canvasDiv = document.getElementById('sandbox-canvas');
             canvasDiv.innerHTML = ''; 
             
-            const size = window.innerWidth < 768 ? 256 : 320; 
+            // 🌟 修正：確保生成的畫布大小與 CSS 容器完全吻合
+            const size = window.innerWidth < 768 ? 240 : 320; 
             
             try {
                 sbWriter = HanziWriter.create('sandbox-canvas', data.char, {
