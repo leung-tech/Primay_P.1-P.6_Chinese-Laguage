@@ -76,8 +76,8 @@
             </div>
         </div>
         <div class="flex w-full bg-slate-100 border-b border-slate-300">
-            <button onclick="switchMode('quest')" id="tab-quest" class="tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700">🚀 深度語感特訓 (210題)</button>
-            <button onclick="switchMode('sandbox')" id="tab-sandbox" class="tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200">📖 高級字詞寶庫</button>
+            <button onclick="window.switchMode('quest')" id="tab-quest" class="tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700">🚀 深度語感特訓 (210題)</button>
+            <button onclick="window.switchMode('sandbox')" id="tab-sandbox" class="tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200">📖 高級字詞寶庫</button>
         </div>
         <div id="progress-container" class="w-full bg-slate-200 h-2">
             <div id="progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
@@ -87,9 +87,14 @@
     <!-- 主畫面區 -->
     <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
         
+        <!-- 模式 1：答題目錄 -->
         <div id="quest-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
             <div id="quest-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
-                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">🚀 深度語感與精準表達特訓</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">🚀 深度語感與精準表達特訓</h2>
+                    <button onclick="window.showTutorial('intro')" class="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-purple-300 hover:bg-purple-200 transition">📘 學習錦囊</button>
+                </div>
+                
                 <div class="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
                     <div class="text-purple-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
                     <div class="flex flex-wrap gap-4 flex-1">
@@ -103,52 +108,62 @@
             <div id="quest-play" class="w-full hidden flex-col items-center"></div>
         </div>
 
-        <div id="sandbox-wrapper" class="hidden w-full h-full">
-            <div class="w-full max-w-6xl mx-auto flex flex-col lg:flex-row gap-4 lg:gap-6 h-full min-h-[500px]">
-                <div class="lg:w-1/3 flex flex-col gap-3 min-h-[300px] lg:h-[600px]">
-                    <div class="bg-white rounded-xl shadow-sm border border-purple-200 p-3 flex flex-col gap-2 relative">
+        <!-- 模式 2：高級字庫沙盒 -->
+        <div id="sandbox-wrapper" class="hidden w-full h-full pb-6">
+            <div class="w-full max-w-6xl mx-auto flex flex-col lg:flex-row gap-4 lg:gap-6 h-full min-h-[600px]">
+                
+                <!-- 左側：搜尋列 + 字庫列表 (RWD 排版優化) -->
+                <div class="lg:w-1/3 flex flex-col gap-3 h-full lg:max-h-[700px]">
+                    <div class="bg-white rounded-xl shadow-sm border border-purple-200 p-3 flex flex-col gap-2 relative flex-shrink-0">
                         <h3 class="font-bold text-purple-800 text-sm">🔍 搜尋高級生字：</h3>
                         <div class="flex gap-2">
                             <input type="text" id="custom-char-input" maxlength="1" placeholder="輸入古文或罕見字..." class="flex-1 px-3 py-2 border-2 border-slate-200 rounded-lg focus:outline-none focus:border-purple-500 text-lg text-center font-bold">
-                            <button onclick="searchCustomChar()" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-purple-700 shadow-sm transition">生成</button>
+                            <button onclick="window.searchCustomChar()" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-purple-700 shadow-sm transition whitespace-nowrap">生成</button>
                         </div>
                     </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-2 flex overflow-x-auto no-scrollbar gap-2 flex-shrink-0">
-                        <button onclick="filterWords('all')" id="flt-all" class="filter-btn filter-active px-4 py-2 rounded-lg whitespace-nowrap text-sm border">全部</button>
-                        <button onclick="filterWords('advanced')" id="flt-advanced" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">深字</button>
-                        <button onclick="filterWords('classic')" id="flt-classic" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">古文</button>
-                        <button onclick="filterWords('emotion')" id="flt-emotion" class="filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border">情感</button>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-2 flex flex-wrap justify-center gap-2 flex-shrink-0">
+                        <button onclick="window.filterWords('all')" id="flt-all" class="filter-btn filter-active px-3 py-1.5 rounded-lg text-sm border">全部</button>
+                        <button onclick="window.filterWords('advanced')" id="flt-advanced" class="filter-btn bg-slate-50 text-slate-600 px-3 py-1.5 rounded-lg text-sm border">深字</button>
+                        <button onclick="window.filterWords('classic')" id="flt-classic" class="filter-btn bg-slate-50 text-slate-600 px-3 py-1.5 rounded-lg text-sm border">古文</button>
+                        <button onclick="window.filterWords('emotion')" id="flt-emotion" class="filter-btn bg-slate-50 text-slate-600 px-3 py-1.5 rounded-lg text-sm border">情感</button>
                     </div>
-                    <div class="bg-white rounded-xl shadow-md border-2 border-slate-200 p-4 flex-1 overflow-y-auto no-scrollbar min-h-[250px]">
-                        <div id="word-grid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 gap-2"></div>
+                    
+                    <div class="bg-white rounded-xl shadow-md border-2 border-slate-200 p-3 flex-1 overflow-y-auto no-scrollbar min-h-[250px]">
+                        <div id="word-grid" class="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-4 xl:grid-cols-5 gap-2"></div>
                     </div>
                 </div>
-                <div class="lg:w-2/3 bg-white rounded-2xl shadow-xl border-t-8 border-purple-600 p-4 lg:p-6 flex flex-col items-center justify-center relative min-h-[400px]">
+
+                <!-- 右側：寫字板 (固定高度與置中優化) -->
+                <div class="lg:w-2/3 bg-white rounded-2xl shadow-xl border-t-8 border-purple-600 p-4 lg:p-8 flex flex-col items-center justify-center relative min-h-[450px] h-full lg:max-h-[700px]">
                     <div id="sandbox-placeholder" class="text-slate-400 font-bold text-xl text-center flex flex-col items-center gap-4">
                         <span class="text-6xl animate-bounce">👈</span>請從左側選擇，或直接搜尋中文字
                     </div>
-                    <div id="sandbox-content" class="hidden w-full flex flex-col items-center">
-                        <div class="flex justify-between w-full mb-4 items-end border-b-2 border-slate-100 pb-4">
-                            <div>
-                                <h2 id="sb-char" class="text-5xl lg:text-6xl font-black text-slate-800 mb-3">字</h2>
-                                <div class="flex flex-wrap gap-2">
+                    <div id="sandbox-content" class="hidden w-full flex-col items-center justify-center h-full">
+                        <div class="flex justify-between w-full mb-6 items-center border-b-2 border-slate-100 pb-4">
+                            <div class="flex flex-col md:flex-row items-center md:items-end gap-3 md:gap-4">
+                                <h2 id="sb-char" class="text-5xl lg:text-7xl font-black text-slate-800 leading-none">字</h2>
+                                <div class="flex flex-wrap gap-2 items-center">
                                     <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-lg border border-purple-200 font-bold text-sm lg:text-base">部首：<span id="sb-radical"></span></span>
                                     <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-lg border border-indigo-200 font-bold text-sm lg:text-base" id="sb-english">English</span>
                                 </div>
                             </div>
-                            <button onclick="speakText(document.getElementById('sb-char').innerText)" class="tts-btn bg-purple-100 text-purple-700 w-14 h-14 rounded-full text-3xl flex items-center justify-center shadow-sm border-2 border-purple-200">🔊</button>
+                            <button onclick="window.speakText(document.getElementById('sb-char').innerText)" class="tts-btn bg-purple-100 text-purple-700 w-14 h-14 rounded-full text-3xl flex items-center justify-center shadow-sm border-2 border-purple-200">🔊</button>
                         </div>
-                        <div class="relative w-64 h-64 md:w-80 md:h-80 mi-zi-ge mb-6 shadow-inner touch-none" id="sandbox-canvas"></div>
-                        <div class="flex flex-wrap justify-center gap-3 w-full">
-                            <button onclick="sbWriter.animateCharacter()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-xl shadow transition flex items-center gap-2 text-lg">👀 看筆順</button>
-                            <button onclick="startSandboxQuiz()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow transition flex items-center gap-2 text-lg">✍️ 試寫</button>
-                            <button onclick="sbWriter.hideCharacter(); sbWriter.showCharacter()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-6 rounded-xl transition text-lg">🔄 重設</button>
+                        
+                        <div class="relative w-[240px] h-[240px] md:w-[320px] md:h-[320px] mi-zi-ge mb-8 shadow-inner touch-none mx-auto flex-shrink-0" id="sandbox-canvas"></div>
+                        
+                        <div class="flex flex-wrap justify-center gap-3 w-full mt-auto">
+                            <button onclick="sbWriter.animateCharacter()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-xl shadow transition flex items-center gap-2 text-base md:text-lg">👀 看筆順</button>
+                            <button onclick="window.startSandboxQuiz()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow transition flex items-center gap-2 text-base md:text-lg">✍️ 試寫</button>
+                            <button onclick="sbWriter.hideCharacter(); sbWriter.showCharacter()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-6 rounded-xl transition text-base md:text-lg">🔄 重設</button>
                         </div>
                         <div id="sb-feedback" class="mt-4 text-xl font-bold text-purple-600 h-8 opacity-0 transition-opacity"></div>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 
     <!-- 學習小教學 Modal -->
@@ -156,23 +171,23 @@
         <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="tutorial-content">
             <div class="flex justify-between items-center mb-4 border-b-2 border-purple-100 pb-3">
                 <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-purple-600 flex items-center gap-2">📘 學習錦囊</h2>
-                <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
+                <button onclick="window.closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
             </div>
             <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4"></div>
             <div class="mt-6 pt-4 border-t-2 border-slate-100">
-                <button onclick="closeTutorial()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-purple-800 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
+                <button onclick="window.closeTutorial()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-purple-800 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
             </div>
         </div>
     </div>
 
     <!-- 答對全解析 Modal -->
     <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity">
-        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl text-center transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="feedback-content">
-            <div id="feedback-icon" class="text-6xl mb-2">🎉</div>
-            <h2 id="feedback-title" class="text-2xl md:text-3xl font-black text-slate-800 mb-2">答對了！</h2>
-            <div id="feedback-desc" class="text-slate-600 font-bold mb-4 text-base md:text-lg leading-relaxed text-left overflow-y-auto pr-2 flex-1 w-full"></div>
-            <div class="flex gap-3 w-full mt-2 pt-4 border-t border-slate-100">
-                <button onclick="backToDirectoryFromModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition text-lg">⬅️ 目錄</button>
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform" id="feedback-content">
+            <div id="feedback-icon" class="text-7xl mb-4">🎉</div>
+            <h2 id="feedback-title" class="text-3xl font-black text-slate-800 mb-2">答對了！</h2>
+            <div id="feedback-desc" class="text-slate-600 font-bold mb-6 text-lg leading-relaxed text-center"></div>
+            <div class="flex gap-3 w-full mt-4">
+                <button onclick="window.backToDirectoryFromModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition text-lg">⬅️ 目錄</button>
                 <button id="next-btn" class="flex-[1.5] bg-purple-600 hover:bg-purple-700 text-white font-black py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-purple-800 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
             </div>
         </div>
@@ -189,31 +204,32 @@
         let isSandboxInitialized = false;
         let sbWriter;
 
-        // 用於記錄該題學生點錯的選項解釋
         window.currentHints = [];
 
-        document.getElementById('exp-display').innerText = advExp;
-
-        function speakText(text) {
+        window.speakText = function(text) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                // 過濾掉 HTML 標籤，並將 <br> 替換為句號產生停頓
-                let cleanText = text.replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】]/g, '').replace(/&nbsp;/g, ' ');
+                let cleanText = text.replace(/___/g, '什麼')
+                                    .replace(/<br\s*\/?>/gi, '。')
+                                    .replace(/<[^>]*>?/gm, '')
+                                    .replace(/[✅❌💡【】_]/g, '')
+                                    .replace(/&nbsp;/g, ' ')
+                                    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '');
                 let msg = new SpeechSynthesisUtterance(cleanText);
                 msg.lang = 'zh-HK';
                 msg.rate = 0.95; 
                 window.speechSynthesis.speak(msg);
             }
-        }
+        };
 
-        function showToast(message) {
+        window.showToast = function(message) {
             const toast = document.getElementById("toast");
             toast.innerText = message;
             toast.className = "toast-msg show";
             setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
-        }
+        };
 
-        function switchMode(mode) {
+        window.switchMode = function(mode) {
             const tabQuest = document.getElementById('tab-quest');
             const tabSandbox = document.getElementById('tab-sandbox');
             const questMode = document.getElementById('quest-mode');
@@ -226,16 +242,16 @@
                 questMode.style.display = 'flex';
                 sandboxWrapper.style.display = 'none';
                 progress.style.display = 'block';
-                updateTotalProgress();
+                window.updateTotalProgress();
             } else {
                 tabSandbox.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-purple-700";
                 tabQuest.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
                 questMode.style.display = 'none';
                 sandboxWrapper.style.display = 'block'; 
                 progress.style.display = 'none';
-                if(!isSandboxInitialized) { initSandbox(); isSandboxInitialized = true; }
+                if(!isSandboxInitialized) { window.initSandbox(); isSandboxInitialized = true; }
             }
-        }
+        };
 
         // ================= 1.5 學習錦囊 (教學庫) =================
         const tutorialContents = {
@@ -248,16 +264,32 @@
             'c-adv-synonym': `<div class="text-center mb-4"><span class="text-6xl">🎯 🔍</span></div><p class="font-bold text-slate-700 mb-4 text-center">高級近義詞精準狙擊</p><p class="mb-4 text-slate-600">呈分試最愛考這種「雙胞胎詞語」，請根據句子的對象來選擇最精確的詞！</p><div class="bg-teal-50 p-4 rounded-xl border-2 border-teal-200 mb-3 space-y-2"><p class="font-bold text-teal-900"><span class="bg-white px-2 rounded">權利</span> 👉 法律賦予的利益</p><p class="font-bold text-teal-900"><span class="bg-white px-2 rounded">權力</span> 👉 支配別人的力量</p><p class="font-bold text-teal-900 mt-3"><span class="bg-white px-2 rounded">反映</span> 👉 把情況告訴上級</p><p class="font-bold text-teal-900"><span class="bg-white px-2 rounded">反應</span> 👉 受刺激的動作</p></div>`
         };
 
-        function showTutorial(categoryId) {
+        window.showTutorial = function(categoryId) {
             const modal = document.getElementById('tutorial-modal');
             const content = document.getElementById('tutorial-content');
-            document.getElementById('tutorial-body').innerHTML = tutorialContents[categoryId];
+            
+            // Fallback content if intro is called
+            if(categoryId === 'intro') {
+                document.getElementById('tutorial-body').innerHTML = `
+                <div class="text-center mb-4"><span class="text-6xl">📚 ✨</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">字詞基礎 (拔尖版) 挑戰指南</p>
+                <p class="mb-4 text-slate-600">在這個模式裡，你將會遇到七種不同的題型，考驗你對中文字詞的全面掌握：</p>
+                <div class="bg-purple-50 p-4 rounded-xl border-2 border-purple-200 mb-3 space-y-3 font-bold text-purple-800">
+                    <p>💡 <span class="bg-white px-2 py-1 rounded shadow-sm text-purple-600">疊字 / 近義詞</span> 👉 注意詞語形容的感覺和準確度。</p>
+                    <p>💡 <span class="bg-white px-2 py-1 rounded shadow-sm text-purple-600">歇後語 / 諺語</span> 👉 根據句子的前後文，推斷出蘊含的大道理。</p>
+                    <p>💡 <span class="bg-white px-2 py-1 rounded shadow-sm text-purple-600">成語 / 文言文</span> 👉 小心成語的褒貶陷阱，了解古人說話的方式。</p>
+                </div>
+                <p class="mt-4 text-rose-600 font-bold text-center">遇到不會的字，答錯後系統會彈出黃色提示框教你喔！</p>`;
+            } else {
+                document.getElementById('tutorial-body').innerHTML = tutorialContents[categoryId] || "學習錦囊準備中...";
+            }
+            
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
             localStorage.setItem('tut_seen_' + categoryId, 'true');
-        }
+        };
 
-        function closeTutorial() {
+        window.closeTutorial = function() {
             const modal = document.getElementById('tutorial-modal');
             const content = document.getElementById('tutorial-content');
             modal.classList.add('opacity-0');
@@ -267,12 +299,25 @@
                 if (pendingQuestionIdx !== -1) {
                     let targetIdx = pendingQuestionIdx;
                     pendingQuestionIdx = -1;
-                    startQuestion(targetIdx, true); 
+                    window.startQuestion(targetIdx, true); 
                 }
             }, 300);
-        }
+        };
 
-        // ================= 2. 拔尖題庫 (210題 全解析版) =================
+        // 智能微提示引擎
+        window.getSubtleHint = function(category, exp) {
+            if (!exp) return "請再仔細推敲喔！";
+            if (category === 'c-redup') return "請注意疊字的結構和它所形容的感覺喔！";
+            if (category === 'c-xiehou') return "歇後語就像謎語，請聯想前半部的畫面來猜後半部的意思！";
+            if (category === 'c-proverb') return "這是一句古人的智慧，請根據句子的情境推斷道理。";
+            if (category === 'c-idiom-sentiment') return "請仔細分辨這個成語是稱讚（褒）還是批評（貶）喔！";
+            if (category === 'c-idiom-story') return "請回想一下這個成語背後的歷史故事。";
+            if (category === 'c-classic') return "文言文的字義通常和現代不一樣，請根據上下文推敲！";
+            if (category === 'c-adv-synonym') return "這兩個詞意思很近，請仔細比較它們用在什麼對象身上！";
+            return "請仔細分析句子裡的線索！";
+        };
+
+        // ================= 2. 拔尖題庫 (210題 完整版) =================
         const categories = [
             { id: 'c-redup', title: '🔤 疊字語感與畫面感', color: 'fuchsia' },
             { id: 'c-xiehou', title: '🎭 歇後語情境精準配對', color: 'pink' },
@@ -543,7 +588,7 @@
                         <div class="mb-6">
                             <div class="flex items-center justify-between border-b-2 border-${cat.color}-100 pb-2 mb-3">
                                 <h3 class="text-xl font-bold text-${cat.color}-700">${cat.title}</h3>
-                                <button onclick="showTutorial('${cat.id}')" class="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-purple-300 hover:bg-purple-200 transition flex items-center gap-1 active:scale-95">📘 學習錦囊</button>
+                                <button onclick="window.showTutorial('${cat.id}')" class="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-purple-300 hover:bg-purple-200 transition flex items-center gap-1 active:scale-95">📘 學習錦囊</button>
                             </div>
                             <div class="flex flex-wrap gap-3">
                     `;
@@ -564,47 +609,43 @@
                                 icon = '❌';
                             }
 
-                            html += `<button onclick="startQuestion(${idx})" class="lvl-btn ${btnClass} w-12 h-12 lg:w-14 lg:h-14 rounded-xl font-black text-base lg:text-lg border-b-4 flex items-center justify-center shadow-sm transition-transform">${icon}</button>`;
+                            html += `<button onclick="window.startQuestion(${idx})" class="lvl-btn ${btnClass} w-12 h-12 lg:w-14 lg:h-14 rounded-xl font-black text-base lg:text-lg border-b-4 flex items-center justify-center shadow-sm transition-transform">${icon}</button>`;
                         }
                     });
                     html += `</div></div>`;
                 }
             });
             dirContainer.innerHTML = html;
-            updateTotalProgress();
+            window.updateTotalProgress();
         }
 
-        function updateTotalProgress() {
+        window.updateTotalProgress = function() {
             let solved = userProgress.filter(p => p === 1 || p === 2).length;
             let percent = (solved / rawQuestDataObj.length) * 100;
             document.getElementById('progress-bar').style.width = percent + '%';
-        }
+        };
 
-        function shuffleOptions(correct, wrongs) {
-            let opts = [correct, ...wrongs];
-            for (let i = opts.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [opts[i], opts[j]] = [opts[j], opts[i]];
-            }
-            return {
-                options: opts,
-                ansIdx: opts.indexOf(correct)
-            };
-        }
+        window.shuffleOptions = function(correctOpt, wrongOpts) {
+            let opts = [
+                { text: correctOpt, isCorrect: true },
+                ...wrongOpts.filter(w => w != null).map(w => ({ text: w, isCorrect: false }))
+            ];
+            return opts.sort(() => Math.random() - 0.5);
+        };
 
-        function startQuestion(idx, forceStart = false) {
+        window.startQuestion = function(idx, forceStart = false) {
             const qData = rawQuestDataObj[idx];
             const qType = qData.category;
             
             if (!forceStart && !localStorage.getItem('tut_seen_' + qType)) {
                 pendingQuestionIdx = idx; 
-                showTutorial(qType);      
+                window.showTutorial(qType);      
                 return;                   
             }
 
             currentQuestionMistakes = 0; 
             currentQuestionIdx = idx;
-            window.currentHints = []; // 重置提示庫
+            window.currentHints = []; 
             
             document.getElementById('quest-directory').style.display = 'none';
             const questPlay = document.getElementById('quest-play');
@@ -612,18 +653,18 @@
             document.getElementById('main-scroll-area').scrollTop = 0;
             
             const qCatTitle = categories.find(c => c.id === qType).title;
-            const { options, ansIdx } = shuffleOptions(qData.correct, qData.wrongs);
+            const options = window.shuffleOptions(qData.correct, qData.wrongs);
 
-            let ttsText = qData.sentence.replace('___', '什麼');
-            if(qData.category === 'c-xiehou' || qData.category === 'c-proverb') {
-                ttsText = qData.task + "。 " + qData.sentence.replace('___', '什麼');
+            let ttsText = qData.sentence.replace(/___/g, '什麼');
+            if(qType === 'c-xiehou' || qType === 'c-proverb') {
+                ttsText = qData.task + "。 " + qData.sentence.replace(/___/g, '什麼');
             }
 
-            let sentenceHtml = qData.sentence.replace('___', '<span class="text-purple-600 border-b-4 border-purple-500 px-6 font-black bg-purple-50">?</span>');
+            let sentenceHtml = qData.sentence.replace(/___/g, '<span class="text-purple-600 border-b-4 border-purple-500 px-6 font-black bg-purple-50 inline-block mx-1">?</span>');
 
             let html = `
                 <div class="w-full flex justify-between items-center mb-4">
-                    <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
+                    <button onclick="window.backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
                     <span class="bg-purple-100 text-purple-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${idx + 1} 題 / 共 210 題</span>
                 </div>
                 
@@ -636,43 +677,49 @@
                         <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded text-sm font-bold whitespace-nowrap">進階任務</span>
                         <h2 class="text-lg md:text-xl font-bold text-slate-700">${qData.task}</h2>
                     </div>
-
-                    <div class="w-full flex items-start gap-4 mb-6 bg-purple-50 p-6 rounded-2xl border border-purple-100 shadow-inner">
-                        <button onclick="speakText('${ttsText}')" class="tts-btn flex-shrink-0 bg-white text-purple-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-purple-200">🔊</button>
+                    
+                    <div class="w-full flex items-start gap-4 mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-200 shadow-inner mt-2">
+                        <button onclick="window.speakText('${ttsText.replace(/'/g, "\\'")}')" class="tts-btn flex-shrink-0 bg-white text-purple-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-purple-200 mt-1">🔊</button>
                         <div class="text-2xl md:text-3xl font-bold text-slate-800 leading-loose">${sentenceHtml}</div>
                     </div>
 
-                    <div class="flex flex-col gap-4 w-full max-w-lg mt-auto" id="options-container">
+                    <div class="flex flex-col gap-3 w-full max-w-2xl mt-auto" id="options-container">
             `;
 
-            options.forEach((optText, oIdx) => {
-                const isCorr = (oIdx === ansIdx);
+            options.forEach((optItem, oIdx) => {
+                const isCorr = optItem.isCorrect;
                 const letter = ['A','B','C','D'][oIdx];
-                // 過濾掉褒貶標籤，純粹顯示文字
-                const displayOpt = optText.replace(/\s*\([褒貶中]義\)/g, '');
-                const safeOpt = optText.replace(/'/g, "\\'");
-                html += `<button onclick="checkAnswer(this, ${isCorr}, '${safeOpt}')" class="option-btn bg-white border-2 border-slate-200 text-slate-700 text-xl font-bold py-4 px-6 rounded-xl hover:bg-purple-50 hover:border-purple-300 transition w-full text-left flex items-center gap-4"><span class="bg-slate-100 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0">${letter}</span> <span>${displayOpt}</span></button>`;
+                const displayOpt = optItem.text.replace(/\s*\([褒貶中]義\)/g, '');
+                const safeOpt = optItem.text.replace(/'/g, "\\'");
+                html += `
+                <div class="flex items-stretch gap-2 w-full">
+                    <button onclick="window.checkAnswer(this, ${isCorr}, '${safeOpt}')" class="option-btn flex-1 bg-white border-4 border-slate-200 text-slate-700 text-xl font-bold py-4 px-6 rounded-2xl hover:bg-purple-50 hover:border-purple-300 transition text-left flex items-center gap-4">
+                        <span class="bg-slate-100 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5">${letter}</span> 
+                        <span class="leading-relaxed break-words">${displayOpt}</span>
+                    </button>
+                    <button onclick="window.speakText('${displayOpt.replace(/'/g, "\\'")}')" class="tts-btn flex-shrink-0 bg-purple-50 text-purple-600 w-16 rounded-2xl text-2xl flex items-center justify-center shadow-sm border-2 border-purple-200 hover:bg-purple-100 transition" title="朗讀此選項">🔊</button>
+                </div>`;
             });
             
             html += `
                     </div>
-                    <!-- 💡 動態提示框 (初始隱藏) -->
-                    <div id="dynamic-hint-box" class="hidden w-full max-w-lg mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3">
+                    <!-- 💡 動態提示框 -->
+                    <div id="dynamic-hint-box" class="hidden w-full max-w-lg mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3 slide-up">
                         <div class="flex-1 space-y-2" id="hint-text"></div>
                         <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
                     </div>
                 </div>
             `;
-            questPlay.innerHTML = html;
-        }
+            document.getElementById('quest-play').innerHTML = html;
+        };
 
-        function backToDirectory() {
+        window.backToDirectory = function() {
             document.getElementById('quest-play').style.display = 'none';
             document.getElementById('quest-directory').style.display = 'block';
             renderDirectory();
-        }
+        };
 
-        function checkAnswer(btnElement, isCorrect, clickedOptText) {
+        window.checkAnswer = function(btnElement, isCorrect, clickedOptText) {
             const allBtns = document.querySelectorAll('.option-btn');
             const qData = rawQuestDataObj[currentQuestionIdx];
             
@@ -681,7 +728,7 @@
                 btnElement.classList.add('correct');
                 const expText = qData.explanation; 
                 
-                speakText("精準！");
+                window.speakText("精準！");
                 
                 let finalStatus = currentQuestionMistakes === 0 ? 1 : 2;
                 let previousStatus = userProgress[currentQuestionIdx];
@@ -716,51 +763,38 @@
                     <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 text-left text-indigo-900 rounded-r-lg font-bold">
                         <div class="flex justify-between items-center mb-3 pb-2 border-b border-indigo-200">
                             <span class="text-xl">📚 選項全解析</span>
-                            <button onclick="speakText('${expText}')" class="bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm hover:bg-indigo-100 text-xl transition active:scale-95">🔊</button>
+                            <button onclick="window.speakText('${expText.replace(/'/g, "\\'")}')" class="bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm hover:bg-indigo-100 text-xl transition active:scale-95">🔊</button>
                         </div>
                         <div class="space-y-3 text-base leading-relaxed">${expText}</div>
                     </div>`;
 
-                setTimeout(() => { showModal(modalIcon, modalTitle, combinedDesc); }, 800);
+                setTimeout(() => { window.showModal(modalIcon, modalTitle, combinedDesc); }, 800);
             } else {
-                // 答錯邏輯：啟用動態累積提示
                 btnElement.classList.add('wrong', 'shake');
                 currentQuestionMistakes++; 
                 userProgress[currentQuestionIdx] = -1;
                 localStorage.setItem('advQuestProgress', JSON.stringify(userProgress));
                 
-                // 找出被點擊選項的解釋
-                let lines = qData.explanation.split('<br>');
-                let matchedLine = lines.find(l => l.includes(clickedOptText));
-                let newHint = "請再仔細推敲語境！";
-                
-                if (matchedLine) {
-                    newHint = matchedLine.replace(/^[✅❌]\s*/, ''); // 移除表情符號前綴
-                }
+                // 🌟 智能鷹架微提示
+                let newHint = window.getSubtleHint(qData.category, qData.explanation);
 
-                // 加入提示庫 (防止重複加入)
                 if (!window.currentHints) window.currentHints = [];
-                if (!window.currentHints.includes(newHint)) {
-                    window.currentHints.push(newHint);
-                }
+                if (!window.currentHints.includes(newHint)) window.currentHints.push(newHint);
 
-                // 產生多條提示的 HTML
                 let combinedHintsHtml = window.currentHints.map(h => `<div class="border-b border-yellow-200 pb-1 last:border-0 last:pb-0">💡 ${h}</div>`).join('');
                 
                 document.getElementById('hint-text').innerHTML = combinedHintsHtml;
-                document.getElementById('hint-tts-btn').onclick = () => speakText(window.currentHints.join('。'));
+                document.getElementById('hint-tts-btn').onclick = () => window.speakText(window.currentHints.join('。'));
                 document.getElementById('dynamic-hint-box').classList.remove('hidden');
                 document.getElementById('dynamic-hint-box').classList.add('slide-up');
                 
-                speakText("不對喔，" + newHint);
+                window.speakText("不對喔，" + newHint);
                 
-                setTimeout(() => {
-                    btnElement.classList.remove('shake');
-                }, 500);
+                setTimeout(() => { btnElement.classList.remove('shake'); }, 500);
             }
-        }
+        };
 
-        function showModal(icon, title, desc) {
+        window.showModal = function(icon, title, desc) {
             const modal = document.getElementById('feedback-modal');
             const content = document.getElementById('feedback-content');
             document.getElementById('feedback-icon').innerText = icon;
@@ -774,27 +808,27 @@
                 setTimeout(() => {
                     modal.classList.add('hidden');
                     let nextIdx = currentQuestionIdx + 1;
-                    if (nextIdx < rawQuestDataObj.length) startQuestion(nextIdx);
-                    else { showToast("恭喜完成所有挑戰！"); backToDirectory(); }
+                    if (nextIdx < rawQuestDataObj.length) window.startQuestion(nextIdx);
+                    else { window.showToast("恭喜完成所有挑戰！"); window.backToDirectory(); }
                 }, 300);
             };
 
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
-        }
+        };
 
-        function backToDirectoryFromModal() {
+        window.backToDirectoryFromModal = function() {
             const modal = document.getElementById('feedback-modal');
             const content = document.getElementById('feedback-content');
             modal.classList.add('opacity-0');
             content.classList.add('scale-90');
             setTimeout(() => {
                 modal.classList.add('hidden');
-                backToDirectory();
+                window.backToDirectory();
             }, 300);
-        }
+        };
 
-        // ================= 4. 拔尖字庫 =================
+        // ================= 4. 拔尖字庫 (Sandbox) =================
         const rawWordData = "advanced|躊:足:Hesitate,躇:足:Hesitate,尷:尢:Embarrassed,尬:尢:Embarrassed,忐:心:Nervous,忑:心:Nervous,璀:玉:Bright,璨:玉:Bright,翱:舟:Soar,翔:羽:Soar,憧:心:Yearn for,憬:心:Yearn for,湛:水:Deep/Clear,蔚:艸:Lush,浩:水:Vast,瀚:水:Vast|classic|走:走:Run (Ancient),湯:水:Hot water (Ancient),兵:八:Weapon (Ancient),股:肉:Thigh (Ancient),臭:自:Smell (Ancient),涕:水:Tear (Ancient),妻:女:Wife,子:子:Children,布:巾:Cloth/Commoner,衣:衣:Clothes/Commoner|emotion|憤:心:Angry,恨:心:Hate,愁:心:Worry,悲:心:Sad,恐:心:Fear,懼:心:Dread,慕:心:Admire,戀:心:Love,慰:心:Comfort,愧:心:Ashamed,驚:馬:Surprised,喜:口:Joy,怒:心:Anger,哀:口:Sorrow";
         let parsedWords = [];
         rawWordData.split('|').forEach((chunk, index, arr) => {
@@ -808,9 +842,9 @@
             }
         });
 
-        function initSandbox() { filterWords('all'); }
+        window.initSandbox = function() { window.filterWords('all'); };
 
-        function filterWords(category) {
+        window.filterWords = function(category) {
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('filter-active', 'bg-purple-600', 'text-white');
                 btn.classList.add('bg-slate-50', 'text-slate-600');
@@ -818,7 +852,7 @@
             let activeBtn = document.getElementById('flt-' + category);
             if (activeBtn) {
                 activeBtn.classList.remove('bg-slate-50', 'text-slate-600');
-                activeBtn.classList.add('filter-active');
+                activeBtn.classList.add('filter-active', 'bg-purple-600', 'text-white');
             }
 
             const grid = document.getElementById('word-grid');
@@ -826,33 +860,36 @@
             parsedWords.forEach((item) => {
                 if (category === 'all' || item.cat === category) {
                     const itemStr = encodeURIComponent(JSON.stringify(item));
-                    html += `<button onclick="selectSandboxChar('${itemStr}')" class="bg-slate-50 border-2 border-slate-200 hover:border-purple-400 hover:bg-purple-50 text-2xl lg:text-3xl font-bold py-3 lg:py-4 rounded-xl transition shadow-sm text-slate-700">${item.char}</button>`;
+                    html += `<button onclick="window.selectSandboxChar('${itemStr}')" class="bg-slate-50 border-2 border-slate-200 hover:border-purple-400 hover:bg-purple-50 text-xl md:text-2xl font-bold py-2 rounded-xl transition shadow-sm text-slate-700">${item.char}</button>`;
                 }
             });
             grid.innerHTML = html;
-        }
+        };
 
-        function searchCustomChar() {
+        window.searchCustomChar = function() {
             const input = document.getElementById('custom-char-input').value.trim();
             const chars = input.match(/[\u4e00-\u9fa5]/g);
-            if (!chars || chars.length === 0) { showToast("請輸入一個有效的中文字！"); return; }
-            selectSandboxChar(encodeURIComponent(JSON.stringify({ char: chars[0], rad: '檢索', eng: 'Dictionary' })));
+            if (!chars || chars.length === 0) { window.showToast("請輸入一個有效的中文字！"); return; }
+            window.selectSandboxChar(encodeURIComponent(JSON.stringify({ char: chars[0], rad: '檢索', eng: 'Dictionary' })));
             document.getElementById('custom-char-input').value = ''; 
-        }
+        };
 
-        function selectSandboxChar(itemStr) {
+        window.selectSandboxChar = function(itemStr) {
             document.getElementById('sandbox-placeholder').classList.add('hidden');
             document.getElementById('sandbox-content').classList.remove('hidden');
+            document.getElementById('sandbox-content').classList.add('flex');
+
             const data = JSON.parse(decodeURIComponent(itemStr));
             document.getElementById('sb-char').innerText = data.char;
             document.getElementById('sb-radical').innerText = data.rad;
             document.getElementById('sb-english').innerText = data.eng || 'Translation';
             document.getElementById('sb-feedback').style.opacity = '0';
-            speakText(data.char);
+            window.speakText(data.char);
 
             const canvasDiv = document.getElementById('sandbox-canvas');
             canvasDiv.innerHTML = ''; 
-            const size = window.innerWidth < 768 ? 256 : 320; 
+            const size = window.innerWidth < 768 ? 240 : 320; 
+            
             try {
                 sbWriter = HanziWriter.create('sandbox-canvas', data.char, {
                     width: size, height: size, padding: 15, strokeAnimationSpeed: 1, delayBetweenStrokes: 100,
@@ -862,24 +899,24 @@
                 canvasDiv.innerHTML = `<div class="flex flex-col items-center justify-center h-full px-4 text-center"><span class="text-5xl mb-3">📭</span><p class="text-rose-500 font-bold text-lg">字庫暫未收錄「${data.char}」的筆順。</p></div>`;
                 sbWriter = null;
             }
-        }
+        };
 
-        function startSandboxQuiz() {
-            if (!sbWriter) { showToast("無法練習試寫喔！"); return; }
+        window.startSandboxQuiz = function() {
+            if (!sbWriter) { window.showToast("無法練習試寫喔！"); return; }
             document.getElementById('sb-feedback').style.opacity = '0';
             sbWriter.quiz({
                 onMistake: function() {
                     const fb = document.getElementById('sb-feedback');
                     fb.innerText = "❌ 筆順不正確！";
                     fb.className = "mt-4 text-lg font-bold text-rose-500 h-8 transition-opacity opacity-100 shake";
-                    speakText("筆順不正確");
+                    window.speakText("筆順不正確");
                     setTimeout(() => fb.classList.remove('shake'), 400);
                 },
                 onComplete: function() {
                     const fb = document.getElementById('sb-feedback');
                     fb.innerText = "✨ 書寫精確！(獲得 5 EXP)";
                     fb.className = "mt-4 text-xl font-bold text-purple-600 h-8 transition-opacity opacity-100 pop";
-                    speakText("書寫精確！");
+                    window.speakText("書寫精確！");
                     advExp += 5;
                     localStorage.setItem('advExp', advExp);
                     document.getElementById('exp-display').innerText = advExp;
@@ -887,14 +924,14 @@
                     setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
                 }
             });
-        }
+        };
 
         window.onload = function() {
             document.getElementById('exp-display').innerText = advExp;
-            switchMode('quest'); 
+            window.switchMode('quest'); 
             renderDirectory();
             document.getElementById('custom-char-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') searchCustomChar();
+                if (e.key === 'Enter') window.searchCustomChar();
             });
         }
     </script>
