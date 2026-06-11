@@ -56,6 +56,7 @@
 </head>
 <body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
 
+    <!-- 頂部導覽列 (Orange 配色) -->
     <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
         <div class="p-3 lg:p-4 bg-orange-600 text-white flex justify-between items-center w-full">
             <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
@@ -72,10 +73,16 @@
         </div>
     </div>
 
+    <!-- 主畫面區 -->
     <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
         <div id="quest-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
+            <!-- 目錄 -->
             <div id="quest-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
-                <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">⭐ 複句與語法常規特訓</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">⭐ 複句與語法常規特訓</h2>
+                    <button onclick="window.showTutorial('s-complex-type')" class="bg-orange-100 text-orange-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-orange-300 hover:bg-orange-200 transition flex items-center gap-1 active:scale-95">📘 學習錦囊</button>
+                </div>
+                
                 <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
                     <div class="text-orange-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
                     <div class="flex flex-wrap gap-4 flex-1">
@@ -86,6 +93,8 @@
                 </div>
                 <div id="directory-content" class="flex flex-col gap-8"></div>
             </div>
+            
+            <!-- 答題區 -->
             <div id="quest-play" class="w-full hidden flex-col items-center"></div>
         </div>
     </div>
@@ -95,11 +104,11 @@
         <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="tutorial-content">
             <div class="flex justify-between items-center mb-4 border-b-2 border-orange-100 pb-3">
                 <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-orange-600 flex items-center gap-2">📘 學習錦囊</h2>
-                <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
+                <button onclick="window.closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
             </div>
             <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4"></div>
             <div class="mt-6 pt-4 border-t-2 border-slate-100">
-                <button onclick="closeTutorial()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-orange-700 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
+                <button onclick="window.closeTutorial()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-orange-700 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
             </div>
         </div>
     </div>
@@ -111,7 +120,7 @@
             <h2 id="feedback-title" class="text-2xl md:text-3xl font-black text-slate-800 mb-2">答對了！</h2>
             <div id="feedback-desc" class="text-slate-600 font-bold mb-4 text-base md:text-lg leading-relaxed text-left overflow-y-auto pr-2 flex-1 w-full"></div>
             <div class="flex gap-3 w-full mt-2 pt-4 border-t border-slate-100">
-                <button onclick="backToDirectoryFromModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition text-lg">⬅️ 目錄</button>
+                <button onclick="window.backToDirectoryFromModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition text-lg">⬅️ 目錄</button>
                 <button id="next-btn" class="flex-[1.5] bg-orange-600 hover:bg-orange-700 text-white font-black py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-orange-800 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
             </div>
         </div>
@@ -121,7 +130,7 @@
 
     <script>
         // ================= 1. 核心狀態 =================
-        let sentStdExp = parseInt(localStorage.getItem('sentStdExp')) || 0;
+        let sentStdExp = parseInt(localStorage.getItem('sentStandardExp')) || 0;
         let currentQuestionMistakes = 0; 
         let pendingQuestionIdx = -1;
         let currentQuestionIdx = -1;
@@ -133,23 +142,32 @@
 
         document.getElementById('exp-display').innerText = sentStdExp;
 
-        function speakText(text) {
+        window.cleanTextForSpeech = function(text) {
+            if(!text) return "";
+            return text.replace(/___/g, '什麼')
+                       .replace(/<br\s*\/?>/gi, '。')
+                       .replace(/<[^>]*>?/gm, '')
+                       .replace(/[✅❌💡【】＋]/g, '')
+                       .replace(/&nbsp;/g, ' ');
+        };
+
+        window.speakText = function(text, rate = 0.9) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                let cleanText = text.replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】＋]/g, '').replace(/&nbsp;/g, ' ');
+                let cleanText = window.cleanTextForSpeech(text);
                 let msg = new SpeechSynthesisUtterance(cleanText);
                 msg.lang = 'zh-HK';
-                msg.rate = 0.9; 
+                msg.rate = rate; 
                 window.speechSynthesis.speak(msg);
             }
-        }
+        };
 
-        function showToast(message) {
+        window.showToast = function(message) {
             const toast = document.getElementById("toast");
             toast.innerText = message;
             toast.className = "toast-msg show";
             setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
-        }
+        };
 
         // ================= 2. 學習錦囊 (教學庫) =================
         const tutorialContents = {
@@ -217,16 +235,23 @@
             `
         };
 
-        function showTutorial(categoryId) {
+        window.showTutorial = function(categoryId) {
             const modal = document.getElementById('tutorial-modal');
             const content = document.getElementById('tutorial-content');
-            document.getElementById('tutorial-body').innerHTML = tutorialContents[categoryId];
+            
+            // 若為總教學
+            if (!tutorialContents[categoryId]) {
+                document.getElementById('tutorial-body').innerHTML = tutorialContents['s-complex-type'];
+            } else {
+                document.getElementById('tutorial-body').innerHTML = tutorialContents[categoryId];
+            }
+            
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
             localStorage.setItem('tut_seen_' + categoryId, 'true');
-        }
+        };
 
-        function closeTutorial() {
+        window.closeTutorial = function() {
             const modal = document.getElementById('tutorial-modal');
             const content = document.getElementById('tutorial-content');
             modal.classList.add('opacity-0');
@@ -236,12 +261,12 @@
                 if (pendingQuestionIdx !== -1) {
                     let targetIdx = pendingQuestionIdx;
                     pendingQuestionIdx = -1;
-                    startQuestion(targetIdx, true); 
+                    window.startQuestion(targetIdx, true); 
                 }
             }, 300);
-        }
+        };
 
-        // ================= 3. 題庫資料 (150題) =================
+        // ================= 3. 題庫資料 (150題 絕對純淨版) =================
         const categories = [
             { id: 's-complex-type', title: '🔍 認識複句類型 (30題)', color: 'blue' },
             { id: 's-conj', title: '🔗 關聯詞應用 (30題)', color: 'amber' },
@@ -282,47 +307,41 @@
             ['他不但沒有生氣，反而笑了起來。', '遞進複句', '轉折複句', '並列複句', '因果複句', '「不但不...反而...」是反向的遞進關係。'],
             ['大家既然都同意了，我們就開始執行吧。', '因果複句', '條件複句', '假設複句', '轉折複句', '「既然...就...」是推論因果。'],
             ['只有不斷練習，才能掌握這項技能。', '條件複句', '假設複句', '因果複句', '遞進複句', '「只有...才...」是條件關係。']
-        ].map(item => ({
-            type: 'mcq', category: 's-complex-type', task: '認識複句：這句話屬於哪一種複句類型？',
-            sentence: item[0], correct: item[1], wrongs: [item[2], item[3], item[4]], explanation: `✅ ${item[1]}：${item[5]}`
-        }));
+        ];
 
         // --- 2. 關聯詞應用 (MCQ) ---
         const conjPool = [
-            ['___明天下大雨，我們___不去了。', '如果...就...', ['因為...所以...', '雖然...但是...', '不但...而且...'], '「下大雨」是未發生的假設情況，應用「如果...就...」。'],
-            ['___他生病了，___他沒有來上學。', '因為...所以...', ['不但...而且...', '如果...就...', '雖然...但是...'], '生病是原因，沒上學是結果，應用「因為...所以...」。'],
-            ['他___聰明，___非常勤奮。', '不但...而且...', ['雖然...但是...', '與其...不如...', '因為...所以...'], '聰明和勤奮都是好的優點，程度更進一步，用「不但...而且...」。'],
-            ['___這次考試很難，___他還是考了滿分。', '雖然...但是...', ['因為...所以...', '只要...就...', '如果...就...'], '考試難卻考滿分，結果出乎意料，用「雖然...但是...」。'],
-            ['___你肯努力，___一定會成功。', '只要...就...', ['只有...才...', '無論...都...', '雖然...但是...'], '努力是成功的充足條件，用「只要...就...」。'],
-            ['他___自己受委屈，___不願意連累朋友。', '寧可...也...', ['與其...不如...', '不但...而且...', '因為...所以...'], '在兩難中堅決選擇吃虧，用「寧可...也...」。'],
-            ['___天氣有多熱，他___堅持每天跑步。', '無論...都...', ['即使...也...', '雖然...但是...', '如果...就...'], '表示在任何條件下都不變，用「無論...都...」。'],
-            ['___大家都同意，這件事___這麼決定了。', '既然...就...', ['因為...所以...', '如果...就...', '只要...就...'], '基於已成的事實來推論結果，用「既然...就...」。'],
-            ['這件衣服___款式好看，___價錢也很便宜。', '不但...而且...', ['雖然...但是...', '因為...所以...', '如果...就...'], '兩個都是優點，用「不但...而且...」。'],
-            ['這___一本普通的書，___一本魔法書。', '不是...而是...', ['不但...而且...', '不是...就是...', '與其...不如...'], '否定前者，肯定後者，用「不是...而是...」。'],
-            ['___只有多閱讀，___能提高寫作能力。', '只有...才...', ['如果...就...', '雖然...但是...', '只要...就...'], '多閱讀是提高寫作的唯一條件，用「只有...才...」。'],
-            ['___你已經知道錯了，___應該馬上道歉。', '既然...就...', ['只要...就...', '因為...所以...', '雖然...但是...'], '基於已知事實推論，用「既然...就...」。'],
-            ['這隻小狗___可愛，___十分聰明。', '不僅...還...', ['不是...而是...', '寧可...也...', '雖然...但是...'], '遞進關係，用「不僅...還...」。'],
-            ['我們___在這裡等待，___主動去尋找線索。', '與其...不如...', ['不但...而且...', '既然...就...', '因為...所以...'], '在兩者中選擇較好的一個，用「與其...不如...」。'],
-            ['___遇到多大的困難，我們___不能輕言放棄。', '即使...也...', ['只要...就...', '因為...所以...', '雖然...但是...'], '退一步假設，用「即使...也...」或「無論...都...」。'],
-            ['這頓晚餐___豐盛，___非常美味。', '不但...而且...', ['雖然...但是...', '不是...而是...', '與其...不如...'], '遞進關係。'],
-            ['___外面風雨交加，他___堅持要去送信。', '儘管...還是...', ['如果...就...', '既然...就...', '因為...所以...'], '轉折關係，風大雨大卻堅持去，用「儘管...還是...」。'],
-            ['___沒有你的幫助，我___無法完成這項任務。', '如果...就...', ['無論...都...', '雖然...但是...', '不但...而且...'], '假設沒有幫助的情況，用「如果...就...」。'],
-            ['他___是一名醫生，___是一位優秀的作家。', '既...又...', ['與其...不如...', '寧可...也...', '雖然...但是...'], '並列關係，同時具備兩種身分，用「既...又...」。'],
-            ['___你想取得好成績，___必須付出努力。', '如果...就...', ['即使...也...', '雖然...但是...', '因為...所以...'], '假設一種目標，用「如果...就...」。'],
-            ['這場雨___沒有停下來，___越下越大了。', '不但不...反而...', ['雖然...但是...', '即使...也...', '既然...就...'], '反向遞進關係。'],
-            ['___明天下大雪，我們的活動___會如期舉行。', '無論...都...', ['如果...就...', '因為...所以...', '既然...就...'], '無條件複句。'],
-            ['這___一個簡單的失誤，___一個嚴重的錯誤。', '不是...而是...', ['不但...而且...', '不是...就是...', '與其...不如...'], '否定與肯定。'],
-            ['___天氣非常寒冷，工人們___堅持在戶外工作。', '雖然...但是...', ['如果...就...', '只要...就...', '既然...就...'], '轉折關係。'],
-            ['這本書___內容豐富，___插圖也非常精美。', '不但...而且...', ['雖然...但是...', '寧可...也...', '與其...不如...'], '遞進關係。'],
-            ['___時間很緊迫，他___冷靜地完成了任務。', '雖然...但是...', ['既然...就...', '如果...就...', '只要...就...'], '轉折關係。'],
-            ['___每天堅持鍛鍊，身體___會越來越健康。', '只要...就...', ['只有...才...', '即使...也...', '無論...都...'], '充足條件。'],
-            ['___遇到什麼困難，我們___不能退縮。', '無論...都...', ['即使...也...', '如果...就...', '既然...就...'], '無條件。'],
-            ['他___知道自己錯了，___不願意向對方道歉。', '雖然...但是...', ['既然...就...', '不但不...反而...', '與其...不如...'], '轉折關係。'],
-            ['___大家不合作，這項計畫___無法順利完成。', '如果...就...', ['只要...就...', '既然...就...', '即使...也...'], '假設關係。']
-        ].map(item => ({
-            type: 'mcq', category: 's-conj', task: '關聯詞：選出最合適的關聯詞填入空格。',
-            sentence: item[0], correct: item[1], wrongs: item[2], explanation: `✅ ${item[1]}：${item[3]}`
-        }));
+            ['___明天下大雨，我們___不去了。', '如果...就...', '因為...所以...', '雖然...但是...', '不但...而且...', '「下大雨」是未發生的假設情況，應用「如果...就...」。'],
+            ['___他生病了，___他沒有來上學。', '因為...所以...', '不但...而且...', '如果...就...', '雖然...但是...', '生病是原因，沒上學是結果，應用「因為...所以...」。'],
+            ['他___聰明，___非常勤奮。', '不但...而且...', '雖然...但是...', '與其...不如...', '因為...所以...', '聰明和勤奮都是好的優點，程度更進一步，用「不但...而且...」。'],
+            ['___這次考試很難，___他還是考了滿分。', '雖然...但是...', '因為...所以...', '只要...就...', '如果...就...', '考試難卻考滿分，結果出乎意料，用「雖然...但是...」。'],
+            ['___你肯努力，___一定會成功。', '只要...就...', '只有...才...', '無論...都...', '雖然...但是...', '努力是成功的充足條件，用「只要...就...」。'],
+            ['他___自己受委屈，___不願意連累朋友。', '寧可...也...', '與其...不如...', '不但...而且...', '因為...所以...', '在兩難中堅決選擇吃虧，用「寧可...也...」。'],
+            ['___天氣有多熱，他___堅持每天跑步。', '無論...都...', '即使...也...', '雖然...但是...', '如果...就...', '表示在任何條件下都不變，用「無論...都...」。'],
+            ['___大家都同意，這件事___這麼決定了。', '既然...就...', '因為...所以...', '如果...就...', '只要...就...', '基於已成的事實來推論結果，用「既然...就...」。'],
+            ['這件衣服___款式好看，___價錢也很便宜。', '不但...而且...', '雖然...但是...', '因為...所以...', '如果...就...', '兩個都是優點，用「不但...而且...」。'],
+            ['這___一本普通的書，___一本魔法書。', '不是...而是...', '不但...而且...', '不是...就是...', '與其...不如...', '否定前者，肯定後者，用「不是...而是...」。'],
+            ['___只有多閱讀，___能提高寫作能力。', '只有...才...', '如果...就...', '雖然...但是...', '只要...就...', '多閱讀是提高寫作的唯一條件，用「只有...才...」。'],
+            ['___你已經知道錯了，___應該馬上道歉。', '既然...就...', '只要...就...', '因為...所以...', '雖然...但是...', '基於已知事實推論，用「既然...就...」。'],
+            ['這隻小狗___可愛，___十分聰明。', '不僅...還...', '不是...而是...', '寧可...也...', '雖然...但是...', '遞進關係，用「不僅...還...」。'],
+            ['我們___在這裡等待，___主動去尋找線索。', '與其...不如...', '不但...而且...', '既然...就...', '因為...所以...', '在兩者中選擇較好的一個，用「與其...不如...」。'],
+            ['___遇到多大的困難，我們___不能輕言放棄。', '即使...也...', '只要...就...', '因為...所以...', '雖然...但是...', '退一步假設，用「即使...也...」或「無論...都...」。'],
+            ['這頓晚餐___豐盛，___非常美味。', '不但...而且...', '雖然...但是...', '不是...而是...', '與其...不如...', '遞進關係。'],
+            ['___外面風雨交加，他___堅持要去送信。', '儘管...還是...', '如果...就...', '既然...就...', '因為...所以...', '轉折關係，風大雨大卻堅持去，用「儘管...還是...」。'],
+            ['___沒有你的幫助，我___無法完成這項任務。', '如果...就...', '無論...都...', '雖然...但是...', '不但...而且...', '假設沒有幫助的情況，用「如果...就...」。'],
+            ['他___是一名醫生，___是一位優秀的作家。', '既...又...', '與其...不如...', '寧可...也...', '雖然...但是...', '並列關係，同時具備兩種身分，用「既...又...」。'],
+            ['___你想取得好成績，___必須付出努力。', '如果...就...', '即使...也...', '雖然...但是...', '因為...所以...', '假設一種目標，用「如果...就...」。'],
+            ['這場雨___沒有停下來，___越下越大了。', '不但不...反而...', '雖然...但是...', '即使...也...', '既然...就...', '反向遞進關係。'],
+            ['___明天下大雪，我們的活動___會如期舉行。', '無論...都...', '如果...就...', '因為...所以...', '既然...就...', '無條件複句。'],
+            ['這___一個簡單的失誤，___一個嚴重的錯誤。', '不是...而是...', '不但...而且...', '不是...就是...', '與其...不如...', '否定與肯定。'],
+            ['___天氣非常寒冷，工人們___堅持在戶外工作。', '雖然...但是...', '如果...就...', '只要...就...', '既然...就...', '轉折關係。'],
+            ['這本書___內容豐富，___插圖也非常精美。', '不但...而且...', '雖然...但是...', '寧可...也...', '與其...不如...', '遞進關係。'],
+            ['___時間很緊迫，他___冷靜地完成了任務。', '雖然...但是...', '既然...就...', '如果...就...', '只要...就...', '轉折關係。'],
+            ['___每天堅持鍛鍊，身體___會越來越健康。', '只要...就...', '只有...才...', '即使...也...', '無論...都...', '充足條件。'],
+            ['___遇到什麼困難，我們___不能退縮。', '無論...都...', '即使...也...', '如果...就...', '既然...就...', '無條件。'],
+            ['他___知道自己錯了，___不願意向對方道歉。', '雖然...但是...', '既然...就...', '不但不...反而...', '與其...不如...', '轉折關係。'],
+            ['___大家不合作，這項計畫___無法順利完成。', '如果...就...', '只要...就...', '既然...就...', '即使...也...', '假設關係。']
+        ];
 
         // --- 3. 複句重組實戰 (REORDER) ---
         const reorderComplexPool = [
@@ -356,10 +375,7 @@
             [['無論', '明天的天氣', '多麼惡劣，', '比賽', '都', '會照常進行。'], '找出「無論...都」的關聯詞。'],
             [['只要', '你', '肯花時間，', '這件事', '就', '一定能做好。'], '找出「只要...就」的關聯詞。'],
             [['他', '不但', '聰明，', '而且', '肯下苦功，', '所以成績很好。'], '這是一個包含遞進和因果的多重複句。']
-        ].map(item => ({
-            type: 'reorder', category: 's-reorder-complex', task: '複句重組：把碎片排成語意通順的複句。',
-            sentence: '', chunks: item[0], hint: item[1]
-        }));
+        ];
 
         // --- 4. 擴充句子 (INSERT) ---
         const insertPool = [
@@ -383,7 +399,6 @@
             [['汽車', '在公路上行駛。'], '飛快地', 1, '「飛快地」修飾行駛的動作。'],
             [['我', '完成功課。'], '每天都', 1, '時間副詞放在動作前。'],
             [['我們', '去公園玩。'], '星期天', 1, '時間副詞可以放在動作前。'],
-            // 湊滿30題
             [['月亮', '掛在天空。'], '圓圓的', 0, '「圓圓的」用來形容名詞「月亮」。'],
             [['這是一個', '蘋果。'], '紅彤彤的', 1, '「紅彤彤的」用來形容名詞「蘋果」。'],
             [['河水', '流向遠方。'], '嘩啦啦地', 1, '「嘩啦啦地」修飾流動的動作。'],
@@ -394,64 +409,77 @@
             [['他', '看著我。'], '生氣地', 1, '「生氣地」修飾看的動作。'],
             [['這是一條', '河流。'], '清澈的', 1, '「清澈的」用來形容名詞「河流」。'],
             [['大家', '鼓起掌來。'], '熱烈地', 1, '「熱烈地」修飾鼓掌的動作。']
-        ].map(item => ({
-            type: 'insert', category: 's-insert', task: '擴充句子：點擊正確的 ＋ 號位置，把詞語加入句子中。',
-            chunks: item[0], insertWord: item[1], ansPos: item[2], explanation: item[3], hint: item[3]
-        }));
+        ];
 
         // --- 5. 句型轉換 (MCQ) ---
         const rhetoricalPool = [
-            ['這點小事，你不應該生氣。（改為反問句）', '這點小事，你怎麼能生氣呢？', ['這點小事，你一定會生氣。', '這點小事，請你不要生氣。', '這點小事，你為什麼生氣？'], '「不應該」變成反問的「怎麼能...呢」，意思維持不變。'],
-            ['這件事怎麼能怪他呢？（改為陳述句）', '這件事不應該怪他。', ['這件事一定要怪他。', '這件事難道不怪他嗎？', '這件事難道應該怪他嗎？'], '反問句有「怎麼能」，陳述句加上「不」，變成「不應該怪他」。'],
-            ['我們不能浪費食物。（改為反問句）', '我們怎麼能浪費食物呢？', ['我們一定不要浪費食物。', '我們是不會浪費食物的。', '我們為什麼要浪費食物？'], '陳述句有「不」，反問句去掉「不」，變成「怎麼能...呢」。'],
-            ['這難道不是一個好主意嗎？（改為陳述句）', '這是一個好主意。', ['這不是一個好主意。', '這可能是一個好主意。', '這到底是不是好主意？'], '反問句有「不」，陳述句去掉「不」，變成肯定句。'],
-            ['父母的養育之恩，我們永遠不能忘記。（改為反問句）', '父母的養育之恩，我們怎麼能忘記呢？', ['父母的養育之恩，我們一定會忘記的。', '父母的養育之恩，請大家不要忘記。', '父母的養育之恩，我們為什麼忘記？'], '陳述句有「不能」，反問句去掉「不」，變成「怎麼能...呢」。'],
-            ['遇到困難，我們怎麼能輕易放棄呢？（改為陳述句）', '遇到困難，我們不能輕易放棄。', ['遇到困難，我們必須輕易放棄。', '遇到困難，我們可能會輕易放棄。', '遇到困難，我們難道不能放棄嗎？'], '反問句沒有「不」，陳述句加上「不」，變成「不能放棄」。'],
-            ['破壞公物是不對的行為。（改為反問句）', '破壞公物難道是對的行為嗎？', ['破壞公物絕對是不對的行為。', '破壞公物可能是對的行為。', '破壞公物為什麼是對的行為？'], '陳述句有「不」，反問句去掉「不」，加上「難道...嗎」。'],
-            ['天下哪有免費的午餐呢？（改為陳述句）', '天下沒有免費的午餐。', ['天下一定有免費的午餐。', '天下其實有免費的午餐。', '天下難道沒有免費的午餐嗎？'], '反問句意思是「沒有」，改為陳述句加上「沒有」。'],
-            ['這美麗的風景，難道不令人陶醉嗎？（改為陳述句）', '這美麗的風景令人陶醉。', ['這美麗的風景不令人陶醉。', '這美麗的風景有時令人陶醉。', '這美麗的風景怎麼令人陶醉呢？'], '反問句有「不」，陳述句去掉「不」，變成肯定句。'],
-            ['你做錯了事，應該向他道歉。（改為反問句）', '你做錯了事，難道不應該向他道歉嗎？', ['你做錯了事，一定要向他道歉。', '你做錯了事，請馬上向他道歉。', '你做錯了事，為什麼不道歉？'], '陳述句沒有「不」，反問句加上「不」，變成「難道不應該...嗎」。'],
-            ['我們不應該欺負弱小。（改為反問句）', '我們怎麼能欺負弱小呢？', ['我們一定會欺負弱小的。', '我們是不會欺負弱小的。', '我們為什麼欺負弱小？'], '陳述句有「不」，反問去掉「不」。'],
-            ['難道這不是大家的責任嗎？（改為陳述句）', '這是大家的責任。', ['這不是大家的責任。', '這或許是大家的責任。', '這怎麼會是大家的責任呢？'], '反問句有「不」，陳述句去掉「不」。'],
-            ['說謊是絕對不能被原諒的。（改為反問句）', '說謊怎麼能被原諒呢？', ['說謊一定會被原諒的。', '說謊有時能被原諒。', '說謊難道不能被原諒嗎？'], '陳述句有「不能」，反問去掉「不」。'],
-            ['這麼簡單的問題，你怎麼會不懂呢？（改為陳述句）', '這麼簡單的問題，你應該懂。', ['這麼簡單的問題，你不應該懂。', '這麼簡單的問題，你可能不懂。', '這麼簡單的問題，你難道不懂嗎？'], '反問句沒有「不」，陳述句加上「不」(這裡意思轉化為你應該懂)。'],
-            ['我們必須遵守交通規則。（改為反問句）', '我們難道不必須遵守交通規則嗎？', ['我們一定不必須遵守交通規則。', '我們有時必須遵守交通規則。', '我們為什麼遵守交通規則？'], '陳述句肯定，反問句加「不」。'],
-            ['難道你沒有聽見上課鐘聲嗎？（改為陳述句）', '你應該聽見上課鐘聲了。', ['你沒有聽見上課鐘聲。', '你可能聽見上課鐘聲了。', '你怎麼聽見上課鐘聲了？'], '反問句有「沒有」，陳述句表示肯定。'],
-            ['隨地吐痰是沒有公德心的表現。（改為反問句）', '隨地吐痰難道是有公德心的表現嗎？', ['隨地吐痰絕對是沒有公德心的表現。', '隨地吐痰或許是有公德心的表現。', '隨地吐痰怎麼是沒有公德心？'], '陳述句有「沒有」，反問去掉「沒有」。'],
-            ['誰說世上沒有真正的友誼呢？（改為陳述句）', '世上是有真正的友誼的。', ['世上是沒有真正的友誼的。', '世上可能有真正的友誼。', '世上難道有真正的友誼嗎？'], '反問句有「沒有」，陳述句改為肯定。'],
-            ['我們應該愛護大自然。（改為反問句）', '我們怎麼能不愛護大自然呢？', ['我們一定會愛護大自然的。', '我們是不會愛護大自然的。', '我們為什麼愛護大自然？'], '陳述句肯定，反問句加「不」。'],
-            ['難道他不值得我們學習嗎？（改為陳述句）', '他值得我們學習。', ['他不值得我們學習。', '他可能值得我們學習。', '他怎麼值得我們學習？'], '反問句有「不」，陳述句去掉「不」。'],
-            // 湊滿30題
-            ['這件事我一定能做好。（改為反問句）', '這件事我難道不能做好嗎？', ['這件事我一定不能做好。', '這件事我可能做好。', '這件事我怎麼能做好呢？'], '陳述肯定，反問加「不」。'],
-            ['你怎麼能隨便拿別人的東西呢？（改為陳述句）', '你不應該隨便拿別人的東西。', ['你應該隨便拿別人的東西。', '你可以隨便拿別人的東西。', '你難道不隨便拿別人的東西嗎？'], '反問肯定，陳述加「不」。'],
-            ['我們不能忘記歷史。（改為反問句）', '我們怎麼能忘記歷史呢？', ['我們必須忘記歷史。', '我們可能會忘記歷史。', '我們難道不能忘記歷史嗎？'], '陳述否定，反問肯定。'],
-            ['這難道不是一個奇蹟嗎？（改為陳述句）', '這是一個奇蹟。', ['這不是一個奇蹟。', '這可能是一個奇蹟。', '這怎麼會是一個奇蹟呢？'], '反問否定，陳述肯定。'],
-            ['大家都喜歡這個遊戲。（改為反問句）', '難道大家不喜歡這個遊戲嗎？', ['大家都不喜歡這個遊戲。', '大家可能喜歡這個遊戲。', '大家為什麼喜歡這個遊戲？'], '陳述肯定，反問加「不」。'],
-            ['哪有不勞而獲的事情呢？（改為陳述句）', '沒有不勞而獲的事情。', ['一定有不勞而獲的事情。', '可能有不勞而獲的事情。', '難道有不勞而獲的事情嗎？'], '反問肯定，陳述否定。'],
-            ['我們應該珍惜時間。（改為反問句）', '我們難道不應該珍惜時間嗎？', ['我們不應該珍惜時間。', '我們有時應該珍惜時間。', '我們怎麼能珍惜時間呢？'], '陳述肯定，反問加「不」。'],
-            ['難道這幅畫不美嗎？（改為陳述句）', '這幅畫很美。', ['這幅畫不美。', '這幅畫一般般。', '這幅畫怎麼會美呢？'], '反問否定，陳述肯定。'],
-            ['他不應該這樣對待朋友。（改為反問句）', '他怎麼能這樣對待朋友呢？', ['他應該這樣對待朋友。', '他可以這樣對待朋友。', '他難道不應該這樣對待朋友嗎？'], '陳述否定，反問肯定。'],
-            ['誰不知道你是個大好人呢？（改為陳述句）', '大家都知道你是個大好人。', ['誰都不知道你是個大好人。', '沒有人知道你是個大好人。', '難道大家都不知道你是大好人嗎？'], '反問否定，陳述肯定。']
-        ].map(item => ({
-            type: 'mcq', category: 's-rhetorical', task: '句型轉換：選出意思相同，但句型正確的選項。',
-            sentence: item[0], correct: item[1], wrongs: item[2], explanation: `✅ ${item[1]}：${item[3]}`
-        }));
+            ['這點小事，你不應該生氣。（改為反問句）', '這點小事，你怎麼能生氣呢？', '這點小事，你一定會生氣。', '這點小事，請你不要生氣。', '這點小事，你為什麼生氣？', '「不應該」變成反問的「怎麼能...呢」，意思維持不變。'],
+            ['這件事怎麼能怪他呢？（改為陳述句）', '這件事不應該怪他。', '這件事一定要怪他。', '這件事難道不怪他嗎？', '這件事難道應該怪他嗎？', '反問句有「怎麼能」，陳述句加上「不」，變成「不應該怪他」。'],
+            ['我們不能浪費食物。（改為反問句）', '我們怎麼能浪費食物呢？', '我們一定不要浪費食物。', '我們是不會浪費食物的。', '我們為什麼要浪費食物？', '陳述句有「不」，反問句去掉「不」，變成「怎麼能...呢」。'],
+            ['這難道不是一個好主意嗎？（改為陳述句）', '這是一個好主意。', '這不是一個好主意。', '這可能是一個好主意。', '這到底是不是好主意？', '反問句有「不」，陳述句去掉「不」，變成肯定句。'],
+            ['父母的養育之恩，我們永遠不能忘記。（改為反問句）', '父母的養育之恩，我們怎麼能忘記呢？', '父母的養育之恩，我們一定會忘記的。', '父母的養育之恩，請大家不要忘記。', '父母的養育之恩，我們為什麼忘記？', '陳述句有「不能」，反問句去掉「不」，變成「怎麼能...呢」。'],
+            ['遇到困難，我們怎麼能輕易放棄呢？（改為陳述句）', '遇到困難，我們不能輕易放棄。', '遇到困難，我們必須輕易放棄。', '遇到困難，我們可能會輕易放棄。', '遇到困難，我們難道不能放棄嗎？', '反問句沒有「不」，陳述句加上「不」，變成「不能放棄」。'],
+            ['破壞公物是不對的行為。（改為反問句）', '破壞公物難道是對的行為嗎？', '破壞公物絕對是不對的行為。', '破壞公物可能是對的行為。', '破壞公物為什麼是對的行為？', '陳述句有「不」，反問句去掉「不」，加上「難道...嗎」。'],
+            ['天下哪有免費的午餐呢？（改為陳述句）', '天下沒有免費的午餐。', '天下一定有免費的午餐。', '天下其實有免費的午餐。', '天下難道沒有免費的午餐嗎？', '反問句意思是「沒有」，改為陳述句加上「沒有」。'],
+            ['這美麗的風景，難道不令人陶醉嗎？（改為陳述句）', '這美麗的風景令人陶醉。', '這美麗的風景不令人陶醉。', '這美麗的風景有時令人陶醉。', '這美麗的風景怎麼令人陶醉呢？', '反問句有「不」，陳述句去掉「不」，變成肯定句。'],
+            ['你做錯了事，應該向他道歉。（改為反問句）', '你做錯了事，難道不應該向他道歉嗎？', '你做錯了事，一定要向他道歉。', '你做錯了事，請馬上向他道歉。', '你做錯了事，為什麼不道歉？', '陳述句沒有「不」，反問句加上「不」，變成「難道不應該...嗎」。'],
+            ['我們不應該欺負弱小。（改為反問句）', '我們怎麼能欺負弱小呢？', '我們一定會欺負弱小的。', '我們是不會欺負弱小的。', '我們為什麼欺負弱小？', '陳述句有「不」，反問去掉「不」。'],
+            ['難道這不是大家的責任嗎？（改為陳述句）', '這是大家的責任。', '這不是大家的責任。', '這或許是大家的責任。', '這怎麼會是大家的責任呢？', '反問句有「不」，陳述句去掉「不」。'],
+            ['說謊是絕對不能被原諒的。（改為反問句）', '說謊怎麼能被原諒呢？', '說謊一定會被原諒的。', '說謊有時能被原諒。', '說謊難道不能被原諒嗎？', '陳述句有「不能」，反問去掉「不」。'],
+            ['這麼簡單的問題，你怎麼會不懂呢？（改為陳述句）', '這麼簡單的問題，你應該懂。', '這麼簡單的問題，你不應該懂。', '這麼簡單的問題，你可能不懂。', '這麼簡單的問題，你難道不懂嗎？', '反問句沒有「不」，陳述句加上「不」(這裡意思轉化為你應該懂)。'],
+            ['我們必須遵守交通規則。（改為反問句）', '我們難道不必須遵守交通規則嗎？', '我們一定不必須遵守交通規則。', '我們有時必須遵守交通規則。', '我們為什麼遵守交通規則？', '陳述句肯定，反問句加「不」。'],
+            ['難道你沒有聽見上課鐘聲嗎？（改為陳述句）', '你應該聽見上課鐘聲了。', '你沒有聽見上課鐘聲。', '你可能聽見上課鐘聲了。', '你怎麼聽見上課鐘聲了？', '反問句有「沒有」，陳述句表示肯定。'],
+            ['隨地吐痰是沒有公德心的表現。（改為反問句）', '隨地吐痰難道是有公德心的表現嗎？', '隨地吐痰絕對是沒有公德心的表現。', '隨地吐痰或許是有公德心的表現。', '隨地吐痰怎麼是沒有公德心？', '陳述句有「沒有」，反問去掉「沒有」。'],
+            ['誰說世上沒有真正的友誼呢？（改為陳述句）', '世上是有真正的友誼的。', '世上是沒有真正的友誼的。', '世上可能有真正的友誼。', '世上難道有真正的友誼嗎？', '反問句有「沒有」，陳述句改為肯定。'],
+            ['我們應該愛護大自然。（改為反問句）', '我們怎麼能不愛護大自然呢？', '我們一定會愛護大自然的。', '我們是不會愛護大自然的。', '我們為什麼愛護大自然？', '陳述句肯定，反問句加「不」。'],
+            ['難道他不值得我們學習嗎？（改為陳述句）', '他值得我們學習。', '他不值得我們學習。', '他可能值得我們學習。', '他怎麼值得我們學習？', '反問句有「不」，陳述句去掉「不」。'],
+            ['這件事我一定能做好。（改為反問句）', '這件事我難道不能做好嗎？', '這件事我一定不能做好。', '這件事我可能做好。', '這件事我怎麼能做好呢？', '陳述肯定，反問加「不」。'],
+            ['你怎麼能隨便拿別人的東西呢？（改為陳述句）', '你不應該隨便拿別人的東西。', '你應該隨便拿別人的東西。', '你可以隨便拿別人的東西。', '你難道不隨便拿別人的東西嗎？', '反問肯定，陳述加「不」。'],
+            ['我們不能忘記歷史。（改為反問句）', '我們怎麼能忘記歷史呢？', '我們必須忘記歷史。', '我們可能會忘記歷史。', '我們難道不能忘記歷史嗎？', '陳述否定，反問肯定。'],
+            ['這難道不是一個奇蹟嗎？（改為陳述句）', '這是一個奇蹟。', '這不是一個奇蹟。', '這可能是一個奇蹟。', '這怎麼會是一個奇蹟呢？', '反問否定，陳述肯定。'],
+            ['大家都喜歡這個遊戲。（改為反問句）', '難道大家不喜歡這個遊戲嗎？', '大家都不喜歡這個遊戲。', '大家可能喜歡這個遊戲。', '大家為什麼喜歡這個遊戲？', '陳述肯定，反問加「不」。'],
+            ['哪有不勞而獲的事情呢？（改為陳述句）', '沒有不勞而獲的事情。', '一定有不勞而獲的事情。', '可能有不勞而獲的事情。', '難道有不勞而獲的事情嗎？', '反問肯定，陳述改否定「沒有」。'],
+            ['你不應該欺負小動物。（改為反問句）', '你怎麼能欺負小動物呢？', '你一定會欺負小動物的。', '你難道不欺負小動物嗎？', '你為什麼不欺負小動物？', '陳述否定，反問肯定。'],
+            ['難道這不是我們共同的家園嗎？（改為陳述句）', '這是我們共同的家園。', '這不是我們共同的家園。', '這可能是我們共同的家園。', '這怎麼是我們共同的家園呢？', '反問否定，陳述肯定。'],
+            ['我們必須保護地球。（改為反問句）', '我們難道不應該保護地球嗎？', '我們一定不保護地球。', '我們為什麼保護地球？', '我們可能會保護地球。', '陳述肯定，反問否定。'],
+            ['你怎麼會不知道這個道理呢？（改為陳述句）', '你應該知道這個道理。', '你不應該知道這個道理。', '你可能不知道這個道理。', '你難道知道這個道理嗎？', '反問否定(怎麼會不知)，陳述肯定(應該知道)。']
+        ];
 
+        // 統整所有題目為純淨不重複的 rawQuestDataObj
         const rawQuestDataObj = [
-            ...complexTypePool, ...conjPool, ...reorderComplexPool, ...insertPool, ...rhetoricalPool
+            ...complexTypePool.map(item => ({
+                type: 'mcq', category: 's-complex-type', task: '認識複句：這句話屬於哪一種複句類型？',
+                sentence: item[0], correct: item[1], wrongs: [item[2], item[3], item[4]], explanation: `✅ ${item[1]}：${item[5]}`
+            })),
+            ...conjPool.map(item => ({
+                type: 'mcq', category: 's-conj', task: '關聯詞：選出最合適的關聯詞填入空格。',
+                sentence: item[0], correct: item[1], wrongs: [item[2], item[3], item[4]], explanation: `✅ ${item[1]}：${item[5]}`
+            })),
+            ...reorderComplexPool.map(item => ({
+                type: 'reorder', category: 's-reorder-complex', task: '複句重組：把碎片排成語意通順的複句。',
+                sentence: '', chunks: item[0], hint: item[1]
+            })),
+            ...insertPool.map(item => ({
+                type: 'insert', category: 's-insert', task: '擴充句子：點擊正確的 ＋ 號位置，把詞語加入句子中。',
+                chunks: item[0], insertWord: item[1], ansPos: item[2], explanation: item[3], hint: item[3]
+            })),
+            ...rhetoricalPool.map(item => ({
+                type: 'mcq', category: 's-rhetorical', task: '句型轉換：選出意思相同，但句型正確的選項。',
+                sentence: item[0], correct: item[1], wrongs: [item[2], item[3], item[4]], explanation: `✅ ${item[1]}：${item[5]}`
+            }))
         ];
 
         let userProgress = JSON.parse(localStorage.getItem('sentStdProgress')) || new Array(rawQuestDataObj.length).fill(0);
 
-        function renderDirectory() {
+        window.renderDirectory = function() {
             const dirContainer = document.getElementById('directory-content');
             let html = '';
             categories.forEach(cat => {
                 html += `
                     <div class="mb-6">
-                        <div class="flex items-center justify-between border-b-2 border-${cat.color}-100 pb-2 mb-3">
-                            <h3 class="text-xl font-bold text-${cat.color}-700">${cat.title}</h3>
-                            <button onclick="showTutorial('${cat.id}')" class="bg-orange-100 text-orange-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-orange-300 hover:bg-orange-200 transition flex items-center gap-1 active:scale-95">📘 學習錦囊</button>
+                        <div class="flex items-center justify-between border-b-2 border-orange-100 pb-2 mb-3">
+                            <h3 class="text-xl font-bold text-orange-700">${cat.title}</h3>
+                            <button onclick="window.showTutorial('${cat.id}')" class="bg-orange-100 text-orange-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-orange-300 hover:bg-orange-200 transition flex items-center gap-1 active:scale-95">📘 學習錦囊</button>
                         </div>
                         <div class="flex flex-wrap gap-3">
                 `;
@@ -472,57 +500,52 @@
                             icon = '❌';
                         }
 
-                        html += `<button onclick="startQuestion(${idx})" class="lvl-btn ${btnClass} w-12 h-12 lg:w-14 lg:h-14 rounded-xl font-black text-base lg:text-lg border-b-4 flex items-center justify-center shadow-sm transition-transform">${icon}</button>`;
+                        html += `<button onclick="window.startQuestion(${idx})" class="lvl-btn ${btnClass} w-12 h-12 lg:w-14 lg:h-14 rounded-xl font-black text-base lg:text-lg border-b-4 flex items-center justify-center shadow-sm transition-transform">${icon}</button>`;
                     }
                 });
                 html += `</div></div>`;
             });
             dirContainer.innerHTML = html;
-            updateTotalProgress();
-        }
+            window.updateTotalProgress();
+        };
 
-        function updateTotalProgress() {
+        window.updateTotalProgress = function() {
             let solved = userProgress.filter(p => p === 1 || p === 2).length;
             let percent = (solved / rawQuestDataObj.length) * 100;
             document.getElementById('progress-bar').style.width = percent + '%';
-        }
+        };
 
-        function shuffleOptions(correct, wrongs) {
-            let opts = [correct, ...wrongs];
-            for (let i = opts.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [opts[i], opts[j]] = [opts[j], opts[i]];
-            }
-            return { options: opts, ansIdx: opts.indexOf(correct) };
-        }
+        window.shuffleOptions = function(correctOpt, wrongOpts) {
+            let opts = [
+                { text: correctOpt, isCorrect: true },
+                ...wrongOpts.filter(w => w != null).map(w => ({ text: w, isCorrect: false }))
+            ];
+            return opts.sort(() => Math.random() - 0.5);
+        };
 
-        function startQuestion(idx, forceStart = false) {
+        window.startQuestion = function(idx, forceStart = false) {
             const qData = rawQuestDataObj[idx];
             const qType = qData.category;
             
             if (!forceStart && !localStorage.getItem('tut_seen_' + qType)) {
                 pendingQuestionIdx = idx; 
-                showTutorial(qType);      
+                window.showTutorial(qType);      
                 return;                   
             }
 
             currentQuestionMistakes = 0; 
             currentQuestionIdx = idx;
-            window.currentHints = []; 
-            
-            let hintBox = document.getElementById('dynamic-hint-box');
-            if(hintBox) hintBox.classList.add('hidden');
-
             document.getElementById('quest-directory').style.display = 'none';
             const questPlay = document.getElementById('quest-play');
             questPlay.style.display = 'flex';
             document.getElementById('main-scroll-area').scrollTop = 0;
             
             const qCatTitle = categories.find(c => c.id === qType).title;
+            const qTask = qData.task;
 
             let html = `
                 <div class="w-full flex justify-between items-center mb-4">
-                    <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
+                    <button onclick="window.backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
                     <span class="bg-orange-100 text-orange-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${idx + 1} 題 / 共 150 題</span>
                 </div>
                 
@@ -533,83 +556,133 @@
                     
                     <div class="w-full flex items-center gap-3 mt-4 mb-4">
                         <span class="bg-orange-100 text-orange-800 px-3 py-1 rounded text-sm font-bold whitespace-nowrap">任務</span>
-                        <h2 class="text-lg md:text-xl font-bold text-slate-700">${qData.task}</h2>
+                        <h2 class="text-lg md:text-xl font-bold text-slate-700">${qTask}</h2>
                     </div>
             `;
 
-            if (qData.type === 'mcq') {
-                const { options, ansIdx } = shuffleOptions(qData.correct, qData.wrongs);
-                let ttsText = qData.sentence.replace(/___/g, '什麼');
-                let sentenceHtml = qData.sentence.replace(/___/g, '<span class="text-orange-600 border-b-4 border-orange-500 px-6 font-black bg-orange-50 inline-block mx-1">?</span>');
+            if (qType === 's-insert') {
+                const chunks = qData.chunks;
+                const phrase = qData.insertWord;
+                const ansPos = qData.ansPos;
 
-                html += `
-                    <div class="w-full flex items-start gap-4 mb-6 bg-orange-50 p-6 rounded-2xl border border-orange-100 shadow-inner">
-                        <button onclick="speakText('${ttsText}')" class="tts-btn flex-shrink-0 bg-white text-orange-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-orange-200">🔊</button>
-                        <div class="text-2xl md:text-3xl font-bold text-slate-800 leading-loose">${sentenceHtml}</div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-3xl mt-auto" id="options-container">
-                `;
-                
-                options.forEach((optText, oIdx) => {
-                    const isCorr = (oIdx === ansIdx);
-                    const safeOpt = optText.replace(/'/g, "\\'");
-                    html += `<button onclick="checkMCQAnswer(this, ${isCorr}, '${safeOpt}')" class="option-btn bg-white border-4 border-slate-200 text-slate-700 font-bold text-xl md:text-2xl py-6 px-4 rounded-2xl hover:bg-orange-50 hover:border-orange-300 transition w-full text-center flex flex-col items-center justify-center break-words"><span class="bg-slate-100 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 mb-2">${['A','B','C','D'][oIdx]}</span> <span>${optText}</span></button>`;
-                });
-                
-                html += `</div>`;
-
-            } else if (qData.type === 'reorder') {
-                reorderCorrect = [...qData.chunks];
-                reorderSource = [...reorderCorrect].sort(() => Math.random() - 0.5);
-                reorderTarget = [];
-
-                html += `
-                    <button onclick="speakText('${reorderCorrect.join('')}')" class="mb-6 bg-blue-100 text-blue-700 font-bold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-200 transition"><span class="text-2xl">🔊</span> 聽聽完整句子</button>
-                    <div class="w-full bg-slate-50 p-4 md:p-6 rounded-2xl border-2 border-slate-200 min-h-[120px] flex flex-wrap content-start gap-2 mb-6" id="reorder-target-area"></div>
-                    <div class="w-full border-t-2 border-dashed border-slate-200 my-2"></div>
-                    <div class="text-center text-slate-500 font-bold mb-2 text-sm">👇 點擊下方詞語加入句子</div>
-                    <div class="w-full flex flex-wrap justify-center gap-3" id="reorder-source-area"></div>
-                `;
-                setTimeout(renderReorderUI, 0);
-
-            } else if (qData.type === 'insert') {
-                let ttsText = `請把「${qData.insertWord}」放入句子：` + qData.chunks.join('');
+                let ttsText = `請把「${phrase}」放入句子：` + chunks.join('');
                 
                 html += `
                     <div class="w-full text-center mb-6 mt-2">
                         <div class="inline-block bg-orange-100 text-orange-800 border-2 border-orange-300 rounded-2xl p-4 md:p-6 shadow-md">
                             <div class="text-sm font-bold text-orange-600 mb-2">準備加入的詞語</div>
-                            <div class="text-4xl md:text-5xl font-black tracking-widest pop">${qData.insertWord}</div>
+                            <div class="text-4xl md:text-5xl font-black tracking-widest pop">${phrase}</div>
                         </div>
                     </div>
-                    <button onclick="speakText('${ttsText}')" class="mb-6 bg-orange-100 text-orange-700 font-bold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-200 transition"><span class="text-2xl">🔊</span> 朗讀題目</button>
+                    <button onclick="window.speakText('${ttsText.replace(/'/g, "\\'")}')" class="mb-6 bg-orange-100 text-orange-700 font-bold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-200 transition"><span class="text-2xl">🔊</span> 朗讀題目</button>
 
                     <div class="w-full bg-slate-50 p-6 md:p-8 rounded-2xl border-2 border-slate-200 flex flex-wrap items-center justify-center gap-2 mb-6 text-2xl md:text-3xl font-bold text-slate-700 leading-loose">
                 `;
 
-                for (let i = 0; i <= qData.chunks.length; i++) {
-                    const isCorr = (i === qData.ansPos);
-                    html += `<button onclick="checkInsertAnswer(this, ${isCorr})" class="insert-slot px-4 py-2 rounded-xl text-orange-400 font-black hover:text-white hover:bg-orange-400" title="點擊放入這裡">＋</button>`;
-                    if (i < qData.chunks.length) {
-                        html += `<span>${qData.chunks[i]}</span>`;
+                for (let i = 0; i <= chunks.length; i++) {
+                    const isCorr = (i === ansPos);
+                    html += `<button onclick="window.checkInsertAnswer(this, ${isCorr}, '${phrase}', ${i})" class="insert-slot px-4 py-2 rounded-xl text-orange-400 font-black" title="點擊放入這裡">＋</button>`;
+                    if (i < chunks.length) {
+                        html += `<span>${chunks[i]}</span>`;
                     }
                 }
-                html += `</div>`;
-            }
+                html += `</div></div>`;
+                questPlay.innerHTML = html;
 
-            html += `
-                    <!-- 💡 動態提示框 -->
-                    <div id="dynamic-hint-box" class="hidden w-full max-w-3xl mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3">
+            } else if (qType === 's-reorder-complex') {
+                const chunkArray = qData.chunks;
+                const fullSentence = chunkArray.join('');
+                
+                reorderCorrect = [...chunkArray];
+                reorderSource = [...reorderCorrect].sort(() => Math.random() - 0.5);
+                reorderTarget = [];
+
+                html += `
+                    <div class="text-7xl md:text-8xl mb-4 text-center animate-bounce drop-shadow-md cursor-default select-none">🧩</div>
+                    <button onclick="window.speakText('${fullSentence.replace(/'/g, "\\'")}')" class="mb-6 bg-teal-100 text-teal-700 font-bold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-teal-200 transition"><span class="text-2xl">🔊</span> 聽聽完整句子</button>
+                    
+                    <div class="w-full bg-slate-50 p-4 md:p-6 rounded-2xl border-2 border-slate-200 min-h-[120px] flex flex-wrap content-start gap-2 mb-6" id="reorder-target-area"></div>
+                    <div class="w-full border-t-2 border-dashed border-slate-200 my-2"></div>
+                    <div class="text-center text-slate-500 font-bold mb-2 text-sm">👇 點擊下方詞語加入句子</div>
+                    <div class="w-full flex flex-wrap justify-center gap-3" id="reorder-source-area"></div>
+                `;
+                html += `</div>`;
+                questPlay.innerHTML = html;
+                window.renderReorderUI();
+
+            } else {
+                const sentence = qData.sentence;
+                const correctAns = qData.correct;
+                const wrongAns = qData.wrongs;
+
+                let ttsText = sentence.replace(/___/g, '什麼');
+                let sentenceHtml = sentence.replace(/___/g, '<span class="text-orange-600 border-b-4 border-orange-500 px-4 md:px-6 mx-1 font-black bg-orange-50 inline-block">?</span>');
+
+                html += `
+                    <div class="w-full flex items-start gap-4 mb-8 bg-orange-50 p-6 rounded-2xl border border-orange-100 shadow-inner mt-4">
+                        <button onclick="window.speakText('${ttsText.replace(/'/g, "\\'")}')" class="tts-btn flex-shrink-0 bg-white text-orange-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-orange-200">🔊</button>
+                        <div class="text-2xl md:text-3xl font-bold text-slate-800 leading-relaxed">${sentenceHtml}</div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 w-full mt-auto" id="options-container">
+                `;
+                
+                const shuffledOpts = window.shuffleOptions(correctAns, wrongAns);
+
+                shuffledOpts.forEach((opt) => {
+                    const safeOpt = opt.text.replace(/'/g, "\\'");
+                    html += `
+                    <div class="flex items-stretch gap-2 w-full">
+                        <button onclick="window.checkSelectionAnswer(this, ${opt.isCorrect})" class="option-btn flex-1 bg-white border-4 border-slate-200 text-slate-700 text-2xl font-bold py-6 px-4 rounded-2xl hover:bg-orange-50 hover:border-orange-300 transition text-center break-words">${opt.text}</button>
+                        <button onclick="window.speakText('${safeOpt}')" class="tts-btn flex-shrink-0 bg-orange-50 text-orange-600 w-16 rounded-2xl text-3xl flex items-center justify-center shadow-sm border-2 border-orange-200 hover:bg-orange-100 transition" title="朗讀此選項">🔊</button>
+                    </div>`;
+                });
+                
+                html += `</div>
+                    <!-- 動態提示框 -->
+                    <div id="dynamic-hint-box" class="hidden w-full mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3 slide-up">
                         <div class="flex-1 space-y-2" id="hint-text"></div>
                         <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
                     </div>
-                </div>
-            `;
-            questPlay.innerHTML = html;
-        }
+                </div>`;
+                questPlay.innerHTML = html;
+            }
+        };
 
-        // --- 重組句子相關邏輯 ---
-        function renderReorderUI() {
+        // --- 擴充句子專用邏輯 ---
+        window.checkInsertAnswer = function(btnElement, isCorrect, phrase, index) {
+            const allSlots = document.querySelectorAll('.insert-slot');
+            allSlots.forEach(s => s.style.pointerEvents = 'none');
+
+            if (isCorrect) {
+                btnElement.innerHTML = phrase;
+                btnElement.className = "px-4 py-2 rounded-xl text-white font-black bg-orange-500 pop shadow-md mx-2";
+                
+                const qData = rawQuestDataObj[currentQuestionIdx];
+                let finalSentence = "";
+                for (let i=0; i<=qData.chunks.length; i++){
+                    if(i===index) finalSentence += phrase;
+                    if(i<qData.chunks.length) finalSentence += qData.chunks[i];
+                }
+                
+                window.speakText("答對了！" + finalSentence);
+                window.handleCorrectAnswer(finalSentence);
+            } else {
+                btnElement.classList.add('bg-rose-200', 'border-rose-400', 'text-rose-700', 'shake');
+                window.speakText("放在這裡好像不太通順喔！");
+                currentQuestionMistakes++; 
+                userProgress[currentQuestionIdx] = -1;
+                localStorage.setItem('sentStandardProgress', JSON.stringify(userProgress));
+                
+                setTimeout(() => {
+                    btnElement.classList.remove('bg-rose-200', 'border-rose-400', 'text-rose-700', 'shake');
+                    allSlots.forEach(s => s.style.pointerEvents = 'auto');
+                }, 1000);
+            }
+        };
+
+        // --- 重組句子 UI 渲染與邏輯 ---
+        window.renderReorderUI = function() {
             const tArea = document.getElementById('reorder-target-area');
             const sArea = document.getElementById('reorder-source-area');
             if(!tArea || !sArea) return;
@@ -619,7 +692,7 @@
                 tHtml = '<span class="text-slate-400 font-bold m-auto">你的句子會顯示在這裡...</span>';
             } else {
                 reorderTarget.forEach((chunk, idx) => {
-                    tHtml += `<button onclick="removeFromTarget(${idx})" class="chunk-btn bg-orange-500 text-white font-black text-xl md:text-2xl py-3 px-5 rounded-xl shadow-md pop">${chunk}</button>`;
+                    tHtml += `<button onclick="window.removeFromTarget(${idx})" class="chunk-btn bg-orange-500 text-white font-black text-xl md:text-2xl py-3 px-5 rounded-xl shadow-md pop">${chunk}</button>`;
                 });
             }
             tArea.innerHTML = tHtml;
@@ -629,162 +702,99 @@
                 if (chunk === null) {
                     sHtml += `<div class="chunk-slot w-24 h-14 md:w-32 md:h-16 rounded-xl"></div>`; 
                 } else {
-                    sHtml += `<button onclick="moveToTarget(${idx})" class="chunk-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-orange-400 hover:bg-orange-50 font-black text-xl md:text-2xl py-3 px-5 rounded-xl shadow">${chunk}</button>`;
+                    sHtml += `<button onclick="window.moveToTarget(${idx})" class="chunk-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-orange-400 hover:bg-orange-50 font-black text-xl md:text-2xl py-3 px-5 rounded-xl shadow">${chunk}</button>`;
                 }
             });
             sArea.innerHTML = sHtml;
 
             if (reorderTarget.length > 0 && reorderTarget.length === reorderCorrect.length) {
-                checkReorderAnswer();
+                window.checkReorderAnswer();
             }
-        }
+        };
 
-        function moveToTarget(sourceIdx) {
+        window.moveToTarget = function(sourceIdx) {
             let chunk = reorderSource[sourceIdx];
             reorderSource[sourceIdx] = null; 
             reorderTarget.push(chunk);
-            speakText(chunk);
-            renderReorderUI();
-        }
+            window.speakText(chunk);
+            window.renderReorderUI();
+        };
 
-        function removeFromTarget(targetIdx) {
+        window.removeFromTarget = function(targetIdx) {
             let chunk = reorderTarget[targetIdx];
             reorderTarget.splice(targetIdx, 1);
             let emptyIdx = reorderSource.indexOf(null);
             if(emptyIdx !== -1) reorderSource[emptyIdx] = chunk;
-            renderReorderUI();
-        }
+            window.renderReorderUI();
+        };
 
-        function checkReorderAnswer() {
+        window.checkReorderAnswer = function() {
             let isCorrect = true;
-            let correctCount = 0;
-            for(let i=0; i<reorderTarget.length; i++) {
-                if(reorderTarget[i] === reorderCorrect[i]) {
-                    correctCount++;
-                } else {
-                    isCorrect = false;
-                    break;
-                }
+            for(let i=0; i<reorderCorrect.length; i++) {
+                if(reorderTarget[i] !== reorderCorrect[i]) isCorrect = false;
             }
 
-            const qData = rawQuestDataObj[currentQuestionIdx];
-
-            if (isCorrect && reorderTarget.length === reorderCorrect.length) {
-                speakText("完美的重組！");
-                let expText = `✅ 正確句子：<br>${reorderCorrect.join('')}<br><br>💡 解析：${qData.hint}`;
-                triggerSuccess(expText);
-            } else if (reorderTarget.length === reorderCorrect.length) {
+            if (isCorrect) {
+                let fullSent = reorderCorrect.join('');
+                window.speakText("重組正確！" + fullSent);
+                window.handleCorrectAnswer(fullSent);
+            } else {
+                window.speakText("順序好像有點不對喔，再試試看！");
                 currentQuestionMistakes++;
                 userProgress[currentQuestionIdx] = -1;
-                localStorage.setItem('sentStdProgress', JSON.stringify(userProgress));
-                
-                let chunksToReturn = reorderTarget.splice(correctCount);
-                for (let chunk of chunksToReturn) {
-                    let emptyIdx = reorderSource.indexOf(null);
-                    if(emptyIdx !== -1) {
-                        reorderSource[emptyIdx] = chunk;
-                    } else {
-                        reorderSource.push(chunk);
-                    }
-                }
-
-                let hintWord = reorderCorrect[correctCount];
-                let newHint = `排錯了喔！正確的部分已保留。<br>👉 下一個應該是：「<span class="text-rose-600">${hintWord}</span>」<br>💡 技巧：${qData.hint}`;
-
-                document.getElementById('hint-text').innerHTML = newHint;
-                document.getElementById('hint-tts-btn').onclick = () => speakText(`排錯了喔。下一個應該是，${hintWord}`);
-                document.getElementById('dynamic-hint-box').classList.remove('hidden');
-                document.getElementById('dynamic-hint-box').classList.add('slide-up');
-                
-                speakText("順序不對喔，請看提示！");
+                localStorage.setItem('sentStandardProgress', JSON.stringify(userProgress));
                 
                 const tArea = document.getElementById('reorder-target-area');
                 tArea.classList.add('bg-rose-100', 'border-rose-400', 'shake');
                 setTimeout(() => tArea.classList.remove('bg-rose-100', 'border-rose-400', 'shake'), 800);
-
-                renderReorderUI();
-            }
-        }
-
-        // --- 選擇題檢查邏輯 ---
-        function checkMCQAnswer(btnElement, isCorrect, clickedOptText) {
-            const allBtns = document.querySelectorAll('.option-btn');
-            const qData = rawQuestDataObj[currentQuestionIdx];
-            
-            if (isCorrect) {
-                allBtns.forEach(b => b.style.pointerEvents = 'none');
-                btnElement.classList.add('correct');
-                const expText = qData.explanation; 
-                
-                speakText("精準！");
-                triggerSuccess(expText);
-            } else {
-                btnElement.classList.add('wrong', 'shake');
-                currentQuestionMistakes++; 
-                userProgress[currentQuestionIdx] = -1;
-                localStorage.setItem('sentStdProgress', JSON.stringify(userProgress));
-                
-                // 由於這裡的選擇題沒有像拔尖版那樣寫滿4個解析，我們提供通用錯誤提示
-                let newHint = "請再仔細想一想喔！";
-                if (qData.category === 's-complex-type') newHint = "複句判斷錯誤，請根據關聯詞再試一次！";
-                if (qData.category === 's-conj') newHint = "這個關聯詞放在這裡意思不通順喔！";
-                if (qData.category === 's-rhetorical') newHint = "注意有沒有「不」字，意思不能改變喔！";
-
-                if (!window.currentHints) window.currentHints = [];
-                if (!window.currentHints.includes(newHint)) window.currentHints.push(newHint);
-
-                let combinedHintsHtml = window.currentHints.map(h => `<div class="border-b border-yellow-200 pb-1 last:border-0 last:pb-0">💡 ${h}</div>`).join('');
-                document.getElementById('hint-text').innerHTML = combinedHintsHtml;
-                document.getElementById('hint-tts-btn').onclick = () => speakText(window.currentHints.join('。'));
-                document.getElementById('dynamic-hint-box').classList.remove('hidden');
-                document.getElementById('dynamic-hint-box').classList.add('slide-up');
-                
-                speakText("不對喔，" + newHint);
-                setTimeout(() => { btnElement.classList.remove('shake'); }, 500);
-            }
-        }
-
-        // --- 插入題檢查邏輯 ---
-        function checkInsertAnswer(btnElement, isCorrect) {
-            const allSlots = document.querySelectorAll('.insert-slot');
-            const qData = rawQuestDataObj[currentQuestionIdx];
-
-            if (isCorrect) {
-                allSlots.forEach(b => b.style.pointerEvents = 'none');
-                btnElement.classList.add('bg-orange-500', 'text-white', 'pop');
-                btnElement.innerText = qData.insertWord;
-
-                let completeSentence = "";
-                for (let i = 0; i <= qData.chunks.length; i++) {
-                    if (i === qData.ansPos) completeSentence += qData.insertWord;
-                    if (i < qData.chunks.length) completeSentence += qData.chunks[i];
-                }
-
-                speakText("答對了！" + completeSentence);
-                triggerSuccess(`✅ 完整句子：<br>${completeSentence}<br><br>💡 解析：${qData.explanation}`);
-            } else {
-                btnElement.classList.add('bg-rose-200', 'text-rose-700', 'shake');
-                currentQuestionMistakes++;
-                userProgress[currentQuestionIdx] = -1;
-                localStorage.setItem('sentStdProgress', JSON.stringify(userProgress));
-
-                let newHint = "放這裡讀起來不太通順喔！<br>" + qData.hint;
-                
-                document.getElementById('hint-text').innerHTML = `💡 ${newHint}`;
-                document.getElementById('hint-tts-btn').onclick = () => speakText(newHint);
-                document.getElementById('dynamic-hint-box').classList.remove('hidden');
-                document.getElementById('dynamic-hint-box').classList.add('slide-up');
-
-                speakText("放在這裡好像不太通順喔！");
                 
                 setTimeout(() => {
-                    btnElement.classList.remove('bg-rose-200', 'text-rose-700', 'shake');
+                    if(reorderTarget.length > 0) window.removeFromTarget(reorderTarget.length - 1);
                 }, 1000);
             }
-        }
+        };
 
-        // --- 成功處理共通邏輯 ---
-        function triggerSuccess(expText) {
+        // --- 選擇題檢查邏輯 ---
+        window.checkSelectionAnswer = function(btnElement, isCorrect) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+            if (isCorrect) {
+                btnElement.classList.add('correct');
+                const qData = rawQuestDataObj[currentQuestionIdx];
+                let answerText = "";
+                
+                if (qData.category === 's-conj' || qData.category === 's-complex-type') {
+                    let parts = btnElement.innerText.split('...');
+                    let sentence = qData.sentence;
+                    if(sentence.includes('___')) {
+                        if(parts.length >= 2) {
+                            sentence = sentence.replace('___', parts[0]).replace('___', parts[1]);
+                        }
+                    }
+                    answerText = sentence.replace(/___/g, ''); 
+                } else if (qData.category === 's-rhetorical') {
+                    answerText = btnElement.innerText;
+                }
+
+                window.speakText("答對了！" + answerText);
+                window.handleCorrectAnswer(answerText);
+            } else {
+                btnElement.classList.add('wrong', 'shake');
+                window.speakText("不對喔，請再想想看！");
+                currentQuestionMistakes++; 
+                userProgress[currentQuestionIdx] = -1;
+                localStorage.setItem('sentStandardProgress', JSON.stringify(userProgress));
+                
+                setTimeout(() => {
+                    btnElement.classList.remove('wrong', 'shake');
+                    allBtns.forEach(b => { if (!b.classList.contains('correct')) b.style.pointerEvents = 'auto'; });
+                }, 1500);
+            }
+        };
+
+        // --- 共通答對處理 ---
+        window.handleCorrectAnswer = function(completeText) {
             let finalStatus = currentQuestionMistakes === 0 ? 1 : 2;
             let previousStatus = userProgress[currentQuestionIdx];
             let expGained = 0;
@@ -797,7 +807,7 @@
 
             if (expGained > 0) {
                 sentStdExp += expGained;
-                localStorage.setItem('sentStdExp', sentStdExp);
+                localStorage.setItem('sentStandardExp', sentStdExp);
                 document.getElementById('exp-display').innerText = sentStdExp;
                 document.getElementById('exp-display').classList.add('pop');
                 setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
@@ -805,73 +815,76 @@
 
             if (finalStatus === 1 || previousStatus !== 1) {
                 userProgress[currentQuestionIdx] = finalStatus;
-                localStorage.setItem('sentStdProgress', JSON.stringify(userProgress));
+                localStorage.setItem('sentStandardProgress', JSON.stringify(userProgress));
             }
 
             let modalIcon = finalStatus === 1 ? '🌟' : '✅';
-            let modalTitle = finalStatus === 1 ? '完美答對！' : '成功過關！';
+            let modalTitle = finalStatus === 1 ? '太棒了！一次答對！' : '成功找出正解！';
             let expMsg = expGained > 0 
                 ? `<span class="text-orange-600 block text-xl mb-4">獲得 ${expGained} 點經驗值 ✨</span>` 
                 : `<span class="text-slate-500 block text-lg mb-4">這題已經成功過關囉！</span>`;
             
-            let combinedDesc = expMsg + `
-                <div class="bg-orange-50 border-l-4 border-orange-500 p-4 text-left text-orange-900 rounded-r-lg font-bold">
-                    <div class="flex justify-between items-center mb-3 pb-2 border-b border-orange-200">
-                        <span class="text-xl">📚 深度解析</span>
-                        <button onclick="speakText('${expText}')" class="bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm hover:bg-orange-100 text-xl transition active:scale-95">🔊</button>
-                    </div>
-                    <div class="space-y-3 text-base leading-relaxed">${expText}</div>
-                </div>`;
+            let combinedDesc = expMsg + `<div class="bg-orange-50 border-l-4 border-orange-500 p-4 text-left text-slate-800 rounded-r-lg font-bold text-xl flex items-center justify-between">
+                <span>${completeText}</span>
+                <button onclick="window.speakText('${completeText.replace(/'/g, "\\'")}')" class="bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm hover:bg-orange-100 text-xl transition active:scale-95">🔊</button>
+            </div>`;
 
-            setTimeout(() => { showModal(modalIcon, modalTitle, combinedDesc); }, 800);
-        }
+            const qData = rawQuestDataObj[currentQuestionIdx];
+            if (qData.explanation) {
+                combinedDesc += `<div class="mt-3 bg-white p-3 rounded-lg border border-orange-200 text-orange-800 font-bold text-base leading-relaxed">💡 解析：${qData.explanation}</div>`;
+            } else if (qData.hint) {
+                combinedDesc += `<div class="mt-3 bg-white p-3 rounded-lg border border-orange-200 text-orange-800 font-bold text-base leading-relaxed">💡 解析：${qData.hint}</div>`;
+            }
 
-        function showModal(icon, title, desc) {
+            setTimeout(() => { window.showModal(modalIcon, modalTitle, combinedDesc); }, 1000);
+        };
+
+        window.showModal = function(icon, title, desc) {
             const modal = document.getElementById('feedback-modal');
             const content = document.getElementById('feedback-content');
             document.getElementById('feedback-icon').innerText = icon;
             document.getElementById('feedback-title').innerText = title;
             document.getElementById('feedback-desc').innerHTML = desc;
             
-            const nextBtn = document.getElementById('next-btn');
-            nextBtn.onclick = () => {
-                modal.classList.add('opacity-0');
-                content.classList.add('scale-90');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                    let nextIdx = currentQuestionIdx + 1;
-                    if (nextIdx < rawQuestDataObj.length) startQuestion(nextIdx);
-                    else { showToast("恭喜完成所有挑戰！"); backToDirectory(); }
-                }, 300);
-            };
-
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
-        }
+        };
 
-        function backToDirectory() {
-            let hintBox = document.getElementById('dynamic-hint-box');
-            if(hintBox) hintBox.classList.add('hidden');
+        window.backToDirectory = function() {
             document.getElementById('quest-play').style.display = 'none';
             document.getElementById('quest-directory').style.display = 'block';
-            renderDirectory();
-        }
+            window.renderDirectory();
+        };
 
-        function backToDirectoryFromModal() {
+        window.backToDirectoryFromModal = function() {
             const modal = document.getElementById('feedback-modal');
             const content = document.getElementById('feedback-content');
             modal.classList.add('opacity-0');
             content.classList.add('scale-90');
             setTimeout(() => {
                 modal.classList.add('hidden');
-                backToDirectory();
+                window.backToDirectory();
             }, 300);
-        }
+        };
+
+        window.goToNextQuestion = function() {
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                let nextIdx = currentQuestionIdx + 1;
+                if (nextIdx < rawQuestDataObj.length) window.startQuestion(nextIdx);
+                else { window.showToast("恭喜完成所有挑戰！"); window.backToDirectory(); }
+            }, 300);
+        };
 
         window.onload = function() {
             document.getElementById('exp-display').innerText = sentStdExp;
-            renderDirectory();
-        }
+            window.renderDirectory();
+            document.getElementById('next-btn').onclick = window.goToNextQuestion;
+        };
     </script>
 </body>
 </html>
