@@ -45,7 +45,7 @@
         @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
     </style>
 </head>
-<body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
+<body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden bg-grid-pattern">
 
     <!-- 頂部導覽列 (Cyan 配色) -->
     <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
@@ -65,7 +65,7 @@
     </div>
 
     <!-- 主畫面區 -->
-    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
+    <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth" id="main-scroll-area">
         
         <div id="quest-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
             <div id="quest-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
@@ -90,11 +90,11 @@
         <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="tutorial-content">
             <div class="flex justify-between items-center mb-4 border-b-2 border-cyan-100 pb-3">
                 <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-cyan-600 flex items-center gap-2">📘 學習錦囊</h2>
-                <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
+                <button onclick="window.closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
             </div>
             <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4"></div>
             <div class="mt-6 pt-4 border-t-2 border-slate-100">
-                <button onclick="closeTutorial()" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-cyan-800 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
+                <button onclick="window.closeTutorial()" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-cyan-800 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
             </div>
         </div>
     </div>
@@ -106,7 +106,7 @@
             <h2 id="feedback-title" class="text-2xl md:text-3xl font-black text-slate-800 mb-2">答對了！</h2>
             <div id="feedback-desc" class="text-slate-600 font-bold mb-4 text-base md:text-lg leading-relaxed text-left overflow-y-auto pr-2 flex-1 w-full"></div>
             <div class="flex gap-3 w-full mt-2 pt-4 border-t border-slate-100">
-                <button onclick="backToDirectoryFromModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition text-lg">⬅️ 目錄</button>
+                <button onclick="window.backToDirectoryFromModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition text-lg">⬅️ 目錄</button>
                 <button id="next-btn" class="flex-[1.5] bg-cyan-600 hover:bg-cyan-700 text-white font-black py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-cyan-800 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
             </div>
         </div>
@@ -120,36 +120,67 @@
         let currentQuestionMistakes = 0; 
         let pendingQuestionIdx = -1;
         let currentQuestionIdx = -1;
-        window.currentHints = []; // 用於記錄累積提示
+        window.currentHints = []; 
 
         document.getElementById('exp-display').innerText = stdExp;
 
-        function speakText(text) {
+        window.cleanTextForSpeech = function(text) {
+            if(!text) return "";
+            return text.replace(/<br\s*\/?>/gi, '。')
+                       .replace(/<[^>]*>?/gm, '')
+                       .replace(/[✅❌💡【】_]/g, '')
+                       .replace(/&nbsp;/g, ' ')
+                       .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDC00-\uDFFF]/g, ''); 
+        };
+
+        window.speakText = function(text, rate = 0.95) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                let cleanText = text.replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】]/g, '').replace(/&nbsp;/g, ' ');
-                let msg = new SpeechSynthesisUtterance(cleanText);
+                let msg = new SpeechSynthesisUtterance(window.cleanTextForSpeech(text));
                 msg.lang = 'zh-HK';
-                msg.rate = 0.9; 
+                msg.rate = rate; 
                 window.speechSynthesis.speak(msg);
             }
-        }
+        };
 
-        function showToast(message) {
+        window.showToast = function(message) {
             const toast = document.getElementById("toast");
             toast.innerText = message;
             toast.className = "toast-msg show";
             setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
-        }
+        };
 
-        // 標點與修辭的通用解釋字典 (極大壓縮資料量)
+        // 🌟 新增：針對標點符號的語音轉譯器 (照顧 SEN 學生)
+        window.getTTSOptionText = function(opt) {
+            if(opt === '。') return '句號';
+            if(opt === '，') return '逗號';
+            if(opt === '？') return '問號';
+            if(opt === '！') return '感嘆號';
+            if(opt === '、') return '頓號';
+            if(opt === '：') return '冒號';
+            if(opt === '；') return '分號';
+            if(opt === '《》') return '書名號';
+            if(opt === '「」') return '引號';
+            if(opt === '（）') return '括號';
+            if(opt === '……') return '省略號';
+            if(opt === '——') return '破折號';
+            return opt;
+        };
+
+        // 標點與修辭的通用解釋字典 (包含所有錯誤選項的合理解釋)
         const genericExplanations = {
+            '。': '句號：表示一句話完整說完了。',
+            '，': '逗號：表示句子中間的短暫停頓。',
+            '？': '問號：表示這是一句發問的話。',
+            '！': '感嘆號：表示帶有強烈的感情或語氣。',
+            '、': '頓號：用來分開連續相同種類的物品。',
+            '：': '冒號：用在提示語後面，引起下文。',
+            '；': '分號：用來分開兩個結構相同、意思並列的長句子。',
             '《》': '書名號：用來標示書本、文章、電影、報紙等的名稱。',
             '「」': '引號：用來標示人物說的話，或特別強調的詞語。',
+            '（）': '括號：用來對句子中的詞語進行補充說明。',
             '……': '省略號：表示話未說完、語意未盡，或列舉的省略。',
             '——': '破折號：表示聲音的延長，或意思的轉折、解釋說明。',
-            '；': '分號：用來分開兩個結構相同、意思並列的長句子。',
-            '：': '冒號：用在提示語後面，引起下文。',
             '明喻': '明喻：有本體、喻體，並使用「像」、「好像」、「猶如」等喻詞。',
             '暗喻': '暗喻：有本體、喻體，但不使用「像」，而是用「是」、「變成」等連接。',
             '借喻': '借喻：不出現本體和喻詞，直接把喻體（比喻的東西）當作本體來說。',
@@ -162,9 +193,9 @@
             '對偶': '對偶：兩句話字數相等、結構相同、意思相對或相關（如春聯）。'
         };
 
-        function getGenericExp(term) {
+        window.getGenericExp = function(term) {
             return genericExplanations[term] || '這是一個修辭或標點符號。';
-        }
+        };
 
         // ================= 2. 學習錦囊 (教學庫) =================
         const tutorialContents = {
@@ -224,16 +255,16 @@
             `
         };
 
-        function showTutorial(categoryId) {
+        window.showTutorial = function(categoryId) {
             const modal = document.getElementById('tutorial-modal');
             const content = document.getElementById('tutorial-content');
             document.getElementById('tutorial-body').innerHTML = tutorialContents[categoryId];
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
             localStorage.setItem('tut_seen_' + categoryId, 'true');
-        }
+        };
 
-        function closeTutorial() {
+        window.closeTutorial = function() {
             const modal = document.getElementById('tutorial-modal');
             const content = document.getElementById('tutorial-content');
             modal.classList.add('opacity-0');
@@ -243,12 +274,12 @@
                 if (pendingQuestionIdx !== -1) {
                     let targetIdx = pendingQuestionIdx;
                     pendingQuestionIdx = -1;
-                    startQuestion(targetIdx, true); 
+                    window.startQuestion(targetIdx, true); 
                 }
             }, 300);
-        }
+        };
 
-        // ================= 3. 標準題庫 (160題 全解析版) =================
+        // ================= 3. 基礎標點與修辭題庫 (160題 全解析版) =================
         const categories = [
             { id: 'r-punc-adv', title: '🔴 進階標點符號辨析 (40題)', color: 'rose' },
             { id: 'r-rhet-meta', title: '🟠 比喻三兄弟辨析 (40題)', color: 'orange' },
@@ -256,8 +287,8 @@
             { id: 'r-rhet-struct', title: '🔵 排比與問句辨析 (40題)', color: 'blue' }
         ];
 
-        // 資料產生器：將精簡陣列轉為完整物件，並自動綁定通用解釋
-        function formatData(pool, category, task) {
+        // 🌟 資料產生器：將精簡陣列轉為完整物件，並自動綁定通用解釋
+        window.formatData = function(pool, category, task) {
             return pool.map(item => {
                 let correctOpt = item[1];
                 let w1 = item[2];
@@ -265,11 +296,11 @@
                 let w3 = item[4];
                 let specificExp = item[5];
                 
-                let exp = `✅ ${correctOpt}：${specificExp}<br>❌ ${w1}：${getGenericExp(w1)}<br>❌ ${w2}：${getGenericExp(w2)}<br>❌ ${w3}：${getGenericExp(w3)}`;
+                let exp = `✅ ${correctOpt}：${specificExp}<br>❌ ${w1}：${window.getGenericExp(w1)}<br>❌ ${w2}：${window.getGenericExp(w2)}<br>❌ ${w3}：${window.getGenericExp(w3)}`;
                 
                 return { category: category, task: task, sentence: item[0], correct: correctOpt, wrongs: [w1, w2, w3], explanation: exp };
             });
-        }
+        };
 
         // --- 1. 進階標點 (40題) ---
         // 格式: [句子, 正確, 錯1, 錯2, 錯3, 具體解釋]
@@ -449,15 +480,15 @@
         ];
 
         const rawQuestDataObj = [
-            ...formatData(puncAdvPool, 'r-punc-adv', '進階標點：選出適合放在 ___ 位置的標點符號。'),
-            ...formatData(metaAdvPool, 'r-rhet-meta', '比喻辨析：這句話運用了哪種修辭手法？'),
-            ...formatData(personHyperPool, 'r-rhet-person', '修辭辨析：這句話運用了哪種修辭手法？'),
-            ...formatData(structPool, 'r-rhet-struct', '句型辨析：這句話運用了哪種修辭手法？')
+            ...window.formatData(puncAdvPool, 'r-punc-adv', '進階標點：選出適合放在 ___ 位置的標點符號。'),
+            ...window.formatData(metaAdvPool, 'r-rhet-meta', '比喻辨析：這句話運用了哪種修辭手法？'),
+            ...window.formatData(personHyperPool, 'r-rhet-person', '修辭辨析：這句話運用了哪種修辭手法？'),
+            ...window.formatData(structPool, 'r-rhet-struct', '句型辨析：這句話運用了哪種修辭手法？')
         ];
 
         let userProgress = JSON.parse(localStorage.getItem('rhetStdProgress')) || new Array(rawQuestDataObj.length).fill(0);
 
-        function renderDirectory() {
+        window.renderDirectory = function() {
             const dirContainer = document.getElementById('directory-content');
             let html = '';
             categories.forEach(cat => {
@@ -467,7 +498,7 @@
                         <div class="mb-6">
                             <div class="flex items-center justify-between border-b-2 border-${cat.color}-100 pb-2 mb-3">
                                 <h3 class="text-xl font-bold text-${cat.color}-700">${cat.title}</h3>
-                                <button onclick="showTutorial('${cat.id}')" class="bg-cyan-100 text-cyan-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-cyan-300 hover:bg-cyan-200 transition flex items-center gap-1 active:scale-95">📘 學習錦囊</button>
+                                <button onclick="window.showTutorial('${cat.id}')" class="bg-cyan-100 text-cyan-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-cyan-300 hover:bg-cyan-200 transition flex items-center gap-1 active:scale-95">📘 學習錦囊</button>
                             </div>
                             <div class="flex flex-wrap gap-3">
                     `;
@@ -488,47 +519,47 @@
                                 icon = '❌';
                             }
 
-                            html += `<button onclick="startQuestion(${idx})" class="lvl-btn ${btnClass} w-12 h-12 lg:w-14 lg:h-14 rounded-xl font-black text-base lg:text-lg border-b-4 flex items-center justify-center shadow-sm transition-transform">${icon}</button>`;
+                            html += `<button onclick="window.startQuestion(${idx})" class="lvl-btn ${btnClass} w-12 h-12 lg:w-14 lg:h-14 rounded-xl font-black text-base lg:text-lg border-b-4 flex items-center justify-center shadow-sm transition-transform">${icon}</button>`;
                         }
                     });
                     html += `</div></div>`;
                 }
             });
             dirContainer.innerHTML = html;
-            updateTotalProgress();
-        }
+            window.updateTotalProgress();
+        };
 
-        function updateTotalProgress() {
+        window.updateTotalProgress = function() {
             let solved = userProgress.filter(p => p === 1 || p === 2).length;
             let percent = (solved / rawQuestDataObj.length) * 100;
             document.getElementById('progress-bar').style.width = percent + '%';
-        }
+        };
 
-        function shuffleOptions(correct, wrongs) {
-            let opts = [correct, ...wrongs];
-            for (let i = opts.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [opts[i], opts[j]] = [opts[j], opts[i]];
+        window.shuffleOptions = function(correct, wrongs) {
+            let opts = [ { text: correct, isCorrect: true } ];
+            if (Array.isArray(wrongs)) {
+                wrongs.forEach(w => {
+                    if (w !== undefined && w !== null) {
+                        opts.push({ text: String(w), isCorrect: false });
+                    }
+                });
             }
-            return {
-                options: opts,
-                ansIdx: opts.indexOf(correct)
-            };
-        }
+            return opts.sort(() => Math.random() - 0.5);
+        };
 
-        function startQuestion(idx, forceStart = false) {
+        window.startQuestion = function(idx, forceStart = false) {
             const qData = rawQuestDataObj[idx];
             const qType = qData.category;
             
             if (!forceStart && !localStorage.getItem('tut_seen_' + qType)) {
                 pendingQuestionIdx = idx; 
-                showTutorial(qType);      
+                window.showTutorial(qType);      
                 return;                   
             }
 
             currentQuestionMistakes = 0; 
             currentQuestionIdx = idx;
-            window.currentHints = []; // 重置該題的累積提示
+            window.currentHints = []; 
             
             document.getElementById('quest-directory').style.display = 'none';
             const questPlay = document.getElementById('quest-play');
@@ -536,14 +567,14 @@
             document.getElementById('main-scroll-area').scrollTop = 0;
             
             const qCatTitle = categories.find(c => c.id === qType).title;
-            const { options, ansIdx } = shuffleOptions(qData.correct, qData.wrongs);
+            const options = window.shuffleOptions(qData.correct, qData.wrongs);
 
             let ttsText = qData.sentence.replace(/___/g, '什麼');
-            let sentenceHtml = qData.sentence.replace(/___/g, '<span class="text-cyan-600 border-b-4 border-cyan-500 px-6 font-black bg-cyan-50">?</span>');
+            let sentenceHtml = qData.sentence.replace(/___/g, '<span class="text-cyan-600 border-b-4 border-cyan-500 px-6 font-black bg-cyan-50 inline-block mx-1">?</span>');
 
             let html = `
                 <div class="w-full flex justify-between items-center mb-4">
-                    <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
+                    <button onclick="window.backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
                     <span class="bg-cyan-100 text-cyan-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${idx + 1} 題 / 共 160 題</span>
                 </div>
                 
@@ -557,43 +588,51 @@
                         <h2 class="text-lg md:text-xl font-bold text-slate-700">${qData.task}</h2>
                     </div>
 
-                    <div class="w-full flex items-start gap-4 mb-6 bg-cyan-50 p-6 rounded-2xl border border-cyan-100 shadow-inner">
-                        <button onclick="speakText('${ttsText}')" class="tts-btn flex-shrink-0 bg-white text-cyan-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-cyan-200">🔊</button>
+                    <div class="w-full flex items-start gap-4 mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-200 shadow-inner mt-2">
+                        <button onclick="window.speakText('${ttsText.replace(/'/g, "\\'")}')" class="tts-btn flex-shrink-0 bg-white text-cyan-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-cyan-200 mt-1">🔊</button>
                         <div class="text-2xl md:text-3xl font-bold text-slate-800 leading-loose">${sentenceHtml}</div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl mt-auto" id="options-container">
+                    <div class="flex flex-col gap-3 w-full max-w-2xl mt-auto" id="options-container">
             `;
             
             // 標點符號的按鈕特別放大，修辭則是普通文字
             let isPunc = qType.includes('punc');
             let textClass = isPunc ? 'text-4xl md:text-5xl pb-6 pt-3' : 'text-2xl md:text-3xl py-6';
 
-            options.forEach((optText, oIdx) => {
-                const isCorr = (oIdx === ansIdx);
-                const safeOpt = optText.replace(/'/g, "\\'");
-                html += `<button onclick="checkAnswer(this, ${isCorr}, '${safeOpt}')" class="option-btn bg-white border-4 border-slate-200 text-slate-700 font-bold ${textClass} rounded-2xl hover:bg-cyan-50 hover:border-cyan-300 transition w-full text-center flex flex-col items-center justify-center">${optText}</button>`;
+            options.forEach((optItem, oIdx) => {
+                const isCorr = optItem.isCorrect;
+                const letter = ['A','B','C','D'][oIdx];
+                const safeOpt = optItem.text.replace(/'/g, "\\'");
+                html += `
+                <div class="flex items-stretch gap-2 w-full">
+                    <button onclick="window.checkAnswer(this, ${isCorr}, '${safeOpt}')" class="option-btn flex-1 bg-white border-4 border-slate-200 text-slate-700 font-bold ${textClass} rounded-2xl hover:bg-cyan-50 hover:border-cyan-300 transition text-left flex items-center gap-4 px-6">
+                        <span class="bg-slate-100 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5">${letter}</span> 
+                        <span class="leading-relaxed break-words option-text-span">${optItem.text}</span>
+                    </button>
+                    <button onclick="window.speakText(window.getTTSOptionText(this.previousElementSibling.querySelector('.option-text-span').innerText), 0.95)" class="tts-btn flex-shrink-0 bg-cyan-50 text-cyan-600 w-16 rounded-2xl text-3xl flex items-center justify-center shadow-sm border-2 border-cyan-200 hover:bg-cyan-100 transition" title="朗讀此選項">🔊</button>
+                </div>`;
             });
             
             html += `
                     </div>
                     <!-- 💡 動態提示框 -->
-                    <div id="dynamic-hint-box" class="hidden w-full max-w-2xl mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3">
+                    <div id="dynamic-hint-box" class="hidden w-full max-w-2xl mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3 slide-up">
                         <div class="flex-1 space-y-2" id="hint-text"></div>
                         <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
                     </div>
                 </div>
             `;
-            questPlay.innerHTML = html;
-        }
+            document.getElementById('quest-play').innerHTML = html;
+        };
 
-        function backToDirectory() {
+        window.backToDirectory = function() {
             document.getElementById('quest-play').style.display = 'none';
             document.getElementById('quest-directory').style.display = 'block';
-            renderDirectory();
-        }
+            window.renderDirectory();
+        };
 
-        function checkAnswer(btnElement, isCorrect, clickedOptText) {
+        window.checkAnswer = function(btnElement, isCorrect, clickedOptText) {
             const allBtns = document.querySelectorAll('.option-btn');
             const qData = rawQuestDataObj[currentQuestionIdx];
             
@@ -603,7 +642,7 @@
                 const expText = qData.explanation; 
                 
                 let completeSentence = qData.sentence.replace('___', clickedOptText);
-                speakText("答對了！" + completeSentence);
+                window.speakText("答對了！" + completeSentence);
                 
                 let finalStatus = currentQuestionMistakes === 0 ? 1 : 2;
                 let previousStatus = userProgress[currentQuestionIdx];
@@ -639,12 +678,12 @@
                     <div class="bg-cyan-50 border-l-4 border-cyan-500 p-4 text-left text-cyan-900 rounded-r-lg font-bold">
                         <div class="flex justify-between items-center mb-3 pb-2 border-b border-cyan-200">
                             <span class="text-xl">📚 選項全解析</span>
-                            <button onclick="speakText('${expText}')" class="bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm hover:bg-cyan-100 text-xl transition active:scale-95">🔊</button>
+                            <button onclick="window.speakText('${expText.replace(/'/g, "\\'")}')" class="bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm hover:bg-cyan-100 text-xl transition active:scale-95">🔊</button>
                         </div>
                         <div class="space-y-3 text-base leading-relaxed">${expText}</div>
                     </div>`;
 
-                setTimeout(() => { showModal(modalIcon, modalTitle, combinedDesc); }, 800);
+                setTimeout(() => { window.showModal(modalIcon, modalTitle, combinedDesc); }, 800);
             } else {
                 // ❌ 答錯邏輯：動態累積提示
                 btnElement.classList.add('wrong', 'shake');
@@ -666,22 +705,22 @@
                     window.currentHints.push(newHint);
                 }
 
-                let combinedHintsHtml = window.currentHints.map(h => `<div class="border-b border-yellow-200 pb-1 last:border-0 last:pb-0">💡 ${h}</div>`).join('');
+                let combinedHintsHtml = window.currentHints.map(h => `<div class="border-b border-yellow-200 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0">💡 ${h}</div>`).join('');
                 
                 document.getElementById('hint-text').innerHTML = combinedHintsHtml;
-                document.getElementById('hint-tts-btn').onclick = () => speakText(window.currentHints.join('。'));
+                document.getElementById('hint-tts-btn').onclick = () => window.speakText(window.currentHints.join('。'));
                 document.getElementById('dynamic-hint-box').classList.remove('hidden');
                 document.getElementById('dynamic-hint-box').classList.add('slide-up');
                 
-                speakText("不對喔，" + newHint);
+                window.speakText("不對喔，" + newHint);
                 
                 setTimeout(() => {
                     btnElement.classList.remove('shake');
                 }, 500);
             }
-        }
+        };
 
-        function showModal(icon, title, desc) {
+        window.showModal = function(icon, title, desc) {
             const modal = document.getElementById('feedback-modal');
             const content = document.getElementById('feedback-content');
             document.getElementById('feedback-icon').innerText = icon;
@@ -695,30 +734,30 @@
                 setTimeout(() => {
                     modal.classList.add('hidden');
                     let nextIdx = currentQuestionIdx + 1;
-                    if (nextIdx < rawQuestDataObj.length) startQuestion(nextIdx);
-                    else { showToast("恭喜完成所有挑戰！"); backToDirectory(); }
+                    if (nextIdx < rawQuestDataObj.length) window.startQuestion(nextIdx);
+                    else { window.showToast("恭喜完成所有挑戰！"); window.backToDirectory(); }
                 }, 300);
             };
 
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
-        }
+        };
 
-        function backToDirectoryFromModal() {
+        window.backToDirectoryFromModal = function() {
             const modal = document.getElementById('feedback-modal');
             const content = document.getElementById('feedback-content');
             modal.classList.add('opacity-0');
             content.classList.add('scale-90');
             setTimeout(() => {
                 modal.classList.add('hidden');
-                backToDirectory();
+                window.backToDirectory();
             }, 300);
-        }
+        };
 
         window.onload = function() {
             document.getElementById('exp-display').innerText = stdExp;
-            renderDirectory();
-        }
+            window.renderDirectory();
+        };
     </script>
 </body>
 </html>
