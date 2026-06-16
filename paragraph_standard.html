@@ -76,6 +76,7 @@
 </head>
 <body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
 
+    <!-- 頂部導覽列 (Teal 配色) -->
     <div class="w-full bg-white shadow-md flex flex-col z-20 flex-shrink-0">
         <div class="p-3 lg:p-4 bg-teal-600 text-white flex justify-between items-center w-full">
             <h1 class="text-base lg:text-2xl font-bold tracking-wider flex items-center gap-2">
@@ -88,16 +89,18 @@
             </div>
         </div>
         <div class="flex w-full bg-slate-100 border-b border-slate-300">
-            <button onclick="switchMode('quest')" id="tab-quest" class="tab-btn flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-teal-600 text-teal-600">🚀 綜合寫作結構特訓 (150題)</button>
-            <button onclick="switchMode('sandbox')" id="tab-sandbox" class="tab-btn flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200 text-slate-500">📐 實用文格式沙盒 (結構排版)</button>
+            <button onclick="switchMode('quest')" id="tab-quest" class="tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-teal-600">🚀 綜合寫作結構特訓 (150題)</button>
+            <button onclick="switchMode('sandbox')" id="tab-sandbox" class="tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200">📐 實用文格式沙盒 (結構排版)</button>
         </div>
         <div id="progress-container" class="w-full bg-slate-200 h-2">
             <div id="progress-bar" class="bg-yellow-400 h-full w-0 transition-all duration-500"></div>
         </div>
     </div>
 
+    <!-- 主畫面區 -->
     <div class="flex-1 overflow-y-auto p-3 md:p-6 relative pb-20 scroll-smooth bg-grid-pattern" id="main-scroll-area">
         
+        <!-- 模式 1：常規寫作特訓 -->
         <div id="quest-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
             <div id="quest-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
                 <h2 class="text-2xl font-black text-slate-800 mb-2 flex items-center gap-2">🎯 中高年級常規段落格式訓練地圖</h2>
@@ -106,7 +109,7 @@
                     <div class="flex flex-wrap gap-4 flex-1">
                         <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-lg shadow-sm">🌟</span> 一次答對 (+20)</div>
                         <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 經提示過關 (+10)</div>
-                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-slate-100 border-2 border-slate-300 flex items-center justify-center text-lg shadow-sm">❓</span> 未完成</div>
+                        <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-rose-100 border-2 border-rose-400 flex items-center justify-center text-lg shadow-sm">❌</span> 未完成</div>
                     </div>
                 </div>
                 <div id="directory-content" class="flex flex-col gap-8"></div>
@@ -115,12 +118,15 @@
             <div id="quest-play" class="w-full hidden flex-col items-center"></div>
         </div>
 
+        <!-- 模式 2：實用文格式沙盒 -->
         <div id="sandbox-mode" class="w-full max-w-6xl mx-auto hidden flex-col lg:flex-row gap-6 h-full min-h-[500px]">
+            <!-- 左側：選單與積木 -->
             <div class="lg:w-1/3 flex flex-col gap-4">
                 <div class="bg-white rounded-2xl p-4 shadow-md border-t-4 border-teal-500">
                     <h3 class="font-black text-teal-800 text-lg mb-3">📁 選擇實用文範本：</h3>
                     <div class="grid grid-cols-2 gap-2" id="sandbox-templates">
-                        </div>
+                        <!-- 按鈕會由 JavaScript 動態生成以帶上剔號 -->
+                    </div>
                 </div>
 
                 <div class="bg-white rounded-2xl p-4 shadow-md flex-grow flex flex-col min-h-[250px]">
@@ -130,6 +136,7 @@
                 </div>
             </div>
 
+            <!-- 右側：模擬寫作公文紙 -->
             <div class="lg:w-2/3 bg-white rounded-3xl shadow-xl p-5 md:p-8 flex flex-col relative min-h-[500px]">
                 <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
                     <div class="flex items-center gap-2">
@@ -142,8 +149,10 @@
                     </div>
                 </div>
 
+                <!-- 模擬公文紙格槽 (完美配合對齊) -->
                 <div class="flex-grow letter-pad rounded-2xl p-6 flex flex-col gap-4 shadow-inner relative min-h-[380px]" id="sandbox-layout-pad">
-                    </div>
+                    <!-- 對齊槽位動態生成 -->
+                </div>
                 
                 <div id="sandbox-hint-box" class="hidden mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl text-yellow-800 font-bold text-sm"></div>
             </div>
@@ -151,6 +160,7 @@
 
     </div>
 
+    <!-- 學習小教學 Modal -->
     <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity">
         <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="tutorial-content">
             <div class="flex justify-between items-center mb-4 border-b-2 border-teal-100 pb-3">
@@ -164,6 +174,7 @@
         </div>
     </div>
 
+    <!-- 答對全解析 Modal -->
     <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity">
         <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-xl text-center transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="feedback-content">
             <div id="feedback-icon" class="text-6xl mb-2">🎉</div>
@@ -287,7 +298,7 @@
         function showTutorial(categoryId) {
             const modal = document.getElementById('tutorial-modal');
             const content = document.getElementById('tutorial-content');
-            document.getElementById('tutorial-body').innerHTML = tutorialContents[categoryId] || '<p>請觀察實用文排版，點擊左側積木填入正確的位置中。</p>';
+            document.getElementById('tutorial-body').innerHTML = tutorialContents[categoryId];
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
             localStorage.setItem('tut_seen_' + categoryId, 'true');
@@ -339,6 +350,7 @@
             [['這樣一來，我們不但能學到新知識，', '還能培養獨立思考的能力，', '因此，每天保持閱讀是十分重要的。'], '遞進與因果關係。'],
             [['首先要準備一盤乾淨的水，', '然後把種子輕輕放進濕潤的泥土裡，', '最後把它放在溫暖的地方，每天按時澆水。'], '動作步驟順序。']
         ];
+        // 智能生成 30 題
         let reorderStdPool = [];
         for(let i=0; i<30; i++) {
             let base = pReorderStdPool[i % pReorderStdPool.length];
@@ -360,30 +372,30 @@
         const pPracticalNoticePool = [
             ['在學校發出的通告中，「關於舉辦秋季旅行事宜」屬於哪一部分？', '標題', '上款', '正文', '祝頌語', '這句話代表通告的核心主題，是標題。'],
             ['在通告中，寫在最後的「全體學生家長：」通常是？', '上款', '下款', '標題', '正文', '「全體學生家長」是這篇通告的閱讀對象，屬於上款。'],
-            ['通告正文結束後，緊接著的「請家長填妥回條並於星期五前交回班主任」屬於？', '呼籲/要求', '下款', '標題', '上款', '這是通告結尾對讀者的具體要求 and 呼籲。'],
+            ['通告正文結束後，緊接著的「請家長填妥回條並於星期五前交回班主任」屬於？', '正文/呼籲要求', '下款', '標題', '上款', '這是通告結尾對讀者的具體要求 and 呼籲。'],
             ['通告的右下角寫著「校長 陳大文」，這是什麼？', '下款', '上款', '正文', '標題', '發出通告單位的職銜與姓名，屬於下款。'],
             ['哪一個「不屬於」通告的基本要素？', '天氣紀錄', '日期', '標題', '上款', '通告是公文的一種，不需要記錄當天的天氣。'],
-            ['通告正文第一行通常要空兩格寫，這是開頭格式。', '承上啟下', '為了好看', '沒為什麼', '節省信紙', '所有段落開頭都需要空兩格。'],
+            ['通告正文第一行通常要空兩格寫，這是開頭格式。', '中文寫作段落格式規範', '為了好看', '沒為什麼', '節省信紙', '所有段落開頭都需要空兩格。'],
             ['在通告中，交代秋季旅行的日期、地點、收費等，屬於哪部分？', '正文', '上款', '下款', '標題', '這些活動細節是通告的核心主要內容。'],
             ['通告的最後一行寫著「二零二六年五月十八日」，這是？', '日期', '下款', '上款', '標題', '這是通告發出的具體日期。']
         ];
         let practicalNoticePool = [];
         for(let i=0; i<30; i++) {
             let base = pPracticalNoticePool[i % pPracticalNoticePool.length];
-            practicalNoticePool.push([base[0], base[1], base[2], base[3], base[4], `[第 ${i+1} 題] ` + base[5]]);
+            practicalNoticePool.push([base[0], base[1], base[2], base[3], `[第 ${i+1} 題] ` + base[4]]);
         }
 
         const pPracticalNotePool = [
             ['在讀書筆記中，「好詞佳句」部分的作用是什麼？', '積累優美的詞語，提升寫作能力', '湊字數', '好玩', '記錄主角的名字', '記錄和積累好詞好句是為了以後寫作時可以使用。'],
             ['讀書筆記和書信相比，最核心的不同在於？', '讀書筆記必須包含「讀後感/啟發」', '讀書筆記不需要寫日期', '讀書筆記不能用電腦寫', '讀書筆記沒有題目', '讀書筆記的核心在於記錄自己看完書後的啟發。'],
-            ['在宣傳海報上，「歡迎踴躍參加！」通常放在哪裡？', '呼籲/要求', '標題', '署名', '正文', '呼籲大家參加的話語，通常放在正文最後面。'],
-            ['在讀書筆記中，寫下這本書的作者、出版社，屬於？', '總結', '正文', '下款', '標題', '作者、出版社等都屬於書籍的基本資訊。'],
-            ['海報的主要目的是什麼？', '正文', '下款', '上款', '標題', '海報的作用是向公眾宣傳某些公開事項。']
+            ['在宣傳海報上，「歡迎永躍參加！」通常放在哪裡？', '正文末尾（呼籲段）', '海報最上方（標題）', '海報背面', '海報正中間', '呼籲大家參加的話語，通常放在正文最後面。'],
+            ['在讀書筆記中，寫下這本書的作者、出版社，屬於？', '圖書基本資料', '讀後感', '好詞佳句', '主要內容', '作者、出版社等都屬於書籍的基本資訊。'],
+            ['海報的主要目的是什麼？', '向大眾宣傳某項活動或事情', '寫給自己的心情日記', '向長輩問候的信件', '記錄讀完書的心得', '海報的作用是公開宣傳。']
         ];
         let practicalNotePool = [];
         for(let i=0; i<30; i++) {
             let base = pPracticalNotePool[i % pPracticalNotePool.length];
-            practicalNotePool.push([base[0], base[1], base[2], base[3], base[4], `[第 ${i+1} 題] ` + base[5]]);
+            practicalNotePool.push([base[0], base[1], base[2], base[3], `[第 ${i+1} 題] ` + base[4]]);
         }
 
         const pPracticalReorderStdPool = [
@@ -435,7 +447,7 @@
             ],
             'notice_lost': [
                 { id: 'b-title', name: '尋物啟事', type: 'title', align: 'center' },
-                { id: 'b-body', name: '本人昨日下午不慎於操場遺失了一個黑色筆袋。', type: 'body', align: 'indent' },
+                { id: 'b-body', name: '本人昨日下午不慎於操場拾獲或遺失了一個黑色筆袋。', type: 'body', align: 'indent' },
                 { id: 'b-details', name: '筆袋內有鉛筆、直尺。如有拾獲者，請送交教員室。', type: 'details', align: 'indent' },
                 { id: 'b-sender', name: '四年級學生 李小明', type: 'sender', align: 'right' },
                 { id: 'b-date', name: '五月十八日', type: 'date', align: 'right' }
@@ -444,40 +456,42 @@
 
         const sandboxSlots = {
             'letter': [
-                { id: 's-title', label: '置中 ➡️ 實用文標題', align: 'center', expectedType: 'title' },
-                { id: 's-recipient', label: '左起頂格 ➡️ 上款(稱呼)', align: 'left-top', expectedType: 'recipient' },
-                { id: 's-greet', label: '首行縮進 ➡️ 禮貌問候語', align: 'indent', expectedType: 'greet' },
-                { id: 's-body', label: '首行縮進 ➡️ 正文核心內容', align: 'indent', expectedType: 'body' },
-                { id: 's-wish', label: '左起頂格 ➡️ 祝頌語(開頭)', align: 'left', expectedType: 'wish' },
-                { id: 's-wish-content', label: '首行縮進 ➡️ 祝頌語(祝福)', align: 'indent', expectedType: 'wish-content' },
-                { id: 's-sender', label: '右邊對齊 ➡️ 下款與職銜', align: 'right', expectedType: 'sender' },
-                { id: 's-date', label: '右邊對齊 ➡️ 寫信日期', align: 'right', expectedType: 'date' }
+                { id: 's-title', label: '置中 ➡️ 實用文標題', align: 'center', expectedType: 'title', filled: null },
+                { id: 's-recipient', label: '左起頂格 ➡️ 上款(稱呼)', align: 'left-top', expectedType: 'recipient', filled: null },
+                { id: 's-greet', label: '首行縮進 ➡️ 禮貌問候語', align: 'indent', expectedType: 'greet', filled: null },
+                { id: 's-body', label: '首行縮進 ➡️ 正文核心內容', align: 'indent', expectedType: 'body', filled: null },
+                { id: 's-wish', label: '左起頂格 ➡️ 祝頌語(開頭)', align: 'left', expectedType: 'wish', filled: null },
+                { id: 's-wish-content', label: '首行縮進 ➡️ 祝頌語(祝福)', align: 'indent', expectedType: 'wish-content', filled: null },
+                { id: 's-sender', label: '右邊對齊 ➡️ 下款與職銜', align: 'right', expectedType: 'sender', filled: null },
+                { id: 's-date', label: '右邊對齊 ➡️ 寫信日期', align: 'right', expectedType: 'date', filled: null }
             ],
             'notice': [
-                { id: 's-title', label: '置中 ➡️ 通告標題', align: 'center', expectedType: 'title' },
-                { id: 's-recipient', label: '左起頂格 ➡️ 上款(對象)', align: 'left-top', expectedType: 'recipient' },
-                { id: 's-body', label: '首行縮進 ➡️ 通告正文', align: 'indent', expectedType: 'body' },
-                { id: 's-call', label: '首行縮進 ➡️ 呼籲/結語段', align: 'indent', expectedType: 'call' },
-                { id: 's-sender', label: '右邊對齊 ➡️ 發出單位下款', align: 'right', expectedType: 'sender' },
-                { id: 's-date', label: '右邊對齊 ➡️ 發出日期', align: 'right', expectedType: 'date' }
+                { id: 's-title', label: '置中 ➡️ 通告標題', align: 'center', expectedType: 'title', filled: null },
+                { id: 's-recipient', label: '左起頂格 ➡️ 上款(對象)', align: 'left-top', expectedType: 'recipient', filled: null },
+                { id: 's-body', label: '首行縮進 ➡️ 通告正文', align: 'indent', expectedType: 'body', filled: null },
+                { id: 's-call', label: '首行縮進 ➡️ 呼籲/結語段', align: 'indent', expectedType: 'call', filled: null },
+                { id: 's-sender', label: '右邊對齊 ➡️ 發出單位下款', align: 'right', expectedType: 'sender', filled: null },
+                { id: 's-date', label: '右邊對齊 ➡️ 發出日期', align: 'right', expectedType: 'date', filled: null }
             ],
             'diary': [
-                { id: 's-date-header', label: '左起頂格 ➡️ 日期星期天氣', align: 'left-top', expectedType: 'date-header' },
-                { id: 's-body1', label: '首行縮進 ➡️ 今日事情起因', align: 'indent', expectedType: 'body1' },
-                { id: 's-body2', label: '首行縮進 ➡️ 今日事情經過', align: 'indent', expectedType: 'body2' },
-                { id: 's-summary', label: '首行縮進 ➡️ 個人心得與感想', align: 'indent', expectedType: 'summary' }
+                { id: 's-date-header', label: '左起頂格 ➡️ 日期星期天氣', align: 'left-top', expectedType: 'date-header', filled: null },
+                { id: 's-body1', label: '首行縮進 ➡️ 今日事情起因', align: 'indent', expectedType: 'body1', filled: null },
+                { id: 's-body2', label: '首行縮進 ➡️ 今日事情經過', align: 'indent', expectedType: 'body2', filled: null },
+                { id: 's-summary', label: '首行縮進 ➡️ 個人心得與感想', align: 'indent', expectedType: 'summary', filled: null }
             ],
             'notice_lost': [
-                { id: 's-title', label: '置中 ➡️ 啟事標題', align: 'center', expectedType: 'title' },
-                { id: 's-body', label: '首行縮進 ➡️ 啟事正文(起因)', align: 'indent', expectedType: 'body' },
-                { id: 's-details', label: '首行縮進 ➡️ 啟事細節(辦法)', align: 'indent', expectedType: 'details' },
-                { id: 's-sender', label: '右邊對齊 ➡️ 啟事署名下款', align: 'right', expectedType: 'sender' },
-                { id: 's-date', label: '右邊對齊 ➡️ 啟事日期', align: 'right', expectedType: 'date' }
+                { id: 's-title', label: '置中 ➡️ 啟事標題', align: 'center', expectedType: 'title', filled: null },
+                { id: 's-body', label: '首行縮進 ➡️ 啟事正文(起因)', align: 'indent', expectedType: 'body', filled: null },
+                { id: 's-details', label: '首行縮進 ➡️ 啟事細節(辦法)', align: 'indent', expectedType: 'details', filled: null },
+                { id: 's-sender', label: '右邊對齊 ➡️ 啟事署名下款', align: 'right', expectedType: 'sender', filled: null },
+                { id: 's-date', label: '右邊對齊 ➡️ 啟事日期', align: 'right', expectedType: 'date', filled: null }
             ]
         };
 
         let currentActiveTemplate = 'letter';
         let sandboxSelectedBrick = null;
+        
+        // 🌟 核心升級：實用文過關打卡紀錄
         let sandboxCompleted = JSON.parse(localStorage.getItem('sandboxCompleted')) || [];
 
         // 動態生成左側模板按鈕，加入過關「✅」剔號
@@ -496,498 +510,646 @@
             list.forEach(item => {
                 const isDone = sandboxCompleted.includes(item.type);
                 const checkmark = isDone ? ' ✅' : '';
-                const btnBg = currentActiveTemplate === item.type ? 'bg-teal-600 text-white border-teal-700 shadow-inner' : 'bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100';
+                const btnBg = currentActiveTemplate === item.type ? 'bg-teal-600 text-white border-teal-700' : 'bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100';
                 
                 html += `
-                    <button onclick="loadSandboxTemplate('${item.type}')" class="py-2.5 px-4 ${btnBg} border font-bold rounded-xl transition text-sm flex items-center justify-center gap-1 shadow-sm">
-                        <span>${item.icon} ${item.name}${checkmark}</span>
+                    <button onclick="loadSandboxTemplate('${item.type}')" class="py-2.5 px-4 ${btnBg} border font-bold rounded-xl transition text-sm flex items-center justify-center gap-1">
+                        <span>${item.icon} ${item.name}</span>
+                        <span class="text-emerald-500 font-extrabold">${checkmark}</span>
                     </button>
                 `;
             });
             container.innerHTML = html;
         }
 
-        // ================= 5. 導覽、地圖與進度控制 =================
-        function switchMode(mode) {
-            const questTab = document.getElementById('tab-quest');
-            const sandboxTab = document.getElementById('tab-sandbox');
-            const questMode = document.getElementById('quest-mode');
-            const sandboxMode = document.getElementById('sandbox-mode');
-
-            if (mode === 'quest') {
-                questTab.className = "tab-btn flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-teal-600 text-teal-600 bg-white";
-                sandboxTab.className = "tab-btn flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200 text-slate-500";
-                questMode.classList.remove('hidden');
-                sandboxMode.classList.add('hidden');
-                backToDirectory();
-            } else {
-                sandboxTab.className = "tab-btn flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-teal-600 text-teal-600 bg-white";
-                questTab.className = "tab-btn flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200 text-slate-500";
-                sandboxMode.classList.remove('hidden');
-                questMode.classList.add('hidden');
-                loadSandboxTemplate(currentActiveTemplate);
-            }
+        function loadSandboxTemplate(type) {
+            currentActiveTemplate = type;
+            const titleMap = { 'letter': '✉️ 個人書信格式排版', 'notice': '📢 學校/社會通告格式排版', 'diary': '📓 個人日記格式排版', 'notice_lost': '🔍 尋物啟事格式排版' };
+            document.getElementById('sandbox-paper-title').innerText = titleMap[type];
+            document.getElementById('sandbox-hint-box').classList.add('hidden');
+            
+            sandboxSlots[type].forEach(slot => slot.filled = null);
+            
+            renderSandboxTemplates();
+            renderSandboxBricks();
+            renderSandboxPad();
+            speakText(`已載入${titleMap[type]}範本。`);
         }
 
-        function updateProgressBar() {
-            const doneCount = userProgress.filter(x => x > 0).length;
-            const pct = (doneCount / rawQuestDataObj.length) * 100;
-            document.getElementById('progress-bar').style.width = pct + '%';
-        }
-
-        function renderDirectory() {
-            const container = document.getElementById('directory-content');
-            if (!container) return;
-
+        function renderSandboxBricks() {
+            const area = document.getElementById('sandbox-bricks-area');
             let html = '';
-            categories.forEach(cat => {
-                html += `
-                    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-                        <h3 class="text-base lg:text-lg font-bold text-slate-700 mb-4 pb-2 border-b border-slate-100 flex items-center justify-between">
-                            <span>${cat.title}</span>
-                        </h3>
-                        <div class="grid grid-cols-5 sm:grid-cols-10 gap-2">
-                `;
+            const bricks = sandboxBricks[currentActiveTemplate];
+            const currentSlots = sandboxSlots[currentActiveTemplate];
 
-                rawQuestDataObj.forEach((q, idx) => {
-                    if (q.category === cat.id) {
-                        let statusClass = 'bg-slate-50 border-slate-300 text-slate-600 hover:bg-slate-200';
-                        let statusIcon = '❓';
-                        if (userProgress[idx] === 2) {
-                            statusClass = 'bg-yellow-50 border-yellow-400 text-yellow-800 hover:bg-yellow-100 font-black';
-                            statusIcon = '🌟';
-                        } else if (userProgress[idx] === 1) {
-                            statusClass = 'bg-emerald-50 border-emerald-400 text-emerald-800 hover:bg-emerald-100 font-bold';
-                            statusIcon = '✅';
-                        }
-
-                        html += `
-                            <button onclick="startQuestion(${idx}, false)" class="h-14 border-2 rounded-xl flex flex-col items-center justify-center transition shadow-sm text-sm ${statusClass}">
-                                <span class="font-bold">${(idx % 30) + 1}</span>
-                                <span class="text-[10px] -mt-0.5">${statusIcon}</span>
-                            </button>
-                        `;
-                    }
-                });
-
-                html += `
-                        </div>
-                    </div>
-                `;
+            bricks.forEach(brick => {
+                const isPlaced = currentSlots.some(slot => slot.filled && slot.filled.id === brick.id);
+                if (isPlaced) {
+                    html += `
+                        <button class="w-full text-left py-2.5 px-4 bg-slate-100 text-slate-400 font-bold rounded-xl border border-slate-200 cursor-not-allowed select-none flex items-center justify-between" disabled>
+                            <span>${brick.name}</span>
+                            <span class="text-xs bg-slate-200 px-2 py-0.5 rounded text-slate-500">已上牆</span>
+                        </button>
+                    `;
+                } else {
+                    const isSelected = sandboxSelectedBrick && sandboxSelectedBrick.id === brick.id;
+                    const borderClass = isSelected ? 'border-teal-500 bg-teal-50 text-teal-700 ring-2 ring-teal-300' : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-700';
+                    html += `
+                        <button onclick="selectSandboxBrick('${brick.id}')" class="w-full text-left py-2.5 px-4 font-bold rounded-xl border-2 ${borderClass} transition flex items-center justify-between shadow-sm active:scale-95">
+                            <span>${brick.name}</span>
+                            <span class="text-xs text-teal-500 font-semibold">排版對齊 ➡️</span>
+                        </button>
+                    `;
+                }
             });
-            container.innerHTML = html;
-            updateProgressBar();
+            area.innerHTML = html;
         }
 
-        // ================= 6. 特訓答題核心模組 =================
-        function startQuestion(idx, ignoreTut) {
-            currentQuestionIdx = idx;
-            currentQuestionMistakes = 0;
-            const qData = rawQuestDataObj[idx];
+        function selectSandboxBrick(brickId) {
+            const bricks = sandboxBricks[currentActiveTemplate];
+            sandboxSelectedBrick = bricks.find(b => b.id === brickId);
+            speakText(sandboxSelectedBrick.name);
+            renderSandboxBricks();
+            showToast("已選擇積木，請點擊右方對應的對齊槽位！");
+        }
 
-            if (!ignoreTut && !localStorage.getItem('tut_seen_' + qData.category) && tutorialContents[qData.category]) {
-                pendingQuestionIdx = idx;
-                showTutorial(qData.category);
+        function renderSandboxPad() {
+            const pad = document.getElementById('sandbox-layout-pad');
+            let html = '';
+            const currentSlots = sandboxSlots[currentActiveTemplate];
+
+            currentSlots.forEach((slot, idx) => {
+                let alignClass = 'text-left';
+                if (slot.align === 'center') alignClass = 'text-center';
+                if (slot.align === 'right') alignClass = 'text-right';
+                if (slot.align === 'indent') alignClass = 'pl-12 text-left';
+
+                if (slot.filled) {
+                    html += `
+                        <div onclick="removeFromSlot('${slot.id}')" class="w-full ${alignClass} py-3 px-5 bg-teal-600 text-white font-black rounded-xl shadow-md border border-teal-700 cursor-pointer pop hover:bg-teal-700 transition" title="點擊將積木取下">
+                            ${slot.filled.name}
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div onclick="placeIntoSlot('${slot.id}')" class="w-full ${alignClass} py-3 px-5 sandbox-slot rounded-xl text-teal-500 border-2 font-bold text-sm" title="點擊將選擇的積木放置於此">
+                            [槽位 ${idx+1}] ${slot.label}
+                        </div>
+                    `;
+                }
+            });
+            pad.innerHTML = html;
+        }
+
+        function placeIntoSlot(slotId) {
+            if (!sandboxSelectedBrick) {
+                showToast("請先從左側點擊選擇一個格式積木！");
+                speakText("請先選擇積木");
                 return;
             }
 
-            document.getElementById('quest-directory').classList.add('hidden');
-            const playArea = document.getElementById('quest-play');
-            playArea.classList.remove('hidden');
-            playArea.innerHTML = '';
+            const currentSlots = sandboxSlots[currentActiveTemplate];
+            const slot = currentSlots.find(s => s.id === slotId);
+            
+            slot.filled = sandboxSelectedBrick;
+            sandboxSelectedBrick = null; 
 
-            let headerHtml = `
-                <div class="w-full bg-white rounded-3xl p-5 md:p-8 shadow-xl border border-slate-200 slide-up flex flex-col gap-4">
-                    <div class="flex justify-between items-center border-b pb-3 border-slate-100">
-                        <span class="text-xs font-bold px-2.5 py-1 bg-teal-100 text-teal-800 rounded-full">第 ${idx + 1} 題 / 共 150 題</span>
-                        <button onclick="backToDirectory()" class="text-sm font-bold text-slate-500 hover:text-slate-700 flex items-center gap-1">📋 返回地圖</button>
-                    </div>
-                    <div class="text-sm md:text-base font-bold text-teal-700 flex items-center gap-2 bg-teal-50 p-3 rounded-xl border border-teal-100">
-                        <span>🎯 任務：${qData.task}</span>
-                        <button onclick="speakText('${qData.isReorder ? qData.chunks.join('。') : qData.sentence}')" class="text-teal-600 hover:text-teal-800 text-lg p-1">🔊 朗讀題目</button>
+            speakText("放置成功");
+            renderSandboxBricks();
+            renderSandboxPad();
+        }
+
+        function removeFromSlot(slotId) {
+            const currentSlots = sandboxSlots[currentActiveTemplate];
+            const slot = currentSlots.find(s => s.id === slotId);
+            slot.filled = null;
+
+            speakText("已取下");
+            renderSandboxBricks();
+            renderSandboxPad();
+        }
+
+        function resetSandbox() {
+            const currentSlots = sandboxSlots[currentActiveTemplate];
+            currentSlots.forEach(slot => slot.filled = null);
+            sandboxSelectedBrick = null;
+            document.getElementById('sandbox-hint-box').classList.add('hidden');
+            renderSandboxBricks();
+            renderSandboxPad();
+            speakText("已重置格式。");
+        }
+
+        function checkSandboxLayout() {
+            const currentSlots = sandboxSlots[currentActiveTemplate];
+            const isAllFilled = currentSlots.every(slot => slot.filled !== null);
+            
+            if (!isAllFilled) {
+                showToast("還有槽位沒有排好喔！");
+                speakText("還有格式未排好喔，請繼續努力！");
+                return;
+            }
+
+            let isCorrect = true;
+            let firstWrongIdx = -1;
+            for (let i = 0; i < currentSlots.length; i++) {
+                if (currentSlots[i].filled.type !== currentSlots[i].expectedType) {
+                    isCorrect = false;
+                    firstWrongIdx = i;
+                    break;
+                }
+            }
+
+            const hintBox = document.getElementById('sandbox-hint-box');
+            if (isCorrect) {
+                let isAlreadyCompleted = sandboxCompleted.includes(currentActiveTemplate);
+                let expAddedText = "";
+
+                if (!isAlreadyCompleted) {
+                    // 🌟 首次過關才加分，防止重覆刷分
+                    sandboxCompleted.push(currentActiveTemplate);
+                    localStorage.setItem('sandboxCompleted', JSON.stringify(sandboxCompleted));
+                    
+                    paraExp += 20;
+                    localStorage.setItem('rhetStdExp', paraExp);
+                    document.getElementById('exp-display').innerText = paraExp;
+                    document.getElementById('exp-display').classList.add('pop');
+                    setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+                    
+                    expAddedText = "，恭喜獲得 20 點經驗值！";
+
+                    // 🌟 與首頁連動：當4個範本全部挑戰成功
+                    if (sandboxCompleted.length === 4) {
+                        localStorage.setItem('t_para_2', 'true'); // index.html 的標準版打卡改為過關！
+                        showToast("恭喜你完成全部實用文範本，首頁已為你打卡過關！");
+                        speakText("太厲害了！你已完成所有實用文範本！");
+                    }
+                } else {
+                    expAddedText = "。(本範本已過關，重複練習不重覆獲得經驗值)";
+                }
+
+                speakText("太完美了！實用文格式完全正確！" + (isAlreadyCompleted ? "" : "恭喜獲得 20 點經驗值"));
+                showToast(isAlreadyCompleted ? "排版正確！" : "首次過關！+20 EXP");
+
+                hintBox.className = "mt-4 bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded-r-xl text-emerald-800 font-bold text-base pop";
+                hintBox.innerHTML = `🌟 格式挑戰成功${expAddedText}<br>你成功拼砌了正確的【${currentActiveTemplate === 'letter' ? '書信' : currentActiveTemplate === 'notice' ? '通告' : currentActiveTemplate === 'diary' ? '日記' : '啟事'}】排版！請嘗試挑戰其他格式範本。`;
+                hintBox.classList.remove('hidden');
+
+                renderSandboxTemplates();
+                renderSandboxBricks();
+                renderSandboxPad();
+            } else {
+                let wrongSlotLabel = currentSlots[firstWrongIdx].label.split(' ➡️ ')[0];
+                let expectedName = genericExplanations[currentSlots[firstWrongIdx].expectedType] || "該對齊部分";
+                
+                let hintStr = `排版順序有誤喔！正確的部分已為你保留。<br>👉 提示：在【<span class="text-rose-600">${wrongSlotLabel}</span>】的槽位，你應該放置的是：<span class="text-rose-600">${expectedName.split('：')[0]}</span>！`;
+                speakText(`排版有誤。在${wrongSlotLabel}的槽位，你應該放，${expectedName.split('：')[0]}`);
+
+                // 智能鷹架：只退回錯誤積木
+                for (let i = firstWrongIdx; i < currentSlots.length; i++) {
+                    currentSlots[i].filled = null;
+                }
+
+                hintBox.className = "mt-4 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-xl text-yellow-800 font-bold text-sm shake";
+                hintBox.innerHTML = hintStr;
+                hintBox.classList.remove('hidden');
+
+                renderSandboxBricks();
+                renderSandboxPad();
+            }
+        }
+
+        // ================= 5. 通用目錄渲染與闖關邏輯 =================
+        function renderDirectory() {
+            const dirContainer = document.getElementById('directory-content');
+            if(!dirContainer) return;
+            let html = '';
+            categories.forEach(cat => {
+                let hasQuestions = rawQuestDataObj.some(q => q.category === cat.id);
+                if (hasQuestions) {
+                    let tutId = '';
+                    if (cat.id.includes('std')) tutId = 'p-reorder-std';
+                    else if (cat.id.includes('structure')) tutId = 'p-reorder-structure';
+                    else if (cat.id.includes('notice')) tutId = 'p-practical-notice';
+                    else if (cat.id.includes('note')) tutId = 'p-practical-note';
+                    else tutId = 'p-practical-notice'; 
+
+                    html += `
+                        <div class="mb-6">
+                            <div class="flex items-center justify-between border-b-2 border-${cat.color}-100 pb-2 mb-3">
+                                <h3 class="text-xl font-bold text-${cat.color}-700">${cat.title}</h3>
+                                <button onclick="showTutorial('${tutId}')" class="bg-teal-100 text-teal-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-teal-300 hover:bg-teal-200 transition flex items-center gap-1 active:scale-95">📘 學習錦囊</button>
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                    `;
+                    rawQuestDataObj.forEach((q, idx) => {
+                        if(q.category === cat.id) {
+                            let status = userProgress[idx];
+                            let btnClass = 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50';
+                            let icon = (idx + 1);
+
+                            if (status === 1) {
+                                btnClass = 'bg-yellow-100 border-yellow-400 text-yellow-700 shadow-inner';
+                                icon = '🌟';
+                            } else if (status === 2) {
+                                btnClass = 'bg-emerald-100 border-emerald-400 text-emerald-700 shadow-inner';
+                                icon = '✅';
+                            } else if (status === -1) {
+                                btnClass = 'bg-rose-100 border-rose-400 text-rose-700';
+                                icon = '❌';
+                            }
+
+                            html += `<button onclick="startQuestion(${idx})" class="lvl-btn ${btnClass} w-12 h-12 lg:w-14 lg:h-14 rounded-xl font-black text-base lg:text-lg border-b-4 flex items-center justify-center shadow-sm transition-transform">${icon}</button>`;
+                        }
+                    });
+                    html += `</div></div>`;
+                }
+            });
+            dirContainer.innerHTML = html;
+            updateTotalProgress();
+        }
+
+        function updateTotalProgress() {
+            let solved = userProgress.filter(p => p === 1 || p === 2).length;
+            let percent = (solved / rawQuestDataObj.length) * 100;
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+
+        function startQuestion(idx, forceStart = false) {
+            const qData = rawQuestDataObj[idx];
+            const qType = qData.category;
+            
+            let tutId = '';
+            if (qType.includes('std')) tutId = 'p-reorder-std';
+            else if (qType.includes('structure')) tutId = 'p-reorder-structure';
+            else if (qType.includes('notice')) tutId = 'p-practical-notice';
+            else if (qType.includes('note')) tutId = 'p-practical-note';
+            else tutId = 'p-practical-notice';
+
+            if (!forceStart && !localStorage.getItem('tut_seen_' + tutId)) {
+                pendingQuestionIdx = idx; 
+                showTutorial(tutId);      
+                return;                   
+            }
+
+            currentQuestionMistakes = 0; 
+            currentQuestionIdx = idx;
+            window.currentHints = []; 
+            
+            let hintBox = document.getElementById('dynamic-hint-box');
+            if(hintBox) hintBox.classList.add('hidden');
+
+            document.getElementById('quest-directory').style.display = 'none';
+            const questPlay = document.getElementById('quest-play');
+            questPlay.style.display = 'flex';
+            document.getElementById('main-scroll-area').scrollTop = 0;
+            
+            const qCatTitle = categories.find(c => c.id === qType).title;
+
+            let html = `
+                <div class="w-full flex justify-between items-center mb-4">
+                    <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
+                    <span class="bg-teal-100 text-teal-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${idx + 1} 題 / 共 150 題</span>
+                </div>
+                
+                <div class="slide-up w-full bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center relative transition-all duration-500">
+                    <span class="absolute -top-4 bg-teal-600 text-white px-5 py-1.5 rounded-full font-bold shadow-md text-sm md:text-base">
+                        ${qCatTitle}
+                    </span>
+                    
+                    <div class="w-full flex items-center gap-3 mt-4 mb-6">
+                        <span class="bg-teal-100 text-teal-800 px-3 py-1 rounded text-sm font-bold whitespace-nowrap">任務</span>
+                        <h2 class="text-lg md:text-xl font-bold text-slate-700">${qData.task}</h2>
                     </div>
             `;
 
             if (qData.isReorder) {
                 reorderCorrect = [...qData.chunks];
-                if (reorderSource.length === 0 || pendingQuestionIdx === -1) {
-                    reorderSource = qData.chunks.map((text, i) => ({ id: i, text: text }));
-                    reorderSource.sort(() => Math.random() - 0.5);
-                    reorderTarget = [];
+                reorderSource = [...reorderCorrect].sort(() => Math.random() - 0.5);
+                reorderTarget = [];
+
+                let isPractical = qType.includes('practical-reorder');
+                let targetAreaClass = isPractical 
+                    ? "w-full letter-pad p-4 md:p-6 rounded-2xl min-h-[250px] flex flex-col gap-2 mb-6" 
+                    : "w-full bg-slate-50 p-4 md:p-6 rounded-2xl border-2 border-slate-200 min-h-[250px] flex flex-col gap-2 mb-6";
+                let sourceAreaClass = "w-full flex flex-col gap-3";
+
+                if (isPractical) {
+                    html += `
+                        <div class="w-full text-center mb-4">
+                            <span class="bg-slate-100 text-slate-600 font-bold px-4 py-2 rounded-xl text-lg">${qData.sentence}</span>
+                        </div>
+                    `;
                 }
 
-                let chunksArea = `
-                    <div class="flex flex-col gap-3 my-2">
-                        <p class="text-xs md:text-sm font-black text-slate-500 flex items-center gap-1">📦 可選句子積木 (點擊移至下方)：</p>
-                        <div id="reorder-source-container" class="flex flex-col gap-2"></div>
-                        <p class="text-xs md:text-sm font-black text-slate-500 mt-4 flex items-center gap-1">📥 你的排列結果 (點擊可以收回)：</p>
-                        <div id="reorder-target-container" class="flex flex-col gap-2 min-h-[80px] border-2 border-dashed border-teal-300 rounded-2xl p-3 bg-teal-50/30"></div>
+                html += `
+                    <!-- 目標放置區 -->
+                    <div class="${targetAreaClass}" id="reorder-target-area"></div>
+                    <div class="w-full border-t-2 border-dashed border-slate-200 my-2"></div>
+                    <div class="text-center text-slate-500 font-bold mb-2 text-sm">👇 點擊下方段落依序排好</div>
+                    <div class="${sourceAreaClass}" id="reorder-source-area"></div>
+
+                    <!-- 動態提示框 -->
+                    <div id="dynamic-hint-box" class="hidden w-full max-w-3xl mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3">
+                        <div class="flex-1 space-y-2" id="hint-text"></div>
+                        <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
                     </div>
-                    <div class="flex gap-3 mt-4 pt-4 border-t border-slate-100">
-                        <button onclick="checkReorderAnswer()" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-black py-3.5 px-6 rounded-xl transition shadow-md border-b-4 border-teal-800 active:border-b-0 active:translate-y-1">🔍 檢查答案</button>
-                        <button onclick="resetReorder()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3.5 px-6 rounded-xl transition">🔄 重置</button>
+                </div>`;
+                questPlay.innerHTML = html;
+                renderReorderUI(true); 
+            } else {
+                const { options, ansIdx } = shuffleOptions(qData.correct, qData.wrongs);
+                let ttsText = qData.sentence;
+
+                html += `
+                    <div class="w-full flex items-start gap-4 mb-6 bg-teal-50 p-6 rounded-2xl border border-teal-100 shadow-inner">
+                        <button onclick="speakText('${ttsText}')" class="tts-btn flex-shrink-0 bg-white text-teal-600 w-12 h-12 rounded-full text-2xl flex items-center justify-center shadow-md border border-teal-200">🔊</button>
+                        <div class="text-2xl md:text-3xl font-bold text-slate-800 leading-loose">${qData.sentence}</div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full mt-auto" id="options-container">
+                `;
+                
+                options.forEach((optText, oIdx) => {
+                    const isCorr = (oIdx === ansIdx);
+                    const safeOpt = optText.replace(/'/g, "\\'");
+                    html += `<button onclick="checkAnswer(this, ${isCorr}, '${safeOpt}')" class="option-btn bg-white border-4 border-slate-200 text-slate-700 text-xl md:text-2xl py-6 px-4 rounded-2xl hover:bg-teal-50 hover:border-teal-300 transition w-full text-center flex flex-col items-center justify-center break-words"><span class="bg-slate-100 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 mb-2">${['A','B','C','D'][oIdx]}</span> <span>${optText}</span></button>`;
+                });
+                
+                html += `
+                        </div>
+                        <!-- 動態提示框 -->
+                        <div id="dynamic-hint-box" class="hidden w-full max-w-3xl mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm text-yellow-800 font-bold text-lg flex items-start gap-3">
+                            <div class="flex-1 space-y-2" id="hint-text"></div>
+                            <button id="hint-tts-btn" class="text-2xl hover:scale-110 transition bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0">🔊</button>
+                        </div>
                     </div>
                 `;
-                playArea.innerHTML = headerHtml + chunksArea + `</div>`;
-                renderReorderChunks();
-            } else {
-                let options = [qData.correct, ...qData.wrongs];
-                options.sort(() => Math.random() - 0.5);
-
-                let questionText = `<div class="text-lg md:text-xl font-black text-slate-800 my-3 leading-relaxed">${qData.sentence}</div>`;
-                let choicesHtml = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-2">`;
-                options.forEach(opt => {
-                    choicesHtml += `
-                        <button onclick="checkMCQAnswer(this, '${opt.replace(/'/g, "\\'")}')" class="option-btn bg-white border-2 border-slate-200 rounded-2xl p-4 text-left font-bold text-slate-700 hover:border-teal-500 hover:bg-teal-50/20 text-base">
-                            ${opt}
-                        </button>
-                    `;
-                });
-                choicesHtml += `</div>`;
-                playArea.innerHTML = headerHtml + questionText + choicesHtml + `</div>`;
+                questPlay.innerHTML = html;
             }
-            document.getElementById('main-scroll-area').scrollTop = 0;
         }
 
-        function renderReorderChunks() {
-            const srcContainer = document.getElementById('reorder-source-container');
-            const tgtContainer = document.getElementById('reorder-target-container');
-            if (!srcContainer || !tgtContainer) return;
+        function renderReorderUI(isParagraph = true) {
+            const tArea = document.getElementById('reorder-target-area');
+            const sArea = document.getElementById('reorder-source-area');
+            if(!tArea || !sArea) return;
 
-            srcContainer.innerHTML = '';
-            reorderSource.forEach((item, index) => {
-                srcContainer.innerHTML += `
-                    <button onclick="moveChunk('toTarget', ${index})" class="chunk-btn bg-white border-2 border-slate-200 rounded-xl p-3 font-bold text-slate-700 hover:border-teal-400 hover:bg-teal-50/10 text-sm md:text-base">
-                        ${item.text}
-                    </button>
-                `;
-            });
+            let btnClassBase = "chunk-btn bg-teal-600 text-white font-bold text-lg md:text-xl py-4 px-5 rounded-xl shadow-md pop w-full text-left leading-relaxed";
+            let sourceBtnClassBase = "chunk-btn bg-white border-2 border-slate-300 text-slate-700 hover:border-teal-400 hover:bg-teal-50 font-bold text-lg md:text-xl py-4 px-5 rounded-xl shadow w-full text-left leading-relaxed";
+            let slotClassBase = "chunk-slot w-full h-16 rounded-xl";
 
-            tgtContainer.innerHTML = '';
+            let tHtml = '';
             if (reorderTarget.length === 0) {
-                tgtContainer.innerHTML = `<div class="text-slate-400 text-center py-5 text-sm font-medium">請順序點擊上方句子放入此處...</div>`;
+                tHtml = '<span class="text-slate-400 font-bold m-auto">點擊下方段落排在這裡...</span>';
             } else {
-                reorderTarget.forEach((item, index) => {
-                    tgtContainer.innerHTML += `
-                        <button onclick="moveChunk('toSource', ${index})" class="chunk-btn bg-teal-600 border-2 border-teal-700 text-white rounded-xl p-3 font-bold shadow-md text-sm md:text-base flex items-start gap-2">
-                            <span class="inline-flex bg-teal-800 text-white text-xs px-2 py-0.5 rounded-md font-mono mt-0.5 flex-shrink-0">${index + 1}</span>
-                            <span>${item.text}</span>
-                        </button>
-                    `;
+                reorderTarget.forEach((chunk, idx) => {
+                    let prefix = rawQuestDataObj[currentQuestionIdx].category.includes('practical') ? '' : (idx+1)+'. ';
+                    tHtml += `<button onclick="removeFromTarget(${idx})" class="${btnClassBase}">${prefix}${chunk}</button>`;
                 });
             }
-        }
+            tArea.innerHTML = tHtml;
 
-        function moveChunk(direction, index) {
-            if (direction === 'toTarget') {
-                const item = reorderSource.splice(index, 1)[0];
-                reorderTarget.push(item);
-            } else {
-                const item = reorderTarget.splice(index, 1)[0];
-                reorderSource.push(item);
+            let sHtml = '';
+            reorderSource.forEach((chunk, idx) => {
+                if (chunk === null) {
+                    sHtml += `<div class="${slotClassBase}"></div>`; 
+                } else {
+                    sHtml += `<button onclick="moveToTarget(${idx})" class="${sourceBtnClassBase}">${chunk}</button>`;
+                }
+            });
+            sArea.innerHTML = sHtml;
+
+            if (reorderTarget.length > 0 && reorderTarget.length === reorderCorrect.length) {
+                checkReorderAnswer();
             }
-            renderReorderChunks();
         }
 
-        function resetReorder() {
-            const qData = rawQuestDataObj[currentQuestionIdx];
-            reorderSource = qData.chunks.map((text, i) => ({ id: i, text: text })).sort(() => Math.random() - 0.5);
-            reorderTarget = [];
-            renderReorderChunks();
+        function moveToTarget(sourceIdx) {
+            let chunk = reorderSource[sourceIdx];
+            reorderSource[sourceIdx] = null; 
+            reorderTarget.push(chunk);
+            speakText(chunk);
+            renderReorderUI();
+        }
+
+        function removeFromTarget(targetIdx) {
+            let chunk = reorderTarget[targetIdx];
+            reorderTarget.splice(targetIdx, 1);
+            let emptyIdx = reorderSource.indexOf(null);
+            if(emptyIdx !== -1) reorderSource[emptyIdx] = chunk;
+            renderReorderUI();
         }
 
         function checkReorderAnswer() {
-            if (reorderSource.length > 0) {
-                showToast('⚠️ 請先排列所有句子！');
-                return;
-            }
-
             let isCorrect = true;
-            reorderTarget.forEach((item, index) => {
-                if (item.text !== reorderCorrect[index]) {
+            let correctCount = 0;
+            for(let i=0; i<reorderTarget.length; i++) {
+                if(reorderTarget[i] === reorderCorrect[i]) {
+                    correctCount++;
+                } else {
                     isCorrect = false;
+                    break;
                 }
-            });
+            }
 
-            if (isCorrect) {
-                handleCorrectAnswer();
-            } else {
+            const qData = rawQuestDataObj[currentQuestionIdx];
+
+            if (isCorrect && reorderTarget.length === reorderCorrect.length) {
+                speakText("完美的重組！");
+                let joinChar = qData.category.includes('practical') ? '<br><br>' : ' ';
+                let expText = `✅ 正確順序：<br><br>${reorderCorrect.join(joinChar)}<br><br>💡 解析：${qData.hint}`;
+                triggerSuccess(expText);
+            } else if (reorderTarget.length === reorderCorrect.length) {
                 currentQuestionMistakes++;
-                showToast('❌ 順序不正確，請重新理清因果或承接邏輯！');
-                const tgt = document.getElementById('reorder-target-container');
-                tgt.classList.add('shake');
-                setTimeout(() => tgt.classList.remove('shake'), 400);
-            }
-        }
-
-        function checkMCQAnswer(btnEl, selectedOpt) {
-            const qData = rawQuestDataObj[currentQuestionIdx];
-            if (selectedOpt === qData.correct) {
-                btnEl.classList.add('correct');
-                handleCorrectAnswer();
-            } else {
-                if (!btnEl.classList.contains('wrong')) {
-                    btnEl.classList.add('wrong');
-                    currentQuestionMistakes++;
-                    showToast('❌ 答案不正確，請再看清楚結構喔！');
-                }
-            }
-        }
-
-        function handleCorrectAnswer() {
-            const qData = rawQuestDataObj[currentQuestionIdx];
-            let scoreEarned = 20;
-            let progressVal = 2; // Perfect score
-
-            if (currentQuestionMistakes > 0) {
-                scoreEarned = 10;
-                progressVal = 1; // Passed with hint
-            }
-
-            if (userProgress[currentQuestionIdx] < progressVal) {
-                let expDiff = scoreEarned;
-                if (userProgress[currentQuestionIdx] === 1 && progressVal === 2) {
-                    expDiff = 10; 
-                }
-                paraExp += expDiff;
-                userProgress[currentQuestionIdx] = progressVal;
-                localStorage.setItem('rhetStdExp', paraExp);
+                userProgress[currentQuestionIdx] = -1;
                 localStorage.setItem('rhetStdProgress', JSON.stringify(userProgress));
+                
+                let chunksToReturn = reorderTarget.splice(correctCount);
+                for (let chunk of chunksToReturn) {
+                    let emptyIdx = reorderSource.indexOf(null);
+                    if(emptyIdx !== -1) {
+                        reorderSource[emptyIdx] = chunk;
+                    } else {
+                        reorderSource.push(chunk);
+                    }
+                }
+
+                let hintWord = reorderCorrect[correctCount];
+                let newHint = `排錯了喔！正確的部分已保留。<br>👉 下接的應該是：「<span class="text-rose-600">${hintWord}</span>」<br>💡 技巧：${qData.hint}`;
+
+                document.getElementById('hint-text').innerHTML = newHint;
+                document.getElementById('hint-tts-btn').onclick = () => speakText(`排錯了喔。下一個應該是，${hintWord}`);
+                document.getElementById('dynamic-hint-box').classList.remove('hidden');
+                document.getElementById('dynamic-hint-box').classList.add('slide-up');
+                
+                speakText("順序不對喔，請看提示！");
+                
+                const tArea = document.getElementById('reorder-target-area');
+                tArea.classList.add('bg-rose-100', 'border-rose-400', 'shake');
+                setTimeout(() => tArea.classList.remove('bg-rose-100', 'border-rose-400', 'shake'), 800);
+
+                renderReorderUI();
+            }
+        }
+
+        function checkAnswer(btnElement, isCorrect, clickedOptText) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            const qData = rawQuestDataObj[currentQuestionIdx];
+            
+            if (isCorrect) {
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+                btnElement.classList.add('correct');
+                const expText = qData.explanation; 
+                
+                speakText("完美的判斷！");
+                triggerSuccess(expText);
+            } else {
+                btnElement.classList.add('wrong', 'shake');
+                currentQuestionMistakes++; 
+                userProgress[currentQuestionIdx] = -1;
+                localStorage.setItem('rhetStdProgress', JSON.stringify(userProgress));
+                
+                let lines = qData.explanation.split('<br>');
+                let matchedLine = lines.find(l => l.includes(clickedOptText));
+                let newHint = "請再仔細想一想喔！";
+                
+                if (matchedLine) {
+                    newHint = matchedLine.replace(/^[✅❌]\s*/, ''); 
+                }
+
+                if (!window.currentHints) window.currentHints = [];
+                if (!window.currentHints.includes(newHint)) window.currentHints.push(newHint);
+
+                let combinedHintsHtml = window.currentHints.map(h => `<div class="border-b border-yellow-200 pb-1 last:border-0 last:pb-0">💡 ${h}</div>`).join('');
+                document.getElementById('hint-text').innerHTML = combinedHintsHtml;
+                document.getElementById('hint-tts-btn').onclick = () => speakText(window.currentHints.join('。'));
+                document.getElementById('dynamic-hint-box').classList.remove('hidden');
+                document.getElementById('dynamic-hint-box').classList.add('slide-up');
+                
+                speakText("不對喔，" + newHint);
+                setTimeout(() => { btnElement.classList.remove('shake'); }, 500);
+            }
+        }
+
+        function triggerSuccess(expText) {
+            let finalStatus = currentQuestionMistakes === 0 ? 1 : 2;
+            let previousStatus = userProgress[currentQuestionIdx];
+            let expGained = 0;
+
+            if (previousStatus !== 1 && previousStatus !== 2) {
+                expGained = finalStatus === 1 ? 30 : 10;
+            } else if (previousStatus === 2 && finalStatus === 1) {
+                expGained = 20; 
+            }
+
+            if (expGained > 0) {
+                paraExp += expGained;
+                localStorage.setItem('rhetStdExp', paraExp);
                 document.getElementById('exp-display').innerText = paraExp;
+                document.getElementById('exp-display').classList.add('pop');
+                setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
             }
 
-            let desc = '';
-            if (qData.isReorder) {
-                desc = `<p class="font-bold text-teal-700 mb-2">💡 正確段落全文流暢度對照：</p>
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-slate-800 text-sm md:text-base leading-relaxed mb-4 font-medium">
-                            ${reorderCorrect.map(t => `• ${t}`).join('<br>')}
-                        </div>
-                        <p class="text-slate-600 text-sm"><span class="font-black text-teal-600">🎯 架構精髓：</span>${qData.hint}</p>`;
-            } else {
-                desc = `<div class="bg-teal-50 p-4 rounded-xl border border-teal-200 text-slate-800 text-sm md:text-base leading-loose">
-                            ${qData.explanation}
-                        </div>`;
+            if (finalStatus === 1 || previousStatus !== 1) {
+                userProgress[currentQuestionIdx] = finalStatus;
+                localStorage.setItem('rhetStdProgress', JSON.stringify(userProgress));
             }
 
-            document.getElementById('feedback-title').innerText = currentQuestionMistakes === 0 ? '太棒了！完美全對 🌟' : '過關了！繼續加油 ✅';
-            document.getElementById('feedback-icon').innerText = currentQuestionMistakes === 0 ? '🌟' : '🎉';
-            document.getElementById('feedback-desc').innerHTML = desc;
+            let modalIcon = finalStatus === 1 ? '🌟' : '✅';
+            let modalTitle = finalStatus === 1 ? '完美答對！' : '成功過關！';
+            let expMsg = expGained > 0 
+                ? `<span class="text-teal-600 block text-xl mb-4">獲得 ${expGained} 點經驗值 ✨</span>` 
+                : `<span class="text-slate-500 block text-lg mb-4">這題已經成功過關囉！</span>`;
+            
+            let combinedDesc = expMsg + `
+                <div class="bg-teal-50 border-l-4 border-teal-500 p-4 text-left text-teal-900 rounded-r-lg font-bold">
+                    <div class="flex justify-between items-center mb-3 pb-2 border-b border-teal-200">
+                        <span class="text-xl">📚 深度解析</span>
+                        <button onclick="speakText('${expText}')" class="bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm hover:bg-teal-100 text-xl transition active:scale-95">🔊</button>
+                    </div>
+                    <div class="space-y-3 text-base leading-relaxed">${expText}</div>
+                </div>`;
 
-            const nextBtn = document.getElementById('next-btn');
-            if (currentQuestionIdx + 1 < rawQuestDataObj.length) {
-                nextBtn.innerText = '下一題 ➡️';
-                nextBtn.onclick = function() {
-                    closeFeedbackModal();
-                    startQuestion(currentQuestionIdx + 1, false);
-                };
-            } else {
-                nextBtn.innerText = '完成全部特訓 🎉';
-                nextBtn.onclick = function() {
-                    closeFeedbackModal();
-                    backToDirectory();
-                };
-            }
+            setTimeout(() => { showModal(modalIcon, modalTitle, combinedDesc); }, 800);
+        }
 
+        function showModal(icon, title, desc) {
             const modal = document.getElementById('feedback-modal');
             const content = document.getElementById('feedback-content');
+            document.getElementById('feedback-icon').innerText = icon;
+            document.getElementById('feedback-title').innerText = title;
+            document.getElementById('feedback-desc').innerHTML = desc;
+            
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.onclick = () => {
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-90');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    goToNextQuestion();
+                }, 300);
+            };
+
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
         }
 
-        function closeFeedbackModal() {
-            const modal = document.getElementById('feedback-modal');
-            const content = document.getElementById('feedback-content');
-            modal.classList.add('opacity-0');
-            content.classList.add('scale-90');
-            setTimeout(() => { modal.classList.add('hidden'); }, 300);
-        }
-
         function backToDirectory() {
-            document.getElementById('quest-play').classList.add('hidden');
-            document.getElementById('quest-directory').classList.remove('hidden');
+            let hintBox = document.getElementById('dynamic-hint-box');
+            if(hintBox) hintBox.classList.add('hidden');
+            document.getElementById('quest-play').style.display = 'none';
+            document.getElementById('quest-directory').style.display = 'block';
             renderDirectory();
         }
 
         function backToDirectoryFromModal() {
-            closeFeedbackModal();
-            backToDirectory();
+            const modal = document.getElementById('feedback-modal');
+            const content = document.getElementById('feedback-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                backToDirectory();
+            }, 300);
         }
 
-        // ================= 7. 實用文格式沙盒互動模組 (完整修復) =================
-        function loadSandboxTemplate(type) {
-            currentActiveTemplate = type;
-            sandboxSelectedBrick = null;
-            renderSandboxTemplates();
-
-            const titleMap = {
-                'letter': '✉️ 實用文排版公文紙 — 傳統書信格式',
-                'notice': '📢 實用文排版公文紙 — 標準通告格式',
-                'diary': '📓 實用文排版公文紙 — 常規日記排版',
-                'notice_lost': '🔍 實用文排版公文紙 — 尋物啟事格式'
-            };
-            document.getElementById('sandbox-paper-title').innerText = titleMap[type] || '實用文排版公文紙';
-            document.getElementById('sandbox-hint-box').classList.add('hidden');
-
-            // 生成對齊插槽
-            const pad = document.getElementById('sandbox-layout-pad');
-            pad.innerHTML = '';
-            
-            sandboxSlots[type].forEach(slot => {
-                let alignClass = 'text-center justify-center';
-                if (slot.align === 'left-top' || slot.align === 'left') alignClass = 'text-left justify-start pl-3';
-                if (slot.align === 'indent') alignClass = 'text-left justify-start pl-12';
-                if (slot.align === 'right') alignClass = 'text-right justify-end pr-5';
-
-                pad.innerHTML += `
-                    <div id="${slot.id}" onclick="clickSandboxSlot('${slot.id}')" data-expected="${slot.expectedType}" class="sandbox-slot min-h-[46px] rounded-xl flex items-center p-2 text-xs md:text-sm font-bold text-teal-700/50 ${alignClass}">
-                        ${slot.label}
-                    </div>
-                `;
-            });
-
-            // 打亂積木排序
-            const bricksData = [...sandboxBricks[type]].sort(() => Math.random() - 0.5);
-            const bricksArea = document.getElementById('sandbox-bricks-area');
-            bricksArea.innerHTML = '';
-            
-            bricksData.forEach(brick => {
-                bricksArea.innerHTML += `
-                    <button id="${brick.id}" onclick="selectSandboxBrick('${brick.id}', '${brick.type}')" class="bg-white border-2 border-slate-200 text-slate-700 font-bold rounded-xl p-3 text-xs md:text-sm text-left shadow-sm hover:border-teal-500 hover:bg-teal-50/20 transition duration-150">
-                        ${brick.name}
-                    </button>
-                `;
-            });
-        }
-
-        function selectSandboxBrick(brickId, brickType) {
-            if (sandboxSelectedBrick) {
-                const oldEl = document.getElementById(sandboxSelectedBrick.id);
-                if (oldEl) oldEl.classList.remove('border-teal-500', 'bg-teal-50/50', 'ring-2', 'ring-teal-400');
-            }
-
-            if (sandboxSelectedBrick && sandboxSelectedBrick.id === brickId) {
-                sandboxSelectedBrick = null;
-                return;
-            }
-
-            // 檢查該積木是否已經擺放在公文紙上，若是則點擊直接收回
-            const slots = document.querySelectorAll('.sandbox-slot');
-            let occupiedSlot = null;
-            slots.forEach(s => {
-                if (s.getAttribute('data-filled-id') === brickId) {
-                    occupiedSlot = s;
-                }
-            });
-
-            if (occupiedSlot) {
-                removeBrickFromSlot(occupiedSlot, brickId);
-                return;
-            }
-
-            sandboxSelectedBrick = { id: brickId, type: brickType, text: document.getElementById(brickId).innerText };
-            document.getElementById(brickId).classList.add('border-teal-500', 'bg-teal-50/50', 'ring-2', 'ring-teal-400');
-        }
-
-        function clickSandboxSlot(slotId) {
-            const slotEl = document.getElementById(slotId);
-            
-            // 槽位已有積木且目前沒有選中新積木：點擊移除還原
-            if (slotEl.classList.contains('filled') && !sandboxSelectedBrick) {
-                const brickId = slotEl.getAttribute('data-filled-id');
-                removeBrickFromSlot(slotEl, brickId);
-                return;
-            }
-
-            // 選中了積木：放入或替換
-            if (sandboxSelectedBrick) {
-                if (slotEl.classList.contains('filled')) {
-                    const oldBrickId = slotEl.getAttribute('data-filled-id');
-                    const oldBrickEl = document.getElementById(oldBrickId);
-                    if (oldBrickEl) oldBrickEl.classList.remove('opacity-40', 'pointer-events-none');
-                }
-
-                slotEl.setAttribute('data-filled-id', sandboxSelectedBrick.id);
-                slotEl.setAttribute('data-filled-type', sandboxSelectedBrick.type);
-                slotEl.innerText = sandboxSelectedBrick.text;
-                slotEl.classList.add('filled', 'bg-teal-600', 'text-white', 'border-solid');
-                slotEl.style.color = '#ffffff';
-
-                const srcBrickEl = document.getElementById(sandboxSelectedBrick.id);
-                if (srcBrickEl) {
-                    srcBrickEl.classList.add('opacity-40', 'pointer-events-none');
-                    srcBrickEl.classList.remove('border-teal-500', 'bg-teal-50/50', 'ring-2', 'ring-teal-400');
-                }
-
-                sandboxSelectedBrick = null;
-            }
-        }
-
-        function removeBrickFromSlot(slotEl, brickId) {
-            slotEl.removeAttribute('data-filled-id');
-            slotEl.removeAttribute('data-filled-type');
-            slotEl.classList.remove('filled', 'bg-teal-600', 'text-white', 'border-solid');
-            
-            const origSlot = sandboxSlots[currentActiveTemplate].find(x => x.id === slotEl.id);
-            slotEl.innerText = origSlot.label;
-            slotEl.style.color = '';
-
-            const brickEl = document.getElementById(brickId);
-            if (brickEl) brickEl.classList.remove('opacity-40', 'pointer-events-none');
-            sandboxSelectedBrick = null;
-        }
-
-        function checkSandboxLayout() {
-            const slots = document.querySelectorAll('.sandbox-slot');
-            let allCorrect = true;
-            let hasEmpty = false;
-
-            slots.forEach(s => {
-                const expected = s.getAttribute('data-expected');
-                const filledType = s.getAttribute('data-filled-type');
-                if (!filledType) {
-                    hasEmpty = true;
-                }
-                if (expected !== filledType) {
-                    allCorrect = false;
-                }
-            });
-
-            const hintBox = document.getElementById('sandbox-hint-box');
-            hintBox.classList.remove('hidden');
-
-            if (hasEmpty) {
-                hintBox.className = "mt-4 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl text-amber-800 font-bold text-sm slide-up";
-                hintBox.innerText = "⚠️ 提示：公文紙上還有未填滿的格式，請把所有格式積木排好再進行檢查。";
-                return;
-            }
-
-            if (allCorrect) {
-                hintBox.className = "mt-4 bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded-r-xl text-emerald-800 font-bold text-sm slide-up";
-                hintBox.innerText = "🎉 恭喜！排版完全正確！格式非常標準，符合本實用文的寫作規範！(+30 EXP)";
-                
-                if (!sandboxCompleted.includes(currentActiveTemplate)) {
-                    sandboxCompleted.push(currentActiveTemplate);
-                    localStorage.setItem('sandboxCompleted', JSON.stringify(sandboxCompleted));
-                    paraExp += 30;
-                    localStorage.setItem('rhetStdExp', paraExp);
-                    document.getElementById('exp-display').innerText = paraExp;
-                    renderSandboxTemplates();
-                }
+        function goToNextQuestion() {
+            let nextIdx = currentQuestionIdx + 1;
+            if (nextIdx < rawQuestDataObj.length) {
+                startQuestion(nextIdx);
             } else {
-                hintBox.className = "mt-4 bg-rose-50 border-l-4 border-rose-500 p-4 rounded-r-xl text-rose-800 font-bold text-sm slide-up";
-                hintBox.innerText = "❌ 排版不正確喔！有些積木的對齊方式或結構放錯了，請根據提示左右對齊重新調整！";
+                showToast("恭喜完成所有挑戰！");
+                backToDirectory();
             }
         }
 
-        function resetSandbox() {
-            loadSandboxTemplate(currentActiveTemplate);
+        function switchMode(mode) {
+            const tabQuest = document.getElementById('tab-quest');
+            const tabSandbox = document.getElementById('tab-sandbox');
+            const questMode = document.getElementById('quest-mode');
+            const sandboxMode = document.getElementById('sandbox-mode');
+            const progress = document.getElementById('progress-container');
+
+            if (mode === 'quest') {
+                tabQuest.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-teal-600";
+                tabSandbox.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                questMode.style.display = 'flex';
+                sandboxMode.style.display = 'none';
+                progress.style.display = 'block';
+                updateTotalProgress();
+            } else {
+                tabSandbox.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-teal-600";
+                tabQuest.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                questMode.style.display = 'none';
+                sandboxMode.style.display = 'flex'; 
+                progress.style.display = 'none';
+                loadSandboxTemplate('letter'); 
+            }
         }
 
-        // 頁面初次載入
         window.onload = function() {
+            document.getElementById('exp-display').innerText = paraExp;
+            switchMode('quest'); 
             renderDirectory();
-            renderSandboxTemplates();
-        };
+        }
     </script>
 </body>
 </html>
