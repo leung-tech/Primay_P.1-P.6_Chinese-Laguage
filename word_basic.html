@@ -15,6 +15,7 @@
         
         .bg-dot-pattern { background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNlMmU4ZjAiIGZpbGwtb3BhY2l0eT0iMC40Ii8+PC9zdmc+'); }
         
+        /* 米字格背景 */
         .mi-zi-ge {
             background-color: #f8fafc;
             background-image: 
@@ -81,7 +82,7 @@
         
         <div class="flex w-full bg-slate-100 border-b border-slate-300">
             <button onclick="switchMode('quest')" id="tab-quest" class="tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-emerald-600">
-                🗺️ 闖關地圖
+                🗺️ 闖關地圖 (300題)
             </button>
             <button onclick="switchMode('sandbox')" id="tab-sandbox" class="tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200">
                 ✍️ 無盡寫字板
@@ -118,10 +119,11 @@
             </div>
         </div>
 
-        <!-- 模式 2：常見字寫字板 -->
+        <!-- 模式 2：常見字寫字板 (修復移動端佈局) -->
         <div id="sandbox-wrapper" class="hidden w-full h-full">
             <div class="w-full max-w-6xl mx-auto flex flex-col lg:flex-row gap-4 lg:gap-6 h-full min-h-[500px]">
                 
+                <!-- 左側：搜尋列 + 字庫列表 (調整高度以適應手機) -->
                 <div class="lg:w-1/3 flex flex-col gap-3 min-h-[300px] lg:h-[600px]">
                     <div class="bg-white rounded-xl shadow-sm border border-emerald-200 p-3 flex flex-col gap-2 relative">
                         <h3 class="font-bold text-emerald-800 text-sm">🔍 想寫小學習字表上的字？</h3>
@@ -146,6 +148,7 @@
                     </div>
                 </div>
 
+                <!-- 右側：寫字板 (修復高度避免被擠出) -->
                 <div class="lg:w-2/3 bg-white rounded-2xl shadow-xl border-t-8 border-emerald-500 p-4 lg:p-6 flex flex-col items-center justify-center relative min-h-[400px]">
                     <div id="sandbox-placeholder" class="text-slate-400 font-bold text-xl text-center flex flex-col items-center gap-4">
                         <span class="text-6xl animate-bounce">👈</span>請從左側選擇，或直接搜尋中文字
@@ -173,13 +176,14 @@
     </div>
 
     <!-- 學習小教學 Modal -->
-    <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform flex flex-col max-h-[90vh]" id="tutorial-content">
+    <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 pointer-events-none">
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform flex flex-col max-h-[90vh] pointer-events-auto" id="tutorial-content">
             <div class="flex justify-between items-center mb-4 border-b-2 border-emerald-100 pb-3">
                 <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-emerald-600 flex items-center gap-2">📘 學習錦囊</h2>
                 <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
             </div>
             <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4">
+                <!-- 教學內容動態載入 -->
             </div>
             <div class="mt-6 pt-4 border-t-2 border-slate-100">
                 <button onclick="closeTutorial()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-xl shadow-lg transition text-xl border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">我明白了！開始挑戰 🚀</button>
@@ -188,14 +192,14 @@
     </div>
 
     <!-- 闖關回饋 Modal -->
-    <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform" id="feedback-content">
+    <div id="feedback-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 pointer-events-none">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-[90%] max-w-sm text-center transform scale-90 transition-transform pointer-events-auto" id="feedback-content">
             <div id="feedback-icon" class="text-7xl mb-4">🎉</div>
             <h2 id="feedback-title" class="text-3xl font-black text-slate-800 mb-2">答對了！</h2>
             <div id="feedback-desc" class="text-slate-600 font-bold mb-6 text-xl leading-relaxed"></div>
             <div class="flex gap-3 w-full">
-                <button onclick="backToDirectoryFromModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition">⬅️ 目錄</button>
-                <button id="next-btn" class="flex-[1.5] bg-emerald-500 hover:bg-emerald-600 text-white font-black py-3 rounded-xl shadow-lg transition border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
+                <button onclick="backToDirectoryFromModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition text-lg">⬅️ 目錄</button>
+                <button onclick="nextDirectoryOrQuestion()" id="next-btn" class="flex-[1.5] bg-emerald-500 hover:bg-emerald-600 text-white font-black py-3 rounded-xl shadow-lg transition text-lg border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">下一題 ➡️</button>
             </div>
         </div>
     </div>
@@ -203,101 +207,135 @@
     <div id="toast" class="toast-msg">提示訊息</div>
 
     <script>
-        // ================= 1. 核心邏輯與初始化 =================
+        // ================= 1. 核心系統設定與過濾語音 =================
         let totalExp = parseInt(localStorage.getItem('userExp')) || 0;
         document.getElementById('exp-display').innerText = totalExp;
         let currentQuestionIdx = -1;
+        let questWriter;
         let pendingQuestionIdx = -1;
-        let questWriter = null;
 
-        window.cleanTextForSpeech = function(text) {
+        // 徹底過濾文字，避免讀出亂碼及 Emoji
+        function cleanTextForSpeech(text) {
             if(!text) return "";
-            return text.replace(/___/g, '什麼').replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】_]/g, '').replace(/&nbsp;/g, ' ').replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDC00-\uDFFF]/g, ''); 
-        };
+            return text.replace(/<br\s*\/?>/gi, '。')
+                       .replace(/<[^>]*>?/gm, '')
+                       .replace(/[✅❌💡【】_]/g, '')
+                       .replace(/&nbsp;/g, ' ')
+                       .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '') // 移除大多數 Emoji
+                       .replace(/[\u2600-\u27BF]/g, '')               // 移除雜項符號
+                       .replace(/[\uFE0F]/g, '');                     // 移除變體選擇符
+        }
 
-        window.speakText = function(text, rate = 0.95) {
+        function speakText(text) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                let msg = new SpeechSynthesisUtterance(window.cleanTextForSpeech(text));
+                let msg = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
                 msg.lang = 'zh-HK';
-                msg.rate = rate; 
+                msg.rate = 0.85; 
                 window.speechSynthesis.speak(msg);
             }
-        };
+        }
 
-        window.showToast = function(message) {
+        function showToast(message) {
             const toast = document.getElementById("toast");
             toast.innerText = message;
             toast.className = "toast-msg show";
             setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
-        };
+        }
 
+        function switchMode(mode) {
+            const tabQuest = document.getElementById('tab-quest');
+            const tabSandbox = document.getElementById('tab-sandbox');
+            const questMode = document.getElementById('quest-mode');
+            const sandboxWrapper = document.getElementById('sandbox-wrapper');
+            const progress = document.getElementById('progress-container');
+
+            if (mode === 'quest') {
+                tabQuest.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-emerald-600";
+                tabSandbox.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                questMode.style.display = 'flex';
+                sandboxWrapper.style.display = 'none';
+                progress.style.display = 'block';
+                updateTotalProgress();
+            } else {
+                tabSandbox.className = "tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-emerald-600";
+                tabQuest.className = "tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200";
+                questMode.style.display = 'none';
+                sandboxWrapper.style.display = 'block'; 
+                progress.style.display = 'none';
+                if(!isSandboxInitialized) { initSandbox(); isSandboxInitialized = true; }
+            }
+        }
+
+        // ================= 1.5 學習錦囊 (教學庫) =================
         const tutorialContents = {
             'c-radical': `
-                <div class="text-center mb-4"><span class="text-6xl">🧩 ➕</span></div>
-                <p class="font-bold text-slate-700 mb-4 text-center">字詞小加法：認識部首</p>
-                <p class="mb-4 text-slate-600">中文字就像積木一樣，可以由不同的部分組成。左邊的部分通常代表意思，我們叫它<span class="text-emerald-600 font-bold">部首</span>。</p>
-                <div class="bg-emerald-50 p-4 rounded-xl border-2 border-emerald-100 space-y-2 text-base">
-                    <p>🌲 <span class="font-bold">木部</span>：通常與樹木、木材有關。</p>
-                    <p>✋ <span class="font-bold">手部 (扌)</span>：通常與動作有關。</p>
-                    <p>🦶 <span class="font-bold">足部</span>：通常與腳部動作有關。</p>
+                <div class="text-center mb-4"><span class="text-6xl">🔍 🧩</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">什麼是「部首」？</p>
+                <p class="mb-4 text-slate-600">中文字就像拼圖，而「部首」就是那塊能告訴你這個字<span class="text-emerald-600 font-bold">是什麼意思</span>的關鍵拼圖！</p>
+                <div class="bg-emerald-50 p-4 rounded-xl border-2 border-emerald-200 mb-3 space-y-3">
+                    <p class="text-lg"><span class="bg-white font-black text-blue-600 border border-blue-200 px-2 py-1 rounded">氵 (水字旁)</span> 👉 跟<span class="font-bold text-blue-600">水</span>有關：海、河、流汗</p>
+                    <p class="text-lg"><span class="bg-white font-black text-amber-600 border border-amber-200 px-2 py-1 rounded">扌 (手字旁)</span> 👉 跟<span class="font-bold text-amber-600">手部動作</span>有關：打、拍、推</p>
+                    <p class="text-lg"><span class="bg-white font-black text-green-600 border border-green-200 px-2 py-1 rounded">艹 (草字頭)</span> 👉 跟<span class="font-bold text-green-600">植物</span>有關：花、草、葉</p>
+                    <p class="text-lg"><span class="bg-white font-black text-rose-600 border border-rose-200 px-2 py-1 rounded">犭 (犬字旁)</span> 👉 跟<span class="font-bold text-rose-600">動物</span>有關：狗、貓、獅子</p>
                 </div>
+                <p class="text-sm text-slate-500 text-center mt-2">💡 秘訣：不會讀的字，先看看它的部首猜意思！</p>
             `,
             'tw-similar': `
-                <div class="text-center mb-4"><span class="text-6xl">🕵️‍♂️ 🔍</span></div>
-                <p class="font-bold text-slate-700 mb-4 text-center">火眼金睛：分辨易混淆字</p>
-                <p class="mb-4 text-slate-600">有些字長得很像，但意思完全不同。觀察它們的<span class="text-rose-500 font-bold">部首</span>是分辨它們的好方法！</p>
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-rose-50 p-3 rounded-lg border border-rose-100 text-center">
-                        <p class="text-2xl font-bold">泡 / 抱</p>
-                        <p class="text-xs text-slate-500">三點水 vs 提手旁</p>
+                <div class="text-center mb-4"><span class="text-6xl">👯‍♂️ 🔎</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">如何分辨「雙胞胎字」(形近字)？</p>
+                <p class="mb-4 text-slate-600">有些字長得超級像，一不小心就會寫錯！這時候就要<span class="text-rose-600 font-bold">觀察它們的部首</span>：</p>
+                <div class="bg-rose-50 p-4 rounded-xl border-2 border-rose-200 mb-3 space-y-4 text-center">
+                    <div>
+                        <p class="text-3xl font-black mb-1">喝 <span class="text-slate-400 font-normal">VS</span> 渴</p>
+                        <p class="text-base text-slate-700">用<span class="font-bold text-rose-600">口(嘴巴)</span>來「喝」水<br>身體缺<span class="font-bold text-rose-600">水(氵)</span>會口「渴」</p>
                     </div>
-                    <div class="bg-rose-50 p-3 rounded-lg border border-rose-100 text-center">
-                        <p class="text-2xl font-bold">園 / 圓</p>
-                        <p class="text-xs text-slate-500">裡面是「元」或「員」</p>
+                    <hr class="border-rose-200">
+                    <div>
+                        <p class="text-3xl font-black mb-1">晴 <span class="text-slate-400 font-normal">VS</span> 睛</p>
+                        <p class="text-base text-slate-700">出太<span class="font-bold text-rose-600">陽(日)</span>是天「晴」<br>用<span class="font-bold text-rose-600">眼(目)</span>看是眼「睛」</p>
                     </div>
                 </div>
             `,
             's-stroke': `
-                <div class="text-center mb-4"><span class="text-6xl">✍️ ✨</span></div>
-                <p class="font-bold text-slate-700 mb-4 text-center">寫好中文字的小秘密</p>
-                <p class="mb-4 text-slate-600">中文字有自己的「排隊規則」，叫做<span class="text-indigo-600 font-bold">筆順</span>。跟著規則寫，字就會變漂亮！</p>
-                <div class="bg-indigo-50 p-4 rounded-xl border-2 border-indigo-100 space-y-2 text-base">
-                    <p>1️⃣ <span class="font-bold">從上到下</span>：例如「三」</p>
-                    <p>2️⃣ <span class="font-bold">從左到右</span>：例如「州」</p>
-                    <p>3️⃣ <span class="font-bold">先橫後豎</span>：例如「十」</p>
-                    <p>4️⃣ <span class="font-bold">先撇後捺</span>：例如「人」</p>
+                <div class="text-center mb-4"><span class="text-6xl">✍️ 🏗️</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">寫字與找部首的秘密！</p>
+                <p class="mb-4 text-slate-600">每個中文字都有固定的「蓋房子順序」(筆順)，學會了就能把字寫得漂亮！</p>
+                <div class="bg-purple-50 p-4 rounded-xl border-2 border-purple-200 mb-3 space-y-3 font-bold text-purple-800 text-lg">
+                    <p>1️⃣ 先寫<span class="bg-white px-2 rounded border border-purple-200 text-purple-600">上面</span>，再寫<span class="bg-white px-2 rounded border border-purple-200 text-purple-600">下面</span>。(例：二、李)</p>
+                    <p>2️⃣ 先寫<span class="bg-white px-2 rounded border border-purple-200 text-purple-600">左邊</span>，再寫<span class="bg-white px-2 rounded border border-purple-200 text-purple-600">右邊</span>。(例：明、打)</p>
+                    <p>3️⃣ 先寫<span class="bg-white px-2 rounded border border-purple-200 text-purple-600">外面</span>，再寫<span class="bg-white px-2 rounded border border-purple-200 text-purple-600">裡面</span>，最後關門。(例：國、園)</p>
                 </div>
+                <p class="text-sm text-slate-500 text-center mt-2">💡 在這關，注意看動畫，找出部首藏在哪裡！</p>
             `,
             'w-write': `
-                <div class="text-center mb-4"><span class="text-6xl">🎨 🏆</span></div>
-                <p class="font-bold text-slate-700 mb-4 text-center">成為寫字小達人</p>
-                <p class="mb-4 text-slate-600">現在輪到你大顯身手了！請在紅色的<span class="text-rose-500 font-bold">米字格</span>裡練習寫字。</p>
-                <div class="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                    <div class="w-12 h-12 bg-white border-2 border-rose-300 rounded flex items-center justify-center text-rose-400 font-bold">米</div>
-                    <p class="text-sm text-slate-500">米字格能幫你找準每一筆的位置，讓字體端正不歪斜。</p>
+                <div class="text-center mb-4"><span class="text-6xl">📝 ✨</span></div>
+                <p class="font-bold text-slate-700 mb-4 text-center">動手寫字時間！</p>
+                <p class="mb-4 text-slate-600">準備好你的手指（或滑鼠），跟著米字格上的提示寫字：</p>
+                <div class="bg-amber-50 p-4 rounded-xl border-2 border-amber-200 mb-3">
+                    <p class="text-base text-slate-700 mb-2">✔️ 如果忘記怎麼寫，可以點擊 <span class="bg-slate-200 font-bold px-2 rounded">👀 看提示</span></p>
+                    <p class="text-base text-slate-700 mb-2">✔️ 寫錯了不用怕，系統會輕輕搖晃提醒你。</p>
+                    <p class="text-base text-slate-700">✔️ 寫在格子的正中間，分數最高喔！</p>
                 </div>
             `
         };
 
-        function showTutorial(catId) {
-            let key = '';
-            if (catId.startsWith('c-')) key = 'c-radical';
-            else if (catId.startsWith('tw-')) key = 'tw-similar';
-            else if (catId.startsWith('s-')) key = 's-stroke';
-            else if (catId.startsWith('w-')) key = 'w-write';
+        function showTutorial(categoryId) {
+            const modal = document.getElementById('tutorial-modal');
+            const content = document.getElementById('tutorial-content');
+            
+            let tutKey = '';
+            if (categoryId.startsWith('c-')) tutKey = 'c-radical';
+            if (categoryId.startsWith('tw-')) tutKey = 'tw-similar';
+            if (categoryId.startsWith('s-')) tutKey = 's-stroke';
+            if (categoryId.startsWith('w-')) tutKey = 'w-write';
 
-            if (tutorialContents[key]) {
-                document.getElementById('tutorial-body').innerHTML = tutorialContents[key];
-                const modal = document.getElementById('tutorial-modal');
-                const content = document.getElementById('tutorial-content');
-                modal.classList.remove('hidden');
-                setTimeout(() => {
-                    modal.classList.remove('opacity-0');
-                    content.classList.remove('scale-90');
-                }, 10);
-                localStorage.setItem('tut_seen_' + key, 'true');
-            }
+            document.getElementById('tutorial-body').innerHTML = tutorialContents[tutKey];
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-90'); }, 10);
+            
+            localStorage.setItem('tut_seen_' + tutKey, 'true');
         }
 
         function closeTutorial() {
@@ -308,40 +346,83 @@
             setTimeout(() => {
                 modal.classList.add('hidden');
                 if (pendingQuestionIdx !== -1) {
-                    startQuestion(pendingQuestionIdx, true);
+                    let targetIdx = pendingQuestionIdx;
                     pendingQuestionIdx = -1;
+                    startQuestion(targetIdx, true); 
                 }
             }, 300);
         }
 
-        // ================= 2. 題庫數據庫 =================
+        // ================= 2. 300 題 絕對無重複 終極題庫 =================
         const categories = [
-            { id: 'c-wood', title: '🌿 自然與木部', color: 'emerald' },
-            { id: 'c-action', title: '✋ 動作與手部', color: 'blue' },
-            { id: 'c-other', title: '🏠 房屋與路途', color: 'amber' },
-            { id: 'c-animal', title: '🐕 動物與昆蟲', color: 'rose' },
-            { id: 'tw-1', title: '🔍 易混淆字 (一)', color: 'indigo' },
-            { id: 'tw-2', title: '🔍 易混淆字 (二)', color: 'violet' },
-            { id: 's-1', title: '✍️ 筆順與部首 (一)', color: 'cyan' },
-            { id: 's-2', title: '✍️ 筆順與部首 (二)', color: 'teal' },
-            { id: 'w-1', title: '🎨 常用字書寫 (一)', color: 'pink' },
-            { id: 'w-2', title: '🎨 常用字書寫 (二)', color: 'orange' }
+            { id: 'c-wood', title: '🌳 植物與自然部首 (30題)', color: 'emerald' },
+            { id: 'c-action', title: '🚶 人物與動作部首 (30題)', color: 'blue' },
+            { id: 'c-other', title: '🏠 建築與物品部首 (30題)', color: 'indigo' },
+            { id: 'c-animal', title: '🐾 動物與昆蟲部首 (30題)', color: 'teal' },
+            { id: 'tw-1', title: '👯 形近字防錯 (一) (30題)', color: 'rose' },
+            { id: 'tw-2', title: '👯 形近字防錯 (二) (30題)', color: 'pink' },
+            { id: 's-1', title: '👀 觀察筆順找部首 (一) (30題)', color: 'purple' },
+            { id: 's-2', title: '👀 觀察筆順找部首 (二) (30題)', color: 'fuchsia' },
+            { id: 'w-1', title: '✍️ 動手寫字訓練 (一) (30題)', color: 'amber' },
+            { id: 'w-2', title: '✍️ 動手寫字訓練 (二) (30題)', color: 'orange' }
         ];
 
+        // [資料區保持不變...]
         const cWoodPool = [
-            ['「木🪵」加上「目」，會變成什麼字？', '木 + 目 = ❓', '相 📸', '想 💭', 0, '互相的相。', '相'],
-            ['「木🪵」加上「反」，會變成什麼字？', '木 + 反 = ❓', '板 🛹', '飯 🍚', 0, '木板的板。', '板'],
-            ['「木🪵」加上「白」，會變成什麼字？', '木 + 白 = ❓', '柏 🌲', '拍 👏', 0, '柏樹的柏。', '柏'],
-            ['「木🪵」加上「口」，會變成什麼字？', '木 + 口 = ❓', '杏 🍑', '呆 😶', 0, '杏花的杏。', '杏'],
-            ['「木🪵」加上「及」，會變成什麼字？', '木 + 及 = ❓', '極 🔝', '級 🔢', 0, '極好的極。', '極'],
-            ['「木🪵」加上「風」，會變成什麼字？', '木 + 風 = ❓', '楓 🍁', '風 💨', 0, '楓葉的楓。', '楓'],
-            ['「木🪵」加上「每」，會變成什麼字？', '木 + 每 = ❓', '梅 🌸', '每 🗓️', 0, '梅花的梅。', '梅'],
-            ['「木🪵」加上「交」，會變成什麼字？', '木 + 交 = ❓', '校 🏫', '較 ⚖️', 0, '學校的校。', '校'],
-            ['「木🪵」加上「林」，會變成什麼字？', '木 + 林 = ❓', '森 🌲', '淋 🚿', 0, '森林的森。', '森'],
-            ['「木🪵」加上「木」，會變成什麼字？', '木 + 木 = ❓', '林 🌳', '森 🌲', 0, '樹林的林。', '林']
+            ['哪一個部首加上「木🌳」，會變成休息的「休🛌」？', '❓ + 木 = 休', '亻 (人) 🚶', '氵 (水) 💧', 0, '人字部代表與人有關。', '休'],
+            ['「木🌳」加上「木🌳」，會變成什麼字？', '木 + 木 = ❓', '林 🌲', '森 🌲🌲', 0, '兩個木是樹林。', '林'],
+            ['三個「木🌳」加在一起，會變成什麼字？', '木 + 木 + 木 = ❓', '森 🌲🌲', '林 🌲', 0, '三個木代表非常茂密的「森」林。', '森'],
+            ['哪一個部首加上「交」，會變成學校的「校🏫」？', '❓ + 交 = 校', '木 🪵', '手 ✋', 0, '學校以前多是用木頭建的。', '校'],
+            ['哪一個部首加上「寸」，會變成樹木的「樹🌲」？', '❓ + 寸 = 樹', '木 🪵', '水 💧', 0, '樹木當然是木字部！', '樹'],
+            ['「木🌳」加上「奇」，會變成什麼字？', '木 + 奇 = ❓', '椅 🪑', '桌 🪑', 0, '椅子是用木頭做的。', '椅'],
+            ['「木🌳」加上「喬」，會變成什麼字？', '木 + 喬 = ❓', '橋 🌉', '校 🏫', 0, '橋是用木頭建的。', '橋'],
+            ['「氵💧」加上「工」，會變成什麼字？', '氵 + 工 = ❓', '江 🌊', '河 🌊', 0, '水加工就是長「江」。', '江'],
+            ['「氵💧」加上「可」，會變成什麼字？', '氵 + 可 = ❓', '河 🌊', '海 🌊', 0, '水加可就是「河」流。', '河'],
+            ['「氵💧」加上「每」，會變成什麼字？', '氵 + 每 = ❓', '海 🌊', '洋 🌊', 0, '水加每就是大「海」。', '海'],
+            ['哪一個部首加上「干」，會變成流汗的「汗💦」？', '❓ + 干 = 汗', '氵 (水) 💧', '火 🔥', 0, '流汗會流水出來。', '汗'],
+            ['哪一個部首加上「十」，會變成汁液的「汁🧃」？', '❓ + 十 = 汁', '氵 (水) 💧', '木 🪵', 0, '果汁都是有水份的。', '汁'],
+            ['「火🔥」加上「火🔥」，會變成什麼字？', '火 + 火 = ❓', '炎 🥵', '熱 🥵', 0, '兩個火疊在一起，代表非常「炎」熱。', '炎'],
+            ['「火🔥」(灬) 加上「然」，會變成什麼字？', '灬 + 然 = ❓', '熱 🥵', '冷 🥶', 0, '底下的四點(灬)代表火，所以很熱。', '熱'],
+            ['哪一個部首加上「者」，會變成煮飯的「煮🍳」？', '❓ + 者 = 煮', '灬 (火) 🔥', '氵 (水) 💧', 0, '煮東西需要用火。', '煮'],
+            ['「艸🌿」加上「早」，會變成什麼字？', '艹 + 早 = ❓', '草 🌱', '花 🌸', 0, '草字頭代表植物。', '草'],
+            ['「艸🌿」加上「化」，會變成什麼字？', '艹 + 化 = ❓', '花 🌸', '草 🌱', 0, '花也是植物。', '花'],
+            ['哪一個部首加上「世」，會變成樹葉的「葉🍂」？', '❓ + 世 + 木 = 葉', '艹 (草) 🌿', '竹 🎋', 0, '樹葉也是植物的一部分。', '葉'],
+            ['「艸🌿」加上「牙」，會變成什麼字？', '艹 + 牙 = ❓', '芽 🌱', '花 🌸', 0, '發芽是植物生長。', '芽'],
+            ['「艸🌿」加上「苗」，會變成什麼字？', '艹 + 苗 = ❓', '貓 🐱', '苗 🌱', 1, '小草長出來是苗。', '苗'],
+            ['「木🌳」加上「支」，會變成什麼字？', '木 + 支 = ❓', '枝 🌿', '根 🪵', 0, '樹枝的枝。', '枝'],
+            ['「木🌳」加上「艮」，會變成什麼字？', '木 + 艮 = ❓', '根 🪵', '枝 🌿', 0, '樹根的根。', '根'],
+            ['「木🌳」加上「兆」，會變成什麼字？', '木 + 兆 = ❓', '桃 🍑', '梅 🌸', 0, '水蜜桃的桃。', '桃'],
+            ['「木🌳」加上「每」，會變成什麼字？', '木 + 每 = ❓', '梅 🌸', '桃 🍑', 0, '梅花的梅。', '梅'],
+            ['「氵💧」加上「木」，會變成什麼字？', '氵 + 木 = ❓', '沐 🛀', '洗 🧼', 0, '沐浴的沐。', '沐'],
+            ['「氵💧」加上「胡」，會變成什麼字？', '氵 + 胡 = ❓', '湖 🏞️', '海 🌊', 0, '湖泊的湖。', '湖'],
+            ['「氵💧」加上「先」，會變成什麼字？', '氵 + 先 = ❓', '洗 🧼', '沐 🛀', 0, '洗手的洗。', '洗'],
+            ['「氵💧」加上「永」，會變成什麼字？', '氵 + 永 = ❓', '泳 🏊', '游 🏊', 0, '游泳的泳。', '泳'],
+            ['「火🔥」加上「考」，會變成什麼字？', '火 + 考 = ❓', '烤 🍖', '炒 🍳', 0, '烤肉的烤。', '烤'],
+            ['「火🔥」加上「少」，會變成什麼字？', '火 + 少 = ❓', '炒 🍳', '烤 🍖', 0, '炒菜的炒。', '炒']
         ].map(item => ['c', 'c-wood', item[0], item[1], item[2], item[3], item[4], item[5], item[6]]);
 
         const cActionPool = [
+            ['哪一個部首加上「包」，會變成跑步的「跑🏃」？', '❓ + 包 = 跑', '足 🦶', '手 ✋', 0, '跑步要用腳(足部)。', '跑'],
+            ['「足🦶」加上「兆」，會變成什麼字？', '足 + 兆 = ❓', '跳 🦘', '跑 🏃', 0, '跳躍要用腳。', '跳'],
+            ['「足🦶」加上「易」，會變成什麼字？', '足 + 易 = ❓', '踢 ⚽', '跳 🦘', 0, '踢球要用腳。', '踢'],
+            ['「足🦶」加上「采」，會變成什麼字？', '足 + 采 = ❓', '踩 👞', '踢 ⚽', 0, '踩在地上要用腳。', '踩'],
+            ['「手✋」(扌) 加上「丁」，會變成什麼字？', '扌 + 丁 = ❓', '打 🥊', '拍 👏', 0, '打球要用手。', '打'],
+            ['哪一個部首加上「白」，會變成拍手的「拍👏」？', '❓ + 白 = 拍', '扌 (手) ✋', '足 🦶', 0, '拍手當然用手。', '拍'],
+            ['「手✋」(扌) 加上「立」，會變成什麼字？', '扌 + 立 = ❓', '拉 🪢', '推 🛒', 0, '拉開門要用手。', '拉'],
+            ['「手✋」(扌) 加上「隹」，會變成什麼字？', '扌 + 隹 = ❓', '推 🛒', '拉 🪢', 0, '推車要用手。', '推'],
+            ['「手✋」(扌) 加上「爪」，會變成什麼字？', '扌 + 爪 = ❓', '抓 🫴', '打 🥊', 0, '抓東西要用手。', '抓'],
+            ['哪一個部首加上「欠」，會變成吹氣的「吹💨」？', '❓ + 欠 = 吹', '口 👄', '手 ✋', 0, '用嘴巴(口)來吹氣。', '吹'],
+            ['「口👄」加上「乞」，會變成什麼字？', '口 + 乞 = ❓', '吃 🍔', '喝 🧋', 0, '吃東西要用口。', '吃'],
+            ['「口👄」加上「曷」，會變成什麼字？', '口 + 曷 = ❓', '喝 🧋', '吃 🍔', 0, '喝水要用口。', '喝'],
+            ['哪一個部首加上「昌」，會變成唱歌的「唱🎤」？', '❓ + 昌 = 唱', '口 👄', '言 🗣️', 0, '唱歌要張開口。', '唱'],
+            ['「口👄」加上「少」，會變成什麼字？', '口 + 少 = ❓', '吵 🔊', '唱 🎤', 0, '吵鬧會發出聲音。', '吵'],
+            ['「言🗣️」(訁) 加上「兌」，會變成什麼字？', '訁 + 兌 = ❓', '說 💬', '讀 📖', 0, '說話要用語言。', '說'],
+            ['哪一個部首加上「賣」，會變成讀書的「讀📖」？', '❓ + 賣 = 讀', '訁 (言) 🗣️', '目 👀', 0, '朗讀要發出聲音(言)。', '讀'],
+            ['「言🗣️」(訁) 加上「吾」，會變成什麼字？', '訁 + 吾 = ❓', '語 💬', '說 💬', 0, '語文和說話有關。', '語'],
+            ['「女👩」加上「馬」，會變成什麼字？', '女 + 馬 = ❓', '媽 👩‍👦', '螞 🐜', 0, '媽媽是女性，所以是女字旁。', '媽'],
+            ['哪一個部首加上「乃」，會變成奶奶的「奶👵」？', '❓ + 乃 = 奶', '女 👩', '人 🚶', 0, '奶奶也是女性。', '奶'],
+            ['「女👩」加上「且」，會變成什麼字？', '女 + 且 = ❓', '姐 👧', '妹 👧', 0, '姐姐是女性。', '姐'],
+            ['「女👩」加上「未」，會變成什麼字？', '女 + 未 = ❓', '妹 👧', '姐 👧', 0, '妹妹是女性。', '妹'],
             ['「女👩」加上「皮」，會變成什麼字？', '女 + 皮 = ❓', '婆 👵', '姨 👩', 0, '老婆婆的婆。', '婆'],
             ['「女👩」加上「夷」，會變成什麼字？', '女 + 夷 = ❓', '姨 👩', '婆 👵', 0, '阿姨的姨。', '姨'],
             ['「手✋」(扌) 加上「足」，會變成什麼字？', '扌 + 足 = ❓', '捉 🫴', '抱 🫂', 0, '捉迷藏的捉。', '捉'],
@@ -350,19 +431,18 @@
             ['「足🦶」加上「翟」，會變成什麼字？', '足 + 翟 = ❓', '躍 🦘', '跪 🧎', 0, '跳躍的躍。', '躍'],
             ['「足🦶」加上「危」，會變成什麼字？', '足 + 危 = ❓', '跪 🧎', '躍 🦘', 0, '跪下的跪。', '跪'],
             ['「口👄」加上「交」，會變成什麼字？', '口 + 交 = ❓', '咬 🦷', '叫 🗣️', 0, '咬東西的咬。', '咬'],
-            ['「口👄」加上「斗」，會變成什麼字？', '口 + 斗 = ❓', '叫 🗣️', '咬 🦷', 0, '大叫的叫。', '叫'],
-            ['「手✋」(扌) 加上「丁」，會變成什麼字？', '扌 + 丁 = ❓', '打 ⚾', '叮 🦟', 0, '打球的打。', '打']
+            ['「口👄」加上「斗」，會變成什麼字？', '口 + 斗 = ❓', '叫 🗣️', '咬 🦷', 0, '大叫的叫。', '叫']
         ].map(item => ['c', 'c-action', item[0], item[1], item[2], item[3], item[4], item[5], item[6]]);
 
         const cOtherPool = [
             ['「宀🏠」加上「豕」，會變成什麼字？', '宀 + 豕 = ❓', '家 🏡', '室 🚪', 0, '屋裡有豬(豕)，這就是以前的「家」。', '家'],
-            ['「宀🏠」加上「元」，會變成什麼字？', '宀 + 元 = ❓', '完 ✅', '玩 🎮', 0, '完成任務的完。', '完'],
+            ['「宀🏠」加上「元」，會變成什麼字？', '宀 + 元 = ❓', '完 ✅', '玩 🎮', 0, '完成的完。', '完'],
             ['哪一個部首加上「必」，會變成秘密的「密🤫」？', '❓ + 必 + 山 = 密', '宀 (屋頂🏠)', '广 (屋頂🏠)', 0, '藏在屋頂下的一座山，很秘密。', '密'],
             ['「广🏠」加上「木」，會變成什麼字？', '广 + 木 = ❓', '床 🛏️', '店 🏪', 0, '以前的床是木頭放在屋子裡。', '床'],
             ['哪一個部首加上「占」，會變成商店的「店🏪」？', '❓ + 占 = 店', '广 (屋頂🏠)', '宀 (屋頂🏠)', 0, '店舖通常有一個大屋頂。', '店'],
             ['「广🏠」加上「坐」，會變成什麼字？', '广 + 坐 = ❓', '座 💺', '坐 🚶', 0, '座位是一個有屋頂的地方。', '座'],
             ['「辶🚶」加上「云」，會變成什麼字？', '辶 + 云 = ❓', '運 🚚', '近 📏', 0, '運動、運送都需要走動。', '運'],
-            ['「辶🚶」加上「斤」，會變成什麼字？', '辶 + 斤 = ❓', '近 📏', '遠 🔭', 0, '距離很近。', '近'],
+            ['「辶🚶」加上「斤」，會變成什麼字？', '辶 + 斤 = ❓', '近 📏', '遠 🔭', 0, '走得很近。', '近'],
             ['哪一個部首加上「袁」，會變成遙遠的「遠🔭」？', '❓ + 袁 = 遠', '辶 (走🚶)', '木 🪵', 0, '遠方需要走很遠的路。', '遠'],
             ['「辶🚶」加上「告」，會變成什麼字？', '辶 + 告 = ❓', '造 🏗️', '運 🚚', 0, '製造的造。', '造'],
             ['「門🚪」加上「口」，會變成什麼字？', '門 + 口 = ❓', '問 ❓', '間 🕒', 0, '打開門開口發問。', '問'],
@@ -374,7 +454,7 @@
             ['「雨🌧️」加上「云」，會變成什麼字？', '雨 + 云 = ❓', '雲 ☁️', '雪 ❄️', 0, '雲會帶來下雨。', '雲'],
             ['「雨🌧️」加上「田」，會變成什麼字？', '雨 + 田 = ❓', '雷 ⚡', '電 ⚡', 0, '打雷的雷。', '雷'],
             ['哪一個部首加上「辰」，會變成地震的「震🫨」？', '❓ + 辰 = 震', '雨 🌧️', '水 💧', 0, '震動的震。', '震'],
-            ['「雨🌧️」加上「相」，會變成什麼字？', '雨 + 相 = ❓', '霜 ❄️', '雪 ❄️', 0, '秋天結霜的霜。', '霜'],
+            ['「雨🌧️」加上「相」，會變成什麼字？', '雨 + 相 = ❓', '霜 ❄️', '雪 ❄️', 0, '結霜的霜。', '霜'],
             ['「宀🏠」加上「各」，會變成什麼字？', '宀 + 各 = ❓', '客 👤', '室 🚪', 0, '客人的客。', '客'],
             ['「宀🏠」加上「至」，會變成什麼字？', '宀 + 至 = ❓', '室 🚪', '家 🏡', 0, '課室的室。', '室'],
             ['「宀🏠」加上「玉」，會變成什麼字？', '宀 + 玉 = ❓', '寶 💎', '庫 🏦', 0, '屋裡有玉石，是寶貝。', '寶'],
@@ -392,9 +472,9 @@
             ['「犭🐕」加上「苗」，會變成什麼字？', '犭 + 苗 = ❓', '貓 🐱', '豬 🐷', 0, '貓咪是動物。', '貓'],
             ['「犭🐕」加上「者」，會變成什麼字？', '犭 + 者 = ❓', '豬 🐷', '狗 🐶', 0, '小豬是動物。', '豬'],
             ['哪一個部首加上「文」，會變成蚊子的「蚊🦟」？', '❓ + 文 = 蚊', '虫 🐛', '鳥 🐦', 0, '蚊子是昆蟲，用虫字部。', '蚊'],
-            ['「虫🐛」加上「義」，會變成什麼字？', '虫 + 義 = ❓', '蟻 螞', '蚊 🦟', 0, '螞蟻是昆蟲。', '蟻'],
+            ['「虫🐛」加上「義」，會變成什麼字？', '虫 + 義 = ❓', '蟻 🐜', '蚊 🦟', 0, '螞蟻是昆蟲。', '蟻'],
             ['「虫🐛」加上「它」，會變成什麼字？', '虫 + 它 = ❓', '蛇 🐍', '蛙 🐸', 0, '蛇在古代被歸類為虫部。', '蛇'],
-            ['「虫🐛」加上「馬」，會變成什麼字？', '虫 + 馬 = ❓', '螞 🐜', '媽 👩', 0, '螞蟻的螞。', '螞'],
+            ['「虫🐛」加上「馬」，會變成什麼字？', '虫 + 馬 = ❓', '螞 🐜', '媽 👩', 0, '昆蟲螞蟻。', '螞'],
             ['哪一個部首加上「羊」，會變成新鮮的「鮮🐟」？', '❓ + 羊 = 鮮', '魚 🐟', '犭 🐕', 0, '魚和羊加起來代表味道鮮美。', '鮮'],
             ['「鳥🐦」加上「甲」，會變成什麼字？', '鳥 + 甲 = ❓', '鴨 🦆', '鵝 🦢', 0, '鴨子有鳥字部。', '鴨'],
             ['「鳥🐦」加上「我」，會變成什麼字？', '鳥 + 我 = ❓', '鵝 🦢', '雞 🐔', 0, '白鵝的鵝。', '鵝'],
@@ -406,53 +486,96 @@
             ['哪一個部首加上「侯」，會變成猴子的「猴🐒」？', '❓ + 侯 = 猴', '犭(犬) 🐕', '木 🪵', 0, '猴子是動物。', '猴'],
             ['「犭🐕」加上「良」，會變成什麼字？', '犭 + 良 = ❓', '狼 🐺', '狗 🐶', 0, '野狼的狼。', '狼'],
             ['「鳥🐦」加上「合」，會變成什麼字？', '鳥 + 合 = ❓', '鴿 🕊️', '雞 🐔', 0, '鴿子是鳥類。', '鴿'],
-            ['「虫🐛」加上「工」，會變成什麼字？', '虫 + 工 = ❓', '虹 🌈', '蛇 🐍', 0, '彩虹的虹，部首也是「虫」。', '虹'],
+            ['「虫🐛」加上「工」，會變成什麼字？', '虫 + 工 = ❓', '虹 🌈', '蛇 🐍', 0, '彩虹的虹，部首也是虫！', '虹'],
             ['「虫🐛」加上「丰」，會變成什麼字？', '虫 + 丰 = ❓', '蜂 🐝', '蝶 🦋', 0, '蜜蜂的蜂。', '蜂'],
             ['「犭🐕」加上「瓜」，會變成什麼字？', '犭 + 瓜 = ❓', '狐 🦊', '狸 🦝', 0, '狐狸的狐。', '狐'],
-            ['「犭🐕」加上「里」，會變成什麼字？', '犭 + 里 = ❓', '狸 🦝', '狐 🦊', 0, '狐狸的狸。', '狸']
+            ['「犭🐕」加上「里」，會變成什麼字？', '犭 + 里 = ❓', '狸 🦝', '狐 🦊', 0, '狐狸的狸。', '狸'],
+            ['「犭🐕」加上「王」，會變成什麼字？', '犭 + 王 = ❓', '狂 😠', '狗 🐶', 0, '發狂的狂。', '狂'],
+            ['「虫🐛」加上「世 + 木」，會變成什麼字？', '虫 + 枼 = ❓', '蝶 🦋', '蜂 🐝', 0, '蝴蝶的蝶。', '蝶'],
+            ['「虫🐛」加上「黽」，會變成什麼字？', '虫 + 黽 = ❓', '蠅 🪰', '蛛 🕷️', 0, '蒼蠅的蠅。', '蠅'],
+            ['「虫🐛」加上「朱」，會變成什麼字？', '虫 + 朱 = ❓', '蛛 🕷️', '蟻 🐜', 0, '蜘蛛的蛛。', '蛛'],
+            ['「魚🐟」加上「沙」，會變成什麼字？', '魚 + 沙 = ❓', '鯊 🦈', '鯨 🐋', 0, '鯊魚的鯊。', '鯊'],
+            ['「魚🐟」加上「京」，會變成什麼字？', '魚 + 京 = ❓', '鯨 🐋', '鯉 🐟', 0, '鯨魚的鯨。', '鯨'],
+            ['「鳥🐦」加上「它」，會變成什麼字？', '鳥 + 它 = ❓', '鴕 🦤', '鴿 🕊️', 0, '鴕鳥的鴕。', '鴕'],
+            ['「鳥🐦」加上「號」，會變成什麼字？', '鳥 + 號 = ❓', '鴞 🦉', '鷹 🦅', 0, '貓頭鷹的鴞。', '鴞']
         ].map(item => ['c', 'c-animal', item[0], item[1], item[2], item[3], item[4], item[5], item[6]]);
 
         const tw1Pool = [
+            ['天氣太熱了，我想___水🧋。', '喝 (用口👄)', '渴 (缺水💧)', 0, '用嘴巴喝水，所以是「口」字部。', '喝'],
+            ['跑完步，我感到很口___🥵。', '渴 (缺水💧)', '喝 (用口👄)', 0, '口渴代表身體缺水，所以是「水」字部。', '渴'],
+            ['我們在操場上___遊戲🎠。', '玩 (玉字部)', '完 (宀字部)', 0, '玩耍的玩是王(玉)字旁。', '玩'],
+            ['功課終於做___了✅。', '完 (宀字部)', '玩 (玉字部)', 0, '完成的完是寶蓋頭(宀)。', '完'],
+            ['動物園裡有大___🐘。', '象 (動物)', '像 (好像)', 0, '大象是一種動物。', '象'],
+            ['弟弟長得很___爸爸👨。', '像 (好像)', '象 (動物)', 0, '好像的人，用「人」字部(亻)。', '像'],
+            ['秋天到了，樹葉___下來🍂。', '落 (草字頭🌿)', '洛 (水字部💧)', 0, '樹葉是植物，用草字頭(艹)。', '落'],
+            ['天空___著幾朵白雲☁️。', '飄 (風字部💨)', '漂 (水字部💧)', 0, '被風吹動在天上飛，所以是風字部。', '飄'],
+            ['這朵花長得真___亮🌸。', '漂 (水字部💧)', '飄 (風字部💨)', 0, '漂亮是水字部(氵)。', '漂'],
+            ['請你___下來🪑。', '坐 (動作🚶)', '座 (地方🏠)', 0, '兩個人坐在土上，這是一個動作。', '坐'],
+            ['這是我的___位💺。', '座 (地方🏠)', '坐 (動作🚶)', 0, '座位是一個地方，有廣字頭。', '座'],
+            ['這是一隻小___🐶。', '狗 (動物部)', '夠 (足夠)', 0, '小狗是動物，用犬(犭)字部。', '狗'],
+            ['我的錢不___買這本書💰。', '夠 (足夠)', '狗 (動物部)', 0, '足夠的夠，右邊是多。', '夠'],
+            ['今天天氣很好，是個大___天☀️。', '晴 (日字部☀️)', '睛 (目字部👀)', 0, '和太陽有關的天氣，用日字部。', '晴'],
+            ['妹妹有一雙大眼___👀。', '睛 (目字部👀)', '晴 (日字部☀️)', 0, '眼睛用目字部。', '睛'],
+            ['我___經做完功課了👍。', '已 (半開口)', '己 (全開口)', 0, '已經的已是半開口的。', '已'],
+            ['烏鴉是一隻___色的鳥🐦‍⬛。', '烏 (沒有眼)', '鳥 (有眼睛)', 0, '烏鴉太黑看不到眼睛，所以沒有裡面那一點。', '烏'],
+            ['小明買了一把小___🔪。', '刀 (工具🔪)', '力 (力量💪)', 0, '切東西用刀。', '刀'],
+            ['小鳥的___子很尖利🦅。', '爪 (動物腳)', '瓜 (水果🍉)', 0, '動物的腳是爪。', '爪'],
+            ['我喜歡吃西___🍉。', '瓜 (水果🍉)', '爪 (動物腳)', 0, '西瓜是水果。', '瓜'],
+            ['運動後流了很多___水💦。', '汗 (流水)', '汁 (果汁)', 0, '流汗的汗，右邊是干。', '汗'],
+            ['這杯蘋果___很好喝🧃。', '汁 (果汁)', '汗 (流水)', 0, '果汁的汁，右邊是十。', '汁'],
+            ['農場裡有幾隻乳___🐄。', '牛 (動物)', '午 (中午)', 0, '牛的角穿出頭頂了。', '牛'],
+            ['現在是中___十二點🕛。', '午 (中午)', '牛 (動物)', 0, '中午的午不出頭。', '午'],
+            ['媽媽去市場___菜🥬。', '買 (買入)', '賣 (賣出)', 0, '買東西上面沒有十字。', '買'],
+            ['這間店___很多玩具🧸。', '賣 (賣出)', '買 (買入)', 0, '賣出上面有十字。', '賣'],
+            ['地上有很多泥___🧱。', '土 (泥土)', '士 (士兵)', 0, '泥土的土，下面一橫比較長。', '土'],
+            ['這是一位勇敢的軍___👮。', '士 (士兵)', '土 (泥土)', 0, '士兵的士，上面一橫比較長。', '士'],
+            ['海邊有一隻美麗的___殼🐚。', '貝 (貝類)', '見 (看見)', 0, '貝殼的貝，下面是八字腳。', '貝'],
+            ['我___到了一隻小鳥👀。', '見 (看見)', '貝 (貝類)', 0, '看見的見，下面是人字腳。', '見']
+        ].map(item => ['tw', 'tw-1', '選出正確的字填入空格。', item[0], item[1], item[2], item[3], item[4], item[5]]);
+
+        const tw2Pool = [
+            ['這是一件很___苦的事💦。', '辛 (辛苦)', '幸 (幸福)', 0, '辛苦是辛。', '辛'],
+            ['祝你永遠___福❤️。', '幸 (幸福)', '辛 (辛苦)', 0, '幸福是幸。', '幸'],
+            ['我喜歡吃___蜜🍯。', '蜂 (蜜蜂🐝)', '峰 (山峰⛰️)', 0, '蜜蜂是昆蟲(虫部)。', '蜂'],
+            ['那是一座高高的山___⛰️。', '峰 (山峰⛰️)', '蜂 (蜜蜂🐝)', 0, '山峰是山字部。', '峰'],
+            ['媽媽買了一個水___🍑。', '蜜 (甜蜜🍯)', '密 (秘密🤫)', 0, '水蜜桃很甜，跟蜂蜜(虫部)有關。', '蜜'],
             ['這是一個大秘___🤫。', '密 (秘密🤫)', '蜜 (甜蜜🍯)', 0, '秘密要藏在屋頂下(宀部)。', '密'],
-            ['這是一個圓___的蘋果🍎。', '形 (形狀)', '刑 (處罰)', 0, '形狀的形。', '形'],
+            ['這是一個圓___的蘋果🍎。', '形 (形狀)', '刑 (處罰)', 0, '形狀的形，右邊是三撇。', '形'],
             ['請你幫我___水🚿。', '澆 (澆水)', '燒 (燒火)', 0, '澆水用水部。', '澆'],
             ['小心不要被火___傷🔥。', '燒 (燒火)', '澆 (澆水)', 0, '燒火用火部。', '燒'],
             ['海邊有一隻小貝___🐚。', '殼 (外殼)', '穀 (穀物)', 0, '貝殼的殼，上面沒有禾。', '殼'],
             ['這是一把___利的刀🔪。', '鋒 (鋒利)', '峰 (山峰)', 0, '鋒利用金屬(金字旁)。', '鋒'],
             ['這件衣服是___色的🔵。', '藍 (顏色)', '籃 (籃子)', 0, '藍色有草字頭。', '藍'],
-            ['我們去打___球🏀。', '籃 (籃子)', '藍 (顏色)', 0, '籃球框用竹字頭。', '籃'],
-            ['公園裡有美麗的花___ Fountain。', '園 (公園)', '圓 (圓形)', 0, '公園的園。', '園'],
-            ['這是一個___形的球⚽。', '圓 (圓形)', '園 (公園)', 0, '圓形裡面有員工的員。', '圓']
-        ].map(item => ['tw', 'tw-1', '選出正確的字填入空格。', item[0], item[1], item[2], item[3], item[4], item[5]]);
-
-        const tw2Pool = [
+            ['我們去打___球🏀。', '籃 (籃子)', '藍 (顏色)', 0, '籃球框是用竹子做的(竹字頭)。', '籃'],
+            ['公園裡有美麗的花___⛲。', '園 (公園)', '圓 (圓形)', 0, '公園裡面有衣服(袁)。', '園'],
+            ['這是一個___形的球⚽。', '圓 (圓形)', '園 (公園)', 0, '圓形裡面有員工的員。', '圓'],
             ['妹妹在___覺😴。', '睡 (睡覺)', '垂 (垂下)', 0, '睡覺要閉上眼睛(目部)。', '睡'],
             ['樹葉低___下來🍃。', '垂 (垂下)', '睡 (睡覺)', 0, '垂下沒有目。', '垂'],
             ['桌上有一個果___🍎。', '盤 (盤子)', '盆 (盆子)', 0, '果盤的盤。', '盤'],
             ['這是一___美麗的花🌸。', '盆 (盆子)', '盤 (盤子)', 0, '花盆的盆。', '盆'],
-            ['我們要想___法解決問題🧠。', '辦 (辦法)', '辨 (分辨)', 0, '辦法的辦。', '辦'],
-            ['這對雙胞胎很難分___👯‍♂️。', '辨 (分辨)', '辦 (辦法)', 0, '分辨的辨。', '辨'],
-            ['玫瑰花有很多花___🌹。', '瓣 (花瓣)', '辦 (辦法)', 0, '花瓣的瓣。', '瓣'],
+            ['我們要想___法解決問題🧠。', '辦 (辦法)', '辨 (分辨)', 0, '辦法的辦，中間有力量(力)。', '辦'],
+            ['這對雙胞胎很難分___👯‍♂️。', '辨 (分辨)', '辦 (辦法)', 0, '分辨的辨，中間有一撇一點。', '辨'],
+            ['玫瑰花有很多花___🌹。', '瓣 (花瓣)', '辦 (辦法)', 0, '花瓣的瓣，中間有西瓜的瓜。', '瓣'],
             ['這是一支長長的竹___🎋。', '竿 (竹竿)', '干 (乾淨)', 0, '竹竿有竹字頭。', '竿'],
-            ['大野狼看起來很___毒🐺。', '狠 (兇狠)', '很 (非常)', 0, '兇狠的狠。', '狠'],
+            ['大野狼看起來很___毒🐺。', '狠 (兇狠)', '很 (非常)', 0, '兇狠的狠，左邊是犬(犭)字旁。', '狠'],
             ['今天天氣___好☀️。', '很 (非常)', '狠 (兇狠)', 0, '很好的很，左邊是雙人旁。', '很'],
-            ['水面上冒出很多泡___🫧。', '泡 (水泡)', '抱 (擁抱)', 0, '泡泡用三點水。', '泡'],
-            ['媽媽___著一個嬰兒🤱。', '抱 (擁抱)', '泡 (水泡)', 0, '擁抱用提手旁。', '抱'],
-            ['過年要放鞭___🧨。', '炮 (鞭炮)', '跑 (跑步)', 0, '鞭炮用火部。', '炮'],
+            ['水面上冒出很多泡___🫧。', '泡 (水泡)', '抱 (擁抱)', 0, '泡泡跟水有關(氵)。', '泡'],
+            ['媽媽___著一個嬰兒🤱。', '抱 (擁抱)', '泡 (水泡)', 0, '擁抱要用手(扌)。', '抱'],
+            ['過年要放鞭___🧨。', '炮 (鞭炮)', '跑 (跑步)', 0, '鞭炮要用火點燃(火部)。', '炮'],
             ['大家要耐心地等___⏳。', '待 (等待)', '侍 (侍候)', 0, '等待的待，右邊是寺。', '待'],
-            ['這是一道很難的數學___📝。', '題 (題目)', '提 (手提)', 0, '題目的題。', '題']
+            ['這是一道很難的數學___📝。', '題 (題目)', '提 (手提)', 0, '題目的題，右邊是頁。', '題']
         ].map(item => ['tw', 'tw-2', '選出正確的字填入空格。', item[0], item[1], item[2], item[3], item[4], item[5]]);
 
         const s1Pool = [
-            ['學', '子 👶', '冖', 0, '學字的部首是「子」。'],
+            ['學', '下面 (子👶)', '上面', 0, '學字的部首是下面的「子」。'],
             ['想', '心 ❤️', '木 🪵', 0, '思考要用心，所以是心部。'],
-            ['語', '言 🗣️', '五 🖐️', 0, '語文與說話有關。'],
+            ['語', '言(訁) 🗣️', '五 🖐️', 0, '語文和說話有關。'],
             ['家', '宀 (屋頂🏠)', '豕 (豬🐷)', 0, '寶蓋頭代表屋頂，有屋頂才是家。'],
             ['病', '疒 (病字旁) 🤒', '丙', 0, '病字旁代表生病。'],
-            ['飯', '食 🍚', '反', 0, '吃飯與食物有關。'],
-            ['錢', '金 🪙', '戔', 0, '錢幣多與金屬有關。'],
+            ['飯', '食(飠) 🍚', '反', 0, '吃飯跟食物有關。'],
+            ['錢', '金(釒) 🪙', '戔', 0, '以前的錢多是金屬做的。'],
             ['昨', '日 ☀️', '乍', 0, '昨天代表時間(日)。'],
-            ['明', '日 ☀️', '月 🌙', 0, '明字的部首是「日」。'],
+            ['明', '日 ☀️', '月 🌙', 0, '明字典通常歸入日部。'],
             ['林', '木 🌳', '八', 0, '樹林有很多木。'],
             ['海', '水(氵) 🌊', '每', 0, '海裡全是水。'],
             ['樹', '木 🌳', '寸', 0, '樹是木頭。'],
@@ -460,18 +583,18 @@
             ['跑', '足 🦶', '包', 0, '跑步用腳(足)。'],
             ['媽', '女 👩', '馬 🐴', 0, '媽媽是女性。'],
             ['筆', '竹 🎋', '毛 🪶', 0, '以前的筆是用竹子做的。'],
-            ['國', '囗 📦', '或', 0, '國字的部首是「囗」。'],
-            ['園', '囗 📦', '袁', 0, '園字的部首是「囗」。'],
+            ['國', '囗 (大口) 📦', '或', 0, '國家有邊界，用大口框(囗)。'],
+            ['園', '囗 (大口) 📦', '袁', 0, '公園有圍欄，用大口框(囗)。'],
             ['問', '門 🚪', '口 👄', 0, '問是門字部。'],
             ['聞', '耳 👂', '門 🚪', 0, '用耳朵聽，聞是耳字部。'],
-            ['草', '艸 🌿', '早', 0, '草是植物，用草字頭。'],
-            ['花', '艸 🌿', '化', 0, '花是植物，用草字頭。'],
+            ['草', '艸(艹) 🌿', '早', 0, '草是植物(草字頭)。'],
+            ['花', '艸(艹) 🌿', '化', 0, '花也是植物(草字頭)。'],
             ['爸', '父 👨', '巴', 0, '爸爸是父親(父字部)。'],
             ['姐', '女 👧', '且', 0, '姐姐是女性。'],
             ['哥', '口 👄', '可', 0, '哥哥的部首是口。'],
             ['弟', '弓 🏹', '八', 0, '弟弟的部首是弓。'],
             ['妹', '女 👧', '未', 0, '妹妹是女性。'],
-            ['狗', '犬 🐶', '句', 0, '狗是犬類動物。'],
+            ['狗', '犬(犭) 🐶', '句', 0, '狗是犬類動物。'],
             ['貓', '豸 🐱', '苗', 0, '貓的部首是豸(野獸)。'], 
             ['鳥', '鳥 🐦', '灬', 0, '鳥本身就是部首。']
         ].map(item => ['s', 's-1', `觀察「${item[0]}」字的寫法，它的部首是什麼？`, item[0], item[1], item[2], item[3], item[4], item[0]]);
@@ -480,33 +603,33 @@
             ['春', '日 ☀️', '三人', 0, '春天是日子(日字部)。'],
             ['夏', '夊 (慢慢走)', '目', 0, '夏天是夊部。'],
             ['秋', '禾 🌾', '火 🔥', 0, '秋天收割農作物(禾部)。'],
-            ['冬', '冫 🧊', '夂', 0, '冬天的部首是「冫」。'],
+            ['冬', '冫(冰) 🧊', '夂', 0, '冬天結冰，所以是冫(兩點水)。'],
             ['雪', '雨 🌧️', '彐', 0, '雪和天氣有關(雨字部)。'],
             ['雷', '雨 🌧️', '田', 0, '雷和天氣有關(雨字部)。'],
             ['電', '雨 🌧️', '田', 0, '閃電和天氣有關(雨字部)。'],
-            ['說', '言 🗣️', '兌', 0, '說話與語言有關。'],
-            ['讀', '言 🗣️', '賣', 0, '讀書與語言有關。'],
-            ['寫', '宀 🏠', '舄', 0, '寫字的部首是「宀」。'],
+            ['說', '言(訁) 🗣️', '兌', 0, '說話要用語言。'],
+            ['讀', '言(訁) 🗣️', '賣', 0, '讀書要發出聲音。'],
+            ['寫', '宀(屋頂) 🏠', '舄', 0, '寫字要在屋簷下(宀部)。'],
             ['畫', '田 🖼️', '一', 0, '畫圖就像劃分田地(田部)。'],
             ['跳', '足 🦶', '兆', 0, '跳躍用腳(足)。'],
             ['飛', '飛 🦅', '升', 0, '飛自己本身就是一個部首。'],
-            ['游', '水 💧', '方', 0, '游泳與水有關。'],
+            ['游', '水(氵) 💧', '方', 0, '游泳在水裡(水部)。'],
             ['睡', '目 👀', '垂', 0, '睡覺要閉眼睛(目部)。'],
             ['醒', '酉 🍶', '星', 0, '醒的部首是酉字旁。'],
             ['玩', '玉(王) 💎', '元', 0, '古人玩玉石，所以是玉(王)字旁。'],
             ['吃', '口 👄', '乞', 0, '吃東西用嘴巴(口部)。'],
             ['喝', '口 👄', '曷', 0, '喝水用嘴巴(口部)。'],
-            ['做', '人 🚶', '故', 0, '做事的部首是「人」。'],
+            ['做', '人(亻) 🚶', '故', 0, '做事要靠人(人字旁)。'],
             ['打', '手(扌) ✋', '丁', 0, '打球用手。'],
             ['拉', '手(扌) ✋', '立', 0, '拉開門用手。'],
             ['推', '手(扌) ✋', '隹', 0, '推車用手。'],
             ['黑', '黑 ⚫', '灬', 0, '黑本身就是部首。'],
             ['白', '白 ⚪', '日', 0, '白本身就是部首。'],
-            ['紅', '糸 🧵', '工', 0, '紅字的部首是「糸」。'],
-            ['綠', '糸 🧵', '录', 0, '綠字的部首是「糸」。'],
+            ['紅', '糸(糹) 🧵', '工', 0, '顏色通常跟絲線(糸)有關。'],
+            ['綠', '糸(糹) 🧵', '录', 0, '綠色也是糸部。'],
             ['黃', '黃 🟡', '田', 0, '黃本身就是部首。'],
             ['藍', '艸(艹) 🌿', '監', 0, '藍色是草字頭。'],
-            ['紫', '糸 🧵', '此', 0, '紫字的部首是「糸」。']
+            ['紫', '糸 🧵', '此', 0, '紫色也是糸部。']
         ].map(item => ['s', 's-2', `觀察「${item[0]}」字的寫法，它的部首是什麼？`, item[0], item[1], item[2], item[3], item[4], item[0]]);
 
         const w1Pool = [
@@ -527,6 +650,7 @@
         ];
 
         let userProgress = JSON.parse(localStorage.getItem('questProgress')) || new Array(rawQuestData.length).fill(0);
+        let isSandboxInitialized = false;
 
         function renderDirectory() {
             const dirContainer = document.getElementById('directory-content');
@@ -598,7 +722,7 @@
             let html = `
                 <div class="w-full flex justify-between items-center mb-4">
                     <button onclick="backToDirectory()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 返回目錄</button>
-                    <span class="bg-emerald-100 text-emerald-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${idx + 1} 題 / 共 ${rawQuestData.length} 題</span>
+                    <span class="bg-emerald-100 text-emerald-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${idx + 1} 題 / 共 300 題</span>
                 </div>
                 
                 <div id="q-card" class="slide-up w-full bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center relative transition-all duration-500">
@@ -628,6 +752,10 @@
                     <div class="mb-6 flex flex-col items-center w-full">
                         <div id="quest-canvas" class="w-64 h-64 md:w-72 md:h-72 mi-zi-ge mb-4 touch-none shadow-inner"></div>
                         <div id="write-hint" class="text-rose-500 font-bold text-lg h-6 mb-3">請依照正確筆順書寫</div>
+                        <div class="flex gap-3 w-full justify-center">
+                            <button onclick="questWriter.animateCharacter()" class="bg-slate-200 text-slate-700 px-5 py-3 rounded-xl font-bold shadow-sm hover:bg-slate-300 w-full max-w-[140px]">👀 看提示</button>
+                            <button onclick="startQuestWriting()" class="bg-emerald-500 text-white px-5 py-3 rounded-xl font-bold shadow-sm hover:bg-emerald-600 w-full max-w-[140px]">🔄 重新寫</button>
+                        </div>
                     </div>
                 `;
             }
@@ -636,6 +764,7 @@
                 html += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full mt-auto" id="options-container">`;
                 [opt1, opt2].forEach((optText, oIdx) => {
                     const isCorr = (oIdx === qData[6]);
+                    const safeOpt = optText.replace(/'/g, "\\'");
                     html += `<button onclick="checkAnswer(this, ${isCorr})" class="option-btn bg-white border-4 border-slate-200 text-slate-700 text-xl md:text-2xl font-bold py-5 px-4 rounded-2xl hover:bg-emerald-50 hover:border-emerald-300 transition w-full text-center flex flex-col items-center justify-center break-words leading-relaxed">${optText}</button>`;
                 });
                 html += `</div>`;
@@ -793,142 +922,130 @@
             }, 300);
         }
 
-        // ================= 3. 無盡寫字板系統 =================
-        const wordLib = {
-            nature: [
-                {char: '山', radical: '山'}, {char: '水', radical: '水'}, {char: '日', radical: '日'}, {char: '月', radical: '月'},
-                {char: '火', radical: '火'}, {char: '木', radical: '木'}, {char: '土', radical: '土'}, {char: '天', radical: '大'},
-                {char: '雲', radical: '雨'}, {char: '雷', radical: '雨'}, {char: '雨', radical: '雨'}, {char: '電', radical: '雨'},
-                {char: '石', radical: '石'}, {char: '風', radical: '風'}, {char: '海', radical: '水'}
-            ],
-            person: [
-                {char: '人', radical: '人'}, {char: '女', radical: '女'}, {char: '子', radical: '子'}, {char: '手', radical: '手'},
-                {char: '足', radical: '足'}, {char: '目', radical: '目'}, {char: '耳', radical: '耳'}, {char: '口', radical: '口'},
-                {char: '心', radical: '心'}, {char: '爸', radical: '父'}, {char: '媽', radical: '女'}, {char: '哥', radical: '口'},
-                {char: '弟', radical: '弓'}, {char: '姐', radical: '女'}, {char: '妹', radical: '女'}
-            ],
-            action: [
-                {char: '走', radical: '走'}, {char: '跑', radical: '足'}, {char: '跳', radical: '足'}, {char: '打', radical: '手'},
-                {char: '拉', radical: '手'}, {char: '推', radical: '手'}, {char: '捉', radical: '手'}, {char: '看', radical: '目'},
-                {char: '聽', radical: '耳'}, {char: '說', radical: '言'}, {char: '寫', radical: '宀'}, {char: '坐', radical: '土'},
-                {char: '站', radical: '立'}, {char: '笑', radical: '竹'}, {char: '哭', radical: '口'}
-            ],
-            object: [
-                {char: '書', radical: '曰'}, {char: '筆', radical: '竹'}, {char: '紙', radical: '糸'}, {char: '刀', radical: '刀'},
-                {char: '車', radical: '車'}, {char: '門', radical: '門'}, {char: '床', radical: '广'}, {char: '桌', radical: '木'},
-                {char: '椅', radical: '木'}, {char: '燈', radical: '火'}, {char: '傘', radical: '人'}, {char: '衣', radical: '衣'}
-            ],
-            animal: [
-                {char: '鳥', radical: '鳥'}, {char: '馬', radical: '馬'}, {char: '牛', radical: '牛'}, {char: '羊', radical: '羊'},
-                {char: '狗', radical: '犬'}, {char: '貓', radical: '豸'}, {char: '魚', radical: '魚'}, {char: '虫', radical: '虫'},
-                {char: '龍', radical: '龍'}, {char: '虎', radical: '虍'}, {char: '獅', radical: '犬'}, {char: '象', radical: '豕'}
-            ],
-            food: [
-                {char: '米', radical: '米'}, {char: '飯', radical: '食'}, {char: '水', radical: '水'}, {char: '肉', radical: '肉'},
-                {char: '魚', radical: '魚'}, {char: '果', radical: '木'}, {char: '菜', radical: '艸'}, {char: '糖', radical: '米'},
-                {char: '餅', radical: '食'}, {char: '蛋', radical: '疋'}, {char: '奶', radical: '女'}, {char: '茶', radical: '艸'}
-            ]
-        };
+        // ================= 4. 無盡字庫搜尋與寫字板 =================
+        const rawWordData = "nature|天:大,地:土,日:日,月:月,星:日,雲:雨,風:風,雨:雨,雷:雨,電:雨,山:山,石:石,田:田,土:土,水:水,火:火,春:日,夏:夊,秋:禾,冬:冫,花:艸,草:艸,樹:木,葉:艸,木:木,林:木,森:木,海:水,江:水,河:水,光:儿,冰:冫,雪:雨,霜:雨,波:水,浪:水|person|人:人,我:戈,你:人,他:人,她:女,它:宀,男:田,女:女,父:父,母:毋,子:子,哥:口,弟:弓,姐:女,妹:女,爺:父,奶:女,頭:頁,目:目,耳:耳,口:口,手:手,足:足,心:心,牙:牙,舌:舌,皮:皮,肉:肉,血:血,骨:骨,身:身,臉:肉,鼻:鼻,髮:髟,腿:肉|action|走:走,跑:足,跳:足,飛:飛,游:水,看:目,聽:耳,說:言,讀:言,寫:宀,畫:田,吃:口,喝:口,玩:玉,學:子,做:人,打:手,拍:手,拉:手,推:手,拿:手,放:攴,開:門,關:門,坐:土,立:立,睡:目,醒:酉,笑:竹,哭:口,想:心,去:厶,來:人,給:糸,要:襾,唱:口|object|書:曰,包:勹,筆:竹,紙:糸,尺:尸,桌:木,椅:木,床:广,房:戶,門:門,窗:穴,家:宀,車:車,船:舟,路:足,街:行,市:巾,店:广,錢:金,衣:衣,褲:衣,鞋:革,帽:巾,杯:木,碗:石,碟:石,刀:刀,叉:又,匙:匕,燈:火,鐘:金,錶:金,傘:人,鏡:金|animal|狗:犬,貓:豸,豬:豕,牛:牛,羊:羊,馬:馬,雞:隹,鴨:鳥,鵝:鳥,魚:魚,蝦:虫,蟹:虫,龜:龜,兔:儿,鼠:鼠,鳥:鳥,蟲:虫,蛇:虫,蛙:虫,蚊:虫,蟻:虫,蝶:虫,蛛:虫,象:豕,熊:火,獅:犬,虎:虍,鹿:鹿,猴:犬,狼:犬,鷹:鳥,蜂:虫|food|飯:食,麵:麥,粥:米,粉:米,肉:肉,蛋:虫,菜:艸,果:木,瓜:瓜,豆:豆,奶:女,茶:艸,水:水,湯:水,糖:米,鹽:鹵,油:水,醋:酉,餅:食,包:勹,餃:食,糕:米,蔥:艸,蒜:艸,薑:艸,冰:冫";
 
-        let sbWriter = null;
-        let currentSbChar = '';
-
-        function switchMode(mode) {
-            const questTab = document.getElementById('tab-quest');
-            const sandboxTab = document.getElementById('tab-sandbox');
-            const questMode = document.getElementById('quest-mode');
-            const sandboxMode = document.getElementById('sandbox-wrapper');
-
-            if (mode === 'quest') {
-                questTab.className = 'tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-emerald-600';
-                sandboxTab.className = 'tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200';
-                questMode.style.display = 'flex';
-                sandboxMode.classList.add('hidden');
-            } else {
-                sandboxTab.className = 'tab-btn tab-active flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-emerald-600';
-                questTab.className = 'tab-btn tab-inactive flex-1 py-3 font-bold text-base lg:text-lg border-b-4 border-transparent hover:bg-slate-200';
-                questMode.style.display = 'none';
-                sandboxMode.classList.remove('hidden');
-                filterWords('all');
+        let parsedWords = [];
+        rawWordData.split('|').forEach((chunk, index, arr) => {
+            if(index % 2 === 0) {
+                let cat = chunk;
+                let pairs = arr[index+1].split(',');
+                pairs.forEach(p => {
+                    let [char, rad] = p.split(':');
+                    if (char && rad) {
+                        parsedWords.push({ cat, char, rad });
+                    }
+                });
             }
-        }
+        });
 
-        function filterWords(cat) {
-            const grid = document.getElementById('word-grid');
-            const buttons = document.querySelectorAll('.filter-btn');
-            buttons.forEach(btn => btn.className = "filter-btn bg-slate-50 text-slate-600 px-4 py-2 rounded-lg whitespace-nowrap text-sm border");
-            document.getElementById('flt-' + cat).className = "filter-btn filter-active px-4 py-2 rounded-lg whitespace-nowrap text-sm border";
+        function initSandbox() { filterWords('all'); }
 
-            let list = [];
-            if (cat === 'all') {
-                Object.values(wordLib).forEach(arr => list = list.concat(arr));
-            } else {
-                list = wordLib[cat];
-            }
-
-            const uniqueList = Array.from(new Set(list.map(a => a.char)))
-                .map(char => list.find(a => a.char === char));
-
-            grid.innerHTML = uniqueList.map(item => `
-                <button onclick="selectSandboxChar('${item.char}', '${item.radical}')" class="bg-white border-2 border-slate-100 p-2 rounded-xl shadow-sm hover:border-emerald-300 hover:bg-emerald-50 transition text-2xl font-bold flex items-center justify-center aspect-square">
-                    ${item.char}
-                </button>
-            `).join('');
-        }
-
-        function selectSandboxChar(char, radical) {
-            currentSbChar = char;
-            document.getElementById('sandbox-placeholder').style.display = 'none';
-            document.getElementById('sandbox-content').style.display = 'flex';
-            document.getElementById('sb-char').innerText = char;
-            document.getElementById('sb-radical').innerText = radical;
-            document.getElementById('sb-feedback').style.opacity = '0';
-            
-            document.getElementById('sandbox-canvas').innerHTML = '';
-            let size = window.innerWidth < 768 ? 256 : 320;
-            sbWriter = HanziWriter.create('sandbox-canvas', char, {
-                width: size, height: size, padding: 20, strokeAnimationSpeed: 1, delayBetweenStrokes: 150,
-                strokeColor: '#1e293b', radicalColor: '#10b981', showOutline: true, showCharacter: true
+        function filterWords(category) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('filter-active', 'bg-emerald-500', 'text-white');
+                btn.classList.add('bg-slate-50', 'text-slate-600');
             });
+            let activeBtn = document.getElementById('flt-' + category);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-slate-50', 'text-slate-600');
+                activeBtn.classList.add('filter-active');
+            }
+
+            const grid = document.getElementById('word-grid');
+            let html = '';
+            parsedWords.forEach((item) => {
+                if (category === 'all' || item.cat === category) {
+                    const itemStr = encodeURIComponent(JSON.stringify(item));
+                    html += `<button onclick="selectSandboxChar('${itemStr}')" class="bg-slate-50 border-2 border-slate-200 hover:border-emerald-400 hover:bg-emerald-50 text-2xl lg:text-3xl font-bold py-3 lg:py-4 rounded-xl transition shadow-sm text-slate-700">${item.char}</button>`;
+                }
+            });
+            grid.innerHTML = html;
         }
 
         function searchCustomChar() {
-            const input = document.getElementById('custom-char-input');
-            const char = input.value.trim();
-            if (char && /^[\u4e00-\u9fa5]$/.test(char)) {
-                selectSandboxChar(char, '字典部首');
-            } else {
-                showToast("請輸入一個中文字喔！");
-            }
-        }
-
-        function startSandboxQuiz() {
-            if (!sbWriter) {
-                showToast("請先選擇一個字！");
+            const input = document.getElementById('custom-char-input').value.trim();
+            const chars = input.match(/[\u4e00-\u9fa5]/g);
+            if (!chars || chars.length === 0) {
+                showToast("請輸入一個有效的中文字！");
                 return;
             }
-            const feedback = document.getElementById('sb-feedback');
-            feedback.innerText = "請開始書寫...";
-            feedback.className = "mt-4 text-xl font-bold text-blue-600 opacity-100";
-            sbWriter.quiz({
-                onMistake: function() {
-                    feedback.innerText = "❌ 筆畫不對喔！";
-                    feedback.className = "mt-4 text-xl font-bold text-rose-500 opacity-100 shake";
-                    speakText("不對喔，再試試看");
-                    setTimeout(() => feedback.classList.remove('shake'), 400);
-                },
-                onComplete: function() {
-                    feedback.innerText = "✅ 太棒了！書寫正確！";
-                    feedback.className = "mt-4 text-2xl font-black text-emerald-600 opacity-100 pop";
-                    speakText("太棒了！");
-                    setTimeout(() => feedback.classList.remove('pop'), 400);
+            const char = chars[0];
+            const customItem = { char: char, rad: '自訂檢索' };
+            selectSandboxChar(encodeURIComponent(JSON.stringify(customItem)));
+            document.getElementById('custom-char-input').value = ''; 
+        }
+
+        function selectSandboxChar(itemStr) {
+            document.getElementById('sandbox-placeholder').classList.add('hidden');
+            document.getElementById('sandbox-content').classList.remove('hidden');
+            
+            const data = JSON.parse(decodeURIComponent(itemStr));
+            document.getElementById('sb-char').innerText = data.char;
+            document.getElementById('sb-radical').innerText = data.rad;
+            
+            document.getElementById('sb-feedback').style.opacity = '0';
+            speakText(data.char);
+
+            const canvasDiv = document.getElementById('sandbox-canvas');
+            canvasDiv.innerHTML = ''; 
+            
+            const size = window.innerWidth < 768 ? 256 : 320; 
+            
+            sbWriter = HanziWriter.create('sandbox-canvas', data.char, {
+                width: size, height: size, padding: 15,
+                strokeAnimationSpeed: 1, delayBetweenStrokes: 100,
+                strokeColor: '#1e293b', radicalColor: '#10b981',
+                showHintAfterMisses: 1, leniency: 3.0,
+                onLoadCharDataError: function(reason) {
+                    canvasDiv.innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-full px-4 text-center">
+                            <span class="text-5xl mb-3">📭</span>
+                            <p class="text-rose-500 font-bold text-lg">系統字庫暫時未收錄「${data.char}」字的筆順資料喔！</p>
+                        </div>
+                    `;
+                    sbWriter = null;
                 }
             });
         }
 
-        window.onload = () => {
+        function startSandboxQuiz() {
+            if (!sbWriter) {
+                showToast("這個字沒有筆順資料，無法練習試寫喔！");
+                return;
+            }
+            document.getElementById('sb-feedback').style.opacity = '0';
+            sbWriter.quiz({
+                onMistake: function() {
+                    const fb = document.getElementById('sb-feedback');
+                    fb.innerText = "❌ 筆順錯了，看提示寫！";
+                    fb.className = "mt-4 text-lg font-bold text-rose-500 h-8 transition-opacity opacity-100 shake";
+                    speakText("筆順錯了");
+                    setTimeout(() => fb.classList.remove('shake'), 400);
+                },
+                onComplete: function() {
+                    const fb = document.getElementById('sb-feedback');
+                    fb.innerText = "✨ 寫得非常好！(獲得 2 EXP)";
+                    fb.className = "mt-4 text-xl font-bold text-emerald-600 h-8 transition-opacity opacity-100 pop";
+                    speakText("寫得好！");
+                    
+                    totalExp += 2;
+                    localStorage.setItem('userExp', totalExp);
+                    document.getElementById('exp-display').innerText = totalExp;
+                    document.getElementById('exp-display').classList.add('pop');
+                    setTimeout(() => document.getElementById('exp-display').classList.remove('pop'), 400);
+                }
+            });
+        }
+
+        window.onload = function() {
+            document.getElementById('exp-display').innerText = totalExp;
+            switchMode('quest'); 
             renderDirectory();
-        };
+            document.getElementById('custom-char-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') searchCustomChar();
+            });
+        }
     </script>
 </body>
 </html>
