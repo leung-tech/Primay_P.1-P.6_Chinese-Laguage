@@ -40,6 +40,10 @@
         .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
         @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
 
+        .voice-rate-btn { transition: transform 0.2s, background-color 0.2s, color 0.2s; }
+        .voice-rate-btn:active { transform: scale(0.95); }
+        .voice-rate-btn[aria-pressed="true"] { background-color: #ffffff; color: #be123c; border-color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.18); }
+
         /* 六要素顏色區分 */
         .element-time { background-color: #e0f2fe; color: #0369a1; border-color: #7dd3fc; }
         .element-place { background-color: #dcfce7; color: #166534; border-color: #86efac; }
@@ -152,59 +156,237 @@
             setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
         }
 
-        // 基本選項朗讀與系統語音 (強制廣東話 zh-HK)
-        function speakText(text, rate = 0.85) {
-            if ('speechSynthesis' in window) {
+        // 共用語音管理器：集中處理語音載入、粵語優先、錯誤提示及朗讀狀態。
+        const VoiceManager = (() => {
+            const rateKey = 'listenBasicSpeechRate';
+            const preferredLanguages = ['yue-Hant-HK', 'yue-HK', 'zh-HK', 'zh-TW', 'zh-CN', 'zh'];
+            let voices = [];
+            let activeUtterance = null;
+            let rate = Number(localStorage.getItem(rateKey)) || 0.85;
+
+            function isSupported() {
+                return 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+            }
+
+            function refreshVoices() {
+                voices = isSupported() ? window.speechSynthesis.getVoices() : [];
+                return voices;
+            }
+
+            function getPreferredVoice() {
+                refreshVoices();
+                for (const language of preferredLanguages) {
+                    const exactVoice = voices.find(voice => voice.lang.toLowerCase() === language.toLowerCase());
+                    if (exactVoice) return exactVoice;
+                }
+                return voices.find(voice => /^(yue|zh)/i.test(voice.lang)) || null;
+            }
+
+            function cleanText(text) {
+                return String(text || '')
+                    .replace(/<br\s*\/?>/gi, '。')
+                    .replace(/<[^>]*>?/gm, '')
+                    .replace(/[✅❌💡【】]/g, '')
+                    .replace(/&nbsp;/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+            }
+
+            function announce(message, tone = 'neutral') {
+                const status = document.getElementById('voice-status');
+                if (!status) return;
+                const toneClass = {
+                    neutral: 'text-slate-300',
+                    active: 'text-emerald-300',
+                    warning: 'text-amber-200',
+                    error: 'text-rose-200'
+                }[tone] || 'text-slate-300';
+                status.className = `mt-3 text-sm font-bold min-h-5 relative z-10 ${toneClass}`;
+                status.textContent = message;
+            }
+
+            function updateRateButtons() {
+                document.querySelectorAll('[data-speech-rate]').forEach(button => {
+                    const isCurrentRate = Number(button.dataset.speechRate) === rate;
+                    button.setAttribute('aria-pressed', String(isCurrentRate));
+                });
+            }
+
+            function setRate(nextRate) {
+                rate = Number(nextRate);
+                localStorage.setItem(rateKey, String(rate));
+                updateRateButtons();
+                announce(`朗讀速度已設為 ${rate} 倍。`, 'neutral');
+            }
+
+            function getRate() {
+                return rate;
+            }
+
+            function describeAvailability() {
+                if (!isSupported()) {
+                    announce('此瀏覽器不支援朗讀功能。', 'error');
+                    return false;
+                }
+                const voice = getPreferredVoice();
+                if (!voice) {
+                    const message = voices.length === 0
+                        ? '正在準備裝置語音；如仍無法朗讀，請在裝置設定下載中文語音。'
+                        : '此裝置沒有可用的中文語音，請在裝置設定下載後再試。';
+                    announce(message, 'warning');
+                    return false;
+                }
+                return voice;
+            }
+
+            function speak(text, options = {}) {
+                const voice = describeAvailability();
+                if (!voice) {
+                    showToast('暫時無法朗讀，請檢查裝置的中文語音設定。');
+                    return false;
+                }
+
                 window.speechSynthesis.cancel();
-                let msg = new SpeechSynthesisUtterance(text);
-                msg.lang = 'zh-HK'; 
-                msg.rate = rate; 
-                window.speechSynthesis.speak(msg);
+                const utterance = new SpeechSynthesisUtterance(cleanText(text));
+                utterance.lang = voice.lang || 'zh-HK';
+                utterance.voice = voice;
+                utterance.rate = options.rate || rate;
+                activeUtterance = utterance;
+
+                utterance.onstart = () => {
+                    if (activeUtterance !== utterance) return;
+                    announce(`正在朗讀${options.label || '內容'}（${utterance.rate} 倍速度）。`, 'active');
+                    if (options.onStart) options.onStart();
+                };
+                utterance.onend = () => {
+                    if (activeUtterance !== utterance) return;
+                    activeUtterance = null;
+                    announce('朗讀完成。', 'neutral');
+                    if (options.onEnd) options.onEnd();
+                };
+                utterance.onerror = event => {
+                    if (activeUtterance !== utterance) return;
+                    activeUtterance = null;
+                    if (!['canceled', 'interrupted'].includes(event.error)) {
+                        announce('暫時無法朗讀，請檢查裝置的中文語音設定。', 'error');
+                        showToast('暫時無法朗讀，請檢查裝置的中文語音設定。');
+                    }
+                    if (options.onError) options.onError(event);
+                };
+
+                try {
+                    window.speechSynthesis.speak(utterance);
+                    return true;
+                } catch (error) {
+                    activeUtterance = null;
+                    announce('暫時無法啟動朗讀，請稍後再試。', 'error');
+                    showToast('暫時無法啟動朗讀，請稍後再試。');
+                    if (options.onError) options.onError(error);
+                    return false;
+                }
+            }
+
+            function stop(silent = false) {
+                if (isSupported()) window.speechSynthesis.cancel();
+                activeUtterance = null;
+                if (!silent) announce('已停止朗讀。', 'neutral');
+            }
+
+            function init() {
+                if (!isSupported()) {
+                    announce('此瀏覽器不支援朗讀功能。', 'error');
+                    return;
+                }
+                refreshVoices();
+                updateRateButtons();
+                if (voices.length === 0) announce('正在準備此裝置的中文語音…', 'warning');
+                window.speechSynthesis.onvoiceschanged = () => {
+                    refreshVoices();
+                    if (getPreferredVoice()) announce('中文語音已準備好，可以開始朗讀。', 'neutral');
+                    else announce('此裝置沒有可用的中文語音，請在裝置設定下載後再試。', 'warning');
+                };
+            }
+
+            return { init, speak, stop, setRate, getRate, updateRateButtons };
+        })();
+
+        let activeInlineSpeechButton = null;
+
+        function resetStoryControls() {
+            const btnPlay = document.getElementById('btn-play-story');
+            const btnStop = document.getElementById('btn-stop-story');
+            if (btnPlay && btnStop) {
+                btnPlay.classList.remove('hidden');
+                btnStop.classList.add('hidden');
             }
         }
 
-        // 控制故事廣播播放與停止
-        function playStoryTTS() {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const story = listenData[currentStoryIdx];
-                // 過濾標籤與換行
-                let cleanText = story.text.replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】]/g, '').replace(/&nbsp;/g, ' ');
-                
-                storyUtterance = new SpeechSynthesisUtterance(cleanText);
-                storyUtterance.lang = 'zh-HK'; // 強制廣東話
-                storyUtterance.rate = 0.85; 
+        function resetInlineSpeechButton(button = activeInlineSpeechButton) {
+            if (!button) return;
+            button.textContent = '🔊';
+            button.classList.remove('bg-rose-600', 'text-white', 'border-rose-700');
+            button.classList.add('bg-rose-50', 'text-rose-500', 'border-rose-200');
+            const originalLabel = button.dataset.originalLabel;
+            if (originalLabel) button.setAttribute('aria-label', originalLabel);
+            activeInlineSpeechButton = null;
+        }
 
-                // 切換按鈕狀態
-                storyUtterance.onstart = function() {
-                    document.getElementById('btn-play-story').classList.add('hidden');
-                    document.getElementById('btn-stop-story').classList.remove('hidden');
-                };
-                storyUtterance.onend = function() {
-                    document.getElementById('btn-play-story').classList.remove('hidden');
-                    document.getElementById('btn-stop-story').classList.add('hidden');
-                };
-                storyUtterance.onerror = function() {
-                    document.getElementById('btn-play-story').classList.remove('hidden');
-                    document.getElementById('btn-stop-story').classList.add('hidden');
-                };
+        function stopAllSpeech(silent = false) {
+            VoiceManager.stop(silent);
+            resetStoryControls();
+            resetInlineSpeechButton();
+        }
 
-                window.speechSynthesis.speak(storyUtterance);
-            } else {
-                showToast("您的瀏覽器不支援語音功能。");
+        function setNarrationRate(nextRate) {
+            VoiceManager.setRate(nextRate);
+        }
+
+        // 題目、選項及範例朗讀：再次點擊同一按鈕可立即停止。
+        function speakText(text, button = null, label = '內容') {
+            if (button && activeInlineSpeechButton === button) {
+                stopAllSpeech();
+                return;
             }
+            stopAllSpeech(true);
+            if (button) {
+                activeInlineSpeechButton = button;
+                button.dataset.originalLabel = button.getAttribute('aria-label') || `朗讀${label}`;
+                button.textContent = '⏹️';
+                button.setAttribute('aria-label', `停止朗讀${label}`);
+                button.classList.remove('bg-rose-50', 'text-rose-500', 'border-rose-200');
+                button.classList.add('bg-rose-600', 'text-white', 'border-rose-700');
+            }
+            const started = VoiceManager.speak(text, {
+                label,
+                onEnd: () => resetInlineSpeechButton(button),
+                onError: () => resetInlineSpeechButton(button)
+            });
+            if (!started) resetInlineSpeechButton(button);
+        }
+
+        // 完整故事朗讀可播放、停止，並會套用學生選擇的語速。
+        function playStoryTTS() {
+            if (currentStoryIdx < 0 || !listenData[currentStoryIdx]) return;
+            stopAllSpeech(true);
+            const story = listenData[currentStoryIdx];
+            const started = VoiceManager.speak(story.text, {
+                label: '完整故事',
+                onStart: () => {
+                    const btnPlay = document.getElementById('btn-play-story');
+                    const btnStop = document.getElementById('btn-stop-story');
+                    if (btnPlay && btnStop) {
+                        btnPlay.classList.add('hidden');
+                        btnStop.classList.remove('hidden');
+                    }
+                },
+                onEnd: resetStoryControls,
+                onError: resetStoryControls
+            });
+            if (!started) resetStoryControls();
         }
 
         function stopStoryTTS() {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const btnPlay = document.getElementById('btn-play-story');
-                const btnStop = document.getElementById('btn-stop-story');
-                if (btnPlay && btnStop) {
-                    btnPlay.classList.remove('hidden');
-                    btnStop.classList.add('hidden');
-                }
-            }
+            stopAllSpeech();
         }
 
         // ================= 2. 教學內容 =================
@@ -477,9 +659,18 @@
                         <p class="text-sm font-bold text-slate-400 mb-4 relative z-10">可重複播放；右側小喇叭只會朗讀選項。</p>
                         
                         <div class="relative z-10 flex gap-4 justify-center w-full">
-                            <button id="btn-play-story" onclick="playStoryTTS()" class="bg-rose-500 hover:bg-rose-600 text-white px-6 py-3 rounded-full text-xl font-bold flex items-center justify-center shadow-lg pop border-4 border-rose-400 transition">▶️ 播放故事</button>
-                            <button id="btn-stop-story" onclick="stopStoryTTS()" class="bg-slate-600 hover:bg-slate-500 text-white px-6 py-3 rounded-full text-xl font-bold flex items-center justify-center shadow-lg transition hidden">⏹️ 停止廣播</button>
+                            <button id="btn-play-story" type="button" onclick="playStoryTTS()" aria-describedby="voice-status" class="bg-rose-500 hover:bg-rose-600 text-white px-6 py-3 rounded-full text-xl font-bold flex items-center justify-center shadow-lg pop border-4 border-rose-400 transition">▶️ 播放故事</button>
+                            <button id="btn-stop-story" type="button" onclick="stopStoryTTS()" aria-describedby="voice-status" class="bg-slate-600 hover:bg-slate-500 text-white px-6 py-3 rounded-full text-xl font-bold flex items-center justify-center shadow-lg transition hidden">⏹️ 停止廣播</button>
                         </div>
+                        <div class="relative z-10 mt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+                            <div class="flex items-center gap-1" role="group" aria-label="選擇朗讀速度">
+                                <span class="text-xs font-black text-slate-300 mr-1">語速</span>
+                                <button type="button" data-speech-rate="0.7" onclick="setNarrationRate(0.7)" aria-pressed="false" class="voice-rate-btn border border-slate-500 text-slate-100 text-xs font-black px-3 py-2 rounded-full">慢</button>
+                                <button type="button" data-speech-rate="0.85" onclick="setNarrationRate(0.85)" aria-pressed="true" class="voice-rate-btn border border-slate-500 text-slate-100 text-xs font-black px-3 py-2 rounded-full">標準</button>
+                                <button type="button" data-speech-rate="1" onclick="setNarrationRate(1)" aria-pressed="false" class="voice-rate-btn border border-slate-500 text-slate-100 text-xs font-black px-3 py-2 rounded-full">快</button>
+                            </div>
+                        </div>
+                        <p id="voice-status" role="status" aria-live="polite" class="mt-3 text-sm font-bold min-h-5 relative z-10 text-slate-300">正在準備此裝置的中文語音…</p>
                     </div>
 
                     <div class="w-full flex items-center gap-3 mb-4">
@@ -487,7 +678,7 @@
                     </div>
 
                     <h3 class="text-xl md:text-2xl font-bold text-slate-800 mb-6 w-full flex items-start gap-2">
-                        <button type="button" onclick="speakText('${qData.q}')" aria-label="朗讀本題問題" class="tts-btn flex-shrink-0 bg-rose-50 text-rose-500 w-10 h-10 rounded-full text-xl flex items-center justify-center shadow-sm border border-rose-200 mt-1">🔊</button>
+                        <button type="button" onclick="speakText('${qData.q}', this, '本題問題')" aria-label="朗讀本題問題" class="tts-btn flex-shrink-0 bg-rose-50 text-rose-500 w-10 h-10 rounded-full text-xl flex items-center justify-center shadow-sm border border-rose-200 mt-1">🔊</button>
                         <span>${qData.q}</span>
                     </h3>
 
@@ -496,11 +687,12 @@
 
             qData.opts.forEach((opt, oIdx) => {
                 const isCorr = (oIdx === qData.ans);
-                html += `<div class="flex gap-2 w-full"><button onclick="checkListenAnswer(this, ${isCorr})" class="option-btn bg-white border-2 border-slate-200 text-slate-700 text-lg font-bold py-4 px-6 rounded-2xl hover:bg-slate-50 transition w-full text-left flex-1">${opt}</button><button type="button" onclick="speakText('${opt}')" aria-label="朗讀選項：${opt}" class="tts-btn flex-shrink-0 bg-rose-50 text-rose-500 w-14 rounded-2xl text-2xl flex items-center justify-center shadow-sm border border-rose-200 hover:bg-rose-100 transition">🔊</button></div>`;
+                html += `<div class="flex gap-2 w-full"><button onclick="checkListenAnswer(this, ${isCorr})" class="option-btn bg-white border-2 border-slate-200 text-slate-700 text-lg font-bold py-4 px-6 rounded-2xl hover:bg-slate-50 transition w-full text-left flex-1">${opt}</button><button type="button" onclick="speakText('${opt}', this, '選項')" aria-label="朗讀選項：${opt}" class="tts-btn flex-shrink-0 bg-rose-50 text-rose-500 w-14 rounded-2xl text-2xl flex items-center justify-center shadow-sm border border-rose-200 hover:bg-rose-100 transition">🔊</button></div>`;
             });
 
             html += `</div></div>`;
             document.getElementById('listen-play').innerHTML = html;
+            VoiceManager.init();
         }
 
         function checkListenAnswer(btn, isCorr) {
