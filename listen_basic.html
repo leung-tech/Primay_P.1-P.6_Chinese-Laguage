@@ -2,7 +2,7 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>聆聽與說話 - 基礎六要素訓練</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -27,8 +27,14 @@
         .tab-active { background-color: #e11d48; color: white; border-color: #9f1239; }
         .tab-inactive { background-color: white; color: #64748b; border-color: #cbd5e1; }
         
-        .lvl-btn { transition: transform 0.2s; }
-        .lvl-btn:hover { transform: scale(1.05); }
+        .lvl-btn { transition: transform 0.2s, box-shadow 0.2s; }
+        @media (hover: hover) {
+            .lvl-btn:hover { transform: scale(1.05); }
+        }
+        button:focus-visible, a:focus-visible, input:focus-visible {
+            outline: 3px solid #f59e0b;
+            outline-offset: 3px;
+        }
 
         .toast-msg { visibility: hidden; min-width: 250px; background-color: #ef4444; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px; transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
@@ -72,13 +78,13 @@
         
         <!-- 聆聽特訓目錄 -->
         <div id="listen-mode" class="w-full max-w-5xl mx-auto flex flex-col gap-4 lg:gap-6">
-            <div id="listen-directory" class="w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200">
-                <div class="flex justify-between items-center mb-4">
+            <div id="listen-directory" class="w-full bg-white rounded-3xl p-5 md:p-6 shadow-xl border border-slate-200">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                     <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">🎧 盲聽故事挑戰</h2>
                     <button onclick="showTutorial('t-six')" class="bg-rose-100 text-rose-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-rose-300 hover:bg-rose-200 transition">📘 學習錦囊</button>
                 </div>
-                <p class="text-slate-600 font-bold mb-4">聽一聽故事，並準確抓出故事中的「六大要素」吧！</p>
-                <div id="listen-content" class="flex flex-wrap gap-4"></div>
+                <p class="text-slate-600 font-bold leading-relaxed mb-4">每個故事都有 6 個要素題。先播放完整故事，再逐題找出時間、人物、地點、起因、經過與結果。</p>
+                <div id="listen-content" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
             
             <div id="listen-play" class="w-full hidden flex-col items-center"></div>
@@ -101,11 +107,11 @@
     </div>
 
     <!-- 學習錦囊 Modal -->
-    <div id="tutorial-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+    <div id="tutorial-modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-title" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-3xl p-6 md:p-8 shadow-2xl w-[95%] max-w-2xl transform scale-90 transition-transform duration-300 flex flex-col max-h-[90vh]" id="tutorial-content">
             <div class="flex justify-between items-center mb-4 border-b-2 border-rose-100 pb-3">
                 <h2 id="tutorial-title" class="text-2xl md:text-3xl font-black text-rose-600 flex items-center gap-2">📘 聆聽與說話錦囊</h2>
-                <button onclick="closeTutorial()" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
+                <button type="button" onclick="closeTutorial()" aria-label="關閉聆聽與說話錦囊" class="text-slate-400 hover:text-rose-500 text-4xl font-bold transition leading-none">&times;</button>
             </div>
             <div id="tutorial-body" class="flex-1 overflow-y-auto pr-2 text-slate-700 text-lg md:text-xl leading-relaxed space-y-4"></div>
             <div class="mt-6 pt-4 border-t-2 border-slate-100">
@@ -409,22 +415,21 @@
             const dirContainer = document.getElementById('listen-content');
             let html = '';
             listenData.forEach((item, idx) => {
-                let status = listenProgress[idx];
-                let bgClass = 'bg-white';
-                let borderClass = 'border-slate-200';
-                let icon = ' <span class="text-slate-400 font-bold ml-2"># 未挑戰</span>';
-                
-                if (status === 1) {
-                    bgClass = 'bg-rose-50'; borderClass = 'border-rose-400';
-                    icon = ' <span class="text-rose-600 font-bold ml-2">🌟 完成</span>';
-                }
+                const status = listenProgress[idx];
+                const bgClass = status === 1 ? 'bg-rose-50' : 'bg-white';
+                const borderClass = status === 1 ? 'border-rose-400' : 'border-slate-200';
+                const statusText = status === 1 ? '已完成' : '尚未挑戰';
+                const statusBadge = status === 1
+                    ? '<span class="text-rose-700 bg-rose-100 border border-rose-200 font-black text-xs px-2 py-1 rounded-full">🌟 已完成</span>'
+                    : '<span class="text-slate-600 bg-slate-100 border border-slate-200 font-black text-xs px-2 py-1 rounded-full">準備開始</span>';
                 html += `
-                    <button onclick="startListen(${idx})" class="w-full md:w-[calc(50%-0.5rem)] text-left p-4 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition active:scale-95">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="bg-slate-100 text-slate-700 text-xs font-bold px-2 py-1 rounded">任務 ${idx+1}</span>
-                            ${icon}
+                    <button onclick="startListen(${idx})" aria-label="任務 ${idx + 1}，${item.title}，${statusText}" class="w-full min-h-32 text-left p-4 md:p-5 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition active:scale-95">
+                        <div class="flex justify-between items-center gap-3 mb-3">
+                            <span class="bg-slate-100 text-slate-700 text-xs font-black px-2 py-1 rounded">故事任務 ${idx + 1}</span>
+                            ${statusBadge}
                         </div>
-                        <h3 class="text-lg font-black text-slate-800">${item.title}</h3>
+                        <h3 class="text-lg md:text-xl font-black text-slate-800">${item.title}</h3>
+                        <p class="text-sm font-bold text-slate-500 mt-2">完成 6 個故事要素</p>
                     </button>
                 `;
             });
@@ -460,7 +465,7 @@
             let html = `
                 <div class="w-full max-w-3xl flex justify-between items-center mb-4">
                     <button onclick="switchMode('listen')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 transition">⬅️ 暫停返回</button>
-                    <span class="bg-rose-100 text-rose-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">第 ${currentQuestionIdx + 1} / 6 題</span>
+                    <span class="bg-rose-100 text-rose-800 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">${story.title} · 第 ${currentQuestionIdx + 1} / 6 個要素</span>
                 </div>
                 
                 <div class="w-full max-w-3xl bg-white border-2 border-slate-200 rounded-3xl p-5 md:p-8 shadow-xl flex flex-col items-center">
@@ -468,7 +473,8 @@
                     <!-- 🌟 0秒加載 原生廣東話播放器 -->
                     <div class="w-full bg-slate-800 text-white rounded-2xl p-6 text-center mb-6 shadow-inner relative overflow-hidden flex flex-col items-center justify-center min-h-[160px]">
                         <div class="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xMiAyYTMgMyAwIDAgMCAzIDN2N2EzIDMgMCAwIDEtNiAweiIvPjxwYXRoIGQ9Ik0xOSAxbS0yIDJhMiAyIDAgMCAxIDQgMHYyYTIgMiAwIDAgMS00IDB6Ii8+PHBhdGggZD0iTTIyIDEydjFhMTAgMTAgMCAwIDEtMjAgMHYtMSIvPjxwb2x5Z29uIHBvaW50cz0iMTQgMTcgMTIgMjAgMTAgMTciLz48L3N2Zz4=')] bg-center bg-no-repeat bg-[length:100px_100px]"></div>
-                        <h3 class="text-xl font-bold mb-4 relative z-10 text-slate-300">請聆聽廣播後回答問題</h3>
+                        <h3 class="text-xl font-bold mb-2 relative z-10 text-slate-300">先聽完整故事，再回答這一題</h3>
+                        <p class="text-sm font-bold text-slate-400 mb-4 relative z-10">可重複播放；右側小喇叭只會朗讀選項。</p>
                         
                         <div class="relative z-10 flex gap-4 justify-center w-full">
                             <button id="btn-play-story" onclick="playStoryTTS()" class="bg-rose-500 hover:bg-rose-600 text-white px-6 py-3 rounded-full text-xl font-bold flex items-center justify-center shadow-lg pop border-4 border-rose-400 transition">▶️ 播放故事</button>
@@ -481,7 +487,7 @@
                     </div>
 
                     <h3 class="text-xl md:text-2xl font-bold text-slate-800 mb-6 w-full flex items-start gap-2">
-                        <button onclick="speakText('${qData.q}')" class="tts-btn flex-shrink-0 bg-rose-50 text-rose-500 w-10 h-10 rounded-full text-xl flex items-center justify-center shadow-sm border border-rose-200 mt-1">🔊</button>
+                        <button type="button" onclick="speakText('${qData.q}')" aria-label="朗讀本題問題" class="tts-btn flex-shrink-0 bg-rose-50 text-rose-500 w-10 h-10 rounded-full text-xl flex items-center justify-center shadow-sm border border-rose-200 mt-1">🔊</button>
                         <span>${qData.q}</span>
                     </h3>
 
@@ -490,7 +496,7 @@
 
             qData.opts.forEach((opt, oIdx) => {
                 const isCorr = (oIdx === qData.ans);
-                html += `<div class="flex gap-2 w-full"><button onclick="checkListenAnswer(this, ${isCorr})" class="option-btn bg-white border-2 border-slate-200 text-slate-700 text-lg font-bold py-4 px-6 rounded-2xl hover:bg-slate-50 transition w-full text-left flex-1">${opt}</button><button onclick="speakText('${opt}')" class="tts-btn flex-shrink-0 bg-rose-50 text-rose-500 w-14 rounded-2xl text-2xl flex items-center justify-center shadow-sm border border-rose-200 hover:bg-rose-100 transition">🔊</button></div>`;
+                html += `<div class="flex gap-2 w-full"><button onclick="checkListenAnswer(this, ${isCorr})" class="option-btn bg-white border-2 border-slate-200 text-slate-700 text-lg font-bold py-4 px-6 rounded-2xl hover:bg-slate-50 transition w-full text-left flex-1">${opt}</button><button type="button" onclick="speakText('${opt}')" aria-label="朗讀選項：${opt}" class="tts-btn flex-shrink-0 bg-rose-50 text-rose-500 w-14 rounded-2xl text-2xl flex items-center justify-center shadow-sm border border-rose-200 hover:bg-rose-100 transition">🔊</button></div>`;
             });
 
             html += `</div></div>`;

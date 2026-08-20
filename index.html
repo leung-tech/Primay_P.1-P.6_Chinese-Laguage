@@ -2,7 +2,7 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>小學中國語文學習網 - 終極特訓平台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -21,8 +21,14 @@
         
         .no-scrollbar::-webkit-scrollbar { display: none; }
 
-        .module-card { transition: all 0.3s ease; }
-        .module-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        .module-card { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+        @media (hover: hover) {
+            .module-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        }
+        button:focus-visible, a:focus-visible, input:focus-visible {
+            outline: 3px solid #f59e0b;
+            outline-offset: 3px;
+        }
 
         .lvl-btn { transition: all 0.2s; }
         .lvl-btn:active { transform: scale(0.95); }
@@ -50,7 +56,7 @@
     </div>
 
     <!-- ================= 1. 登入 / 註冊 獨立大廳 ================= -->
-    <div id="login-screen" class="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md hidden">
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md hidden overflow-y-auto">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full transform transition-all slide-up overflow-hidden">
             
             <!-- 大廳頂部 -->
@@ -74,14 +80,14 @@
             <!-- A. 學生登入表單 (Login View) -->
             <div id="view-login" class="p-6 md:p-8 space-y-4">
                 <div>
-                    <label class="block text-slate-500 font-bold text-sm mb-2">登入帳號 (Username)</label>
-                    <input type="text" id="login-username" maxlength="15" placeholder="輸入你的登入帳號" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
+                    <label for="login-username" class="block text-slate-500 font-bold text-sm mb-2">登入帳號 (Username)</label>
+                    <input type="text" id="login-username" autocomplete="username" maxlength="15" placeholder="輸入你的登入帳號" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
                 </div>
                 <div>
-                    <label class="block text-slate-500 font-bold text-sm mb-2">登入密碼 (Password)</label>
+                    <label for="login-password" class="block text-slate-500 font-bold text-sm mb-2">登入密碼 (Password)</label>
                     <div class="relative">
-                        <input type="password" id="login-password" maxlength="15" placeholder="輸入密碼" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition pr-12">
-                        <button onclick="togglePasswordVisibility('login-password')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 font-bold focus:outline-none text-xl">👁️</button>
+                        <input type="password" id="login-password" autocomplete="current-password" maxlength="15" placeholder="輸入密碼" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition pr-12">
+                        <button type="button" onclick="togglePasswordVisibility('login-password')" aria-label="顯示或隱藏登入密碼" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 font-bold focus:outline-none text-xl">👁️</button>
                     </div>
                 </div>
                 <div class="flex items-center justify-between pb-2">
@@ -104,19 +110,19 @@
                     💡 請務必填寫「真實姓名」，方便老師在後台查看你的成績喔！
                 </div>
                 <div>
-                    <label class="block text-slate-500 font-bold text-sm mb-2">真實姓名 (Real Name) ⭐必填</label>
-                    <input type="text" id="register-realname" maxlength="15" placeholder="例如：陳大文" class="w-full px-4 py-3 border-2 border-slate-220 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
+                    <label for="register-realname" class="block text-slate-500 font-bold text-sm mb-2">真實姓名 (Real Name) ⭐必填</label>
+                    <input type="text" id="register-realname" autocomplete="name" maxlength="15" placeholder="例如：陳大文" class="w-full px-4 py-3 border-2 border-slate-220 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
                 </div>
-                <div class="flex gap-2">
-                    <div class="flex-1">
-                        <label class="block text-slate-500 font-bold text-sm mb-2">自訂登入帳號</label>
-                        <input type="text" id="register-username" maxlength="15" placeholder="如: taiman123" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="register-username" class="block text-slate-500 font-bold text-sm mb-2">自訂登入帳號</label>
+                        <input type="text" id="register-username" autocomplete="username" maxlength="15" placeholder="如: taiman123" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition">
                     </div>
-                    <div class="flex-1">
-                        <label class="block text-slate-500 font-bold text-sm mb-2">自訂密碼(最多15字)</label>
+                    <div>
+                        <label for="register-password" class="block text-slate-500 font-bold text-sm mb-2">自訂密碼（最多 15 字）</label>
                         <div class="relative">
-                            <input type="password" id="register-password" maxlength="15" placeholder="設定密碼" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition pr-12">
-                            <button onclick="togglePasswordVisibility('register-password')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 font-bold focus:outline-none text-xl">👁️</button>
+                            <input type="password" id="register-password" autocomplete="new-password" maxlength="15" placeholder="設定密碼" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold focus:outline-none focus:border-indigo-500 text-slate-700 bg-slate-50 transition pr-12">
+                            <button type="button" onclick="togglePasswordVisibility('register-password')" aria-label="顯示或隱藏註冊密碼" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 font-bold focus:outline-none text-xl">👁️</button>
                         </div>
                     </div>
                 </div>
@@ -273,7 +279,7 @@
 
             <div class="max-w-7xl mx-auto flex justify-between items-center relative z-10 mb-4 pb-4 border-b border-white/10">
                 <div class="font-black text-indigo-200 tracking-wider flex items-center gap-2 text-sm md:text-base">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 雲端資料已同步
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 學習進度已準備就緒
                 </div>
                 <div class="flex gap-2">
                     <button onclick="manualSyncToCloud()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-1.5 px-3 rounded-lg text-xs md:text-sm transition flex items-center gap-1 shadow" title="如果您準備關閉瀏覽器，可以點擊此按鈕確保最新進度已上傳">
@@ -322,23 +328,23 @@
 
         <!-- ================= 8 大分類卡片網格 ================= -->
         <div class="max-w-7xl mx-auto w-full p-4 md:p-6 lg:p-8 -mt-6 relative z-20 flex-1">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5 md:gap-6">
 
                 <!-- 1. 字詞基礎 -->
                 <div class="module-card bg-white rounded-3xl p-5 md:p-6 shadow-lg border-t-8 border-emerald-500 flex flex-col h-full">
                     <h2 class="text-lg md:text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>1️⃣</span> 字詞基礎</h2>
-                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">部首部件、量詞、形近字防錯、錯別字修正、近反義詞與成語。</p>
+                    <p class="text-slate-500 font-bold mb-5 text-sm md:text-base leading-relaxed flex-grow">部首部件、量詞、形近字防錯、錯別字修正、近反義詞與成語。</p>
                     <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('word_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
+                            <button onclick="saveAndGo('word_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
                             <div id="t_word_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成補底版即可解鎖">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('word_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
+                            <button onclick="saveAndGo('word_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
                             <div id="t_word_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成標準版即可解鎖">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('word_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
+                            <button onclick="saveAndGo('word_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
                             <div id="t_word_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成拔尖版即可解鎖">🔒</div>
                         </div>
                     </div>
@@ -347,18 +353,18 @@
                 <!-- 2. 句子與語法 -->
                 <div class="module-card bg-white rounded-3xl p-5 md:p-6 shadow-lg border-t-8 border-teal-500 flex flex-col h-full">
                     <h2 class="text-lg md:text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>2️⃣</span> 句子與語法</h2>
-                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">二至四素句重裝、擴充句子、關聯詞邏輯、把被字句與句型轉換。</p>
+                    <p class="text-slate-500 font-bold mb-5 text-sm md:text-base leading-relaxed flex-grow">二至四素句重裝、擴充句子、關聯詞邏輯、把被字句與句型轉換。</p>
                     <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('sentence_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
+                            <button onclick="saveAndGo('sentence_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
                             <div id="t_sent_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('sentence_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
+                            <button onclick="saveAndGo('sentence_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
                             <div id="t_sent_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('sentence_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
+                            <button onclick="saveAndGo('sentence_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
                             <div id="t_sent_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                     </div>
@@ -367,18 +373,18 @@
                 <!-- 3. 修辭與標點 -->
                 <div class="module-card bg-white rounded-3xl p-5 md:p-6 shadow-lg border-t-8 border-cyan-500 flex flex-col h-full">
                     <h2 class="text-lg md:text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>3️⃣</span> 修辭與標點</h2>
-                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">基礎標點至引號破折號、明暗借喻辨析、擬人、排比與反問設問。</p>
+                    <p class="text-slate-500 font-bold mb-5 text-sm md:text-base leading-relaxed flex-grow">基礎標點至引號破折號、明暗借喻辨析、擬人、排比與反問設問。</p>
                     <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('rhetoric_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
+                            <button onclick="saveAndGo('rhetoric_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
                             <div id="t_rhet_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('rhetoric_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
+                            <button onclick="saveAndGo('rhetoric_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
                             <div id="t_rhet_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成標準版即可解鎖">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('rhetoric_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
+                            <button onclick="saveAndGo('rhetoric_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
                             <div id="t_rhet_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成拔尖版即可解鎖">🔒</div>
                         </div>
                     </div>
@@ -387,18 +393,18 @@
                 <!-- 4. 段落與實用文 -->
                 <div class="module-card bg-white rounded-3xl p-5 md:p-6 shadow-lg border-t-8 border-indigo-500 flex flex-col h-full">
                     <h2 class="text-lg md:text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>4️⃣</span> 段落與實用文</h2>
-                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">排句成段邏輯、書信/日記/通告/建議書格式重組與沙盒模擬。</p>
+                    <p class="text-slate-500 font-bold mb-5 text-sm md:text-base leading-relaxed flex-grow">排句成段邏輯、書信/日記/通告/建議書格式重組與沙盒模擬。</p>
                     <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('paragraph_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
+                            <button onclick="saveAndGo('paragraph_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
                             <div id="t_para_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('paragraph_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
+                            <button onclick="saveAndGo('paragraph_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
                             <div id="t_para_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成標準版即可解鎖">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('paragraph_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
+                            <button onclick="saveAndGo('paragraph_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
                             <div id="t_para_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成拔尖版即可解鎖">🔒</div>
                         </div>
                     </div>
@@ -407,18 +413,18 @@
                 <!-- 5. 閱讀理解 -->
                 <div class="module-card bg-white rounded-3xl p-5 md:p-6 shadow-lg border-t-8 border-sky-500 flex flex-col h-full">
                     <h2 class="text-lg md:text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>5️⃣</span> 閱讀理解</h2>
-                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">提取資訊、三層次推論、主旨歸納、寫作手法與深層次評價。</p>
+                    <p class="text-slate-500 font-bold mb-5 text-sm md:text-base leading-relaxed flex-grow">提取資訊、三層次推論、主旨歸納、寫作手法與深層次評價。</p>
                     <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('read_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
+                            <button onclick="saveAndGo('read_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
                             <div id="t_read_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('read_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
+                            <button onclick="saveAndGo('read_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
                             <div id="t_read_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成標準版即可解鎖">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('read_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
+                            <button onclick="saveAndGo('read_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
                             <div id="t_read_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成拔尖版即可解鎖">🔒</div>
                         </div>
                     </div>
@@ -427,18 +433,18 @@
                 <!-- 6. 聆聽與說話 -->
                 <div class="module-card bg-white rounded-3xl p-5 md:p-6 shadow-lg border-t-8 border-rose-500 flex flex-col h-full">
                     <h2 class="text-lg md:text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>6️⃣</span> 聆聽與說話</h2>
-                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">語音故事盲聽、六要素提取、弦外之音推論與看圖說話改編。</p>
+                    <p class="text-slate-500 font-bold mb-5 text-sm md:text-base leading-relaxed flex-grow">語音故事盲聽、六要素提取、弦外之音推論與看圖說話改編。</p>
                     <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('listen_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
+                            <button onclick="saveAndGo('listen_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
                             <div id="t_listen_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('listen_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
+                            <button onclick="saveAndGo('listen_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
                             <div id="t_listen_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('listen_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
+                            <button onclick="saveAndGo('listen_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
                             <div id="t_listen_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                     </div>
@@ -447,18 +453,18 @@
                 <!-- 7. 中華文化與古詩 -->
                 <div class="module-card bg-white rounded-3xl p-5 md:p-6 shadow-lg border-t-8 border-orange-500 flex flex-col h-full">
                     <h2 class="text-lg md:text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>7️⃣</span> 中華文化與古詩</h2>
-                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">古詩卡拉OK帶讀、神話節日、歷史典故謀略與文言文啟蒙。</p>
+                    <p class="text-slate-500 font-bold mb-5 text-sm md:text-base leading-relaxed flex-grow">古詩卡拉OK帶讀、神話節日、歷史典故謀略與文言文啟蒙。</p>
                     <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('culture_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
+                            <button onclick="saveAndGo('culture_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
                             <div id="t_culture_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('culture_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
+                            <button onclick="saveAndGo('culture_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
                             <div id="t_culture_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('culture_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
+                            <button onclick="saveAndGo('culture_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
                             <div id="t_culture_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none">🔒</div>
                         </div>
                     </div>
@@ -467,18 +473,18 @@
                 <!-- 8. 綜合寫作專區 -->
                 <div class="module-card bg-white rounded-3xl p-5 md:p-6 shadow-lg border-t-8 border-purple-500 flex flex-col h-full">
                     <h2 class="text-lg md:text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><span>8️⃣</span> 綜合寫作專區</h2>
-                    <p class="text-slate-500 font-bold mb-5 text-xs md:text-sm flex-grow">看圖故事拼湊、五感擴寫、段落框架建構與寫作小錦囊。</p>
+                    <p class="text-slate-500 font-bold mb-5 text-sm md:text-base leading-relaxed flex-grow">看圖故事拼湊、五感擴寫、段落框架建構與寫作小錦囊。</p>
                     <div class="flex flex-col gap-2 md:gap-3">
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('write_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
+                            <button onclick="saveAndGo('write_basic.html')" class="lvl-btn flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-emerald-200 text-left shadow-sm text-sm md:text-base">🌱 補底版</button>
                             <div id="t_write_1" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成補底版即可解鎖">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('write_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
+                            <button onclick="saveAndGo('write_standard.html')" class="lvl-btn flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-orange-200 text-left shadow-sm text-sm md:text-base">⭐ 標準版</button>
                             <div id="t_write_2" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成標準版即可解鎖">🔒</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="saveAndGo('write_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
+                            <button onclick="saveAndGo('write_advanced.html')" class="lvl-btn flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-3 px-3 md:px-4 rounded-xl border-2 border-rose-200 text-left shadow-sm text-sm md:text-base">🚀 拔尖版</button>
                             <div id="t_write_3" class="badge-locked w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl select-none" title="完成拔尖版即可解鎖">🔒</div>
                         </div>
                     </div>
