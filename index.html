@@ -673,7 +673,7 @@
                     hideLoader();
                     window.showTeacherDashboard();
                 } else {
-                    await saveLocalToCloud(activeProfile);
+                    await syncProgressWithDeadline(activeProfile);
                     hideLoader();
                     showDashboard(activeProfile);
                     checkDailyLogin(); 
@@ -882,33 +882,50 @@
             }
         };
 
+        const CLOUD_SYNC_TIMEOUT_MS = 3000;
+
+        // 雲端請求可能受弱網、離線快取或瀏覽器限制而延後；介面最多等待三秒。
+        // 原請求不會被取消，若連線恢復仍可在背景完成已擷取的進度上傳。
+        async function syncProgressWithDeadline(username) {
+            const timeout = new Promise(resolve => setTimeout(() => resolve(false), CLOUD_SYNC_TIMEOUT_MS));
+            try {
+                return Boolean(await Promise.race([saveLocalToCloud(username), timeout]));
+            } catch (error) {
+                console.warn('[Cloud Sync] 同步等待逾時或失敗：', error);
+                return false;
+            }
+        }
+
         // 登出與切換帳戶
         window.logoutProfile = async function() {
             const activeProfile = sessionStorage.getItem('activeProfile');
-            let confirmMsg = activeProfile === 'admin' ? "確定要退出老師後台嗎？" : `確定要登出並切換帳戶嗎？`;
-            
-            if (confirm(confirmMsg)) {
-                if (activeProfile && activeProfile !== 'admin') {
-                    showLoader("儲存最新進度...");
-                    await saveLocalToCloud(activeProfile);
-                }
-                
-                sessionStorage.removeItem('activeProfile');
-                localStorage.clear();
-                
-                document.getElementById('dashboard-screen').classList.add('hidden');
-                document.getElementById('dashboard-screen').classList.remove('flex');
-                document.getElementById('teacher-dashboard').classList.add('hidden');
-                document.getElementById('teacher-dashboard').classList.remove('flex');
-                document.getElementById('login-screen').classList.remove('hidden');
-                window.switchAuthView('login');
-                hideLoader();
+            const confirmMsg = activeProfile === 'admin' ? "確定要退出老師後台嗎？" : "確定要登出並切換帳戶嗎？";
+            if (!confirm(confirmMsg)) return;
+
+            let syncCompleted = true;
+            if (activeProfile && activeProfile !== 'admin') {
+                showLoader("儲存最新進度...");
+                syncCompleted = await syncProgressWithDeadline(activeProfile);
+            }
+
+            sessionStorage.removeItem('activeProfile');
+            localStorage.clear();
+            document.getElementById('dashboard-screen').classList.add('hidden');
+            document.getElementById('dashboard-screen').classList.remove('flex');
+            document.getElementById('teacher-dashboard').classList.add('hidden');
+            document.getElementById('teacher-dashboard').classList.remove('flex');
+            document.getElementById('login-screen').classList.remove('hidden');
+            window.switchAuthView('login');
+            hideLoader();
+
+            if (!syncCompleted && activeProfile && activeProfile !== 'admin') {
+                showAuthError('已登出；網路較慢，最新進度仍可能在背景同步。下次離開前可先使用「手動備份」。');
             }
         };
 
         // 自動上傳資料
         async function saveLocalToCloud(username) {
-            if (!currentUserId || !username || username === 'admin') return;
+            if (!currentUserId || !username || username === 'admin') return false;
             try {
                 let rawData = {};
                 for (let i = 0; i < localStorage.length; i++) {
@@ -952,8 +969,10 @@
 
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', username);
                 await setDoc(docRef, exportObj, { merge: true });
+                return true;
             } catch (e) {
                 console.error("[Cloud Sync] 備份失敗：", e);
+                return false;
             }
         }
 
@@ -961,9 +980,9 @@
             const activeUser = sessionStorage.getItem('activeProfile');
             if (activeUser && activeUser !== 'admin') {
                 showLoader("雲端備份中...");
-                await saveLocalToCloud(activeUser);
+                const syncCompleted = await syncProgressWithDeadline(activeUser);
                 hideLoader();
-                alert("✅ 雲端備份成功！你的進度已安全儲存。");
+                alert(syncCompleted ? "✅ 雲端備份成功！你的進度已安全儲存。" : "⚠️ 網路較慢，已停止等待；資料仍可能在背景同步。請在網路穩定時再按一次手動備份。");
             }
         };
 
@@ -1094,7 +1113,7 @@
             }
             const activeUser = sessionStorage.getItem('activeProfile');
             if (activeUser && activeUser !== 'admin') {
-                await saveLocalToCloud(activeUser);
+                await syncProgressWithDeadline(activeUser);
             }
             window.location.href = url;
         };

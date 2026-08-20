@@ -78,6 +78,9 @@ Object.entries(navigationExpectations).forEach(([fileName, marker]) => {
 const indexContent = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 expect(indexContent.includes('src="student-tools.js"'), 'index.html: 未載入 student-tools.js');
 expect(indexContent.includes('student-tools-hub') === false, 'index.html: 學生工具應由獨立模組動態建立，避免登入前顯示');
+expect(indexContent.includes('const CLOUD_SYNC_TIMEOUT_MS = 3000;'), 'index.html: 缺少學生端雲端同步等待上限');
+expect(indexContent.includes('syncProgressWithDeadline(activeProfile)'), 'index.html: 登出或恢復會話未使用具期限的同步流程');
+expect(indexContent.includes('syncProgressWithDeadline(activeUser)'), 'index.html: 手動備份或關卡切換未使用具期限的同步流程');
 
 const diagnosticsPath = path.join(root, 'diagnostics.js');
 expect(fs.existsSync(diagnosticsPath), '找不到 diagnostics.js');
@@ -87,6 +90,13 @@ const longCourseNavPath = path.join(root, 'mobile-long-course-nav.js');
 expect(fs.existsSync(longCourseNavPath), '找不到 mobile-long-course-nav.js');
 const studentToolsPath = path.join(root, 'student-tools.js');
 expect(fs.existsSync(studentToolsPath), '找不到 student-tools.js');
+if (fs.existsSync(studentToolsPath)) {
+  const studentToolsContent = fs.readFileSync(studentToolsPath, 'utf8');
+  expect(studentToolsContent.includes("getScopedStorageKey('studentLastCourse')"), 'student-tools.js: 最近學習紀錄未依學生帳戶隔離');
+  expect(studentToolsContent.includes("getScopedStorageKey('studentProgressLastBackup')"), 'student-tools.js: 最近備份日期未依學生帳戶隔離');
+  expect(!studentToolsContent.includes("localStorage.setItem('studentLastCourse'"), 'student-tools.js: 不可再寫入未分帳戶的最近學習鍵');
+  expect(!studentToolsContent.includes("localStorage.setItem('studentProgressLastBackup'"), 'student-tools.js: 不可再寫入未分帳戶的最近備份鍵');
+}
 if (fs.existsSync(diagnosticsPath)) {
   try {
     execFileSync('node', ['--check', diagnosticsPath], { stdio: 'pipe' });
@@ -114,4 +124,4 @@ if (failures.length) {
 }
 
 console.log(`Regression checks passed for ${htmlFiles.length} HTML pages.`);
-console.log('Verified: diagnostics and accessibility coverage, shared voice-manager coverage outside the specialised listening-basic player, student self-service tools, inline JavaScript syntax, and mobile navigation entry points across all levels.');
+console.log('Verified: diagnostics and accessibility coverage, shared voice-manager coverage outside the specialised listening-basic player, student self-service tools with per-account state isolation, bounded student cloud-sync waits, inline JavaScript syntax, and mobile navigation entry points across all levels.');
