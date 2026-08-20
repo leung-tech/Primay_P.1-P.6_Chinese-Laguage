@@ -75,17 +75,30 @@ Object.entries(navigationExpectations).forEach(([fileName, marker]) => {
   expect(content.includes(marker), `${fileName}: 找不到手機續學入口 ${marker}`);
 });
 
+const indexContent = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+expect(indexContent.includes('src="student-tools.js"'), 'index.html: 未載入 student-tools.js');
+expect(indexContent.includes('student-tools-hub') === false, 'index.html: 學生工具應由獨立模組動態建立，避免登入前顯示');
+
 const diagnosticsPath = path.join(root, 'diagnostics.js');
 expect(fs.existsSync(diagnosticsPath), '找不到 diagnostics.js');
 const accessibilityPath = path.join(root, 'mobile-accessibility.css');
 expect(fs.existsSync(accessibilityPath), '找不到 mobile-accessibility.css');
 const longCourseNavPath = path.join(root, 'mobile-long-course-nav.js');
 expect(fs.existsSync(longCourseNavPath), '找不到 mobile-long-course-nav.js');
+const studentToolsPath = path.join(root, 'student-tools.js');
+expect(fs.existsSync(studentToolsPath), '找不到 student-tools.js');
 if (fs.existsSync(diagnosticsPath)) {
   try {
     execFileSync('node', ['--check', diagnosticsPath], { stdio: 'pipe' });
   } catch (_) {
     failures.push('diagnostics.js: JavaScript 語法錯誤');
+  }
+}
+if (fs.existsSync(studentToolsPath)) {
+  try {
+    execFileSync('node', ['--check', studentToolsPath], { stdio: 'pipe' });
+  } catch (_) {
+    failures.push('student-tools.js: JavaScript 語法錯誤');
   }
 }
 
@@ -101,4 +114,4 @@ if (failures.length) {
 }
 
 console.log(`Regression checks passed for ${htmlFiles.length} HTML pages.`);
-console.log('Verified: diagnostics and accessibility coverage, shared voice-manager coverage outside the specialised listening-basic player, inline JavaScript syntax, and mobile navigation entry points across all levels.');
+console.log('Verified: diagnostics and accessibility coverage, shared voice-manager coverage outside the specialised listening-basic player, student self-service tools, inline JavaScript syntax, and mobile navigation entry points across all levels.');

@@ -1089,6 +1089,9 @@
         };
 
         window.saveAndGo = async function(url) {
+            if (window.StudentTools && typeof window.StudentTools.recordLastCourse === 'function') {
+                window.StudentTools.recordLastCourse(url);
+            }
             const activeUser = sessionStorage.getItem('activeProfile');
             if (activeUser && activeUser !== 'admin') {
                 await saveLocalToCloud(activeUser);
@@ -1540,5 +1543,6 @@
         };
 
     </script>
+    <script src="student-tools.js"></script>
 </body>
 </html>
