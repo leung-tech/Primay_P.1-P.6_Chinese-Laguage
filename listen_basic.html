@@ -52,6 +52,7 @@
         .element-process { background-color: #f3e8ff; color: #6b21a8; border-color: #d8b4fe; }
         .element-result { background-color: #ffe4e6; color: #be123c; border-color: #fda4af; }
     </style>
+    <script src="diagnostics.js"></script>
 </head>
 <body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
 
@@ -88,6 +89,13 @@
                     <button onclick="showTutorial('t-six')" class="bg-rose-100 text-rose-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-rose-300 hover:bg-rose-200 transition">📘 學習錦囊</button>
                 </div>
                 <p class="text-slate-600 font-bold leading-relaxed mb-4">每個故事都有 6 個要素題。先播放完整故事，再逐題找出時間、人物、地點、起因、經過與結果。</p>
+                <div class="sticky top-2 z-10 mb-4 bg-white/95 backdrop-blur border-2 border-rose-200 rounded-2xl p-3 shadow-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <p id="listen-quick-label" role="status" class="text-sm font-black text-slate-700">正在整理聆聽進度…</p>
+                    <div class="grid grid-cols-2 gap-2 w-full sm:w-auto">
+                        <button id="listen-continue-btn" type="button" onclick="continueListenLearning()" class="bg-rose-600 hover:bg-rose-700 text-white font-black px-4 py-2.5 rounded-xl shadow transition">▶️ 繼續</button>
+                        <button id="listen-filter-btn" type="button" onclick="toggleListenIncompleteFilter()" aria-pressed="false" class="bg-white text-slate-700 font-black px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 transition">只看未完成</button>
+                    </div>
+                </div>
                 <div id="listen-content" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
             
@@ -102,6 +110,13 @@
                     <button onclick="showTutorial('t-speak')" class="bg-rose-100 text-rose-700 px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-sm border border-rose-300 hover:bg-rose-200 transition">📘 學習錦囊</button>
                 </div>
                 <p class="text-slate-600 font-bold mb-4">看著圖片，利用六要素提示開口說出一個完整的故事吧！</p>
+                <div class="sticky top-2 z-10 mb-4 bg-white/95 backdrop-blur border-2 border-emerald-200 rounded-2xl p-3 shadow-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <p id="speak-quick-label" role="status" class="text-sm font-black text-slate-700">正在整理說話進度…</p>
+                    <div class="grid grid-cols-2 gap-2 w-full sm:w-auto">
+                        <button id="speak-continue-btn" type="button" onclick="continueSpeakLearning()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-4 py-2.5 rounded-xl shadow transition">▶️ 繼續</button>
+                        <button id="speak-filter-btn" type="button" onclick="toggleSpeakIncompleteFilter()" aria-pressed="false" class="bg-white text-slate-700 font-black px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 transition">只看未完成</button>
+                    </div>
+                </div>
                 <div id="speak-content" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
 
@@ -592,11 +607,46 @@
         ];
 
         let listenProgress = JSON.parse(localStorage.getItem('listenBasicProgress')) || new Array(listenData.length).fill(0);
+        let listenIncompleteOnly = localStorage.getItem('listenBasicIncompleteOnly') === 'true';
+
+        function getListenResumeIdx() {
+            const lastIdx = Number(localStorage.getItem('listenBasicLastTaskIdx'));
+            if (Number.isInteger(lastIdx) && lastIdx >= 0 && lastIdx < listenData.length && listenProgress[lastIdx] !== 1) return lastIdx;
+            return listenProgress.findIndex(status => status !== 1);
+        }
+
+        function updateListenQuickNav() {
+            const label = document.getElementById('listen-quick-label');
+            const button = document.getElementById('listen-continue-btn');
+            const filterButton = document.getElementById('listen-filter-btn');
+            if (!label || !button || !filterButton) return;
+            const completed = listenProgress.filter(status => status === 1).length;
+            const idx = getListenResumeIdx();
+            label.textContent = idx === -1 ? `🎉 聆聽任務已完成 ${completed} / ${listenData.length}` : `完成 ${completed} / ${listenData.length} 個故事 · 下一個：${listenData[idx].title}`;
+            button.textContent = idx === -1 ? '🏆 已完成' : `▶️ 繼續任務 ${idx + 1}`;
+            button.disabled = idx === -1;
+            button.className = idx === -1 ? 'bg-slate-200 text-slate-500 font-black px-4 py-2.5 rounded-xl cursor-not-allowed' : 'bg-rose-600 hover:bg-rose-700 text-white font-black px-4 py-2.5 rounded-xl shadow transition';
+            filterButton.setAttribute('aria-pressed', String(listenIncompleteOnly));
+            filterButton.textContent = listenIncompleteOnly ? '顯示全部任務' : '只看未完成';
+        }
+
+        function toggleListenIncompleteFilter() {
+            listenIncompleteOnly = !listenIncompleteOnly;
+            localStorage.setItem('listenBasicIncompleteOnly', String(listenIncompleteOnly));
+            renderListenDirectory();
+        }
+
+        function continueListenLearning() {
+            const idx = getListenResumeIdx();
+            if (idx === -1) { showToast('太棒了！聆聽任務已全部完成。'); return; }
+            startListen(idx);
+        }
 
         function renderListenDirectory() {
             const dirContainer = document.getElementById('listen-content');
             let html = '';
             listenData.forEach((item, idx) => {
+                if (listenIncompleteOnly && listenProgress[idx] === 1) return;
                 const status = listenProgress[idx];
                 const bgClass = status === 1 ? 'bg-rose-50' : 'bg-white';
                 const borderClass = status === 1 ? 'border-rose-400' : 'border-slate-200';
@@ -615,7 +665,9 @@
                     </button>
                 `;
             });
+            if (!html) html = '<p class="col-span-full text-center text-slate-500 font-bold py-8">所有聆聽任務已完成，切換為「顯示全部任務」可再次練習。</p>';
             dirContainer.innerHTML = html;
+            updateListenQuickNav();
         }
 
         function startListen(idx, forceStart = false) {
@@ -626,6 +678,7 @@
                 return;
             }
             currentStoryIdx = idx;
+            localStorage.setItem('listenBasicLastTaskIdx', String(idx));
             currentQuestionIdx = 0;
             document.getElementById('listen-directory').style.display = 'none';
             const playArea = document.getElementById('listen-play');
@@ -762,11 +815,46 @@
         ];
 
         let speakProgress = JSON.parse(localStorage.getItem('speakBasicProgress')) || new Array(speakData.length).fill(0);
+        let speakIncompleteOnly = localStorage.getItem('speakBasicIncompleteOnly') === 'true';
+
+        function getSpeakResumeIdx() {
+            const lastIdx = Number(localStorage.getItem('speakBasicLastTaskIdx'));
+            if (Number.isInteger(lastIdx) && lastIdx >= 0 && lastIdx < speakData.length && speakProgress[lastIdx] !== 1) return lastIdx;
+            return speakProgress.findIndex(status => status !== 1);
+        }
+
+        function updateSpeakQuickNav() {
+            const label = document.getElementById('speak-quick-label');
+            const button = document.getElementById('speak-continue-btn');
+            const filterButton = document.getElementById('speak-filter-btn');
+            if (!label || !button || !filterButton) return;
+            const completed = speakProgress.filter(status => status === 1).length;
+            const idx = getSpeakResumeIdx();
+            label.textContent = idx === -1 ? `🎉 說話任務已完成 ${completed} / ${speakData.length}` : `完成 ${completed} / ${speakData.length} 個練習 · 下一個：${speakData[idx].t}`;
+            button.textContent = idx === -1 ? '🏆 已完成' : `▶️ 繼續練習 ${idx + 1}`;
+            button.disabled = idx === -1;
+            button.className = idx === -1 ? 'bg-slate-200 text-slate-500 font-black px-4 py-2.5 rounded-xl cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 text-white font-black px-4 py-2.5 rounded-xl shadow transition';
+            filterButton.setAttribute('aria-pressed', String(speakIncompleteOnly));
+            filterButton.textContent = speakIncompleteOnly ? '顯示全部任務' : '只看未完成';
+        }
+
+        function toggleSpeakIncompleteFilter() {
+            speakIncompleteOnly = !speakIncompleteOnly;
+            localStorage.setItem('speakBasicIncompleteOnly', String(speakIncompleteOnly));
+            renderSpeakDirectory();
+        }
+
+        function continueSpeakLearning() {
+            const idx = getSpeakResumeIdx();
+            if (idx === -1) { showToast('太棒了！說話任務已全部完成。'); return; }
+            startSpeak(idx);
+        }
 
         function renderSpeakDirectory() {
             const dirContainer = document.getElementById('speak-content');
             let html = '';
             speakData.forEach((item, idx) => {
+                if (speakIncompleteOnly && speakProgress[idx] === 1) return;
                 let status = speakProgress[idx];
                 let bgClass = 'bg-white';
                 let borderClass = 'border-slate-200';
@@ -780,7 +868,9 @@
                     </button>
                 `;
             });
+            if (!html) html = '<p class="col-span-full text-center text-slate-500 font-bold py-8">所有說話任務已完成，切換為「顯示全部任務」可再次練習。</p>';
             dirContainer.innerHTML = html;
+            updateSpeakQuickNav();
         }
 
         function startSpeak(idx, forceStart = false) {
@@ -791,6 +881,7 @@
                 return;
             }
             currentStoryIdx = idx;
+            localStorage.setItem('speakBasicLastTaskIdx', String(idx));
             document.getElementById('speak-directory').style.display = 'none';
             const playArea = document.getElementById('speak-play');
             playArea.style.display = 'flex';

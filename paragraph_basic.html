@@ -56,6 +56,7 @@
         .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
         @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
     </style>
+    <script src="diagnostics.js"></script>
 </head>
 <body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden bg-grid-pattern">
 
@@ -90,7 +91,14 @@
                         <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-rose-100 border-2 border-rose-400 flex items-center justify-center text-lg shadow-sm">❌</span> 未完成</div>
                     </div>
                 </div>
-                <div id="directory-content" class="flex flex-col gap-8"></div>
+                <div class="sticky top-2 z-10 mb-5 bg-white/95 backdrop-blur border-2 border-indigo-200 rounded-2xl p-3 shadow-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <p id="paragraph-quick-next-label" role="status" class="text-sm md:text-base font-black text-slate-700">正在整理你的段落練習…</p>
+                    <div class="grid grid-cols-2 gap-2 w-full sm:w-auto">
+                        <button id="paragraph-continue-btn" type="button" onclick="window.continueParagraphLearning()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black px-4 py-3 rounded-xl shadow transition">▶️ 繼續</button>
+                        <button id="paragraph-filter-btn" type="button" onclick="window.toggleParagraphIncompleteFilter()" aria-pressed="false" class="bg-white text-slate-700 font-black px-4 py-3 rounded-xl border border-slate-300 hover:bg-slate-100 transition">只看未完成</button>
+                    </div>
+                </div>
+                <div id="directory-content" class="flex flex-col gap-4"></div>
             </div>
             
             <div id="quest-play" class="w-full hidden flex-col items-center"></div>
@@ -535,6 +543,40 @@
         ];
 
         let userProgress = JSON.parse(localStorage.getItem('paraBasicProgress')) || new Array(rawQuestDataObj.length).fill(0);
+        let paragraphIncompleteOnly = localStorage.getItem('paraBasicIncompleteOnly') === 'true';
+
+        window.getParagraphResumeIdx = function() {
+            const lastIdx = Number(localStorage.getItem('paraBasicLastQuestionIdx'));
+            if (Number.isInteger(lastIdx) && lastIdx >= 0 && lastIdx < rawQuestDataObj.length && userProgress[lastIdx] !== 1 && userProgress[lastIdx] !== 2) return lastIdx;
+            return userProgress.findIndex(status => status !== 1 && status !== 2);
+        };
+
+        window.updateParagraphQuickNav = function() {
+            const label = document.getElementById('paragraph-quick-next-label');
+            const button = document.getElementById('paragraph-continue-btn');
+            const filterButton = document.getElementById('paragraph-filter-btn');
+            if (!label || !button || !filterButton) return;
+            const completed = userProgress.filter(status => status === 1 || status === 2).length;
+            const idx = window.getParagraphResumeIdx();
+            label.textContent = idx === -1 ? `🎉 已完成 ${completed} / ${rawQuestDataObj.length} 題！` : `完成 ${completed} / ${rawQuestDataObj.length} 題 · 下一題：第 ${idx + 1} 題`;
+            button.textContent = idx === -1 ? '🏆 已完成' : `▶️ 繼續第 ${idx + 1} 題`;
+            button.disabled = idx === -1;
+            button.className = idx === -1 ? 'bg-slate-200 text-slate-500 font-black px-4 py-3 rounded-xl cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white font-black px-4 py-3 rounded-xl shadow transition';
+            filterButton.setAttribute('aria-pressed', String(paragraphIncompleteOnly));
+            filterButton.textContent = paragraphIncompleteOnly ? '顯示全部題目' : '只看未完成';
+        };
+
+        window.toggleParagraphIncompleteFilter = function() {
+            paragraphIncompleteOnly = !paragraphIncompleteOnly;
+            localStorage.setItem('paraBasicIncompleteOnly', String(paragraphIncompleteOnly));
+            window.renderDirectory();
+        };
+
+        window.continueParagraphLearning = function() {
+            const idx = window.getParagraphResumeIdx();
+            if (idx === -1) { window.showToast('太棒了！段落練習已全部完成。'); return; }
+            window.startQuestion(idx);
+        };
 
         window.renderDirectory = function() {
             const dirContainer = document.getElementById('directory-content');
@@ -559,7 +601,7 @@
                             <div class="flex flex-wrap gap-3">
                     `;
                     rawQuestDataObj.forEach((q, idx) => {
-                        if(q.category === cat.id) {
+                        if(q.category === cat.id && !(paragraphIncompleteOnly && (userProgress[idx] === 1 || userProgress[idx] === 2))) {
                             let status = userProgress[idx];
                             let btnClass = 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50';
                             let icon = (idx + 1);
@@ -581,7 +623,9 @@
                     html += `</div></div>`;
                 }
             });
+            if (!html) html = '<p class="text-center text-slate-500 font-bold py-8">所有段落練習已完成，切換為「顯示全部題目」可再次練習。</p>';
             dirContainer.innerHTML = html;
+            window.updateParagraphQuickNav();
             window.updateTotalProgress();
         };
 
@@ -622,6 +666,7 @@
 
             currentQuestionMistakes = 0; 
             currentQuestionIdx = idx;
+            localStorage.setItem('paraBasicLastQuestionIdx', String(idx));
             window.currentHints = []; 
             
             let hintBox = document.getElementById('dynamic-hint-box');

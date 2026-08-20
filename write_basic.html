@@ -79,6 +79,7 @@
         .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
         @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
     </style>
+    <script src="diagnostics.js"></script>
 </head>
 <body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden bg-grid-pattern">
 
@@ -496,6 +497,36 @@
         let fwProgress = JSON.parse(localStorage.getItem('fwBasicProgress')) || new Array(fwData.length).fill(0);
         let exProgress = JSON.parse(localStorage.getItem('exBasicProgress')) || new Array(exData.length).fill(0);
 
+        function getWriteModeConfig(mode) {
+            if (mode === 'seq') return { data: seqData, progress: seqProgress, start: startSeq, lastKey: 'writeBasicLastSeqIdx', label: '看圖小偵探', color: 'sky' };
+            if (mode === 'framework') return { data: fwData, progress: fwProgress, start: startFramework, lastKey: 'writeBasicLastFrameworkIdx', label: '寫作積木', color: 'emerald' };
+            return { data: exData, progress: exProgress, start: startExpand, lastKey: 'writeBasicLastExpandIdx', label: '五感擴寫', color: 'purple' };
+        }
+
+        function getWriteResumeIdx(mode) {
+            const config = getWriteModeConfig(mode);
+            const lastIdx = Number(localStorage.getItem(config.lastKey));
+            if (Number.isInteger(lastIdx) && lastIdx >= 0 && lastIdx < config.data.length && config.progress[lastIdx] !== 1 && config.progress[lastIdx] !== 2) return lastIdx;
+            return config.progress.findIndex(status => status !== 1 && status !== 2);
+        }
+
+        function continueWriting(mode) {
+            const config = getWriteModeConfig(mode);
+            const idx = getWriteResumeIdx(mode);
+            if (idx === -1) { showToast(`太棒了！${config.label}已全部完成。`); return; }
+            config.start(idx);
+        }
+
+        function renderWriteQuickNav(mode) {
+            const config = getWriteModeConfig(mode);
+            const solved = config.progress.filter(status => status === 1 || status === 2).length;
+            const idx = getWriteResumeIdx(mode);
+            const buttonText = idx === -1 ? '🏆 已完成全部任務' : `▶️ 繼續第 ${idx + 1} 個任務`;
+            const stateText = idx === -1 ? `🎉 ${config.label}已完成 ${solved} / ${config.data.length}` : `${config.label}完成 ${solved} / ${config.data.length} · 下一個：${config.data[idx].title}`;
+            const buttonClass = idx === -1 ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : `bg-${config.color}-600 hover:bg-${config.color}-700 text-white`;
+            return `<div class="sticky top-2 z-10 col-span-full mb-2 bg-white/95 backdrop-blur border-2 border-${config.color}-200 rounded-2xl p-3 shadow-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"><p class="text-sm md:text-base font-black text-slate-700">${stateText}</p><button type="button" ${idx === -1 ? 'disabled' : ''} onclick="continueWriting('${mode}')" class="w-full sm:w-auto ${buttonClass} font-black px-5 py-3 rounded-xl shadow transition">${buttonText}</button></div>`;
+        }
+
         // ================= 4. 通用：重組與拖拉邏輯 (局部遣返核心 + 專屬動態提示) =================
         
         function initReorderState(correctArr) {
@@ -656,7 +687,7 @@
         // --- 模組 1：看圖小偵探 ---
         function renderSeqDirectory() {
             const dirContainer = document.getElementById('seq-content');
-            let html = '';
+            let html = renderWriteQuickNav('seq');
             seqData.forEach((item, idx) => {
                 let status = seqProgress[idx];
                 let bgClass = 'bg-white';
@@ -681,6 +712,7 @@
                 pendingIdx = idx; pendingType = 'seq'; showTutorial('t-detective'); return;
             }
             currentIdx = idx; currentMistakes = 0;
+            localStorage.setItem('writeBasicLastSeqIdx', String(idx));
             initReorderState(seqData[idx].ans);
             
             document.getElementById('seq-directory').style.display = 'none';
@@ -796,7 +828,7 @@
         // --- 模組 2：寫作積木 (三階 小步子) ---
         function renderFrameworkDirectory() {
             const dirContainer = document.getElementById('framework-content');
-            let html = '';
+            let html = renderWriteQuickNav('framework');
             fwData.forEach((item, idx) => {
                 let status = fwProgress[idx];
                 let bgClass = 'bg-white';
@@ -826,6 +858,7 @@
                 pendingIdx = idx; pendingType = 'framework'; showTutorial(data.tut); return;
             }
             currentIdx = idx; currentPhase = 1; currentSubTask = 0; currentMistakes = 0;
+            localStorage.setItem('writeBasicLastFrameworkIdx', String(idx));
             
             document.getElementById('framework-directory').style.display = 'none';
             document.getElementById('framework-play').style.display = 'flex';
@@ -1019,7 +1052,7 @@
         // --- 模組 3：五感擴寫段落 ---
         function renderExpandDirectory() {
             const dirContainer = document.getElementById('expand-content');
-            let html = '';
+            let html = renderWriteQuickNav('expand');
             exData.forEach((item, idx) => {
                 let status = exProgress[idx];
                 let bgClass = 'bg-white';
@@ -1051,6 +1084,7 @@
             }
 
             currentIdx = idx; currentMistakes = 0;
+            localStorage.setItem('writeBasicLastExpandIdx', String(idx));
             initReorderState(data.ans); 
             reorderSource = [...data.bank].sort(() => Math.random() - 0.5); 
             

@@ -59,6 +59,7 @@
         .toast-msg.show { visibility: visible; animation: slideUp 0.5s, fadeOut 0.5s 2.5s; }
         @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
     </style>
+    <script src="diagnostics.js"></script>
 </head>
 <body class="text-slate-800 flex flex-col h-[100dvh] overflow-hidden">
 
@@ -97,7 +98,11 @@
                     </div>
                 </div>
 
-                <div id="directory-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="sticky top-2 z-10 mb-5 bg-white/95 backdrop-blur border-2 border-sky-200 rounded-2xl p-3 shadow-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <p id="read-quick-next-label" role="status" class="text-sm md:text-base font-black text-slate-700">正在整理你的閱讀進度…</p>
+                    <button id="read-continue-btn" type="button" onclick="continueReading()" class="w-full sm:w-auto bg-sky-600 hover:bg-sky-700 text-white font-black px-5 py-3 rounded-xl shadow border-b-4 border-sky-800 active:border-b-0 active:translate-y-1 transition">▶️ 繼續閱讀</button>
+                </div>
+                <div id="directory-content" class="flex flex-col gap-4">
                     <!-- 目錄動態生成 -->
                 </div>
             </div>
@@ -660,38 +665,111 @@
             }
         ];
 
-        // 載入進度
+        // 載入進度與手機續學／章節收合狀態
         let userProgress = JSON.parse(localStorage.getItem('readBasicProgress')) || new Array(rawQuestDataObj.length).fill(0);
+        let readChapterOpenState = JSON.parse(localStorage.getItem('readBasicChapterOpenState') || '{}');
+
+        function getReadingResumeIdx() {
+            const lastIdx = Number(localStorage.getItem('readBasicLastPassageIdx'));
+            if (Number.isInteger(lastIdx) && lastIdx >= 0 && lastIdx < rawQuestDataObj.length && userProgress[lastIdx] === 0) return lastIdx;
+            return userProgress.findIndex(status => status === 0);
+        }
+
+        function getReadingChapterForIdx(idx) {
+            return idx >= 0 && rawQuestDataObj[idx] ? rawQuestDataObj[idx].category : null;
+        }
+
+        function isReadingChapterOpen(category) {
+            if (typeof readChapterOpenState[category] === 'boolean') return readChapterOpenState[category];
+            return category === getReadingChapterForIdx(getReadingResumeIdx());
+        }
+
+        function toggleReadingChapter(category) {
+            readChapterOpenState[category] = !isReadingChapterOpen(category);
+            localStorage.setItem('readBasicChapterOpenState', JSON.stringify(readChapterOpenState));
+            renderDirectory();
+            requestAnimationFrame(() => document.getElementById(`read-chapter-${category}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        }
+
+        function continueReading() {
+            const idx = getReadingResumeIdx();
+            if (idx === -1) {
+                showToast('太棒了！所有文章已完成。');
+                return;
+            }
+            const category = getReadingChapterForIdx(idx);
+            if (category) {
+                readChapterOpenState[category] = true;
+                localStorage.setItem('readBasicChapterOpenState', JSON.stringify(readChapterOpenState));
+            }
+            startPassage(idx);
+        }
+
+        function updateReadingQuickNav() {
+            const label = document.getElementById('read-quick-next-label');
+            const button = document.getElementById('read-continue-btn');
+            if (!label || !button) return;
+            const solved = userProgress.filter(status => status === 1 || status === 2).length;
+            const idx = getReadingResumeIdx();
+            if (idx === -1) {
+                label.textContent = `🎉 已完成 ${solved} / ${rawQuestDataObj.length} 篇文章！`;
+                button.textContent = '🏆 全部文章已完成';
+                button.disabled = true;
+                button.className = 'w-full sm:w-auto bg-slate-200 text-slate-500 font-black px-5 py-3 rounded-xl cursor-not-allowed';
+                return;
+            }
+            label.textContent = `目前完成 ${solved} / ${rawQuestDataObj.length} 篇 · 下一篇：${rawQuestDataObj[idx].title}`;
+            button.textContent = `▶️ 繼續「${rawQuestDataObj[idx].title}」`;
+            button.disabled = false;
+            button.className = 'w-full sm:w-auto bg-sky-600 hover:bg-sky-700 text-white font-black px-5 py-3 rounded-xl shadow border-b-4 border-sky-800 active:border-b-0 active:translate-y-1 transition';
+        }
 
         function renderDirectory() {
             const dirContainer = document.getElementById('directory-content');
             let html = '';
-            rawQuestDataObj.forEach((passage, idx) => {
-                let status = userProgress[idx];
-                let bgClass = 'bg-white';
-                let borderClass = 'border-slate-200';
-                let icon = ' <span class="text-slate-400 font-bold ml-2"># 未挑戰</span>';
-                
-                if (status === 1) {
-                    bgClass = 'bg-yellow-50'; borderClass = 'border-yellow-400';
-                    icon = ' <span class="text-yellow-600 font-bold ml-2">🌟 完美</span>';
-                } else if (status === 2) {
-                    bgClass = 'bg-emerald-50'; borderClass = 'border-emerald-400';
-                    icon = ' <span class="text-emerald-600 font-bold ml-2">✅ 過關</span>';
-                }
-
+            const categories = [...new Set(rawQuestDataObj.map(passage => passage.category))];
+            categories.forEach(category => {
+                const passages = rawQuestDataObj.map((passage, idx) => ({ passage, idx })).filter(item => item.passage.category === category);
+                const completed = passages.filter(item => userProgress[item.idx] === 1 || userProgress[item.idx] === 2).length;
+                const isOpen = isReadingChapterOpen(category);
                 html += `
-                    <button onclick="startPassage(${idx})" class="w-full text-left p-4 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition group active:scale-95">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="bg-sky-100 text-sky-800 text-xs font-bold px-2 py-1 rounded">${passage.category}</span>
-                            ${icon}
+                    <section id="read-chapter-${category}" class="scroll-mt-3 bg-slate-50/70 border border-slate-200 rounded-2xl p-4 md:p-5">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${isOpen ? 'border-b-2 border-sky-100 pb-3 mb-3' : ''}">
+                            <div>
+                                <h3 class="text-xl font-black text-sky-800">${category}</h3>
+                                <p class="text-sm font-bold text-slate-500 mt-1">本章進度：${completed} / ${passages.length} 篇</p>
+                            </div>
+                            <button type="button" onclick="toggleReadingChapter('${category}')" aria-expanded="${isOpen}" aria-controls="read-chapter-grid-${category}" class="w-full sm:w-auto bg-white text-slate-700 px-4 py-2 rounded-lg text-sm font-black shadow-sm border border-slate-300 hover:bg-slate-100 transition active:scale-95">${isOpen ? '收合本章 ⌃' : '展開文章 ⌄'}</button>
                         </div>
-                        <h3 class="text-lg font-black text-slate-800 group-hover:text-sky-600 transition">${passage.title}</h3>
-                        <p class="text-sm text-slate-500 mt-1">共 ${passage.questions.length} 題小挑戰</p>
-                    </button>
+                        <div id="read-chapter-grid-${category}" class="${isOpen ? 'grid' : 'hidden'} grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 `;
+                passages.forEach(({ passage, idx }) => {
+                    let status = userProgress[idx];
+                    let bgClass = 'bg-white';
+                    let borderClass = 'border-slate-200';
+                    let icon = ' <span class="text-slate-400 font-bold ml-2"># 未挑戰</span>';
+                    if (status === 1) {
+                        bgClass = 'bg-yellow-50'; borderClass = 'border-yellow-400';
+                        icon = ' <span class="text-yellow-600 font-bold ml-2">🌟 完美</span>';
+                    } else if (status === 2) {
+                        bgClass = 'bg-emerald-50'; borderClass = 'border-emerald-400';
+                        icon = ' <span class="text-emerald-600 font-bold ml-2">✅ 過關</span>';
+                    }
+                    html += `
+                        <button onclick="startPassage(${idx})" class="w-full text-left p-4 rounded-2xl border-2 ${borderClass} ${bgClass} hover:shadow-md transition group active:scale-95">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="bg-sky-100 text-sky-800 text-xs font-bold px-2 py-1 rounded">${passage.category}</span>
+                                ${icon}
+                            </div>
+                            <h4 class="text-lg font-black text-slate-800 group-hover:text-sky-600 transition">${passage.title}</h4>
+                            <p class="text-sm text-slate-500 mt-1">共 ${passage.questions.length} 題小挑戰</p>
+                        </button>
+                    `;
+                });
+                html += '</div></section>';
             });
             dirContainer.innerHTML = html;
+            updateReadingQuickNav();
             updateTotalProgress();
         }
 
@@ -717,6 +795,7 @@
             }
 
             currentPassageIdx = idx;
+            localStorage.setItem('readBasicLastPassageIdx', String(idx));
             currentQuestionIdx = 0; // 從第一題開始
             currentPassageMistakes = 0;
             
@@ -907,7 +986,13 @@
             stopAllSpeechAndHighlights();
             document.getElementById('quest-play').style.display = 'none';
             document.getElementById('quest-directory').style.display = 'block';
+            const category = getReadingChapterForIdx(currentPassageIdx);
+            if (category) {
+                readChapterOpenState[category] = true;
+                localStorage.setItem('readBasicChapterOpenState', JSON.stringify(readChapterOpenState));
+            }
             renderDirectory();
+            requestAnimationFrame(() => document.getElementById(`read-chapter-${category}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
         }
 
         function backToDirectoryFromFinish() {
