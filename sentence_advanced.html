@@ -28,8 +28,9 @@
         
         .option-btn { transition: all 0.2s; box-shadow: 0 4px 0 #fda4af; }
         .option-btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
-        .option-btn.correct { background-color: #fff1f2; border-color: #e11d48; color: #9f1239; box-shadow: 0 0 0 transparent; transform: translateY(4px); pointer-events: none; }
-        .option-btn.wrong { background-color: #f1f5f9; border-color: #94a3b8; color: #475569; opacity: 0.6; pointer-events: none; }
+        /* 回饋色彩需與語意一致：綠色代表正確，紅色代表錯誤。 */
+        .option-btn.correct { background-color: #dcfce7; border-color: #22c55e; color: #166534; box-shadow: 0 0 0 transparent; transform: translateY(4px); pointer-events: none; }
+        .option-btn.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.6; pointer-events: none; }
         
         .tts-btn { transition: transform 0.2s; }
         .tts-btn:active { transform: scale(0.9); }

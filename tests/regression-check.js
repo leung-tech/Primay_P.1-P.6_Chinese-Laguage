@@ -42,6 +42,12 @@ for (const fileName of htmlFiles.filter(name => name !== 'index.html' && name !=
   expect(content.includes('src="voice-manager.js"'), `${fileName}: 未載入 voice-manager.js`);
 }
 
+const misleadingCorrectFeedbackPages = htmlFiles.filter(fileName => {
+  const content = fs.readFileSync(path.join(root, fileName), 'utf8');
+  return /\.option-btn\.correct\s*\{\s*background-color:\s*#fff1f2;/m.test(content);
+});
+expect(misleadingCorrectFeedbackPages.length === 0, `正確答案不可使用紅色回饋：${misleadingCorrectFeedbackPages.join(', ')}`);
+
 const directUtterancePages = htmlFiles.filter(fileName => {
   const content = fs.readFileSync(path.join(root, fileName), 'utf8');
   return content.includes('new SpeechSynthesisUtterance');
@@ -124,4 +130,4 @@ if (failures.length) {
 }
 
 console.log(`Regression checks passed for ${htmlFiles.length} HTML pages.`);
-console.log('Verified: diagnostics and accessibility coverage, shared voice-manager coverage outside the specialised listening-basic player, student self-service tools with per-account state isolation, bounded student cloud-sync waits, inline JavaScript syntax, and mobile navigation entry points across all levels.');
+console.log('Verified: diagnostics and accessibility coverage, shared voice-manager coverage outside the specialised listening-basic player, semantic correct-answer feedback, student self-service tools with per-account state isolation, bounded student cloud-sync waits, inline JavaScript syntax, and mobile navigation entry points across all levels.');
