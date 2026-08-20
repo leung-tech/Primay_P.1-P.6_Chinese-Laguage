@@ -32,6 +32,7 @@ function checkInlineJavaScript(fileName, content) {
 htmlFiles.forEach(fileName => {
   const content = fs.readFileSync(path.join(root, fileName), 'utf8');
   expect(content.includes('src="diagnostics.js"'), `${fileName}: 未載入 diagnostics.js`);
+  expect(content.includes('href="mobile-accessibility.css"'), `${fileName}: 未載入 mobile-accessibility.css`);
   checkInlineJavaScript(fileName, content);
 });
 
@@ -47,6 +48,18 @@ const directUtterancePages = htmlFiles.filter(fileName => {
 });
 const unapprovedDirectUtterancePages = directUtterancePages.filter(fileName => fileName !== 'listen_basic.html');
 expect(unapprovedDirectUtterancePages.length === 0, `仍有未遷移的直接語音物件頁面：${unapprovedDirectUtterancePages.join(', ')}`);
+
+const longCourseNavigationPages = [
+  'read_standard.html', 'read_advanced.html',
+  'listen_standard.html', 'listen_advanced.html',
+  'sentence_standard.html', 'sentence_advanced.html',
+  'paragraph_standard.html', 'paragraph_advanced.html',
+  'write_standard.html', 'write_advanced.html'
+];
+longCourseNavigationPages.forEach(fileName => {
+  const content = fs.readFileSync(path.join(root, fileName), 'utf8');
+  expect(content.includes('src="mobile-long-course-nav.js"'), `${fileName}: 未載入 mobile-long-course-nav.js`);
+});
 
 const navigationExpectations = {
   'word_basic.html': 'continueLearning',
@@ -64,6 +77,10 @@ Object.entries(navigationExpectations).forEach(([fileName, marker]) => {
 
 const diagnosticsPath = path.join(root, 'diagnostics.js');
 expect(fs.existsSync(diagnosticsPath), '找不到 diagnostics.js');
+const accessibilityPath = path.join(root, 'mobile-accessibility.css');
+expect(fs.existsSync(accessibilityPath), '找不到 mobile-accessibility.css');
+const longCourseNavPath = path.join(root, 'mobile-long-course-nav.js');
+expect(fs.existsSync(longCourseNavPath), '找不到 mobile-long-course-nav.js');
 if (fs.existsSync(diagnosticsPath)) {
   try {
     execFileSync('node', ['--check', diagnosticsPath], { stdio: 'pipe' });
@@ -84,4 +101,4 @@ if (failures.length) {
 }
 
 console.log(`Regression checks passed for ${htmlFiles.length} HTML pages.`);
-console.log('Verified: diagnostics coverage, shared voice-manager coverage outside the specialised listening-basic player, inline JavaScript syntax, and primary mobile navigation entry points.');
+console.log('Verified: diagnostics and accessibility coverage, shared voice-manager coverage outside the specialised listening-basic player, inline JavaScript syntax, and mobile navigation entry points across all levels.');

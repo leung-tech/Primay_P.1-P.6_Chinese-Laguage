@@ -1,0 +1,128 @@
+/* 全站行動與鍵盤無障礙基線：不改變題目資料與互動邏輯。 */
+:root {
+  color-scheme: light;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  overflow-wrap: anywhere;
+}
+
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+[tabindex]:not([tabindex="-1"]) {
+  -webkit-tap-highlight-color: rgba(14, 116, 144, 0.22);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 3px solid #0f766e !important;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px rgba(204, 251, 241, 0.92) !important;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+@media (pointer: coarse) {
+  button,
+  a:not([class*="text-"]),
+  input:not([type="hidden"]),
+  select,
+  textarea,
+  [role="button"] {
+    min-height: 44px;
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-width: 22px;
+    min-height: 22px;
+  }
+}
+
+@media (max-width: 640px) {
+  html {
+    font-size: clamp(16px, 4.2vw, 18px);
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font-size: max(1rem, 16px);
+  }
+
+  .mobile-course-toolbar {
+    top: 0.5rem;
+  }
+
+  .mobile-course-toolbar p {
+    line-height: 1.45;
+  }
+}
+
+@media (prefers-contrast: more) {
+  body {
+    color: #0f172a;
+    background-color: #ffffff;
+  }
+
+  button,
+  input,
+  select,
+  textarea,
+  [role="button"] {
+    border-width: 2px !important;
+  }
+
+  .text-slate-400,
+  .text-slate-500,
+  .text-gray-400,
+  .text-gray-500 {
+    color: #334155 !important;
+  }
+}
+
+@media (forced-colors: active) {
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    forced-color-adjust: auto;
+    border: 1px solid CanvasText;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
