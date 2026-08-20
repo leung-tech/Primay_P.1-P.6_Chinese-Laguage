@@ -174,14 +174,14 @@
 
         // 一般短句朗讀
         function speakText(text, rate = 0.8) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                let cleanText = cleanTextForSpeech(text);
-                let msg = new SpeechSynthesisUtterance(cleanText);
-                msg.lang = 'zh-HK'; 
-                msg.rate = rate; 
-                window.speechSynthesis.speak(msg);
+            const preparedText = typeof window.cleanTextForSpeech === 'function'
+                ? window.cleanTextForSpeech(text)
+                : (typeof cleanTextForSpeech === 'function' ? cleanTextForSpeech(text) : text);
+            if (!window.LearningVoice) {
+                if (typeof showToast === 'function') showToast('朗讀功能正在準備，請稍後再試。');
+                return false;
             }
+            return window.LearningVoice.toggle(preparedText, { rate, label: '內容' });
         }
 
         // ================= 🌟 卡拉OK 跟讀引擎 =================
@@ -222,26 +222,29 @@
             // 讓視窗自動滾動到正在讀的那一句
             span.scrollIntoView({ behavior: 'smooth', block: 'center' });
             
-            let text = span.innerText;
-            let cleanText = cleanTextForSpeech(text);
-            let msg = new SpeechSynthesisUtterance(cleanText);
-            msg.lang = 'zh-HK';
-            msg.rate = 0.8; 
-            
-            msg.onend = function() {
-                if (isKaraokePlaying) {
-                    karaokeIndex++;
-                    playNextKaraokeSentence();
-                } else {
-                    stopKaraoke();
-                }
-            };
-            msg.onerror = function() { stopKaraoke(); };
-            window.speechSynthesis.speak(msg);
+            if (!window.LearningVoice) {
+                showToast('朗讀功能正在準備，請稍後再試。');
+                stopKaraoke();
+                return;
+            }
+            const started = window.LearningVoice.speak(span.innerText, {
+                rate: 0.8,
+                label: '跟讀內容',
+                onEnd: function() {
+                    if (isKaraokePlaying) {
+                        karaokeIndex++;
+                        playNextKaraokeSentence();
+                    } else {
+                        stopKaraoke();
+                    }
+                },
+                onError: stopKaraoke
+            });
+            if (!started) stopKaraoke();
         }
 
         function stopKaraoke() {
-            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            if (window.LearningVoice) window.LearningVoice.stop(true);
             isKaraokePlaying = false;
             document.querySelectorAll('.read-sentence').forEach(s => s.classList.remove('active-sentence'));
             const bp = document.getElementById('btn-play-story'), bs = document.getElementById('btn-stop-story');
@@ -253,16 +256,18 @@
             document.querySelectorAll('.read-sentence').forEach(s => s.classList.remove('active-sentence'));
             spanElement.classList.add('active-sentence');
             
-            let text = spanElement.innerText;
-            let cleanText = cleanTextForSpeech(text);
-            let msg = new SpeechSynthesisUtterance(cleanText);
-            msg.lang = 'zh-HK';
-            msg.rate = 0.8;
-            
-            msg.onend = function() {
+            if (!window.LearningVoice) {
+                showToast('朗讀功能正在準備，請稍後再試。');
                 spanElement.classList.remove('active-sentence');
-            };
-            window.speechSynthesis.speak(msg);
+                return;
+            }
+            const started = window.LearningVoice.speak(spanElement.innerText, {
+                rate: 0.8,
+                label: '這一句',
+                onEnd: function() { spanElement.classList.remove('active-sentence'); },
+                onError: function() { spanElement.classList.remove('active-sentence'); }
+            });
+            if (!started) spanElement.classList.remove('active-sentence');
         }
 
         // 把純文字切成句子並包裝成可點擊/跟讀的 span
@@ -711,20 +716,17 @@
 
         // 輔助功能：連讀題目和選項 (動態抓取變數，不經過 HTML 屬性)
         function speakFullQuestion() {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const dataPool = currentMode === 'poem' ? poemData : cultureData;
-                const qData = dataPool[currentIdx].qs[currentQIdx];
-                let fullText = qData.q + " 選項有：";
-                qData.opts.forEach((opt, idx) => {
-                    fullText += `，第${idx+1}：${opt}。`;
-                });
-                let cleanText = cleanTextForSpeech(fullText);
-                let msg = new SpeechSynthesisUtterance(cleanText);
-                msg.lang = 'zh-HK'; 
-                msg.rate = 0.8; 
-                window.speechSynthesis.speak(msg);
+            const dataPool = currentMode === 'poem' ? poemData : cultureData;
+            const qData = dataPool[currentIdx].qs[currentQIdx];
+            let fullText = qData.q + " 選項有：";
+            qData.opts.forEach((opt, idx) => {
+                fullText += `，第${idx+1}：${opt}。`;
+            });
+            if (!window.LearningVoice) {
+                showToast('朗讀功能正在準備，請稍後再試。');
+                return;
             }
+            window.LearningVoice.toggle(fullText, { rate: 0.8, label: '題目與選項' });
         }
 
         function checkAnswer(btn, isCorr, type) {
@@ -816,5 +818,6 @@
             switchMode('poem');
         }
     </script>
+    <script src="voice-manager.js"></script>
 </body>
 </html>

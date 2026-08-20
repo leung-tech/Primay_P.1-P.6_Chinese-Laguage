@@ -206,20 +206,15 @@
 
         window.currentHints = [];
 
-        window.speakText = function(text) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                let cleanText = text.replace(/___/g, '什麼')
-                                    .replace(/<br\s*\/?>/gi, '。')
-                                    .replace(/<[^>]*>?/gm, '')
-                                    .replace(/[✅❌💡【】_]/g, '')
-                                    .replace(/&nbsp;/g, ' ')
-                                    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '');
-                let msg = new SpeechSynthesisUtterance(cleanText);
-                msg.lang = 'zh-HK';
-                msg.rate = 0.95; 
-                window.speechSynthesis.speak(msg);
+        window.speakText = function(text, rate = 0.9) {
+            const preparedText = typeof window.cleanTextForSpeech === 'function'
+                ? window.cleanTextForSpeech(text)
+                : (typeof cleanTextForSpeech === 'function' ? cleanTextForSpeech(text) : text);
+            if (!window.LearningVoice) {
+                if (typeof showToast === 'function') showToast('朗讀功能正在準備，請稍後再試。');
+                return false;
             }
+            return window.LearningVoice.toggle(preparedText, { rate, label: '內容' });
         };
 
         window.showToast = function(message) {
@@ -935,5 +930,6 @@
             });
         }
     </script>
+    <script src="voice-manager.js"></script>
 </body>
 </html>

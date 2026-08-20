@@ -206,20 +206,24 @@
         }
 
         function speakText(text, rate = 0.95) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                let cleanText = cleanTextForSpeech(text);
-                let msg = new SpeechSynthesisUtterance(cleanText);
-                msg.lang = 'zh-HK'; msg.rate = rate; window.currentUtterance = msg; window.speechSynthesis.speak(msg);
+            const preparedText = typeof window.cleanTextForSpeech === 'function'
+                ? window.cleanTextForSpeech(text)
+                : (typeof cleanTextForSpeech === 'function' ? cleanTextForSpeech(text) : text);
+            if (!window.LearningVoice) {
+                if (typeof showToast === 'function') showToast('朗讀功能正在準備，請稍後再試。');
+                return false;
             }
+            return window.LearningVoice.toggle(preparedText, { rate, label: '內容' });
         }
 
         function stopAllSpeechAndHighlights() {
-            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            if (window.LearningVoice) window.LearningVoice.stop(true);
             isReadingAll = false;
-            document.querySelectorAll('.read-sentence').forEach(span => span.classList.remove('active-sentence'));
-            let btn = document.getElementById('btn-read-all');
-            if(btn) btn.innerHTML = '<span class="text-xl">▶️</span> <span class="hidden md:inline">全文朗讀</span>';
+            document.querySelectorAll('.read-sentence').forEach(span => {
+                span.classList.remove('active-sentence');
+            });
+            let readBtn = document.getElementById('btn-read-all');
+            if(readBtn) readBtn.innerHTML = '<span class="text-xl">▶️</span> <span class="hidden md:inline">全文朗讀</span>';
         }
 
         function speakPassage() {
@@ -234,25 +238,50 @@
         }
 
         function readNextSentence() {
-            if (readingIndex >= sentenceSpans.length || !isReadingAll) { stopAllSpeechAndHighlights(); return; }
+            if (readingIndex >= sentenceSpans.length || !isReadingAll) {
+                stopAllSpeechAndHighlights();
+                return;
+            }
             document.querySelectorAll('.read-sentence').forEach(s => s.classList.remove('active-sentence'));
             let span = sentenceSpans[readingIndex];
             span.classList.add('active-sentence');
             span.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            let msg = new SpeechSynthesisUtterance(cleanTextForSpeech(span.innerText));
-            msg.lang = 'zh-HK'; msg.rate = 0.95; window.currentUtterance = msg;
-            msg.onend = function() { if (isReadingAll) { readingIndex++; readNextSentence(); } else stopAllSpeechAndHighlights(); };
-            msg.onerror = function() { stopAllSpeechAndHighlights(); };
-            window.speechSynthesis.speak(msg);
+            if (!window.LearningVoice) {
+                if (typeof showToast === 'function') showToast('朗讀功能正在準備，請稍後再試。');
+                stopAllSpeechAndHighlights();
+                return;
+            }
+            const started = window.LearningVoice.speak(span.innerText, {
+                rate: 0.95,
+                label: '全文內容',
+                onEnd: function() {
+                    if (isReadingAll) {
+                        readingIndex++;
+                        readNextSentence();
+                    } else {
+                        stopAllSpeechAndHighlights();
+                    }
+                },
+                onError: stopAllSpeechAndHighlights
+            });
+            if (!started) stopAllSpeechAndHighlights();
         }
 
         function speakSpecificSentence(spanElement) {
             stopAllSpeechAndHighlights();
             spanElement.classList.add('active-sentence');
-            let msg = new SpeechSynthesisUtterance(cleanTextForSpeech(spanElement.innerText));
-            msg.lang = 'zh-HK'; msg.rate = 0.95; window.currentUtterance = msg;
-            msg.onend = function() { spanElement.classList.remove('active-sentence'); };
-            window.speechSynthesis.speak(msg);
+            if (!window.LearningVoice) {
+                if (typeof showToast === 'function') showToast('朗讀功能正在準備，請稍後再試。');
+                spanElement.classList.remove('active-sentence');
+                return;
+            }
+            const started = window.LearningVoice.speak(spanElement.innerText, {
+                rate: 0.95,
+                label: '這一句',
+                onEnd: function() { spanElement.classList.remove('active-sentence'); },
+                onError: function() { spanElement.classList.remove('active-sentence'); }
+            });
+            if (!started) spanElement.classList.remove('active-sentence');
         }
 
         function parseAndWrapSentences(htmlString) {
@@ -963,5 +992,6 @@
             renderDirectory();
         }
     </script>
+    <script src="voice-manager.js"></script>
 </body>
 </html>

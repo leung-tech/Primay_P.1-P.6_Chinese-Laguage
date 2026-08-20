@@ -113,7 +113,7 @@
                     </div>
                     <span class="text-xs font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-full">共 300 題</span>
                 </div>
-                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4 flex flex-col md:flex-row gap-4 text-sm md:text-base font-bold text-slate-700">
                     <div class="text-emerald-800 md:w-32 flex-shrink-0 flex items-center">💡 標記說明：</div>
                     <div class="flex flex-wrap gap-4 flex-1">
                         <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-lg shadow-sm">✅</span> 已過關</div>
@@ -121,7 +121,11 @@
                         <div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-white border-2 border-slate-300 flex items-center justify-center text-lg shadow-sm text-slate-400">#</span> 尚未挑戰</div>
                     </div>
                 </div>
-                <div id="directory-content" class="flex flex-col gap-8">
+                <div class="sticky top-2 z-10 mb-5 bg-white/95 backdrop-blur border-2 border-emerald-200 rounded-2xl p-3 shadow-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <p id="quick-next-label" role="status" class="text-sm md:text-base font-black text-slate-700">正在整理你的學習進度…</p>
+                    <button id="continue-learning-btn" type="button" onclick="continueLearning()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-black px-5 py-3 rounded-xl shadow border-b-4 border-emerald-800 active:border-b-0 active:translate-y-1 transition">▶️ 繼續未完成題目</button>
+                </div>
+                <div id="directory-content" class="flex flex-col gap-4">
                     <!-- 目錄動態生成 -->
                 </div>
             </div>
@@ -239,14 +243,15 @@
                        .replace(/[\uFE0F]/g, '');                     // 移除變體選擇符
         }
 
-        function speakText(text) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                let msg = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
-                msg.lang = 'zh-HK';
-                msg.rate = 0.85; 
-                window.speechSynthesis.speak(msg);
+        function speakText(text, rate = 0.9) {
+            const preparedText = typeof window.cleanTextForSpeech === 'function'
+                ? window.cleanTextForSpeech(text)
+                : (typeof cleanTextForSpeech === 'function' ? cleanTextForSpeech(text) : text);
+            if (!window.LearningVoice) {
+                if (typeof showToast === 'function') showToast('朗讀功能正在準備，請稍後再試。');
+                return false;
             }
+            return window.LearningVoice.toggle(preparedText, { rate, label: '內容' });
         }
 
         function showToast(message) {
@@ -664,6 +669,71 @@
 
         let userProgress = JSON.parse(localStorage.getItem('questProgress')) || new Array(rawQuestData.length).fill(0);
         let isSandboxInitialized = false;
+        let chapterOpenState = JSON.parse(localStorage.getItem('wordBasicChapterOpenState') || '{}');
+
+        function getResumeQuestionIdx() {
+            const lastQuestionIdx = Number(localStorage.getItem('wordBasicLastQuestionIdx'));
+            if (Number.isInteger(lastQuestionIdx) && lastQuestionIdx >= 0 && lastQuestionIdx < rawQuestData.length && userProgress[lastQuestionIdx] !== 1) {
+                return lastQuestionIdx;
+            }
+            const unfinishedIdx = userProgress.findIndex(status => status !== 1);
+            return unfinishedIdx;
+        }
+
+        function getCategoryForQuestion(idx) {
+            return idx >= 0 && rawQuestData[idx] ? rawQuestData[idx][1] : null;
+        }
+
+        function isChapterOpen(catId) {
+            if (typeof chapterOpenState[catId] === 'boolean') return chapterOpenState[catId];
+            const resumeCatId = getCategoryForQuestion(getResumeQuestionIdx());
+            return catId === resumeCatId;
+        }
+
+        function saveChapterState() {
+            localStorage.setItem('wordBasicChapterOpenState', JSON.stringify(chapterOpenState));
+        }
+
+        function toggleChapter(catId) {
+            chapterOpenState[catId] = !isChapterOpen(catId);
+            saveChapterState();
+            renderDirectory();
+            requestAnimationFrame(() => document.getElementById(`chapter-${catId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        }
+
+        function continueLearning() {
+            const targetIdx = getResumeQuestionIdx();
+            if (targetIdx === -1) {
+                showToast('太棒了！300 題已全部完成。');
+                return;
+            }
+            const targetCatId = getCategoryForQuestion(targetIdx);
+            if (targetCatId) {
+                chapterOpenState[targetCatId] = true;
+                saveChapterState();
+            }
+            startQuestion(targetIdx);
+        }
+
+        function updateQuickNavigation() {
+            const label = document.getElementById('quick-next-label');
+            const button = document.getElementById('continue-learning-btn');
+            if (!label || !button) return;
+            const solved = userProgress.filter(status => status === 1).length;
+            const targetIdx = getResumeQuestionIdx();
+            if (targetIdx === -1) {
+                label.textContent = `🎉 已完成 ${solved} / ${rawQuestData.length} 題，全部過關！`;
+                button.textContent = '🏆 已完成全部題目';
+                button.disabled = true;
+                button.className = 'w-full sm:w-auto bg-slate-200 text-slate-500 font-black px-5 py-3 rounded-xl cursor-not-allowed';
+                return;
+            }
+            const statusText = userProgress[targetIdx] === -1 ? '上次未完成' : '下一個未挑戰';
+            label.textContent = `目前完成 ${solved} / ${rawQuestData.length} 題 · ${statusText}：第 ${targetIdx + 1} 題`;
+            button.textContent = `▶️ 繼續第 ${targetIdx + 1} 題`;
+            button.disabled = false;
+            button.className = 'w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-black px-5 py-3 rounded-xl shadow border-b-4 border-emerald-800 active:border-b-0 active:translate-y-1 transition';
+        }
 
         function renderDirectory() {
             const dirContainer = document.getElementById('directory-content');
@@ -673,16 +743,20 @@
                     .map((q, idx) => ({ q, idx }))
                     .filter(item => item.q[1] === cat.id);
                 const completedCount = categoryQuestions.filter(item => userProgress[item.idx] === 1).length;
+                const chapterIsOpen = isChapterOpen(cat.id);
                 html += `
-                    <section class="mb-2" aria-label="${cat.title}">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b-2 border-${cat.color}-100 pb-3 mb-3">
+                    <section id="chapter-${cat.id}" class="scroll-mt-3 bg-slate-50/70 border border-slate-200 rounded-2xl p-4 md:p-5" aria-label="${cat.title}">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${chapterIsOpen ? 'border-b-2 border-' + cat.color + '-100 pb-3 mb-3' : ''}">
                             <div>
                                 <h3 class="text-xl font-black text-${cat.color}-700">${cat.title}</h3>
                                 <p class="text-sm font-bold text-slate-500 mt-1">本章進度：${completedCount} / ${categoryQuestions.length} 題</p>
                             </div>
-                            <button onclick="showTutorial('${cat.id}')" class="bg-emerald-100 text-emerald-700 px-3 py-2 rounded-lg text-sm font-bold shadow-sm border border-emerald-300 hover:bg-emerald-200 transition flex items-center justify-center gap-1 active:scale-95">📘 先看學習錦囊</button>
+                            <div class="grid grid-cols-2 gap-2 w-full sm:w-auto">
+                                <button type="button" onclick="showTutorial('${cat.id}')" class="bg-emerald-100 text-emerald-700 px-3 py-2 rounded-lg text-sm font-bold shadow-sm border border-emerald-300 hover:bg-emerald-200 transition flex items-center justify-center gap-1 active:scale-95">📘 錦囊</button>
+                                <button type="button" onclick="toggleChapter('${cat.id}')" aria-expanded="${chapterIsOpen}" aria-controls="chapter-grid-${cat.id}" class="bg-white text-slate-700 px-3 py-2 rounded-lg text-sm font-black shadow-sm border border-slate-300 hover:bg-slate-100 transition flex items-center justify-center gap-1 active:scale-95">${chapterIsOpen ? '收合本章 ⌃' : '展開題目 ⌄'}</button>
+                            </div>
                         </div>
-                        <div class="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 md:gap-3">
+                        <div id="chapter-grid-${cat.id}" class="${chapterIsOpen ? 'grid' : 'hidden'} grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 md:gap-3">
                 `;
                 categoryQuestions.forEach(({ q, idx }) => {
                     const status = userProgress[idx];
@@ -698,6 +772,7 @@
                 html += `</div></section>`;
             });
             dirContainer.innerHTML = html;
+            updateQuickNavigation();
             updateTotalProgress();
         }
 
@@ -724,6 +799,7 @@
             }
 
             currentQuestionIdx = idx;
+            localStorage.setItem('wordBasicLastQuestionIdx', String(idx));
             document.getElementById('quest-directory').style.display = 'none';
             
             const questPlay = document.getElementById('quest-play');
@@ -817,7 +893,13 @@
         function backToDirectory() {
             document.getElementById('quest-play').style.display = 'none';
             document.getElementById('quest-directory').style.display = 'block';
+            const currentCatId = getCategoryForQuestion(currentQuestionIdx);
+            if (currentCatId) {
+                chapterOpenState[currentCatId] = true;
+                saveChapterState();
+            }
             renderDirectory();
+            requestAnimationFrame(() => document.getElementById(`chapter-${currentCatId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
         }
 
         function nextDirectoryOrQuestion() {
@@ -1066,5 +1148,6 @@
             });
         }
     </script>
+    <script src="voice-manager.js"></script>
 </body>
 </html>

@@ -216,18 +216,14 @@
 
         // 強制選擇廣東話語音 (zh-HK)
         function speakText(text, rate = 0.9) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                let msg = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
-                msg.lang = 'zh-HK'; 
-                msg.rate = rate; 
-                
-                let voices = window.speechSynthesis.getVoices();
-                let hkVoice = voices.find(v => v.lang === 'zh-HK' || v.lang === 'yue-HK');
-                if (hkVoice) msg.voice = hkVoice;
-
-                window.speechSynthesis.speak(msg);
+            const preparedText = typeof window.cleanTextForSpeech === 'function'
+                ? window.cleanTextForSpeech(text)
+                : (typeof cleanTextForSpeech === 'function' ? cleanTextForSpeech(text) : text);
+            if (!window.LearningVoice) {
+                if (typeof showToast === 'function') showToast('朗讀功能正在準備，請稍後再試。');
+                return false;
             }
+            return window.LearningVoice.toggle(preparedText, { rate, label: '內容' });
         }
 
         function showToast(message) {
@@ -1276,5 +1272,6 @@
             switchMode('seq');
         }
     </script>
+    <script src="voice-manager.js"></script>
 </body>
 </html>

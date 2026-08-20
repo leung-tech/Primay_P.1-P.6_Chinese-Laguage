@@ -153,55 +153,48 @@
 
         // 強制廣東話 (zh-HK)
         function speakText(text, rate = 0.85) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                let msg = new SpeechSynthesisUtterance(text);
-                msg.lang = 'zh-HK'; 
-                msg.rate = rate; 
-                window.speechSynthesis.speak(msg);
+            const preparedText = typeof window.cleanTextForSpeech === 'function'
+                ? window.cleanTextForSpeech(text)
+                : (typeof cleanTextForSpeech === 'function' ? cleanTextForSpeech(text) : text);
+            if (!window.LearningVoice) {
+                if (typeof showToast === 'function') showToast('朗讀功能正在準備，請稍後再試。');
+                return false;
+            }
+            return window.LearningVoice.toggle(preparedText, { rate, label: '內容' });
+        }
+
+        // 播放與停止廣播：完整故事與題目小喇叭共用同一個語音管理器。
+        function resetStoryControls() {
+            const btnPlay = document.getElementById('btn-play-story');
+            const btnStop = document.getElementById('btn-stop-story');
+            if (btnPlay && btnStop) {
+                btnPlay.classList.remove('hidden');
+                btnStop.classList.add('hidden');
             }
         }
 
-        // 播放與停止廣播
         function playStoryTTS() {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const story = listenData[currentStoryIdx];
-                let cleanText = story.text.replace(/<br\s*\/?>/gi, '。').replace(/<[^>]*>?/gm, '').replace(/[✅❌💡【】]/g, '').replace(/&nbsp;/g, ' ');
-                
-                storyUtterance = new SpeechSynthesisUtterance(cleanText);
-                storyUtterance.lang = 'zh-HK'; 
-                storyUtterance.rate = 0.85; 
-
-                storyUtterance.onstart = function() {
+            const story = listenData[currentStoryIdx];
+            if (!story || !window.LearningVoice) {
+                showToast('朗讀功能正在準備，請稍後再試。');
+                return;
+            }
+            const started = window.LearningVoice.speak(story.text, {
+                rate: 0.85,
+                label: '完整故事',
+                onStart: function () {
                     document.getElementById('btn-play-story').classList.add('hidden');
                     document.getElementById('btn-stop-story').classList.remove('hidden');
-                };
-                storyUtterance.onend = function() {
-                    document.getElementById('btn-play-story').classList.remove('hidden');
-                    document.getElementById('btn-stop-story').classList.add('hidden');
-                };
-                storyUtterance.onerror = function() {
-                    document.getElementById('btn-play-story').classList.remove('hidden');
-                    document.getElementById('btn-stop-story').classList.add('hidden');
-                };
-
-                window.speechSynthesis.speak(storyUtterance);
-            } else {
-                showToast("您的瀏覽器不支援語音功能。");
-            }
+                },
+                onEnd: resetStoryControls,
+                onError: resetStoryControls
+            });
+            if (!started) resetStoryControls();
         }
 
         function stopStoryTTS() {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const btnPlay = document.getElementById('btn-play-story');
-                const btnStop = document.getElementById('btn-stop-story');
-                if (btnPlay && btnStop) {
-                    btnPlay.classList.remove('hidden');
-                    btnStop.classList.add('hidden');
-                }
-            }
+            if (window.LearningVoice) window.LearningVoice.stop();
+            resetStoryControls();
         }
 
         // ================= 2. 教學內容 =================
@@ -668,5 +661,6 @@
             switchMode('listen');
         }
     </script>
+    <script src="voice-manager.js"></script>
 </body>
 </html>
