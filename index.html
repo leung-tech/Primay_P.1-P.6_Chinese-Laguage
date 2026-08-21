@@ -46,6 +46,8 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
     <script src="diagnostics.js"></script>
+    <script src="student-feedback.js"></script>
+    <script src="student-sync-status.js"></script>
     <link rel="stylesheet" href="mobile-accessibility.css">
 </head>
 <body class="text-slate-800 flex flex-col min-h-[100dvh] bg-grid-pattern">
@@ -280,8 +282,14 @@
             <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-blue-400 opacity-10 rounded-full blur-2xl"></div>
 
             <div class="max-w-7xl mx-auto flex justify-between items-center relative z-10 mb-4 pb-4 border-b border-white/10">
-                <div class="font-black text-indigo-200 tracking-wider flex items-center gap-2 text-sm md:text-base">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 學習進度已準備就緒
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="font-black text-indigo-200 tracking-wider flex items-center gap-2 text-sm md:text-base">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 學習進度已準備就緒
+                    </div>
+                    <div id="student-sync-status" role="status" aria-live="polite" aria-atomic="true" data-state="local" class="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs md:text-sm font-black">
+                        <span data-sync-status-icon aria-hidden="true"></span>
+                        <span data-sync-status-text>本機進度已保存</span>
+                    </div>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="manualSyncToCloud()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-1.5 px-3 rounded-lg text-xs md:text-sm transition flex items-center gap-1 shadow" title="如果您準備關閉瀏覽器，可以點擊此按鈕確保最新進度已上傳">
@@ -887,11 +895,20 @@
         // 雲端請求可能受弱網、離線快取或瀏覽器限制而延後；介面最多等待三秒。
         // 原請求不會被取消，若連線恢復仍可在背景完成已擷取的進度上傳。
         async function syncProgressWithDeadline(username) {
+            if (!navigator.onLine) {
+                window.StudentSyncStatus?.deferred('目前離線；進度只保存在這台裝置');
+                return false;
+            }
+            window.StudentSyncStatus?.start();
             const timeout = new Promise(resolve => setTimeout(() => resolve(false), CLOUD_SYNC_TIMEOUT_MS));
             try {
-                return Boolean(await Promise.race([saveLocalToCloud(username), timeout]));
+                const completed = Boolean(await Promise.race([saveLocalToCloud(username), timeout]));
+                if (completed) window.StudentSyncStatus?.success();
+                else window.StudentSyncStatus?.deferred();
+                return completed;
             } catch (error) {
                 console.warn('[Cloud Sync] 同步等待逾時或失敗：', error);
+                window.StudentSyncStatus?.deferred();
                 return false;
             }
         }
@@ -926,6 +943,7 @@
         // 自動上傳資料
         async function saveLocalToCloud(username) {
             if (!currentUserId || !username || username === 'admin') return false;
+            window.StudentSyncStatus?.start();
             try {
                 let rawData = {};
                 for (let i = 0; i < localStorage.length; i++) {
@@ -969,9 +987,11 @@
 
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', username);
                 await setDoc(docRef, exportObj, { merge: true });
+                window.StudentSyncStatus?.success();
                 return true;
             } catch (e) {
                 console.error("[Cloud Sync] 備份失敗：", e);
+                window.StudentSyncStatus?.deferred();
                 return false;
             }
         }
@@ -982,7 +1002,7 @@
                 showLoader("雲端備份中...");
                 const syncCompleted = await syncProgressWithDeadline(activeUser);
                 hideLoader();
-                alert(syncCompleted ? "✅ 雲端備份成功！你的進度已安全儲存。" : "⚠️ 網路較慢，已停止等待；資料仍可能在背景同步。請在網路穩定時再按一次手動備份。");
+                alert(syncCompleted ? "✅ 已同步到雲端！你的本機學習進度已安全備份。" : "⚠️ 本機進度已保存；網路較慢，雲端同步稍後完成。請在網路穩定時再按一次手動備份。");
             }
         };
 
