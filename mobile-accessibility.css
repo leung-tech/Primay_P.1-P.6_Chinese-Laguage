@@ -70,6 +70,12 @@ button:disabled,
     font-size: max(1rem, 16px);
   }
 
+  /* 題號地圖常以 w-10 / h-10 顯示；手機改為至少 44px，避免密集題號難以觸碰。 */
+  .lvl-btn {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
   .mobile-course-toolbar {
     top: 0.5rem;
   }

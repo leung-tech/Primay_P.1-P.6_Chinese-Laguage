@@ -127,6 +127,10 @@ expect(fs.existsSync(studentDialogsPath), '找不到 student-dialogs.js');
 expect(fs.existsSync(studentDialogsCssPath), '找不到 student-dialogs.css');
 const accessibilityPath = path.join(root, 'mobile-accessibility.css');
 expect(fs.existsSync(accessibilityPath), '找不到 mobile-accessibility.css');
+if (fs.existsSync(accessibilityPath)) {
+  const accessibilityContent = fs.readFileSync(accessibilityPath, 'utf8');
+  expect(accessibilityContent.includes('.lvl-btn') && accessibilityContent.includes('min-width: 44px'), 'mobile-accessibility.css: 題號地圖缺少 44px 手機觸控目標');
+}
 const longCourseNavPath = path.join(root, 'mobile-long-course-nav.js');
 expect(fs.existsSync(longCourseNavPath), '找不到 mobile-long-course-nav.js');
 const studentToolsPath = path.join(root, 'student-tools.js');
