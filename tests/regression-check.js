@@ -85,6 +85,10 @@ Object.entries(navigationExpectations).forEach(([fileName, marker]) => {
 const indexContent = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 expect(indexContent.includes('src="student-tools.js"'), 'index.html: 未載入 student-tools.js');
 expect(indexContent.includes('src="student-sync-status.js"'), 'index.html: 未載入 student-sync-status.js');
+expect(indexContent.includes('src="student-dialogs.js"'), 'index.html: 未載入學生頁內對話元件');
+expect(indexContent.includes('href="student-dialogs.css"'), 'index.html: 未載入學生頁內對話樣式');
+expect(indexContent.includes("await confirmStudentAction({ title: '登出並切換帳戶？'"), 'index.html: 學生登出未使用頁內確認');
+expect(indexContent.includes('notifyStudentAction('), 'index.html: 學生操作未使用頁內通知');
 expect(indexContent.includes('id="student-sync-status"'), 'index.html: 缺少學生同步狀態提示');
 expect(indexContent.includes('目前離線；進度只保存在這台裝置'), 'index.html: 缺少離線本機保存提示');
 expect(indexContent.includes('student-tools-hub') === false, 'index.html: 學生工具應由獨立模組動態建立，避免登入前顯示');
@@ -109,6 +113,8 @@ Object.entries(specialFeedbackExpectations).forEach(([fileName, markers]) => {
 const diagnosticsPath = path.join(root, 'diagnostics.js');
 const studentFeedbackPath = path.join(root, 'student-feedback.js');
 const studentSyncStatusPath = path.join(root, 'student-sync-status.js');
+const studentDialogsPath = path.join(root, 'student-dialogs.js');
+const studentDialogsCssPath = path.join(root, 'student-dialogs.css');
 expect(fs.existsSync(diagnosticsPath), '找不到 diagnostics.js');
 expect(fs.existsSync(studentFeedbackPath), '找不到 student-feedback.js');
 if (fs.existsSync(studentFeedbackPath)) {
@@ -117,6 +123,8 @@ if (fs.existsSync(studentFeedbackPath)) {
   expect(studentFeedbackContent.includes('function clearState'), 'student-feedback.js: 缺少特殊題型錯誤狀態清理');
 }
 expect(fs.existsSync(studentSyncStatusPath), '找不到 student-sync-status.js');
+expect(fs.existsSync(studentDialogsPath), '找不到 student-dialogs.js');
+expect(fs.existsSync(studentDialogsCssPath), '找不到 student-dialogs.css');
 const accessibilityPath = path.join(root, 'mobile-accessibility.css');
 expect(fs.existsSync(accessibilityPath), '找不到 mobile-accessibility.css');
 const longCourseNavPath = path.join(root, 'mobile-long-course-nav.js');
@@ -129,11 +137,13 @@ if (fs.existsSync(studentToolsPath)) {
   expect(studentToolsContent.includes("getScopedStorageKey('studentProgressLastBackup')"), 'student-tools.js: 最近備份日期未依學生帳戶隔離');
   expect(!studentToolsContent.includes("localStorage.setItem('studentLastCourse'"), 'student-tools.js: 不可再寫入未分帳戶的最近學習鍵');
   expect(!studentToolsContent.includes("localStorage.setItem('studentProgressLastBackup'"), 'student-tools.js: 不可再寫入未分帳戶的最近備份鍵');
+  expect(studentToolsContent.includes('window.StudentDialogs?.confirm'), 'student-tools.js: 備份還原未使用頁內確認');
 }
 for (const [label, scriptPath] of [
   ['diagnostics.js', diagnosticsPath],
   ['student-feedback.js', studentFeedbackPath],
-  ['student-sync-status.js', studentSyncStatusPath]
+  ['student-sync-status.js', studentSyncStatusPath],
+  ['student-dialogs.js', studentDialogsPath]
 ]) {
   if (!fs.existsSync(scriptPath)) continue;
   try {
@@ -162,4 +172,4 @@ if (failures.length) {
 }
 
 console.log(`Regression checks passed for ${htmlFiles.length} HTML pages.`);
-console.log('Verified: diagnostics, accessibility, common answer-feedback coverage for options and special tasks, shared voice-manager coverage outside the specialised listening-basic player, semantic correct-answer feedback, student self-service tools with per-account state isolation, offline and bounded cloud-sync status coverage, inline JavaScript syntax, and mobile navigation entry points across all levels.');
+console.log('Verified: diagnostics, accessibility, common answer-feedback coverage for options and special tasks, shared voice-manager coverage outside the specialised listening-basic player, semantic correct-answer feedback, accessible student inline dialogs, student self-service tools with per-account state isolation, offline and bounded cloud-sync status coverage, inline JavaScript syntax, and mobile navigation entry points across all levels.');

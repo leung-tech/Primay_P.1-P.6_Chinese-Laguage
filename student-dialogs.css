@@ -1,0 +1,68 @@
+.student-inline-notice {
+  position: fixed;
+  z-index: 220;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  width: min(28rem, calc(100vw - 2rem));
+  padding: 0.9rem 1rem;
+  border: 2px solid #1d4ed8;
+  border-radius: 1rem;
+  background: #eff6ff;
+  color: #172554;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.24);
+  font-weight: 800;
+  line-height: 1.5;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(1rem);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.student-inline-notice[data-tone="success"] { border-color: #047857; background: #ecfdf5; color: #064e3b; }
+.student-inline-notice[data-tone="warning"] { border-color: #b45309; background: #fffbeb; color: #78350f; }
+.student-inline-notice[data-tone="error"] { border-color: #b91c1c; background: #fef2f2; color: #7f1d1d; }
+.student-inline-notice.is-visible { opacity: 1; transform: translateY(0); }
+
+.student-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 230;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  background: rgba(15, 23, 42, 0.7);
+}
+.student-confirm-dialog {
+  width: min(31rem, 100%);
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  border: 3px solid #1e3a8a;
+  border-radius: 1.25rem;
+  background: #ffffff;
+  padding: 1.35rem;
+  box-shadow: 0 24px 56px rgba(15, 23, 42, 0.4);
+}
+.student-confirm-title { margin: 0; color: #172554; font-size: 1.35rem; font-weight: 900; line-height: 1.35; }
+.student-confirm-message { margin: 0.8rem 0 0; color: #1e293b; font-size: 1rem; font-weight: 700; line-height: 1.65; white-space: pre-line; }
+.student-confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1.25rem; }
+.student-confirm-actions button {
+  min-height: 2.75rem;
+  border: 2px solid #1d4ed8;
+  border-radius: 0.85rem;
+  background: #ffffff;
+  color: #1e3a8a;
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  font-weight: 900;
+}
+.student-confirm-actions .student-confirm-accept { background: #1d4ed8; color: #ffffff; }
+.student-confirm-actions .student-confirm-accept.is-danger { border-color: #b91c1c; background: #b91c1c; }
+.student-confirm-actions button:hover { filter: brightness(0.95); }
+.student-confirm-actions button:focus-visible { outline: 4px solid #facc15; outline-offset: 3px; }
+
+@media (max-width: 380px) {
+  .student-confirm-actions { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .student-inline-notice { transition: none; transform: none; }
+}

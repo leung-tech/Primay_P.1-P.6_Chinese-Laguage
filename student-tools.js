@@ -206,13 +206,17 @@
     if (!file) { showNotice('請先選擇 JSON 備份檔。'); return; }
     if (file.size > 1024 * 1024) { showNotice('備份檔過大，請選擇由本網站匯出的檔案。'); return; }
     const reader = new FileReader();
-    reader.onload = function () {
+    reader.onload = async function () {
       try {
         const payload = JSON.parse(String(reader.result || ''));
         if (!payload || payload.schema !== BACKUP_SCHEMA || !payload.data || Array.isArray(payload.data) || typeof payload.data !== 'object') throw new Error('格式不符');
         const entries = Object.entries(payload.data).filter(([key, value]) => isExportableKey(key) && typeof value === 'string');
         if (!entries.length || entries.length > MAX_BACKUP_KEYS) throw new Error('資料項目不符');
-        if (!confirm(`確定還原 ${entries.length} 項學習資料嗎？目前裝置中可備份的學習資料將被取代。`)) return;
+        const restoreMessage = `確定還原 ${entries.length} 項學習資料嗎？目前裝置中可備份的學習資料將被取代，但不會更改登入帳戶。`;
+        const confirmed = window.StudentDialogs?.confirm
+          ? await window.StudentDialogs.confirm({ title: '要還原學習進度嗎？', message: restoreMessage, confirmLabel: '還原進度', cancelLabel: '取消', danger: true })
+          : confirm(restoreMessage);
+        if (!confirmed) return;
         Object.keys(collectProgressData()).forEach(key => localStorage.removeItem(key));
         entries.forEach(([key, value]) => localStorage.setItem(key, value));
         localStorage.setItem(getScopedStorageKey('studentProgressLastBackup'), new Date().toISOString());
