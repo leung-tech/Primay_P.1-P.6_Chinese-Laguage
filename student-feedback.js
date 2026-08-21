@@ -94,12 +94,15 @@
         dismissTimer = setTimeout(() => region.classList.remove('is-visible'), tone === 'success' ? 1800 : 4200);
     }
 
+    function markWrong(element) {
+        if (!element) return;
+        element.classList.add('student-feedback-wrong');
+        element.setAttribute('aria-invalid', 'true');
+        element.setAttribute('aria-describedby', 'student-answer-feedback');
+    }
+
     function announceWrong(element, message = WRONG_MESSAGE) {
-        if (element) {
-            element.classList.add('student-feedback-wrong');
-            element.setAttribute('aria-invalid', 'true');
-            element.setAttribute('aria-describedby', 'student-answer-feedback');
-        }
+        markWrong(element);
         show(message, 'error');
     }
 
@@ -109,6 +112,13 @@
             element.setAttribute('aria-invalid', 'false');
         }
         show(message, 'success');
+    }
+
+    function clearState(element) {
+        if (!element) return;
+        element.classList.remove('student-feedback-wrong', 'student-feedback-correct');
+        element.removeAttribute('aria-invalid');
+        element.removeAttribute('aria-describedby');
     }
 
     function observeAnswerState() {
@@ -138,7 +148,9 @@
 
     window.StudentFeedback = Object.freeze({
         wrong: announceWrong,
+        markWrong,
         correct: announceCorrect,
+        clear: clearState,
         show
     });
 

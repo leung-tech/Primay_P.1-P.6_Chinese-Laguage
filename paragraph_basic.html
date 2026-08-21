@@ -891,7 +891,11 @@
                 
                 const tArea = document.getElementById('reorder-target-area');
                 tArea.classList.add('bg-rose-100', 'border-rose-400', 'shake');
-                setTimeout(() => tArea.classList.remove('bg-rose-100', 'border-rose-400', 'shake'), 800);
+                window.StudentFeedback?.wrong(tArea, '順序尚未正確，已保留排對部分。請依提示調整下一項。');
+                setTimeout(() => {
+                    tArea.classList.remove('bg-rose-100', 'border-rose-400', 'shake');
+                    window.StudentFeedback?.clear(tArea);
+                }, 800);
 
                 window.renderReorderUI();
             }

@@ -926,11 +926,13 @@
                 optsContainer.classList.remove('hidden');
                 setTimeout(() => optsContainer.classList.remove('opacity-0'), 50);
             } else {
-                // 使用強烈震動與發光發紅的錯誤動畫
+                // 保留既有短暫動畫，並以共用文字與無障礙狀態清楚說明下一步。
                 btnElement.classList.add('typo-wrong-anim');
+                window.StudentFeedback?.wrong(btnElement, '這個字沒有錯，請找出句子中的錯字。');
                 speakText("這個字沒有錯喔！");
                 setTimeout(() => {
                     btnElement.classList.remove('typo-wrong-anim');
+                    window.StudentFeedback?.clear(btnElement);
                 }, 600);
             }
         }

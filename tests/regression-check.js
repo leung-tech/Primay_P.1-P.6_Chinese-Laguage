@@ -92,11 +92,30 @@ expect(indexContent.includes('const CLOUD_SYNC_TIMEOUT_MS = 3000;'), 'index.html
 expect(indexContent.includes('syncProgressWithDeadline(activeProfile)'), 'index.html: 登出或恢復會話未使用具期限的同步流程');
 expect(indexContent.includes('syncProgressWithDeadline(activeUser)'), 'index.html: 手動備份或關卡切換未使用具期限的同步流程');
 
+const specialFeedbackExpectations = {
+  'word_standard.html': ["StudentFeedback?.wrong(btnElement, '這個字沒有錯", 'StudentFeedback?.clear(btnElement)'],
+  'paragraph_basic.html': ["StudentFeedback?.wrong(tArea, '順序尚未正確"],
+  'paragraph_standard.html': ["StudentFeedback?.wrong(tArea, '順序尚未正確", "StudentFeedback?.wrong(sandboxPad, '還有格式槽位未完成"],
+  'paragraph_advanced.html': ["StudentFeedback?.wrong(tArea, '順序尚未正確", "StudentFeedback?.wrong(sandboxPad, '還有格式槽位未完成"],
+  'write_basic.html': ['StudentFeedback?.show(`有 ${wrongIndices.length} 個位置需要調整。'],
+  'write_standard.html': ['StudentFeedback?.markWrong(slotElem)', 'StudentFeedback?.show(`有 ${wrongIndices.length} 個位置需要調整。'],
+  'write_advanced.html': ['StudentFeedback?.markWrong(slot)', 'StudentFeedback?.wrong(selectedButtons[0]', 'StudentFeedback?.wrong(btn, \'這個成語不太合適']
+};
+Object.entries(specialFeedbackExpectations).forEach(([fileName, markers]) => {
+  const content = fs.readFileSync(path.join(root, fileName), 'utf8');
+  markers.forEach(marker => expect(content.includes(marker), `${fileName}: 特殊題型未接入共用錯答回饋 ${marker}`));
+});
+
 const diagnosticsPath = path.join(root, 'diagnostics.js');
 const studentFeedbackPath = path.join(root, 'student-feedback.js');
 const studentSyncStatusPath = path.join(root, 'student-sync-status.js');
 expect(fs.existsSync(diagnosticsPath), '找不到 diagnostics.js');
 expect(fs.existsSync(studentFeedbackPath), '找不到 student-feedback.js');
+if (fs.existsSync(studentFeedbackPath)) {
+  const studentFeedbackContent = fs.readFileSync(studentFeedbackPath, 'utf8');
+  expect(studentFeedbackContent.includes('function markWrong'), 'student-feedback.js: 缺少特殊題型錯誤槽位標記');
+  expect(studentFeedbackContent.includes('function clearState'), 'student-feedback.js: 缺少特殊題型錯誤狀態清理');
+}
 expect(fs.existsSync(studentSyncStatusPath), '找不到 student-sync-status.js');
 const accessibilityPath = path.join(root, 'mobile-accessibility.css');
 expect(fs.existsSync(accessibilityPath), '找不到 mobile-accessibility.css');
@@ -143,4 +162,4 @@ if (failures.length) {
 }
 
 console.log(`Regression checks passed for ${htmlFiles.length} HTML pages.`);
-console.log('Verified: diagnostics, accessibility, shared answer-feedback coverage, shared voice-manager coverage outside the specialised listening-basic player, semantic correct-answer feedback, student self-service tools with per-account state isolation, offline and bounded cloud-sync status coverage, inline JavaScript syntax, and mobile navigation entry points across all levels.');
+console.log('Verified: diagnostics, accessibility, common answer-feedback coverage for options and special tasks, shared voice-manager coverage outside the specialised listening-basic player, semantic correct-answer feedback, student self-service tools with per-account state isolation, offline and bounded cloud-sync status coverage, inline JavaScript syntax, and mobile navigation entry points across all levels.');

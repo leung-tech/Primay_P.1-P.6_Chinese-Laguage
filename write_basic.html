@@ -647,9 +647,11 @@
                 }
 
                 speakText("排錯了喔，請點擊紅色的積木移出，並查看提示！");
+                window.StudentFeedback?.show(`有 ${wrongIndices.length} 個位置需要調整。請移出紅色積木，並查看提示再試一次。`, 'error');
                 
                 // 重新渲染畫面（此時紅色錯誤積木會持續停留在上方，提示框也會顯示）
                 renderCurrentPlayUI();
+                requestAnimationFrame(() => document.querySelectorAll('.wrong-slot').forEach(slot => window.StudentFeedback?.markWrong(slot)));
 
                 // 3.5秒後自動退回
                 setTimeout(() => {
@@ -662,6 +664,7 @@
                             let slotElem = document.getElementById(`target-slot-${idx}`);
                             if (slotElem) {
                                 slotElem.classList.remove('wrong-slot', 'shake');
+                                window.StudentFeedback?.clear(slotElem);
                             }
 
                             if (currentMode !== 'expand') {

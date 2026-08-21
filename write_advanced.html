@@ -350,6 +350,8 @@
                 window.speakText("順序不太對喔！請看提示。");
                 currentMistakes++;
                 window.reRenderCurrentPlay();
+                requestAnimationFrame(() => document.querySelectorAll('.wrong-slot').forEach(slot => window.StudentFeedback?.markWrong(slot)));
+                window.StudentFeedback?.show(`有 ${wrongSlots.length} 個位置需要調整。請查看提示後再試一次。`, 'error');
                 
                 let hintTxt = "請再檢查一次邏輯順序喔！";
                 if(currentMode === 'outline') hintTxt = outlineData[currentIdx].hint;
@@ -371,6 +373,7 @@
                             targetSlots[idx] = null;
                         }
                     });
+                    document.querySelectorAll('.wrong-slot').forEach(slot => window.StudentFeedback?.clear(slot));
                     wrongSlots = [];
                     window.reRenderCurrentPlay();
                 }, 1500);
@@ -695,10 +698,20 @@
                     document.getElementById('feedback-desc').classList.add('hidden'); document.getElementById('feedback-story').innerHTML = ""; document.getElementById('feedback-essay-container').classList.add('hidden');
                     window.showFeedbackModal(0, () => { vocabPhase = 2; currentVocabSentIdx = 0; window.renderVocabSentence(); }, "進入下一階段 ➡️");
                 } else { window.renderVocabMatching(words, means); }
-            } else {
+                        } else {
                 window.speakText("配對錯誤喔！"); currentMistakes++;
-                document.getElementById('vocab-hint-box').classList.remove('hidden'); document.getElementById('vocab-hint-box').innerText = "💡 提示：請重新閱讀成語意思，再做選擇。";
-                document.querySelectorAll('.bg-purple-200').forEach(b => { b.classList.add('bg-rose-100', 'shake'); setTimeout(() => b.classList.remove('bg-rose-100', 'shake', 'bg-purple-200'), 1000); });
+                document.getElementById('vocab-hint-box').classList.remove('hidden');
+                document.getElementById('vocab-hint-box').innerText = "💡 提示：請重新閱讀成語意思，再做選擇。";
+                const selectedButtons = [...document.querySelectorAll('.bg-purple-200')];
+                window.StudentFeedback?.wrong(selectedButtons[0], '這一組詞義配對不正確。請重新閱讀意思後再配對。');
+                selectedButtons.slice(1).forEach(button => window.StudentFeedback?.markWrong(button));
+                selectedButtons.forEach(button => {
+                    button.classList.add('bg-rose-100', 'shake');
+                    setTimeout(() => {
+                        button.classList.remove('bg-rose-100', 'shake', 'bg-purple-200');
+                        window.StudentFeedback?.clear(button);
+                    }, 1000);
+                });
                 selectedWordIdx = null; selectedMeanIdx = null;
             }
         };
@@ -732,10 +745,16 @@
                 btn.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600'); window.speakText("答對了！" + pair.sent.replace('___', clickedWord));
                 setTimeout(() => { if (currentVocabSentIdx < data.pairs.length - 1) { currentVocabSentIdx++; window.renderVocabSentence(); } else { window.finishVocabLevel(); } }, 1000);
             } else {
-                btn.classList.add('bg-rose-500', 'text-white', 'border-rose-600', 'shake'); window.speakText("不太合適喔！"); currentMistakes++;
+                btn.classList.add('bg-rose-500', 'text-white', 'border-rose-600', 'shake');
+                window.StudentFeedback?.wrong(btn, '這個成語不太合適。請查看詞義提示後再試一次。');
+                window.speakText("不太合適喔！"); currentMistakes++;
                 let clickedPair = data.pairs.find(p => p.word === clickedWord);
                 document.getElementById('vocab-hint-box2').innerHTML = `💡 提示：「${clickedWord}」的意思是 ${clickedPair.mean}`; document.getElementById('vocab-hint-box2').classList.remove('hidden');
-                setTimeout(() => { btn.classList.remove('bg-rose-500', 'text-white', 'border-rose-600', 'shake'); document.querySelectorAll('#vocab-options-container .option-btn').forEach(b => { if (!b.classList.contains('bg-emerald-500')) b.style.pointerEvents = 'auto'; }); }, 1500);
+                setTimeout(() => {
+                    btn.classList.remove('bg-rose-500', 'text-white', 'border-rose-600', 'shake');
+                    window.StudentFeedback?.clear(btn);
+                    document.querySelectorAll('#vocab-options-container .option-btn').forEach(b => { if (!b.classList.contains('bg-emerald-500')) b.style.pointerEvents = 'auto'; });
+                }, 1500);
             }
         };
 
